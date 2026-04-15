@@ -7,6 +7,8 @@ import { TestRouter } from '../utils/TestRouter'
 vi.mock('../../src/lib/supabase', () => ({
   supabase: null,
   isSupabaseConfigured: false,
+  isOfflineDemoMode: false,
+  isBootstrapFatalError: false,
 }))
 
 // Mock hasPermission to always return true (permission logic not under test here)

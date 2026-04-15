@@ -661,7 +661,7 @@ export function Settings() {
   }
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="crm-page space-y-8">
       <section className="bg-navy-800/60 border border-white/8 rounded-2xl p-3">
         <div className="flex gap-2 flex-wrap">
           {SETTINGS_TABS.map((tab) => (
@@ -695,7 +695,7 @@ export function Settings() {
 
         <div className="flex flex-wrap gap-2 md:gap-3">
           {(['en', 'es', 'pt', 'fr', 'de', 'it'] as Language[]).map((lang) => (
-            <button
+            <button type="button"
               key={lang}
               onClick={() => setLanguage(lang)}
               className={`inline-flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium whitespace-nowrap transition-all ${
@@ -904,7 +904,7 @@ export function Settings() {
         {/* Entity type tabs */}
         <div className="flex gap-1 p-1 bg-white/4 rounded-xl mb-4">
           {ENTITY_TABS.map((et) => (
-            <button
+            <button type="button"
               key={et}
               onClick={() => { setCfActiveEntity(et); cfResetForm() }}
               className={`flex-1 text-xs font-medium py-1.5 rounded-lg transition-all ${
@@ -1046,7 +1046,7 @@ export function Settings() {
                 <span className="flex-1 text-sm text-slate-200 truncate">{def.label}</span>
 
                 {/* Required toggle */}
-                <button
+                <button type="button"
                   onClick={() => cfToggleRequired(def.id, def.required)}
                   title={def.required ? t.settings.requiredToggleOn : t.settings.requiredToggleOff}
                   className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
@@ -1059,7 +1059,7 @@ export function Settings() {
                 </button>
 
                 {/* Active toggle */}
-                <button
+                <button type="button"
                   onClick={() => cfToggleActive(def.id, def.isActive)}
                   title={def.isActive ? t.settings.activeToggleOn : t.settings.activeToggleOff}
                   className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
@@ -1073,14 +1073,14 @@ export function Settings() {
 
                 {/* Edit / Delete — gated */}
                 <PermissionGate permission="custom_fields:update">
-                  <button
+                  <button type="button"
                     onClick={() => cfOpenEdit(def.id)}
                     title={t.settings.editField}
                     className="shrink-0 p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/8 transition-all"
                   >
                     <Pencil size={13} />
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => setCfDeleteId(def.id)}
                     title={t.settings.deleteField}
                     className="shrink-0 p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all"
@@ -1331,7 +1331,7 @@ export function Settings() {
           {settings.tags.map((tag) => (
             <div key={tag} className="flex items-center gap-1.5 bg-[#0d0e1a] border border-white/10 rounded-full px-3 py-1">
               <span className="text-xs text-slate-300">{tag}</span>
-              <button
+              <button type="button"
                 onClick={() => { removeTag(tag); toast.success(t.common.delete + ' ✓') }}
                 aria-label={`${t.settings.deleteTagAriaLabel} ${tag}`}
                 className="text-slate-600 hover:text-red-400 transition-colors"
@@ -1449,7 +1449,7 @@ export function Settings() {
           {ALL_NOTIFICATION_TYPES.map((type) => {
             const enabled = !disabledTypes.has(type)
             return (
-              <button
+              <button type="button"
                 key={type}
                 onClick={() => toggleType(type)}
                 className={`flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
@@ -1492,9 +1492,9 @@ export function Settings() {
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm text-slate-200">{section.label}</p>
                     <div className="flex items-center gap-1">
-                      <button className="px-2 py-1 text-xs rounded border border-white/10 text-slate-400" onClick={() => moveSection(section.id, -1)}>↑</button>
-                      <button className="px-2 py-1 text-xs rounded border border-white/10 text-slate-400" onClick={() => moveSection(section.id, 1)}>↓</button>
-                      <button
+                      <button type="button" className="px-2 py-1 text-xs rounded border border-white/10 text-slate-400" onClick={() => moveSection(section.id, -1)}>↑</button>
+                      <button type="button" className="px-2 py-1 text-xs rounded border border-white/10 text-slate-400" onClick={() => moveSection(section.id, 1)}>↓</button>
+                      <button type="button"
                         className={`px-2 py-1 text-xs rounded border ${hidden ? 'border-red-500/30 text-red-300' : 'border-emerald-500/30 text-emerald-300'}`}
                         onClick={() => {
                           void updateNavPrefs((current) => ({
@@ -1516,9 +1516,9 @@ export function Settings() {
                         <div key={itemId} className="flex items-center justify-between text-xs text-slate-400 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5">
                           <span>{itemId}</span>
                           <div className="flex gap-1">
-                            <button className="px-1.5 py-0.5 border border-white/12 rounded" onClick={() => moveBuiltinItem(section.id, itemId, -1)}>↑</button>
-                            <button className="px-1.5 py-0.5 border border-white/12 rounded" onClick={() => moveBuiltinItem(section.id, itemId, 1)}>↓</button>
-                            <button
+                            <button type="button" className="px-1.5 py-0.5 border border-white/12 rounded" onClick={() => moveBuiltinItem(section.id, itemId, -1)}>↑</button>
+                            <button type="button" className="px-1.5 py-0.5 border border-white/12 rounded" onClick={() => moveBuiltinItem(section.id, itemId, 1)}>↓</button>
+                            <button type="button"
                               className={`px-1.5 py-0.5 border rounded ${itemHidden ? 'border-red-500/30 text-red-300' : 'border-emerald-500/30 text-emerald-300'}`}
                               onClick={() => {
                                 void updateNavPrefs((current) => ({
@@ -1577,7 +1577,7 @@ export function Settings() {
                   {(['admin', 'manager', 'sales_rep', 'viewer'] as UserRole[]).map((role) => {
                     const active = group.roleRules?.includes(role) ?? false
                     return (
-                      <button
+                      <button type="button"
                         key={role}
                         className={`px-2 py-1 rounded border text-[11px] ${active ? 'border-brand-500/40 text-brand-200' : 'border-white/12 text-slate-500'}`}
                         onClick={() => {
@@ -1738,7 +1738,7 @@ export function Settings() {
             { value: 'running', label: t.settings.leadOpsFilterRunning },
             { value: 'error', label: t.settings.leadOpsFilterError },
           ] as const).map((opt) => (
-            <button
+            <button type="button"
               key={opt.value}
               onClick={() => setMaintenanceStatusFilter(opt.value)}
               className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${

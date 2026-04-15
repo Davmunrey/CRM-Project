@@ -20,7 +20,7 @@ const variantClasses: Record<BadgeVariant, string> = {
   rose: 'bg-rose-500/15 text-rose-400 ring-rose-500/20',
   purple: 'bg-purple-500/15 text-purple-400 ring-purple-500/20',
   orange: 'bg-orange-500/15 text-orange-400 ring-orange-500/20',
-  gray: 'bg-zinc-700/50 text-zinc-400 ring-zinc-600/20',
+  gray: 'bg-slate-700/50 text-slate-400 ring-slate-600/20',
   indigo: 'bg-indigo-500/15 text-indigo-400 ring-indigo-500/20',
 }
 

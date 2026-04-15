@@ -20,6 +20,8 @@ vi.mock('../../src/lib/supabase', () => ({
     },
   },
   isSupabaseConfigured: true,
+  isOfflineDemoMode: false,
+  isBootstrapFatalError: false,
 }))
 
 describe('initSupabaseAuth', () => {

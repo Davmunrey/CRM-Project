@@ -31,6 +31,8 @@ vi.mock('../../src/lib/supabase', () => {
   }))
   return {
     isSupabaseConfigured: true,
+    isOfflineDemoMode: false,
+    isBootstrapFatalError: false,
     supabase: { from: mockFrom },
   }
 })

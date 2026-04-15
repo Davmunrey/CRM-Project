@@ -1,8 +1,10 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-04-10
+**Analysis Date:** 2026-04-15
 
 ## Directory Layout
+
+**UI layout conventions:** see `docs/master-design-ui.md` (`crm-page`, `crm-page-full`, shared empty states).
 
 ```
 CRM/
@@ -106,6 +108,7 @@ CRM/
   - `src/components/shared/SearchBar.tsx` — text search input with debounce
   - `src/components/shared/SmartViewBar.tsx` — renders saved smart view filter tabs
   - `src/components/shared/EmptyState.tsx` — empty list placeholder with icon and CTA
+  - `src/components/shared/PanelEmpty.tsx` — compact empty/placeholder for side panels and split views
   - `src/components/shared/CustomFieldRenderer.tsx` — renders and edits custom field values
   - `src/components/shared/AttachmentsList.tsx` — file attachment viewer/uploader
 

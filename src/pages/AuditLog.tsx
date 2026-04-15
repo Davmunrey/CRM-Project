@@ -23,6 +23,7 @@ const ENTITY_ICONS: Record<AuditEntry['entityType'], typeof Users> = {
 type ActionCategory = 'created' | 'updated' | 'deleted' | 'stage_changed' | 'completed'
 
 function getActionCategory(action: AuditAction): ActionCategory {
+  if (action === 'email_send_failed') return 'deleted'
   if (action.includes('created') || action === 'email_sent') return 'created'
   if (action.includes('deleted')) return 'deleted'
   if (action === 'deal_stage_changed') return 'stage_changed'
@@ -67,6 +68,7 @@ export function AuditLog() {
     activity_completed: t.activities.completed,
     activity_deleted: t.common.delete,
     email_sent: t.inbox.sent,
+    email_send_failed: t.inbox.sendFailed,
     enrichment_completed: t.activities.completed,
     company_created: t.common.create,
     company_updated: t.common.edit,
@@ -136,10 +138,10 @@ export function AuditLog() {
   ]
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="crm-page space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-white">{t.audit.title}</h1>
+        <h2 className="text-2xl font-bold text-white">{t.audit.title}</h2>
         <p className="text-slate-400 mt-1">{t.audit.subtitle}</p>
       </div>
 
@@ -183,6 +185,7 @@ export function AuditLog() {
             <span className="text-slate-400 text-sm">{t.audit.entity}:</span>
             {entityFilterOptions.map((opt) => (
               <button
+                type="button"
                 key={opt.value}
                 onClick={() => setEntityFilter(opt.value)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${

@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
@@ -25,6 +26,12 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
+    pool: 'threads',
+    /** Single worker: stable Vitest runs and avoids intermittent pool "Timeout waiting for worker to respond" under load. */
+    maxWorkers: 50,
+    minWorkers: 1,
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.{test,spec}.{ts,tsx}'],
     coverage: {

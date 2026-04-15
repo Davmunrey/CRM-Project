@@ -4,7 +4,7 @@ import { Zap, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, ShieldCheck } from '
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { LANGUAGE_FLAGS, LANGUAGE_LABELS, useI18nStore, useTranslations } from '../i18n'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supabase'
 import { authProviderConfig, resolveGoogleOAuthPolicy, resolveSamlDomain } from '../config/authProviders'
 import type { Language } from '../i18n'
 
@@ -134,7 +134,7 @@ export function Login() {
       } else {
         navigate('/')
       }
-    } else {
+    } else if (isOfflineDemoMode) {
       setTimeout(() => {
         const result = login(email, password)
         setLoading(false)
@@ -144,6 +144,9 @@ export function Login() {
           setError(result.error || t.auth.login)
         }
       }, 400)
+    } else {
+      setLoading(false)
+      setError('Supabase is not configured. Set VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY, or enable VITE_ALLOW_DEMO_MODE=true for local demo only.')
     }
   }
 
@@ -358,8 +361,8 @@ export function Login() {
           </div>
         )}
 
-        {/* Demo credentials — only shown in mock mode */}
-        {!isSupabaseConfigured && <div className="mt-6 glass rounded-xl border-white/8 p-4">
+        {/* Demo credentials — only when explicit offline demo flag is set (non-prod) */}
+        {isOfflineDemoMode && <div className="mt-6 glass rounded-xl border-white/8 p-4">
           <p className="text-xs font-semibold text-slate-400 mb-2">{t.auth.demoLogin}</p>
           <div className="space-y-1.5">
               {[
@@ -367,7 +370,7 @@ export function Login() {
               { email: 'sara@crmpro.es', role: t.acceptInvite.roleManager, color: 'text-brand-400' },
               { email: 'carlos@crmpro.es', role: t.acceptInvite.roleSalesRep, color: 'text-emerald-400' },
             ].map((demo) => (
-              <button
+              <button type="button"
                 key={demo.email}
                 onClick={() => { setEmail(demo.email); setPassword('demo123') }}
                 className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"

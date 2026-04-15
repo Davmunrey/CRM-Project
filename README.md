@@ -60,6 +60,9 @@ Create a `.env.local` file in the project root:
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
+# Local demo only (never in production): offline seed users when Supabase is unset
+# VITE_ALLOW_DEMO_MODE=true
+
 # Optional outbound provider (defaults to gmail)
 # VITE_EMAIL_PROVIDER=gmail
 
@@ -100,7 +103,7 @@ npm run maintenance:lead:sla
 ```
 
 Contract and headers are documented in:
-- `docs/lead-score-maintenance-backend.md`
+- `docs/master-lead-management.md` (backend contract section)
 
 ## Testing
 
@@ -147,7 +150,7 @@ src/
 │   ├── companies/      # CompanyForm
 │   ├── deals/          # DealCard, DealForm, KanbanColumn
 │   ├── activities/     # ActivityForm, ActivityItem
-│   └── shared/         # SearchBar, EmptyState
+│   └── shared/         # SearchBar, EmptyState, PanelEmpty
 ├── pages/              # Route containers (27 pages): CRM modules, auth, inbox, timeline, audit, products
 ├── store/              # Zustand stores (19): auth, CRM domains, inbox, settings, templates, products, audit
 ├── types/              # All TypeScript interfaces (index.ts)
@@ -172,66 +175,31 @@ React Router v6 with nested layouts. Each page is wrapped in an `ErrorBoundary` 
 ### Component Size
 All components are kept under 200 lines. Large pages (Contacts, Deals) delegate form logic to dedicated `*Form` components.
 
-## Current Status
+## Current status
 
-- Supabase Auth, org onboarding, and RLS multi-tenancy are implemented.
-- Core CRM stores are wired to Supabase and realtime subscriptions are active.
-- i18n coverage exists for English, Spanish, Portuguese, French, German, and Italian.
-- Test suite is passing (`105` tests).
-- Gmail integration is hardened (PKCE + server refresh + resilient inbox load + persisted thread links + workspace-aware thread-link migration `20260410195500_gmail_thread_workspace.sql`).
-- Post-phase UX/UI upgrades are shipped (quote export/email polish, localized inbox timestamps, language-aware calendar labels, lazy-loaded chart-heavy routes).
-- Quote workflow now supports save, print-to-PDF export, and email send from deal detail.
-- Build hardening is applied: chart-heavy routes are lazy-loaded (`Dashboard`, `Reports`, `Forecast`) and the production build no longer triggers chunk-size warnings at the configured threshold.
-- Next major milestone: deployment/release hardening (Phase 10).
+- **Runtime:** Supabase Auth, org onboarding, RLS multi-tenancy, and core CRM stores with realtime are implemented.
+- **i18n:** EN / ES / PT (plus FR / DE / IT where keyed); run multilingual smoke before releases.
+- **Tests:** Vitest (`npm run test:run`); policy in `vite.config.ts` (single worker for stable CI/local runs).
+- **Gmail:** PKCE, server refresh, resilient inbox, persisted thread links; migration `20260410195500_gmail_thread_workspace.sql`.
+- **UX / shell:** Quote PDF/email from deals; lazy-loaded chart routes; `crm-page` / `crm-page-full`, `PanelEmpty`, auth/branding — see `docs/master-design-ui.md`.
+- **Sell-ready product baseline:** Checklist + QA + go/no-go — `docs/master-release-qa.md` (Apr 2026 internal/beta GO).
+- **Sell-ready security & compliance baseline:** Evidence map, Supabase/DNS runbooks, DSAR — see `docs/master-security-compliance.md`.
+- **Next product focus:** Roadmap + backlog + shipped history — `docs/master-roadmap-backlog.md` and `docs/master-implementation-history.md`.
 
-## Documentation Index
+## Documentation
 
-- Docs index:
-  - `docs/README.md`
-- Full implementation history and technical handoff:
-  - `docs/implementation-history.md`
-- PRO roadmap (30/60/90) with execution priorities:
-  - `docs/pro-roadmap-30-60-90.md`
-- Execution backlog (operational checklist):
-  - `docs/pro-backlog.md`
-- SSO backend integration contract and provider handoff:
-  - `docs/auth-sso-backend-handoff.md`
-- User profile display name behavior:
-  - `docs/user-profile-display-names.md`
-- Navigation i18n release handoff:
-  - `docs/navigation-i18n-release-handoff.md`
-- Navigation + Settings + Sidebar runbook:
-  - `docs/navigation-settings-sidebar-runbook.md`
-- Lead scoring backend maintenance scheduler contract:
-  - `docs/lead-score-maintenance-backend.md`
-- Lead maintenance Ops dashboard (Settings) behavior:
-  - `docs/lead-maintenance-ops-dashboard.md`
-- Lead maintenance incident/run operations runbook:
-  - `docs/lead-maintenance-runbook.md`
-- Theme system (system/light/dark):
-  - `docs/theme-system.md`
-- Email mailbox privacy runbook (support/ops):
-  - `docs/email-mailbox-privacy-runbook.md`
-- Email release readiness checklist:
-  - `docs/email-release-checklist.md`
-- Email 15-minute smoke test script (QA/support):
-  - `docs/email-smoke-test-15min.md`
-- Sell-ready release checklist:
-  - `docs/sell-ready-release-checklist.md`
-- Sell-ready QA evidence (current baseline):
-  - `docs/qa-evidence-sell-ready-baseline.md`
-- Sell-ready Go/No-Go review:
-  - `docs/go-no-go-sell-ready-baseline.md`
-- Production handoff and go-live checklist:
-  - `docs/production-handoff-checklist.md`
-- Audit-ready hardening matrix:
-  - `docs/hardening-matrix.md`
-- SOC2 / GDPR-lite compliance mapping:
-  - `docs/compliance-mapping.md`
-- Gitea repository operations and CI runbook:
-  - `docs/gitea-operations.md`
+**Canonical index (all topics):** [`docs/README.md`](docs/README.md)
+
+| If you need… | Start here |
+|----------------|------------|
+| Full shipped narrative | `docs/master-implementation-history.md` |
+| Priorities and backlog | `docs/master-roadmap-backlog.md` |
+| Security / compliance evidence pack | `docs/master-security-compliance.md` |
+| Go-live operations | `docs/master-release-qa.md` (Production handoff section) |
 
 ## Seed Data
+Offline demo mode (non-production only) requires `VITE_ALLOW_DEMO_MODE=true` when Supabase env vars are absent; production builds require real Supabase configuration.
+
 In mock mode, the app ships with realistic Spanish/European B2B seed data:
 - **25 contacts** across companies in fintech, SaaS, insurance, banking, retail
 - **10 companies** including Bankia, Factorial, Mapfre, Inditex, Cabify, Deloitte

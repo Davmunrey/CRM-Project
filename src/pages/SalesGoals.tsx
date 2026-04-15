@@ -152,7 +152,7 @@ export function SalesGoals() {
     : 0
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="crm-page space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -164,6 +164,7 @@ export function SalesGoals() {
         </div>
         <PermissionGate permission="goals:create">
           <button
+            type="button"
             onClick={() => { setShowForm(true); setEditingId(null); setForm({ type: 'revenue', target: 0, period: 'monthly', startDate: new Date().toISOString().slice(0, 10), endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0, 10) }) }}
             className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold"
           >
@@ -200,7 +201,7 @@ export function SalesGoals() {
         <div className="glass rounded-2xl border-white/10 p-6 animate-scale-in">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-white">{editingId ? t.common.edit : t.goals.title}</p>
-            <button onClick={() => { setShowForm(false); setEditingId(null) }} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
+            <button type="button" onClick={() => { setShowForm(false); setEditingId(null) }} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
               <X size={16} />
             </button>
           </div>
@@ -263,12 +264,13 @@ export function SalesGoals() {
           </div>
           <div className="flex justify-end gap-2">
             <button
+              type="button"
               onClick={() => { setShowForm(false); setEditingId(null) }}
               className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
             >
               {t.common.cancel}
             </button>
-            <button onClick={handleSubmit} className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold">
+            <button type="button" onClick={handleSubmit} className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold">
               <Check size={14} />
               {editingId ? t.common.save : t.common.create}
             </button>
@@ -304,12 +306,12 @@ export function SalesGoals() {
                 </div>
                 <div className="flex items-center gap-1">
                   <PermissionGate permission="goals:update">
-                    <button onClick={() => startEdit(goal)} className="p-1.5 rounded-lg text-slate-600 hover:text-white hover:bg-white/8 transition-colors">
+                    <button type="button" onClick={() => startEdit(goal)} className="p-1.5 rounded-lg text-slate-600 hover:text-white hover:bg-white/8 transition-colors">
                       <Edit2 size={13} />
                     </button>
                   </PermissionGate>
                   <PermissionGate permission="goals:delete">
-                    <button onClick={() => { deleteGoal(goal.id); toast.success(`${t.common.delete} ✓`) }} className="p-1.5 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                    <button type="button" onClick={() => { deleteGoal(goal.id); toast.success(`${t.common.delete} ✓`) }} className="p-1.5 rounded-lg text-slate-600 hover:text-red-400 hover:bg-red-500/10 transition-colors">
                       <Trash2 size={13} />
                     </button>
                   </PermissionGate>

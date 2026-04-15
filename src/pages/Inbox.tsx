@@ -21,6 +21,7 @@ import type { GmailThread, CRMEmail, Contact, InboxAdvancedFilters } from '../ty
 import { formatDateTime, formatRelativeDate } from '../utils/formatters'
 import { trackUxAction } from '../lib/uxMetrics'
 import { buildInboxQueryMatcher } from '../utils/inboxQuery'
+import { PanelEmpty } from '../components/shared/PanelEmpty'
 
 // ─── Thread item ──────────────────────────────────────────────────────────────
 function extractEmail(from: string): string {
@@ -223,13 +224,13 @@ function LocalEmailItem({
           <TrackingBadges email={email} />
           {email.trackingEnabled && (
             <div className="flex items-center gap-1.5 mt-1.5" onClick={(e) => e.stopPropagation()}>
-              <button
+              <button type="button"
                 onClick={() => onTrackOpen(email.id)}
                 className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-emerald-500/15 text-slate-500 hover:text-emerald-400 border border-white/8 transition-colors"
               >
                 {t.common.view}
               </button>
-              <button
+              <button type="button"
                 onClick={() => onTrackClick(email.id)}
                 className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-blue-500/15 text-slate-500 hover:text-blue-400 border border-white/8 transition-colors"
               >
@@ -320,7 +321,7 @@ function ThreadView({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-6 py-4 border-b border-white/6 flex-shrink-0">
+      <div className="px-4 py-3 border-b border-white/6 flex-shrink-0">
         <h2 className="text-base font-semibold text-white">{thread.messages[0]?.subject ?? ''}</h2>
         <p className="text-xs text-slate-500 mt-0.5">{thread.messages.length} {t.common.notes.toLowerCase()}</p>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -356,7 +357,7 @@ function ThreadView({
             </span>
           )}
           {!hasPersistedLink && match && canEditLinks && (
-            <button
+            <button type="button"
               onClick={() => onPinLink(thread, match)}
               className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25 transition-colors"
               title={t.inbox.pinLink}
@@ -366,7 +367,7 @@ function ThreadView({
             </button>
           )}
           {hasPersistedLink && canEditLinks && (
-            <button
+            <button type="button"
               onClick={() => onUnpinLink(thread)}
               className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/20 transition-colors"
               title={t.inbox.unpin}
@@ -376,7 +377,7 @@ function ThreadView({
             </button>
           )}
           {canCreateFollowUp && (
-            <button
+            <button type="button"
               onClick={() => onCreateFollowUp(thread, match)}
               className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 hover:bg-amber-500/25 transition-colors"
               title={t.inbox.followUpCreated}
@@ -386,25 +387,25 @@ function ThreadView({
               {t.followUps.title}
             </button>
           )}
-          <button
+          <button type="button"
             onClick={() => onThreadAction(thread, 'mark_read')}
             className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-emerald-500/15 hover:text-emerald-300 transition-colors"
           >
             {t.inbox.markRead}
           </button>
-          <button
+          <button type="button"
             onClick={() => onThreadAction(thread, 'mark_unread')}
             className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-indigo-500/15 hover:text-indigo-300 transition-colors"
           >
             {t.inbox.markUnread}
           </button>
-          <button
+          <button type="button"
             onClick={() => onThreadAction(thread, 'archive')}
             className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-amber-500/15 hover:text-amber-300 transition-colors"
           >
             {t.inbox.archive}
           </button>
-          <button
+          <button type="button"
             onClick={() => onThreadAction(thread, 'trash')}
             className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-red-500/15 hover:text-red-300 transition-colors"
           >
@@ -435,7 +436,7 @@ function ThreadView({
                 <option key={d.id} value={d.id}>{d.title}</option>
               ))}
             </select>
-            <button
+            <button type="button"
               onClick={() => onManualLinkSave(thread, manualContactId || undefined, manualDealId || undefined)}
               className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-brand-600/20 text-brand-300 border border-brand-500/30 hover:bg-brand-600/30 transition-colors"
               title={t.inbox.saveLink}
@@ -462,14 +463,14 @@ function ThreadView({
               <div className="flex items-center gap-3 text-slate-500">
                 <Clock size={12} />
                 <span className="text-xs">{msg.date ? formatDateTime(msg.date) : ''}</span>
-                <button
+                <button type="button"
                   onClick={() => onReply(msg.from, `Re: ${msg.subject}`)}
                   className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-white/6 hover:bg-brand-600/20 hover:text-brand-400 transition-colors"
                 >
                   <Reply size={11} />
                   {t.common.back}
                 </button>
-                <button
+                <button type="button"
                   onClick={() => onReplyAll(thread, i)}
                   className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-white/6 hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors"
                 >
@@ -483,7 +484,7 @@ function ThreadView({
               {(msg.attachments?.length ?? 0) > 0 && (
                 <div className="mt-3 space-y-1.5">
                   {msg.attachments!.map((att) => (
-                    <button
+                    <button type="button"
                       key={att.attachmentId}
                       onClick={() => onDownloadAttachment(msg.id, att.attachmentId, att.filename)}
                       className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/8 border border-white/10 text-xs text-slate-300 transition-colors"
@@ -549,7 +550,7 @@ function LocalEmailView({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-white/6 flex-shrink-0 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-white/6 flex-shrink-0 flex items-center justify-between">
         <div>
           <h2 className="text-base font-semibold text-white">{email.subject || ''}</h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -609,13 +610,13 @@ function LocalEmailView({
               <TrackingBadges email={email} />
               {email.trackingEnabled && (
                 <div className="flex items-center gap-1.5 mt-1.5">
-                  <button
+                  <button type="button"
                     onClick={() => onTrackOpen(email.id)}
                     className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-emerald-500/15 text-slate-500 hover:text-emerald-400 border border-white/8 transition-colors"
                   >
                     {t.common.view}
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => onTrackClick(email.id)}
                     className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-blue-500/15 text-slate-500 hover:text-blue-400 border border-white/8 transition-colors"
                   >
@@ -835,7 +836,10 @@ export function Inbox() {
   )
   const sentEmails = useMemo(() => mailboxEmails.filter((e) => e.status === 'sent'), [mailboxEmails])
   const scheduledEmails = useMemo(() => mailboxEmails.filter((e) => e.status === 'scheduled'), [mailboxEmails])
-  const draftEmails = useMemo(() => mailboxEmails.filter((e) => e.status === 'draft'), [mailboxEmails])
+  const draftEmails = useMemo(
+    () => mailboxEmails.filter((e) => e.status === 'draft' || e.status === 'failed'),
+    [mailboxEmails],
+  )
   const snoozedEmails = useMemo(() => mailboxEmails.filter((e) => e.status === 'snoozed'), [mailboxEmails])
   const countNeedsAttention = (items: CRMEmail[]) => items.filter((email) => (
     email.isRead === false
@@ -1280,12 +1284,12 @@ export function Inbox() {
   }
 
   return (
-    <div className="flex h-full overflow-hidden p-4 gap-3">
+    <div className="crm-page-full flex h-full min-h-0 overflow-hidden gap-3 py-3 sm:py-4">
       {/* ── Left: Folders ────────────────────────────────────────────────── */}
       <div className="w-52 flex-shrink-0 border border-white/8 rounded-2xl overflow-hidden flex flex-col bg-navy-900/50">
         <div className="p-3 border-b border-white/6">
           <PermissionGate permission="email:send">
-            <button
+            <button type="button"
               onClick={() => {
                 setSelectedEmailId(null)
                 setSelectedThreadId(null)
@@ -1308,7 +1312,7 @@ export function Inbox() {
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-medium text-emerald-400 truncate">{gmailAddress ?? 'Gmail'}</p>
               </div>
-              <button
+              <button type="button"
                 onClick={handleDisconnectGmail}
                 disabled={disconnecting}
                 className="text-slate-600 hover:text-red-400 transition-colors"
@@ -1319,7 +1323,7 @@ export function Inbox() {
               </button>
             </div>
           ) : (
-            <button
+            <button type="button"
               onClick={handleConnectGmail}
               disabled={connecting}
               className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/4 hover:bg-brand-600/15 border border-white/8 hover:border-brand-500/30 text-slate-500 hover:text-brand-400 transition-colors text-[10px] font-medium"
@@ -1332,7 +1336,7 @@ export function Inbox() {
 
         <nav className="flex-1 p-2 space-y-0.5">
           {FOLDERS.map((f) => (
-            <button
+            <button type="button"
               key={f.id}
               onClick={() => {
                 setFolder(f.id as 'inbox' | 'sent' | 'scheduled' | 'drafts' | 'snoozed')
@@ -1372,7 +1376,7 @@ export function Inbox() {
             )}
           </div>
           {connected && folder === 'inbox' && (
-            <button
+            <button type="button"
               onClick={() => handleLoadThreads()}
               disabled={threadsLoading}
               className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/6 transition-colors"
@@ -1386,25 +1390,25 @@ export function Inbox() {
         {folder === 'inbox' && connected && selectedThreadIds.size > 0 && (
           <div className="px-3 py-2 border-b border-white/6 flex items-center gap-1.5 flex-wrap">
             <span className="text-[10px] text-slate-500 mr-1">{t.inbox.selectedCount.replace('{n}', String(selectedThreadIds.size))}</span>
-            <button
+            <button type="button"
               onClick={() => applyBulkThreadAction('mark_read')}
               className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors"
             >
               {t.inbox.markRead}
             </button>
-            <button
+            <button type="button"
               onClick={() => applyBulkThreadAction('mark_unread')}
               className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors"
             >
               {t.inbox.markUnread}
             </button>
-            <button
+            <button type="button"
               onClick={() => applyBulkThreadAction('archive')}
               className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-amber-500/20 hover:text-amber-300 transition-colors"
             >
               {t.inbox.archive}
             </button>
-            <button
+            <button type="button"
               onClick={() => applyBulkThreadAction('trash')}
               className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-red-500/20 hover:text-red-300 transition-colors"
             >
@@ -1496,7 +1500,7 @@ export function Inbox() {
               ['linked', t.inbox.pinnedLink],
               ['mine', t.common.assignedTo],
             ] as const).map(([id, label]) => (
-              <button
+              <button type="button"
                 key={id}
                 onClick={() => setInboxQuickFilter(id)}
                 className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
@@ -1508,7 +1512,7 @@ export function Inbox() {
                 {label}
               </button>
             ))}
-            <button
+            <button type="button"
               onClick={() => setAdvancedFilters((prev) => ({ ...prev, hasAttachments: !prev.hasAttachments }))}
               className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
                 advancedFilters.hasAttachments
@@ -1518,7 +1522,7 @@ export function Inbox() {
             >
               {t.inbox.hasAttachments}
             </button>
-            <button
+            <button type="button"
               onClick={() => setAdvancedFilters((prev) => ({ ...prev, mineOnly: !prev.mineOnly }))}
               className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
                 advancedFilters.mineOnly
@@ -1544,7 +1548,7 @@ export function Inbox() {
                 ))}
               </select>
               {selectedInboxViewId && (
-                <button
+                <button type="button"
                   onClick={() => {
                     deleteInboxView(selectedInboxViewId)
                     setSelectedInboxViewId('')
@@ -1562,7 +1566,7 @@ export function Inbox() {
                 placeholder={t.inbox.savedViewNamePlaceholder}
                 className="flex-1 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
               />
-              <button
+              <button type="button"
                 onClick={saveCurrentInboxView}
                 className="text-[10px] px-2 py-1 rounded-lg bg-brand-500/15 text-brand-300 border border-brand-500/30"
               >
@@ -1579,7 +1583,7 @@ export function Inbox() {
               ['opened', t.common.view],
               ['clicked', t.inbox.clicks],
             ] as const).map(([id, label]) => (
-              <button
+              <button type="button"
                 key={id}
                 onClick={() => setEmailQuickFilter(id)}
                 className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
@@ -1599,11 +1603,12 @@ export function Inbox() {
           {folder === 'inbox' && (
             <>
               {!connected && (
-                <div className="p-6 text-center">
-                  <Mail size={28} className="mx-auto text-slate-600 mb-3" />
-                  <p className="text-sm text-slate-500 mb-1">{t.settings.disconnected} Gmail</p>
-                  <p className="text-xs text-slate-600">{t.settings.connect} Gmail</p>
-                </div>
+                <PanelEmpty
+                  icon={<Mail size={28} />}
+                  primary={`${t.settings.disconnected} Gmail`}
+                  secondary={`${t.settings.connect} Gmail`}
+                  density="compact"
+                />
               )}
               {connected && threadsLoading && (
                 <div className="flex items-center justify-center py-8">
@@ -1611,7 +1616,7 @@ export function Inbox() {
                 </div>
               )}
               {connected && !threadsLoading && inboxThreadsVisible.length === 0 && (
-                <div className="p-6 text-center text-slate-600 text-sm">{t.inbox.noMessages}</div>
+                <PanelEmpty primary={t.inbox.noMessages} density="compact" />
               )}
               {connected && (
                 <div className="mx-3 mt-3 p-2 rounded-lg border border-white/8 bg-white/4 text-[11px] text-slate-300">
@@ -1648,7 +1653,7 @@ export function Inbox() {
               ))}
               {connected && !threadsLoading && !!threadsNextPageToken && (
                 <div className="p-3 border-t border-white/6">
-                  <button
+                  <button type="button"
                     onClick={handleLoadMoreThreads}
                     className="w-full px-3 py-2 rounded-lg text-xs bg-white/6 hover:bg-white/10 text-slate-300 transition-colors"
                   >
@@ -1663,10 +1668,7 @@ export function Inbox() {
           {folder === 'sent' && (
             <>
               {sentEmailsVisible.length === 0 && (
-                <div className="p-6 text-center">
-                  <Send size={28} className="mx-auto text-slate-600 mb-3" />
-                  <p className="text-sm text-slate-500">{t.inbox.noMessages}</p>
-                </div>
+                <PanelEmpty icon={<Send size={28} />} primary={t.inbox.noMessages} density="compact" />
               )}
               {sentEmailsVisible.map((email) => (
                 <LocalEmailItem
@@ -1691,10 +1693,7 @@ export function Inbox() {
           {folder === 'scheduled' && (
             <>
               {scheduledEmailsVisible.length === 0 && (
-                <div className="p-6 text-center">
-                  <Clock size={28} className="mx-auto text-slate-600 mb-3" />
-                  <p className="text-sm text-slate-500">{t.inbox.noMessages}</p>
-                </div>
+                <PanelEmpty icon={<Clock size={28} />} primary={t.inbox.noMessages} density="compact" />
               )}
               {scheduledEmailsVisible.map((email) => (
                 <LocalEmailItem
@@ -1719,10 +1718,7 @@ export function Inbox() {
           {folder === 'drafts' && (
             <>
               {draftEmailsVisible.length === 0 && (
-                <div className="p-6 text-center">
-                  <Mail size={28} className="mx-auto text-slate-600 mb-3" />
-                  <p className="text-sm text-slate-500">{t.inbox.noMessages}</p>
-                </div>
+                <PanelEmpty icon={<Mail size={28} />} primary={t.inbox.noMessages} density="compact" />
               )}
               {draftEmailsVisible.map((email) => (
                 <LocalEmailItem
@@ -1747,10 +1743,7 @@ export function Inbox() {
           {folder === 'snoozed' && (
             <>
               {snoozedEmailsVisible.length === 0 && (
-                <div className="p-6 text-center">
-                  <Clock size={28} className="mx-auto text-slate-600 mb-3" />
-                  <p className="text-sm text-slate-500">{t.inbox.noMessages}</p>
-                </div>
+                <PanelEmpty icon={<Clock size={28} />} primary={t.inbox.noMessages} density="compact" />
               )}
               {snoozedEmailsVisible.map((email) => (
                 <LocalEmailItem
@@ -1832,7 +1825,7 @@ export function Inbox() {
             {selectedEmail && folder !== 'snoozed' && (
               <div className="px-3 py-2 border-t border-white/6">
                 {folder === 'scheduled' && selectedEmail.undoableUntil && new Date(selectedEmail.undoableUntil).getTime() > Date.now() && (
-                  <button
+                  <button type="button"
                     onClick={() => {
                       deleteEmail(selectedEmail.id)
                       setSelectedEmailId(null)
@@ -1843,7 +1836,7 @@ export function Inbox() {
                     {t.email.undoSend}
                   </button>
                 )}
-                <button
+                <button type="button"
                   onClick={() => {
                     snoozeEmail(selectedEmail.id, new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())
                     toast.success(t.inbox.snoozed)

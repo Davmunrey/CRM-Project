@@ -64,6 +64,7 @@ export interface Translations {
     updatedAt: string
     noResults: string
     loading: string
+    skipToMain: string
     export: string
     import: string
     reset: string
@@ -853,6 +854,7 @@ export interface Translations {
     compose: string
     sent: string
     drafts: string
+    sendFailed: string
     snoozed: string
     noMessages: string
     markRead: string
@@ -926,6 +928,7 @@ export interface Translations {
     profile: string
     editProfile: string
     forgotPasswordTitle: string
+    resetPasswordPageTitle: string
     checkEmailTitle: string
     checkEmailSent: string
     checkEmailInstructions: string

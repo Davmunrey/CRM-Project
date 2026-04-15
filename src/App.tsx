@@ -38,6 +38,7 @@ import { GmailTokenProvider } from './contexts/GmailTokenContext'
 import { GmailCallback } from './pages/GmailCallback'
 import { useSettingsStore } from './store/settingsStore'
 import { applyTheme } from './lib/theme'
+import { isBootstrapFatalError } from './lib/supabase'
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
 const Reports = lazy(() => import('./pages/Reports').then((m) => ({ default: m.Reports })))
@@ -56,7 +57,7 @@ function ProtectedPage({ title, children, requiredPermission }: { title: string;
 function AppRoutes() {
   const t = useTranslations()
   useDataInit()
-  const lazyFallback = <div className="p-6 text-sm text-slate-400">{t.common.loading}</div>
+  const lazyFallback = <div className="crm-page text-sm text-slate-400">{t.common.loading}</div>
   return (
     <Routes>
       {/* Public routes */}
@@ -153,6 +154,21 @@ export default function App() {
       mediaQuery.removeEventListener('change', handleSystemThemeChange)
     }
   }, [])
+
+  if (isBootstrapFatalError) {
+    return (
+      <div className="min-h-screen bg-navy-950 text-slate-200 flex items-center justify-center p-8">
+        <div className="max-w-lg rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
+          <h1 className="text-xl font-semibold text-white mb-2">Configuration error</h1>
+          <p className="text-sm text-slate-300 mb-4">
+            This production build requires valid <code className="text-brand-300">VITE_SUPABASE_URL</code> and{' '}
+            <code className="text-brand-300">VITE_SUPABASE_ANON_KEY</code>. Demo/offline mode is disabled in production.
+          </p>
+          <p className="text-xs text-slate-500">Set environment variables and redeploy.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <BrowserRouter>

@@ -68,6 +68,20 @@
 }
 
 @layer components {
+  /*
+   * App shell: consistent horizontal rhythm + max width.
+   * Use .crm-page for scrollable content; .crm-page-full for h-full split views
+   * (inbox, kanban, calendar) where children manage vertical spacing.
+   */
+  .crm-page {
+    @apply w-full max-w-[1800px] mx-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8;
+  }
+
+  /* Full main region height; add flex flex-col or flex flex-row on the element */
+  .crm-page-full {
+    @apply w-full max-w-[1800px] mx-auto min-h-0 h-full px-4 sm:px-6 lg:px-8;
+  }
+
   /* ── Glass card ──────────────────────────────────────── */
   .glass {
     background: var(--bg-panel);

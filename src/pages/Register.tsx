@@ -1,12 +1,18 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Zap, User, Mail, Lock, Building2, Loader2, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
+import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supabase'
 
 export function Register() {
   const t = useTranslations()
+  const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
+  useEffect(() => {
+    const unsub = useSettingsStore.subscribe((s) => setBranding(s.settings.branding))
+    return unsub
+  }, [])
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -46,7 +52,7 @@ export function Register() {
         // Email confirmation required — show "check your email" screen
         setSuccess(true)
       }
-    } else {
+    } else if (isOfflineDemoMode) {
       setTimeout(() => {
         const result = register({ name, email, password, orgName })
         setLoading(false)
@@ -56,23 +62,33 @@ export function Register() {
           setError(result.error || t.auth.register)
         }
       }, 400)
+    } else {
+      setLoading(false)
+      setError('Supabase is not configured. Set VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY, or enable VITE_ALLOW_DEMO_MODE=true for local demo only.')
     }
   }
 
   return (
-    <div className="min-h-screen bg-navy-950 flex items-center justify-center p-4">
+    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 left-1/3 w-96 h-96 bg-emerald-600/8 rounded-full blur-3xl" />
+        <div className="auth-bg-blob absolute top-1/4 right-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
+        <div className="auth-bg-blob absolute bottom-1/3 left-1/3 w-96 h-96 bg-emerald-600/8 rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-14 h-14 rounded-2xl btn-gradient flex items-center justify-center mx-auto shadow-brand-sm mb-4">
-            <Zap size={24} className="text-white" />
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto shadow-brand-sm mb-4 overflow-hidden"
+            style={{ backgroundColor: branding.primaryColor }}
+          >
+            {branding.logoUrl ? (
+              <img src={branding.logoUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <Zap size={24} className="text-white" />
+            )}
           </div>
           <h1 className="text-2xl font-bold text-white">{t.auth.registerButton}</h1>
-          <p className="text-sm text-slate-500 mt-1">CRM Pro</p>
+          <p className="text-sm text-slate-500 mt-1">{branding.appName}</p>
           {isSupabaseConfigured && (
             <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               <ShieldCheck size={11} className="text-emerald-400" />

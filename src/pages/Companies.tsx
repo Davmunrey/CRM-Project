@@ -104,7 +104,7 @@ export function Companies() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="crm-page space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-72" />

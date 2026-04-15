@@ -45,7 +45,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   return (
-    <button
+    <button type="button"
       disabled={disabled || loading}
       className={`
         inline-flex items-center justify-center font-medium

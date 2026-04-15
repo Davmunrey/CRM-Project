@@ -5,6 +5,7 @@ import type { EmailTemplate } from '../types'
 import { toast } from '../store/toastStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { useTranslations } from '../i18n'
+import { PanelEmpty } from '../components/shared/PanelEmpty'
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -190,19 +191,19 @@ export function EmailTemplates() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="crm-page-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5">
+      <div className="flex items-center justify-between shrink-0 py-4 border-b border-white/6">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">{t.emailTemplates.title}</h1>
+          <h2 className="text-2xl font-bold text-white tracking-tight">{t.emailTemplates.title}</h2>
           <p className="text-sm text-slate-400 mt-1">{templates.length} {t.emailTemplates.usageCount.toLowerCase()}</p>
         </div>
       </div>
 
-      <div className="px-6 pb-4">
+      <div className="pb-4 pt-2 shrink-0">
         <div className="glass rounded-2xl p-4 border border-white/8">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-white">{t.emailTemplates.quickReplies}</h2>
+            <h3 className="text-sm font-semibold text-white">{t.emailTemplates.quickReplies}</h3>
             <span className="text-xs text-slate-500">{quickReplies.length}</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
@@ -219,7 +220,7 @@ export function EmailTemplates() {
               className="bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600"
             />
           </div>
-          <button
+          <button type="button"
             onClick={() => {
               if (!quickReplyTitle.trim() || !quickReplyBody.trim()) return
               addQuickReply({ title: quickReplyTitle.trim(), body: quickReplyBody })
@@ -244,7 +245,7 @@ export function EmailTemplates() {
                   onChange={(e) => updateQuickReply(reply.id, { body: e.target.value })}
                   className="flex-1 bg-transparent text-xs text-slate-400"
                 />
-                <button onClick={() => deleteQuickReply(reply.id)} className="text-red-400">
+                <button type="button" onClick={() => deleteQuickReply(reply.id)} className="text-red-400">
                   <Trash2 size={12} />
                 </button>
               </div>
@@ -254,15 +255,15 @@ export function EmailTemplates() {
       </div>
 
       {/* Body */}
-      <div className="flex-1 flex gap-6 px-6 pb-6 min-h-0">
+      <div className="flex-1 flex gap-6 pb-6 pt-2 min-h-0">
         {/* ─── Left Sidebar (1/3) ──────────────────────────────────────── */}
         <div className="w-1/3 flex flex-col glass rounded-2xl overflow-hidden">
           {/* Sidebar header */}
           <div className="p-4 border-b border-white/6">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-white">{t.emailTemplates.title}</h2>
+              <p className="text-lg font-semibold text-white">{t.emailTemplates.title}</p>
               <PermissionGate permission="templates:create">
-                <button
+                <button type="button"
                   onClick={handleNew}
                   className="btn-gradient text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5"
                 >
@@ -288,7 +289,7 @@ export function EmailTemplates() {
           {/* Category tabs */}
           <div className="px-2 py-2 border-b border-white/6 flex flex-col gap-0.5">
             {tabs.map((tab) => (
-              <button
+              <button type="button"
                 key={tab.key}
                 onClick={() => setCategoryFilter(tab.key)}
                 className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${
@@ -305,10 +306,7 @@ export function EmailTemplates() {
           {/* Template list */}
           <div className="flex-1 overflow-y-auto">
             {filtered.length === 0 ? (
-              <div className="p-6 text-center">
-                <FileText size={32} className="mx-auto text-slate-600 mb-2" />
-                <p className="text-sm text-slate-500">{t.common.noResults}</p>
-              </div>
+              <PanelEmpty icon={<FileText size={32} />} primary={t.common.noResults} density="compact" />
             ) : (
               filtered.map((tpl) => (
                 <div
@@ -358,21 +356,21 @@ export function EmailTemplates() {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
+                  <button type="button"
                     onClick={() => setPreview(!preview)}
                     className="bg-[#0d0e1a] border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
                   >
                     {preview ? <EyeOff size={13} /> : <Eye size={13} />}
                     {preview ? t.common.edit : t.common.view}
                   </button>
-                  <button
+                  <button type="button"
                     onClick={handleCopyBody}
                     className="bg-[#0d0e1a] border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
                   >
                     <Copy size={13} />
                     {t.common.export}
                   </button>
-                  <button
+                  <button type="button"
                     onClick={handleDuplicate}
                     className="bg-[#0d0e1a] border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
                   >
@@ -380,7 +378,7 @@ export function EmailTemplates() {
                     {t.common.create}
                   </button>
                   <PermissionGate permission="templates:delete">
-                    <button
+                    <button type="button"
                       onClick={handleDelete}
                       className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-red-500/20 transition-colors"
                     >
@@ -389,7 +387,7 @@ export function EmailTemplates() {
                     </button>
                   </PermissionGate>
                   <PermissionGate permission="templates:update">
-                    <button
+                    <button type="button"
                       onClick={handleSave}
                       className="btn-gradient text-white text-xs font-medium px-4 py-2 rounded-full"
                     >
@@ -509,7 +507,7 @@ export function EmailTemplates() {
                 <h3 className="text-white font-medium mb-1">{t.common.view} {t.emailTemplates.title.toLowerCase()}</h3>
                 <p className="text-sm text-slate-500">{t.common.or} {t.emailTemplates.newTemplate.toLowerCase()}</p>
                 <PermissionGate permission="templates:create">
-                  <button
+                  <button type="button"
                     onClick={handleNew}
                     className="btn-gradient text-white text-xs font-medium px-5 py-2.5 rounded-full mt-4 inline-flex items-center gap-1.5"
                   >

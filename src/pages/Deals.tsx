@@ -414,6 +414,7 @@ function QuoteBuilder({
           ))}
         </select>
         <button
+          type="button"
           onClick={addBlank}
           className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-slate-400 hover:text-white hover:bg-white/4 transition-colors whitespace-nowrap"
         >
@@ -492,7 +493,7 @@ function QuoteBuilder({
                   </td>
                   <td className="py-1.5 pl-1 text-right text-slate-200 font-medium">{fmt(item.total)}</td>
                   <td className="py-1.5 pl-1">
-                    <button onClick={() => removeItem(item.id)} className="text-slate-600 hover:text-red-400 transition-colors">×</button>
+                    <button type="button" onClick={() => removeItem(item.id)} className="text-slate-600 hover:text-red-400 transition-colors">×</button>
                   </td>
                 </tr>
               ))}
@@ -918,9 +919,9 @@ export function Deals() {
   }, [activities, selectedDeal])
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="crm-page-full flex flex-col">
       {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap p-4 border-b border-white/6">
+      <div className="flex items-center gap-3 flex-wrap py-3 shrink-0 border-b border-white/6">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-64" />
         <Button
           variant={showFilters ? 'secondary' : 'ghost'}
@@ -931,6 +932,7 @@ export function Deals() {
           {t.common.filters}
         </Button>
         <button
+          type="button"
           onClick={() => setMyDataOnly((v) => !v)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
             myDataOnly
@@ -944,6 +946,7 @@ export function Deals() {
         <div className="ml-auto flex items-center gap-2">
           <div className="flex rounded-lg border border-white/8 overflow-hidden">
             <button
+              type="button"
               onClick={() => setViewMode('kanban')}
               aria-label={t.deals.kanban}
               className={`p-1.5 ${viewMode === 'kanban' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-300'} transition-colors`}
@@ -951,6 +954,7 @@ export function Deals() {
               <KanbanSquare size={16} />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('list')}
               aria-label={t.deals.list}
               className={`p-1.5 ${viewMode === 'list' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-300'} transition-colors`}
@@ -967,13 +971,13 @@ export function Deals() {
       </div>
 
       {/* Smart Views bar */}
-      <div className="px-4 py-2 border-b border-white/6">
+      <div className="py-2 border-b border-white/6">
         <SmartViewBar entityType="deal" onFiltersChange={setViewFilters} />
       </div>
 
       {/* Filters */}
       {showFilters && (
-        <div className="flex gap-3 flex-wrap items-center px-4 py-3 border-b border-white/6 bg-navy-800/30">
+        <div className="flex gap-3 flex-wrap items-center py-3 border-b border-white/6 bg-navy-800/30">
           <Select
             options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
             placeholder={t.common.assignedTo}
@@ -999,7 +1003,7 @@ export function Deals() {
 
       {/* Kanban */}
       {viewMode === 'kanban' && (
-        <div className="flex-1 overflow-x-auto p-4">
+        <div className="flex-1 min-h-0 overflow-x-auto py-2">
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="flex gap-4 h-full min-h-[500px]" style={{ minWidth: `${sortedPipelineStages.length * 296}px` }}>
               {sortedPipelineStages.map((pipelineStage) => (
@@ -1018,7 +1022,7 @@ export function Deals() {
 
       {/* List view */}
       {viewMode === 'list' && (
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        <div className="flex-1 min-h-0 overflow-y-auto py-3 space-y-3">
           {/* Bulk actions bar */}
           {selectedDealIds.size > 0 && (
             <div className="glass border border-white/8 rounded-xl px-4 py-3 flex items-center gap-3 flex-wrap">
@@ -1161,7 +1165,7 @@ export function Deals() {
       {/* Deal detail */}
       <SlideOver isOpen={isDetailOpen && !isEditing} onClose={() => { setIsDetailOpen(false); setSelectedDeal(null) }} title={t.deals.editDeal} width="xl">
         {selectedDeal && (
-          <div className="p-6 space-y-6">
+          <div className="space-y-6">
             {/* Actions */}
             <div className="flex gap-2 flex-wrap">
               {selectedDeal.stage !== 'closed_won' && selectedDeal.stage !== 'closed_lost' && (

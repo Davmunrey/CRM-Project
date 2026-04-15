@@ -107,13 +107,14 @@ export function FollowUps() {
   ]
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="crm-page space-y-4">
       {/* Toolbar row */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">
           {stats.total} {t.nav.contacts.toLowerCase()} — {t.followUps.title}
         </p>
         <button
+          type="button"
           onClick={() => setRefreshKey((k) => k + 1)}
           className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/5 border border-white/8 transition-colors"
           title={t.common.reset}
@@ -170,6 +171,7 @@ export function FollowUps() {
         <Filter size={13} className="text-slate-600" />
         {filterButtons.map((btn) => (
           <button
+            type="button"
             key={btn.value}
             onClick={() => setUrgencyFilter(btn.value)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
@@ -232,6 +234,7 @@ export function FollowUps() {
                 {/* Quick Actions */}
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); handleCall(reminder) }}
                     className="p-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/8 border border-white/6 transition-colors"
                     title={`${t.common.add} ${t.activities.typeLabels.call}`}
@@ -239,6 +242,7 @@ export function FollowUps() {
                     <Phone size={13} />
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); handleEmail(reminder) }}
                     className="p-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/8 border border-white/6 transition-colors"
                     title={`${t.common.add} ${t.activities.typeLabels.email}`}
@@ -246,6 +250,7 @@ export function FollowUps() {
                     <Mail size={13} />
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); handleTask(reminder) }}
                     className="p-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/8 border border-white/6 transition-colors"
                     title={`${t.common.add} ${t.activities.typeLabels.task}`}

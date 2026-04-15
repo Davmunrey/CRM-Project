@@ -193,7 +193,7 @@ export function Dashboard() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="crm-page space-y-6">
       {/* ── Row 1: Quick actions ──────────────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
         <PermissionGate permission="contacts:create">
@@ -361,6 +361,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.recentActivities}</h2>
             <button
+              type="button"
               onClick={() => navigate('/activities')}
               className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
             >
@@ -396,6 +397,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.topDeals}</h2>
             <button
+              type="button"
               onClick={() => navigate('/deals')}
               className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
             >
@@ -441,6 +443,7 @@ export function Dashboard() {
               <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.latestNotifications}</h2>
             </div>
             <button
+              type="button"
               onClick={() => navigate('/notifications')}
               className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
             >

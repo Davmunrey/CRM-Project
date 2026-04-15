@@ -185,7 +185,7 @@ export function Contacts() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="crm-page space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-72" />
@@ -200,6 +200,7 @@ export function Contacts() {
         </Button>
 
         <button
+          type="button"
           onClick={() => setMyDataOnly((v) => !v)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
             myDataOnly
@@ -308,6 +309,7 @@ export function Contacts() {
           </Button>
           <div className="flex rounded-lg border border-white/12 overflow-hidden">
             <button
+              type="button"
               onClick={() => setViewMode('table')}
               aria-label={`${t.common.view} ${t.nav.contacts}`}
               className={`p-1.5 ${viewMode === 'table' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-300'} transition-colors`}
@@ -315,6 +317,7 @@ export function Contacts() {
               <LayoutList size={16} />
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('grid')}
               aria-label={`${t.common.view} grid`}
               className={`p-1.5 ${viewMode === 'grid' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-300'} transition-colors`}
@@ -385,6 +388,7 @@ export function Contacts() {
           <span className="text-xs text-slate-600">{t.common.filters}:</span>
           {(['score', 'name', 'lastContacted'] as const).map((opt) => (
             <button
+              type="button"
               key={opt}
               onClick={() => setSortBy(opt)}
               className={`text-xs px-2 py-0.5 rounded transition-colors ${
@@ -570,7 +574,7 @@ export function Contacts() {
           {/* Modal */}
           <div className="relative w-full max-w-3xl max-h-[80vh] overflow-y-auto glass border border-white/8 rounded-2xl shadow-2xl">
             {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-white/8 bg-[#0d0e1a] rounded-t-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-white/8 bg-[#0d0e1a] rounded-t-2xl">
               <div>
                 <h2 className="text-lg font-bold text-slate-200">{t.contacts.duplicatesFound}</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -578,17 +582,18 @@ export function Contacts() {
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setShowDuplicates(false)}
                 title={t.common.close}
                 aria-label={t.common.close}
-                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/6 transition-colors"
+                className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/6 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
               >
                 <X size={18} />
               </button>
             </div>
 
             {/* Groups */}
-            <div className="p-6 space-y-4">
+            <div className="px-5 py-5 space-y-4">
               {duplicates.map((group, groupIndex) => {
                 const matchLabel = group.matchType === 'email' ? t.common.email : group.matchType === 'name' ? t.common.name : t.common.phone
                 const matchColor =

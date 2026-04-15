@@ -153,7 +153,7 @@ export function Reports() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="crm-page space-y-6">
       {/* Date filter */}
       <div className="flex items-center gap-4 flex-wrap">
         <p className="text-sm font-medium text-slate-400">{t.reports.periodLabel}:</p>

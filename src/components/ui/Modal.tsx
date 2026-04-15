@@ -74,15 +74,16 @@ export function SlideOver({ isOpen, onClose, title, children, width = 'lg' }: Sl
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/6 flex-shrink-0">
             <h2 className="text-base font-semibold text-white">{title}</h2>
             <button
+              type="button"
               onClick={onClose}
               aria-label={t.common.close}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors"
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
             >
               <X size={16} />
             </button>
           </div>
           {/* Content */}
-          <div className="flex-1 overflow-y-auto">{children}</div>
+          <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
         </div>
       </div>
     </div>
@@ -162,9 +163,10 @@ export function Modal({ isOpen, onClose, title, children, size = 'lg' }: ModalPr
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/6 flex-shrink-0">
           <h2 className="text-base font-semibold text-white">{title}</h2>
           <button
+            type="button"
             onClick={onClose}
             aria-label={t.common.close}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors"
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           >
             <X size={16} />
           </button>
@@ -216,10 +218,10 @@ export function ConfirmDialog({
         <h3 className="text-base font-semibold text-white mb-2">{title}</h3>
         <p className="text-sm text-slate-400 mb-6">{message}</p>
         <div className="flex gap-3 justify-end">
-          <Button variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={onClose}>
             {t.common.cancel}
           </Button>
-          <Button variant={danger ? 'danger' : 'primary'} onClick={() => { onConfirm(); onClose() }}>
+          <Button type="button" variant={danger ? 'danger' : 'primary'} onClick={() => { onConfirm(); onClose() }}>
             {confirmText}
           </Button>
         </div>

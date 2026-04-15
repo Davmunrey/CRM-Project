@@ -77,7 +77,7 @@ export function ContactDetail() {
 
   if (!contact) {
     return (
-      <div className="p-6">
+      <div className="crm-page">
         <Button variant="ghost" leftIcon={<ArrowLeft size={16} />} onClick={() => navigate('/contacts')}>
           {t.common.back}
         </Button>
@@ -149,9 +149,9 @@ export function ContactDetail() {
   ]
 
   return (
-    <div className="p-6">
+    <div className="crm-page space-y-4">
       {/* Back */}
-      <Button variant="ghost" size="sm" leftIcon={<ArrowLeft size={14} />} onClick={() => navigate('/contacts')} className="mb-4">
+      <Button variant="ghost" size="sm" leftIcon={<ArrowLeft size={14} />} onClick={() => navigate('/contacts')}>
         {t.nav.contacts}
       </Button>
 
@@ -163,9 +163,9 @@ export function ContactDetail() {
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-100">
+                  <h2 className="text-2xl font-bold text-slate-100">
                     {contact.firstName} {contact.lastName}
-                  </h1>
+                  </h2>
                   <p className="text-slate-400 mt-0.5">{contact.jobTitle || t.contacts.jobTitle}</p>
                   {company && (
                     <Link
@@ -200,6 +200,7 @@ export function ContactDetail() {
       {/* Quick Actions Bar */}
       <div className="flex gap-2 mb-4 flex-wrap">
         <button
+          type="button"
           onClick={() => handleQuickActivity('call', `${t.activities.typeLabels.call} ${contact.firstName}`)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
         >
@@ -207,6 +208,7 @@ export function ContactDetail() {
           {t.activities.typeLabels.call}
         </button>
         <button
+          type="button"
           onClick={() => setIsEmailOpen(true)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
         >
@@ -214,6 +216,7 @@ export function ContactDetail() {
           {t.activities.typeLabels.email}
         </button>
         <button
+          type="button"
           onClick={() => handleQuickActivity('meeting', `${t.activities.typeLabels.meeting} ${contact.firstName}`)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
         >
@@ -221,6 +224,7 @@ export function ContactDetail() {
           {t.activities.typeLabels.meeting}
         </button>
         <button
+          type="button"
           onClick={() => handleQuickActivity('note', `${t.activities.typeLabels.note} ${contact.firstName}`)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
         >
@@ -233,6 +237,7 @@ export function ContactDetail() {
       <div className="flex gap-1 mb-4 border-b border-white/8">
         {tabs.map((tab) => (
           <button
+            type="button"
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
@@ -408,12 +413,14 @@ export function ContactDetail() {
                     {email.trackingEnabled && (
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <button
+                          type="button"
                           onClick={() => trackEmailOpen(email.id)}
                           className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-emerald-500/15 text-slate-500 hover:text-emerald-400 border border-white/8 transition-colors"
                         >
                           {t.common.view}
                         </button>
                         <button
+                          type="button"
                           onClick={() => trackEmailClick(email.id)}
                           className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-blue-500/15 text-slate-500 hover:text-blue-400 border border-white/8 transition-colors"
                         >
@@ -422,9 +429,27 @@ export function ContactDetail() {
                       </div>
                     )}
                   </div>
-                  <Badge variant={email.status === 'sent' ? 'emerald' : email.status === 'draft' ? 'yellow' : 'blue'}>
-                    {email.status === 'sent' ? t.inbox.sent : email.status === 'draft' ? t.inbox.drafts : t.inbox.title}
-                  </Badge>
+                  <span title={email.sendError}>
+                    <Badge
+                      variant={
+                        email.status === 'sent'
+                          ? 'emerald'
+                          : email.status === 'failed'
+                            ? 'red'
+                            : email.status === 'draft'
+                              ? 'yellow'
+                              : 'blue'
+                      }
+                    >
+                      {email.status === 'sent'
+                        ? t.inbox.sent
+                        : email.status === 'failed'
+                          ? t.inbox.sendFailed
+                          : email.status === 'draft'
+                            ? t.inbox.drafts
+                            : t.inbox.title}
+                    </Badge>
+                  </span>
                 </div>
               </div>
             ))

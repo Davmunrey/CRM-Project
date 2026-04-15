@@ -271,7 +271,7 @@ export interface AIConversation {
 
 // ─── Email ───────────────────────────────────────────────────────────────────
 
-export type EmailStatus = 'draft' | 'scheduled' | 'sent' | 'received' | 'snoozed'
+export type EmailStatus = 'draft' | 'scheduled' | 'sent' | 'received' | 'snoozed' | 'failed'
 
 export interface CRMEmail {
   id: string
@@ -294,6 +294,8 @@ export interface CRMEmail {
   body: string
   htmlBody?: string
   status: EmailStatus
+  /** Populated when status is failed (provider error or configuration). */
+  sendError?: string
   contactId?: string
   dealId?: string
   companyId?: string
@@ -405,7 +407,7 @@ export type AuditAction =
   | 'contact_created' | 'contact_updated' | 'contact_deleted'
   | 'deal_created' | 'deal_updated' | 'deal_deleted' | 'deal_stage_changed'
   | 'activity_created' | 'activity_completed' | 'activity_deleted'
-  | 'email_sent' | 'enrichment_completed'
+  | 'email_sent' | 'email_send_failed' | 'enrichment_completed'
   | 'company_created' | 'company_updated'
   | 'lead_score_recomputed'
   | 'user_role_changed' | 'permission_profile_updated'

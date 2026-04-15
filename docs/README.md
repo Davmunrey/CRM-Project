@@ -1,68 +1,38 @@
-# CRM Docs Index
+# CRM documentation
 
-Updated: 2026-04-14
+**Canonical index:** everything that used to live across ~28 topic files is now **7 master documents** (consolidated 2026-04-15). Edit these files directly; the one-time merge script is `scripts/build-doc-masters.mjs` (requires restoring legacy paths from git history if you ever re-run it).
 
-This file is the canonical index for all documentation under `docs/`. Use it as the starting point before opening feature-specific docs.
+## Document control
 
-## Quick Navigation
+- **Status:** Active  
+- **Owner:** Engineering  
+- **Last updated:** 2026-04-15  
+- **Canonical:** Yes  
 
-- Main project overview: `../README.md`
-- Supabase setup and SQL migration context: `../supabase/README.md`
-- This docs index: `docs/README.md`
+---
 
-## Document Control
+## Status snapshot
 
-- Status: Active
-- Owner: Engineering
-- Last updated: 2026-04-14
-- Canonical: Yes
+| Area | State | Master document |
+|------|--------|-------------------|
+| Security, compliance, SSO, Gitea, evidence | Baseline shipped Apr 2026 + external sign-offs per env | [`master-security-compliance.md`](./master-security-compliance.md) |
+| Email (deliverability, privacy, release, smoke) | Active runbooks | [`master-email-operations.md`](./master-email-operations.md) |
+| Lead maintenance, scoring backend, retention | Ops + telemetry + retention policy | [`master-lead-management.md`](./master-lead-management.md) |
+| Design system, theme, navigation, profiles | UI reference | [`master-design-ui.md`](./master-design-ui.md) |
+| Release, QA, go/no-go, production handoff | Gates and evidence | [`master-release-qa.md`](./master-release-qa.md) |
+| Implementation history (full handoff) | Part A + Part B merged | [`master-implementation-history.md`](./master-implementation-history.md) |
+| Roadmap 30/60/90 + execution backlog | Forward plan | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
 
-## Product planning
+---
 
-- Roadmap (30/60/90): `docs/pro-roadmap-30-60-90.md`
-- Execution backlog: `docs/pro-backlog.md`
-- Implementation history (cross-team handoff): `docs/implementation-history.md`
+## Other entry points
 
-## Release and QA
+- Main app overview: [`../README.md`](../README.md)  
+- Supabase SQL and migrations: [`../supabase/README.md`](../supabase/README.md)  
 
-- Sell-ready release checklist: `docs/sell-ready-release-checklist.md`
-- QA evidence template: `docs/qa-evidence-template.md`
-- QA evidence (sell-ready baseline): `docs/qa-evidence-sell-ready-baseline.md`
-- Go/No-Go decision record: `docs/go-no-go-sell-ready-baseline.md`
-- Production handoff checklist: `docs/production-handoff-checklist.md`
-
-## Operations and reliability
-
-- Lead maintenance backend contract: `docs/lead-score-maintenance-backend.md`
-- Lead maintenance runbook: `docs/lead-maintenance-runbook.md`
-- Lead maintenance ops dashboard: `docs/lead-maintenance-ops-dashboard.md`
-- Hardening matrix: `docs/hardening-matrix.md`
-- Compliance mapping: `docs/compliance-mapping.md`
-
-## Navigation and settings
-
-- Canonical runbook (settings tabs, sidebar prefs, i18n): `docs/navigation-settings-sidebar-runbook.md`
-- Archived pointer (kept for old links): `docs/navigation-i18n-release-handoff.md`
-
-## Email operations
-
-- Mailbox privacy runbook: `docs/email-mailbox-privacy-runbook.md`
-- Email release checklist: `docs/email-release-checklist.md`
-- Email smoke test (15 min): `docs/email-smoke-test-15min.md`
-
-## Auth, profile, and UX references
-
-- SSO backend handoff: `docs/auth-sso-backend-handoff.md`
-- User profile display-name consistency: `docs/user-profile-display-names.md`
-- Theme system reference: `docs/theme-system.md`
+---
 
 ## Conventions
 
-- Prefer one canonical document per feature area and link related artifacts instead of duplicating operational steps.
-- When scope changes, update both the feature doc and this index in the same PR.
-
-## Maintenance Checklist
-
-- Add new docs here the same day they are created.
-- Keep names action-oriented (`*-runbook.md`, `*-checklist.md`, `*-handoff.md`).
-- Archive or relabel outdated docs instead of silently replacing behavior.
+- Prefer editing **master-*.md**; avoid resurrecting one-off filenames unless a master grows unwieldy and you split with intent.  
+- Cross-links inside masters use `docs/master-….md#section-id` anchors.  

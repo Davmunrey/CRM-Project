@@ -8,6 +8,8 @@ const { mockResetPassword } = vi.hoisted(() => ({
 }))
 
 vi.mock('../../src/lib/supabase', () => ({
+  isOfflineDemoMode: false,
+  isBootstrapFatalError: false,
   supabase: { auth: { resetPasswordForEmail: mockResetPassword } },
   isSupabaseConfigured: true,
 }))

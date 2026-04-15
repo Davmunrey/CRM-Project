@@ -148,7 +148,7 @@ export function Notifications() {
   const olderNotifs = filtered.filter((n) => !n.createdAt.startsWith(todayStr))
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="crm-page space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -177,6 +177,7 @@ export function Notifications() {
       {/* Stats cards */}
       <div className="grid grid-cols-4 gap-3">
         <button
+          type="button"
           onClick={() => setFilter('all')}
           className={`glass rounded-xl p-3 text-left transition-all ${filter === 'all' ? 'ring-1 ring-brand-500/50 bg-brand-500/5' : 'hover:bg-white/4'}`}
         >
@@ -184,6 +185,7 @@ export function Notifications() {
           <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.common.total}</p>
         </button>
         <button
+          type="button"
           onClick={() => setFilter('unread')}
           className={`glass rounded-xl p-3 text-left transition-all ${filter === 'unread' ? 'ring-1 ring-brand-500/50 bg-brand-500/5' : 'hover:bg-white/4'}`}
         >
@@ -191,6 +193,7 @@ export function Notifications() {
           <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.common.selected}</p>
         </button>
         <button
+          type="button"
           onClick={() => setFilter('deal_won')}
           className={`glass rounded-xl p-3 text-left transition-all ${filter === 'deal_won' ? 'ring-1 ring-emerald-500/50 bg-emerald-500/5' : 'hover:bg-white/4'}`}
         >
@@ -198,6 +201,7 @@ export function Notifications() {
           <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.deals.won}</p>
         </button>
         <button
+          type="button"
           onClick={() => setFilter('activity_overdue')}
           className={`glass rounded-xl p-3 text-left transition-all ${filter === 'activity_overdue' ? 'ring-1 ring-amber-500/50 bg-amber-500/5' : 'hover:bg-white/4'}`}
         >
@@ -214,6 +218,7 @@ export function Notifications() {
           const label = f === 'all' ? t.common.all : f === 'unread' ? t.common.selected : cfg?.label || f
           return (
             <button
+              type="button"
               key={f}
               onClick={() => setFilter(f)}
               className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
@@ -227,7 +232,7 @@ export function Notifications() {
           )
         })}
         {filter !== 'all' && (
-          <button onClick={() => setFilter('all')} className="text-xs text-slate-500 hover:text-white ml-1 flex items-center gap-1">
+          <button type="button" onClick={() => setFilter('all')} className="text-xs text-slate-500 hover:text-white ml-1 flex items-center gap-1">
             <X size={12} /> {t.common.clear}
           </button>
         )}
@@ -338,6 +343,7 @@ function NotificationRow({
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
         {!notification.isRead && (
           <button
+            type="button"
             onClick={(e) => { e.stopPropagation(); onMarkRead(notification.id) }}
             className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors"
             title={markReadTitle}
@@ -346,6 +352,7 @@ function NotificationRow({
           </button>
         )}
         <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); onDelete(notification.id) }}
           className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
           title={deleteTitle}

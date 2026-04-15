@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { v4 as uuidv4 } from 'uuid'
 import type { AuthUser, Organization, Invitation, UserRole, Session } from '../types/auth'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supabase'
 import { useAuditStore } from './auditStore'
 import { toast } from './toastStore'
 
@@ -151,8 +151,8 @@ export const useAuthStore = create<AuthState>()(
       organizationId: null,
       tenantResolutionStatus: 'idle',
       tenantResolutionMessage: null,
-      users: isSupabaseConfigured ? [] : SEED_USERS,
-      passwords: isSupabaseConfigured ? {} : SEED_PASSWORDS,
+      users: isSupabaseConfigured ? [] : (isOfflineDemoMode ? SEED_USERS : []),
+      passwords: isSupabaseConfigured ? {} : (isOfflineDemoMode ? SEED_PASSWORDS : {}),
       invitations: [],
 
       setCurrentUser: (user) => {
@@ -624,28 +624,36 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'crm_auth',
-      partialize: (state) => ({
-        currentUser: state.currentUser,
-        session: state.session,
-        organization: state.organization,
+      partialize: (state) => {
+        const shared = {
+          currentUser: state.currentUser,
+          session: state.session,
+          organization: state.organization,
+          invitations: state.invitations,
+        }
         // supabaseSession intentionally excluded — Supabase SDK manages its own storage
         // under localStorage key sb-<ref>-auth-token. Including it here causes stale
         // copies to survive after supabase.auth.signOut().
         // organizationId intentionally excluded — derived state, always re-computed from JWT on load.
-        users: state.users,
-        passwords: state.passwords,
-        invitations: state.invitations,
-      }),
+        if (isSupabaseConfigured) {
+          return shared
+        }
+        return {
+          ...shared,
+          users: state.users,
+          passwords: state.passwords,
+        }
+      },
       merge: (persisted, current) => {
         const p = persisted as Partial<AuthState> | undefined
         if (!p) return current
-        // In Supabase mode, never re-inject demo users/passwords from fallback.
+        // In Supabase mode, never persist or restore local user/password maps (server is source of truth).
         if (isSupabaseConfigured) {
           return {
             ...current,
             ...p,
-            users: p.users ?? [],
-            passwords: p.passwords ?? {},
+            users: [],
+            passwords: {},
           }
         }
         // Mock mode fallback: ensure demo users exist if persisted storage is stale/empty.

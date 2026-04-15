@@ -124,14 +124,15 @@ export function Leads() {
   }, [filtered, fetchScoreInsight])
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="crm-page space-y-5">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-xl font-bold text-white">{t.leads.title}</h1>
+          <h2 className="text-xl font-bold text-white">{t.leads.title}</h2>
           <p className="text-sm text-slate-500">{filtered.length} {t.leads.title.toLowerCase()} • {hotCount} {t.leads.hot.toLowerCase()}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => { fetchLeads() }}
             className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-white/6 text-slate-300 hover:bg-white/10"
           >
@@ -139,6 +140,7 @@ export function Leads() {
             {t.leads.refresh}
           </button>
           <button
+            type="button"
             onClick={() => setShowQuickAdd((v) => !v)}
             className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg btn-gradient text-white"
           >
@@ -158,6 +160,7 @@ export function Leads() {
           </div>
           <div className="mt-3">
             <button
+              type="button"
               onClick={() => {
                 if (!firstName || !lastName || !email) return
                 addLead({
@@ -257,6 +260,7 @@ export function Leads() {
                 {stageLabels[lead.lifecycleStage]}
               </span>
               <button
+                type="button"
                 onClick={async () => {
                   const willExpand = expandedLeadId !== lead.id
                   setExpandedLeadId(willExpand ? lead.id : null)
@@ -268,6 +272,7 @@ export function Leads() {
                 {t.leads.timelineAction}
               </button>
               <button
+                type="button"
                 onClick={async () => {
                   const willExpand = expandedScoreLeadId !== lead.id
                   setExpandedScoreLeadId(willExpand ? lead.id : null)
@@ -285,6 +290,7 @@ export function Leads() {
               {lead.status !== 'converted' && (
                 <div className="inline-flex items-center gap-1">
                   <button
+                    type="button"
                     onClick={async () => {
                       const ok = await convertLeadToContact(lead.id)
                       if (ok) {
@@ -304,6 +310,7 @@ export function Leads() {
                 </div>
               )}
               <button
+                type="button"
                 onClick={() => {
                   deleteLead(lead.id)
                   toast.success(t.common.delete)

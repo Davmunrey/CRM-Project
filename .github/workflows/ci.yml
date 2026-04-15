@@ -27,3 +27,6 @@ jobs:
 
       - name: Run tests
         run: npx vitest run
+
+      - name: Dependency audit (critical+)
+        run: npm audit --audit-level=critical

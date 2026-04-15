@@ -146,7 +146,7 @@ export function TeamManagement() {
   })()
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="crm-page space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -162,6 +162,7 @@ export function TeamManagement() {
           <div className="flex items-center gap-2">
             {canInviteUsers && (
               <button
+                type="button"
                 onClick={() => setShowInvite(true)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0d0e1a] border border-white/10 text-slate-300 hover:text-white hover:bg-white/8 text-sm font-medium transition-all"
               >
@@ -171,6 +172,7 @@ export function TeamManagement() {
             )}
             {canCreateUsers && (
               <button
+                type="button"
                 onClick={() => setShowAddUser(true)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold"
               >
@@ -208,7 +210,7 @@ export function TeamManagement() {
               <UserPlus size={16} className="text-brand-400" />
               {t.team.newUser}
             </p>
-            <button onClick={() => setShowAddUser(false)} title={t.common.close} aria-label={t.common.close} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
+            <button type="button" onClick={() => setShowAddUser(false)} title={t.common.close} aria-label={t.common.close} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
               <X size={16} />
             </button>
           </div>
@@ -244,8 +246,8 @@ export function TeamManagement() {
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <button onClick={() => setShowAddUser(false)} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">{t.common.cancel}</button>
-            <button onClick={handleAddUser} className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold">
+            <button type="button" onClick={() => setShowAddUser(false)} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">{t.common.cancel}</button>
+            <button type="button" onClick={handleAddUser} className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold">
               <Check size={14} /> {t.team.createUser}
             </button>
           </div>
@@ -260,7 +262,7 @@ export function TeamManagement() {
               <Mail size={16} className="text-amber-400" />
               {t.team.inviteByEmail}
             </p>
-            <button onClick={() => setShowInvite(false)} title={t.common.close} aria-label={t.common.close} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
+            <button type="button" onClick={() => setShowInvite(false)} title={t.common.close} aria-label={t.common.close} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
               <X size={16} />
             </button>
           </div>
@@ -271,7 +273,7 @@ export function TeamManagement() {
               <option value="sales_rep">{t.team.roleLabels.sales_rep}</option>
               <option value="viewer">{t.team.roleLabels.viewer}</option>
             </select>
-            <button onClick={handleInvite} disabled={isInviting} className="px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">{isInviting ? t.common.loading : t.team.invite}</button>
+            <button type="button" onClick={handleInvite} disabled={isInviting} className="px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">{isInviting ? t.common.loading : t.team.invite}</button>
           </div>
           <p className="text-[10px] text-slate-600">{t.team.invitationValidity}</p>
         </div>
@@ -294,7 +296,7 @@ export function TeamManagement() {
                   </div>
                 </div>
                 {canManageUsers && (
-                  <button onClick={() => { cancelInvitation(inv.id); toast.success(t.team.toastInviteCancelled) }} className="text-xs text-slate-500 hover:text-red-400 transition-colors">
+                  <button type="button" onClick={() => { cancelInvitation(inv.id); toast.success(t.team.toastInviteCancelled) }} className="text-xs text-slate-500 hover:text-red-400 transition-colors">
                     {t.common.cancel}
                   </button>
                 )}
@@ -344,7 +346,7 @@ export function TeamManagement() {
                       <option value="sales_rep">{t.team.roleLabels.sales_rep}</option>
                       <option value="viewer">{t.team.roleLabels.viewer}</option>
                     </select>
-                    <button onClick={() => setEditingRole(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-slate-500 hover:text-white">
+                    <button type="button" onClick={() => setEditingRole(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-slate-500 hover:text-white">
                       <X size={12} />
                     </button>
                   </div>
@@ -367,6 +369,7 @@ export function TeamManagement() {
                 {canManageUsers && !isCurrentUser && (
                   <div className="relative">
                     <button
+                      type="button"
                       onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)}
                       title={t.common.actions}
                       aria-label={t.common.actions}
@@ -379,12 +382,14 @@ export function TeamManagement() {
                         <div className="fixed inset-0 z-40" onClick={() => setActiveMenu(null)} />
                         <div className="absolute right-0 top-full mt-1 w-48 glass rounded-xl border-white/10 shadow-float z-50 py-1 animate-scale-in">
                           <button
+                            type="button"
                             onClick={() => { setEditingRole(user.id); setActiveMenu(null) }}
                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
                           >
                             <ShieldAlert size={13} /> {t.team.changeRole}
                           </button>
                           <button
+                            type="button"
                             onClick={() => { setResetPwUser(user.id); setNewPw(''); setActiveMenu(null) }}
                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
                           >
@@ -392,6 +397,7 @@ export function TeamManagement() {
                           </button>
                           <div className="border-t border-white/6 my-1" />
                           <button
+                            type="button"
                             onClick={() => { deactivateUser(user.id); setActiveMenu(null); toast.success(t.team.toastUserDeactivated.replace('{name}', user.name)) }}
                             className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 transition-colors"
                           >
@@ -415,8 +421,8 @@ export function TeamManagement() {
                       className="flex-1 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none"
                       autoFocus
                     />
-                    <button onClick={() => handleResetPassword(user.id)} disabled={newPw.length < 6} className="px-3 py-1.5 rounded-lg btn-gradient text-xs text-white font-medium disabled:opacity-40">{t.common.save}</button>
-                    <button onClick={() => setResetPwUser(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-slate-500 hover:text-white"><X size={14} /></button>
+                    <button type="button" onClick={() => handleResetPassword(user.id)} disabled={newPw.length < 6} className="px-3 py-1.5 rounded-lg btn-gradient text-xs text-white font-medium disabled:opacity-40">{t.common.save}</button>
+                    <button type="button" onClick={() => setResetPwUser(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-slate-500 hover:text-white"><X size={14} /></button>
                   </div>
                 )}
               </div>
@@ -441,6 +447,7 @@ export function TeamManagement() {
                 </div>
                 {canManageUsers && (
                   <button
+                    type="button"
                     onClick={() => { reactivateUser(user.id); toast.success(t.team.toastUserReactivated.replace('{name}', user.name)) }}
                     className="text-xs text-brand-400 hover:text-brand-300 font-medium transition-colors"
                   >

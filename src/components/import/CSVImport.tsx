@@ -311,7 +311,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
               </span>
             )}
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
+          <button type="button" onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -322,7 +322,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
             <div className="space-y-4">
               <div className="flex gap-2 mb-4">
                 {(['contacts', 'companies'] as const).map((type) => (
-                  <button
+                  <button type="button"
                     key={type}
                     onClick={() => setEntityType(type)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
@@ -415,10 +415,10 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
               )}
 
               <div className="flex justify-between pt-2">
-                <button onClick={reset} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
+                <button type="button" onClick={reset} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
                   {t.csvImport.back}
                 </button>
-                <button
+                <button type="button"
                   onClick={() => setStep('preview')}
                   disabled={!requiredFieldsMapped}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold disabled:opacity-40"
@@ -468,10 +468,10 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
               </div>
 
               <div className="flex justify-between pt-2">
-                <button onClick={() => setStep('mapping')} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
+                <button type="button" onClick={() => setStep('mapping')} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
                   {t.csvImport.back}
                 </button>
-                <button
+                <button type="button"
                   onClick={handleImport}
                   className="flex items-center gap-2 px-5 py-2 rounded-xl btn-gradient text-white text-sm font-semibold"
                 >
@@ -505,10 +505,10 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                 </p>
               </div>
               <div className="flex justify-center gap-3 pt-2">
-                <button onClick={() => { reset(); }} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
+                <button type="button" onClick={() => { reset(); }} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
                   {t.csvImport.importMore}
                 </button>
-                <button onClick={onClose} className="px-5 py-2 rounded-xl btn-gradient text-white text-sm font-semibold">
+                <button type="button" onClick={onClose} className="px-5 py-2 rounded-xl btn-gradient text-white text-sm font-semibold">
                   {t.csvImport.close}
                 </button>
               </div>

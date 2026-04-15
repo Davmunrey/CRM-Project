@@ -9,6 +9,7 @@ import { useContactsStore } from '../store/contactsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { toast } from '../store/toastStore'
 import { useTranslations } from '../i18n'
+import { PanelEmpty } from '../components/shared/PanelEmpty'
 import { formatDateShort } from '../utils/formatters'
 import type {
   EmailSequence,
@@ -94,7 +95,7 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
             <h2 className="text-lg font-semibold text-white">{t.sequences.enrolled}</h2>
             <p className="text-xs text-slate-400 mt-0.5">{sequence.name}</p>
           </div>
-          <button
+          <button type="button"
             onClick={onClose}
             title={t.common.close}
             aria-label={t.common.close}
@@ -124,13 +125,13 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
           </div>
 
           <div className="flex items-center gap-3 pt-2">
-            <button
+            <button type="button"
               onClick={onClose}
               className="flex-1 bg-[#0d0e1a] border border-white/10 text-slate-300 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-white/10 transition-colors"
             >
               {t.common.cancel}
             </button>
-            <button
+            <button type="button"
               onClick={handleEnroll}
               disabled={!selectedContactId}
               className="flex-1 btn-gradient text-white text-sm font-medium px-4 py-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
@@ -238,7 +239,7 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
         )}
       </div>
 
-      <button
+      <button type="button"
         onClick={onRemove}
         title={t.common.delete}
         aria-label={t.common.delete}
@@ -320,7 +321,7 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
             <h2 className="text-lg font-semibold text-white">{t.sequences.newSequence}</h2>
             <p className="text-xs text-slate-400 mt-0.5">{t.common.description}</p>
           </div>
-          <button
+          <button type="button"
             onClick={handleClose}
             title={t.common.close}
             aria-label={t.common.close}
@@ -362,7 +363,7 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
               <label className="text-xs font-medium text-slate-400">
                 {t.sequences.steps} ({steps.length})
               </label>
-              <button
+              <button type="button"
                 onClick={addStep}
                 className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors"
               >
@@ -375,7 +376,7 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
               <div className="text-center py-8 border border-dashed border-white/10 rounded-xl">
                 <ListOrdered size={24} className="mx-auto text-slate-600 mb-2" />
                 <p className="text-sm text-slate-500">{t.common.noResults}</p>
-                <button
+                <button type="button"
                   onClick={addStep}
                   className="text-xs text-brand-400 hover:text-brand-300 mt-2 transition-colors"
                 >
@@ -400,13 +401,13 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-white/8 flex items-center gap-3">
-          <button
+          <button type="button"
             onClick={handleClose}
             className="flex-1 bg-[#0d0e1a] border border-white/10 text-slate-300 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-white/10 transition-colors"
           >
             {t.common.cancel}
           </button>
-          <button
+          <button type="button"
             onClick={handleSave}
             className="flex-1 btn-gradient text-white text-sm font-medium px-4 py-2.5 rounded-xl"
           >
@@ -466,7 +467,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
             </div>
           </div>
           <PermissionGate permission="sequences:enroll">
-            <button
+            <button type="button"
               onClick={onEnroll}
               className="btn-gradient text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5 flex-shrink-0"
             >
@@ -479,7 +480,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
         {/* Tabs */}
         <div className="flex gap-1 mt-4">
           {(['steps', 'enrolled'] as const).map((tabKey) => (
-            <button
+            <button type="button"
               key={tabKey}
               onClick={() => setTab(tabKey)}
               className={`text-xs font-medium px-4 py-2 rounded-full transition-colors ${
@@ -578,7 +579,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                 <Users size={32} className="mx-auto text-slate-600 mb-2" />
                 <p className="text-sm text-slate-500">{t.common.noResults}</p>
                 <PermissionGate permission="sequences:create">
-                  <button
+                  <button type="button"
                     onClick={onEnroll}
                     className="btn-gradient text-white text-xs font-medium px-4 py-2 rounded-full mt-4 inline-flex items-center gap-1.5"
                   >
@@ -624,7 +625,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                         <td className="py-3">
                           <div className="flex items-center gap-1.5">
                             {enr.status === 'active' && (
-                              <button
+                              <button type="button"
                                 onClick={() => { pauseEnrollment(enr.id); toast.success(t.sequences.paused) }}
                                 title={t.sequences.paused}
                                 className="p-1 text-slate-500 hover:text-amber-400 transition-colors"
@@ -633,7 +634,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                               </button>
                             )}
                             {enr.status === 'paused' && (
-                              <button
+                              <button type="button"
                                 onClick={() => { resumeEnrollment(enr.id); toast.success(t.sequences.active) }}
                                 title={t.sequences.active}
                                 className="p-1 text-slate-500 hover:text-emerald-400 transition-colors"
@@ -642,7 +643,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                               </button>
                             )}
                             {(enr.status === 'active' || enr.status === 'paused') && (
-                              <button
+                              <button type="button"
                                 onClick={() => { completeEnrollment(enr.id); toast.success(t.activities.completed) }}
                                 title={t.activities.completed}
                                 className="p-1 text-slate-500 hover:text-blue-400 transition-colors"
@@ -650,7 +651,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                                 <CheckCircle2 size={15} />
                               </button>
                             )}
-                            <button
+                            <button type="button"
                               onClick={() => { unenrollContact(enr.id); toast.success(t.common.remove) }}
                               title={t.common.remove}
                               className="p-1 text-slate-500 hover:text-red-400 transition-colors"
@@ -708,11 +709,11 @@ export function Sequences() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="crm-page-full flex flex-col min-h-0">
       {/* Page Header */}
-      <div className="flex items-center justify-between px-6 py-5">
+      <div className="flex items-center justify-between shrink-0 py-4 border-b border-white/6">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">{t.sequences.title}</h1>
+          <h2 className="text-2xl font-bold text-white tracking-tight">{t.sequences.title}</h2>
           <p className="text-sm text-slate-400 mt-1">
             {sequences.length} {t.sequences.title.toLowerCase()} · {enrollments.filter((e) => e.status === 'active').length} {t.sequences.active.toLowerCase()}
           </p>
@@ -720,13 +721,13 @@ export function Sequences() {
       </div>
 
       {/* Two-column layout */}
-      <div className="flex-1 flex gap-6 px-6 pb-6 min-h-0">
+      <div className="flex-1 flex gap-6 pb-6 pt-2 min-h-0">
         {/* ─── Left: Sequence List ─────────────────────────────────────── */}
         <div className="w-[280px] flex-shrink-0 glass rounded-2xl flex flex-col overflow-hidden">
           <div className="p-4 border-b border-white/6 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-white">{t.sequences.title}</h2>
             <PermissionGate permission="sequences:create">
-              <button
+              <button type="button"
                 onClick={() => setShowNewSlideOver(true)}
                 className="btn-gradient text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1"
               >
@@ -738,13 +739,13 @@ export function Sequences() {
 
           <div className="flex-1 overflow-y-auto">
             {sequences.length === 0 ? (
-              <div className="p-6 text-center">
-                <ListOrdered size={28} className="mx-auto text-slate-600 mb-2" />
-                <p className="text-xs text-slate-500">{t.common.noResults}</p>
+              <div className="flex flex-col items-center gap-1 pb-2">
+                <PanelEmpty icon={<ListOrdered size={28} />} primary={t.common.noResults} density="compact" />
                 <PermissionGate permission="sequences:create">
                   <button
+                    type="button"
                     onClick={() => setShowNewSlideOver(true)}
-                    className="text-xs text-brand-400 hover:text-brand-300 mt-2 block mx-auto transition-colors"
+                    className="text-xs text-brand-400 hover:text-brand-300 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 rounded-md px-2 py-1.5"
                   >
                     + {t.sequences.newSequence}
                   </button>
@@ -780,7 +781,7 @@ export function Sequences() {
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <PermissionGate permission="sequences:delete">
-                          <button
+                          <button type="button"
                             onClick={(e) => { e.stopPropagation(); handleDelete(seq.id) }}
                             title={t.common.delete}
                             aria-label={t.common.delete}
@@ -816,7 +817,7 @@ export function Sequences() {
                 <h3 className="text-white font-medium mb-1">{t.common.view} {t.sequences.title.toLowerCase()}</h3>
                 <p className="text-sm text-slate-500">{t.common.or} {t.sequences.newSequence.toLowerCase()}</p>
                 <PermissionGate permission="sequences:create">
-                  <button
+                  <button type="button"
                     onClick={() => setShowNewSlideOver(true)}
                     className="btn-gradient text-white text-xs font-medium px-5 py-2.5 rounded-full mt-4 inline-flex items-center gap-1.5"
                   >

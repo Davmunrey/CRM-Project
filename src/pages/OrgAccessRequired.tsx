@@ -9,7 +9,7 @@ export function OrgAccessRequired() {
   const logout = useAuthStore((s) => s.logout)
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md text-center">
         <div className="w-14 h-14 rounded-full bg-amber-500/15 flex items-center justify-center mx-auto mb-4">
           <MailWarning size={28} className="text-amber-400" />
@@ -26,8 +26,9 @@ export function OrgAccessRequired() {
             {t.acceptInvite.acceptCta}
           </Link>
           <button
+            type="button"
             onClick={() => { logout() }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/12 text-slate-300 hover:text-white hover:bg-white/6 text-sm transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-white/12 text-slate-300 hover:text-white hover:bg-white/6 text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           >
             <LogOut size={14} />
             {t.auth.logout}

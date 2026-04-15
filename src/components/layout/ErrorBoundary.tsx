@@ -37,11 +37,11 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-4">
             <AlertTriangle size={28} className="text-red-400" />
           </div>
-          <h2 className="text-lg font-semibold text-zinc-100 mb-2">{t.errorBoundary.title}</h2>
-          <p className="text-sm text-zinc-400 max-w-sm mb-6">
+          <h2 className="text-lg font-semibold text-slate-100 mb-2">{t.errorBoundary.title}</h2>
+          <p className="text-sm text-slate-400 max-w-sm mb-6">
             {this.state.error?.message ?? t.errorBoundary.fallbackDescription}
           </p>
-          <Button onClick={() => this.setState({ hasError: false })}>
+          <Button type="button" onClick={() => this.setState({ hasError: false })}>
             {t.errorBoundary.retry}
           </Button>
         </div>

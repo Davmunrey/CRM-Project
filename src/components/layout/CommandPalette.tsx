@@ -155,7 +155,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
               {items.map((item) => {
                 const idx = itemIndex++
                 return (
-                  <button
+                  <button type="button"
                     key={item.id}
                     onClick={item.action}
                     onMouseEnter={() => setSelected(idx)}

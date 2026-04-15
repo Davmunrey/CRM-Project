@@ -99,6 +99,7 @@ function CalendarView({
         {/* Month navigation */}
         <div className="flex items-center justify-between mb-4">
           <button
+            type="button"
             onClick={() => setCalendarMonth((m) => subMonths(m, 1))}
             title={`${t.common.previous} ${t.common.date}`}
             aria-label={`${t.common.previous} ${t.common.date}`}
@@ -110,6 +111,7 @@ function CalendarView({
             {format(calendarMonth, 'MMMM yyyy', { locale: dateLocale })}
           </h3>
           <button
+            type="button"
             onClick={() => setCalendarMonth((m) => addMonths(m, 1))}
             title={`${t.common.next} ${t.common.date}`}
             aria-label={`${t.common.next} ${t.common.date}`}
@@ -139,6 +141,7 @@ function CalendarView({
 
             return (
               <button
+                type="button"
                 key={key}
                 onClick={() => handleDayClick(day)}
                 className={`
@@ -305,7 +308,7 @@ export function Activities() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="crm-page space-y-4">
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         <div className="glass p-4">
@@ -359,6 +362,7 @@ export function Activities() {
         {/* View mode toggle */}
         <div className="flex items-center gap-0.5 glass rounded-lg p-0.5">
           <button
+            type="button"
             onClick={() => setViewMode('list')}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
               viewMode === 'list'
@@ -370,6 +374,7 @@ export function Activities() {
             {t.deals.list}
           </button>
           <button
+            type="button"
             onClick={() => setViewMode('calendar')}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
               viewMode === 'calendar'

@@ -1,6 +1,6 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-04-10
+**Analysis Date:** 2026-04-15
 
 ## Test Framework
 
@@ -21,10 +21,9 @@
 
 ## Current Baseline
 
-- Test files: 15
-- Total tests: 105 passing
-- CI includes test + typecheck (`vitest run` + `tsc --noEmit`)
-- Build remains part of release validation (`npm run build`)
+- Test suites live under `tests/**` (auth, stores, schemas, utils, components, pages). The exact file and case count changes over time; **`npm run test:run`** is the source of truth.
+- CI should include typecheck and tests (`tsc` / `npm run build` and `vitest run` per project workflow).
+- **`npm run build`** remains required for production validation.
 
 ## Test File Organization
 

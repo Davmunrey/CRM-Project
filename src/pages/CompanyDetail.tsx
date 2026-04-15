@@ -101,7 +101,7 @@ export function CompanyDetail() {
 
   if (!company) {
     return (
-      <div className="p-6">
+      <div className="crm-page">
         <Button variant="ghost" leftIcon={<ArrowLeft size={16} />} onClick={() => navigate('/companies')}>{t.common.back}</Button>
         <p className="text-slate-500 mt-4">{t.companies.emptyTitle}</p>
       </div>
@@ -131,7 +131,7 @@ export function CompanyDetail() {
   ]
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="crm-page space-y-4">
       <Button variant="ghost" size="sm" leftIcon={<ArrowLeft size={14} />} onClick={() => navigate('/companies')} className="mb-2">
         {t.nav.companies}
       </Button>
@@ -145,7 +145,7 @@ export function CompanyDetail() {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-white">{company.name}</h1>
+                <h2 className="text-2xl font-bold text-white">{company.name}</h2>
                 <p className="text-slate-400 mt-0.5">{COMPANY_INDUSTRY_LABELS[company.industry]}</p>
                 <div className="flex items-center gap-3 mt-2 text-sm text-slate-500">
                   {company.website && (
@@ -209,6 +209,7 @@ export function CompanyDetail() {
       <div className="flex gap-1 border-b border-white/6">
         {tabs.map((tab) => (
           <button
+            type="button"
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${

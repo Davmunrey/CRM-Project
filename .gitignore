@@ -27,3 +27,5 @@ supabase/.temp/
 # Local tooling / artifacts
 .claude/
 coverage/
+verify-smoke.txt
+.cursor-verify-tsc.txt

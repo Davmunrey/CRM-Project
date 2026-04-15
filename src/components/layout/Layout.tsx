@@ -52,10 +52,16 @@ export function Layout({ children, title }: LayoutProps) {
 
   return (
     <div className="flex h-screen bg-navy-900 overflow-hidden">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white/40"
+      >
+        {t.common.skipToMain}
+      </a>
       <Sidebar />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <Topbar title={title} onOpenCommandPalette={() => setCmdOpen(true)} />
-        <main className="flex-1 overflow-y-auto">
+        <main id="main-content" className="flex-1 min-h-0 overflow-y-auto scroll-smooth">
           {children}
         </main>
       </div>

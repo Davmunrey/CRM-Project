@@ -21,8 +21,12 @@ export const supabase = {
 }
 
 export const isSupabaseConfigured = true
+export const isOfflineDemoMode = false
+export const isBootstrapFatalError = false
 
 vi.mock('../src/lib/supabase', () => ({
   supabase,
   isSupabaseConfigured,
+  isOfflineDemoMode,
+  isBootstrapFatalError,
 }))

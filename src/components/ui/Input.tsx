@@ -30,11 +30,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className={`
               w-full rounded-xl border bg-[#0d0e1a] text-slate-100 text-sm
               placeholder:text-slate-600
-              focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/50
+              focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:border-brand-500/50
               hover:border-white/15
               disabled:opacity-50 disabled:cursor-not-allowed
               transition-all duration-150
-              ${error ? 'border-red-500/50 focus:ring-red-500/30' : 'border-white/8'}
+              ${error ? 'border-red-500/50 focus-visible:ring-red-500/30' : 'border-white/8'}
               ${leftIcon ? 'pl-9' : 'pl-3'}
               ${rightIcon ? 'pr-9' : 'pr-3'}
               py-2

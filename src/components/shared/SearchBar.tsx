@@ -22,8 +22,9 @@ export function SearchBar({ value, onChange, placeholder = 'Buscar...', classNam
         rightIcon={
           value ? (
             <button
+              type="button"
               onClick={() => onChange('')}
-              className="text-zinc-500 hover:text-zinc-300 pointer-events-auto"
+              className="text-slate-500 hover:text-slate-300 pointer-events-auto rounded-md p-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-500"
               aria-label={t.common.close}
             >
               <X size={14} />

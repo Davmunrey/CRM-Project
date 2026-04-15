@@ -54,6 +54,8 @@ const fromMock = vi.fn((table: string) => {
 
 vi.mock('../../src/lib/supabase', () => ({
   isSupabaseConfigured: true,
+  isOfflineDemoMode: false,
+  isBootstrapFatalError: false,
   supabase: { from: fromMock, rpc: rpcMock },
 }))
 

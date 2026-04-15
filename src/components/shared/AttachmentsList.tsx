@@ -88,7 +88,7 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
             {t.inbox.attachments} {attachments.length > 0 && `(${attachments.length})`}
           </p>
         </div>
-        <button
+        <button type="button"
           onClick={() => fileInputRef.current?.click()}
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#0d0e1a] border border-white/8 text-slate-400 hover:text-white hover:border-white/15 transition-colors"
         >
@@ -144,14 +144,14 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
                     </p>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
+                    <button type="button"
                       onClick={() => handleDownload(att)}
                       className="p-1 rounded text-slate-500 hover:text-brand-400 transition-colors"
                       title={t.common.export}
                     >
                       <Download size={13} />
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => handleDelete(att.id, att.fileName)}
                       className="p-1 rounded text-slate-500 hover:text-red-400 transition-colors"
                       title={t.common.delete}

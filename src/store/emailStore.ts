@@ -301,29 +301,45 @@ export const useEmailStore = create<EmailStore>()(
           }
         }
 
-        if (shouldUseProvider) {
-          const sent = await emailProvider.send({
-            to: params.to,
-            cc: params.cc,
-            bcc: params.bcc,
-            replyTo: params.replyTo,
-            attachments: (params.attachments ?? [])
-              .filter((a) => !!a.dataBase64)
-              .map((a) => ({
-                name: a.name,
-                mimeType: a.mimeType,
-                dataBase64: a.dataBase64 as string,
-              })),
-            subject: params.subject,
-            body: params.body,
-            htmlBody: trackedHtmlBody,
-            accessToken,
-          })
-          providerMessageId = sent.providerMessageId
-          if (sent.provider === 'gmail') {
-            gmailMessageId = sent.providerMessageId
-            gmailThreadId = sent.providerThreadId
+        let sendSucceeded = false
+        let sendError: string | undefined
+        const mockRuntime = !isSupabaseConfigured
+
+        try {
+          if (shouldUseProvider) {
+            const sent = await emailProvider.send({
+              to: params.to,
+              cc: params.cc,
+              bcc: params.bcc,
+              replyTo: params.replyTo,
+              attachments: (params.attachments ?? [])
+                .filter((a) => !!a.dataBase64)
+                .map((a) => ({
+                  name: a.name,
+                  mimeType: a.mimeType,
+                  dataBase64: a.dataBase64 as string,
+                })),
+              subject: params.subject,
+              body: params.body,
+              htmlBody: trackedHtmlBody,
+              accessToken,
+            })
+            providerMessageId = sent.providerMessageId
+            if (sent.provider === 'gmail') {
+              gmailMessageId = sent.providerMessageId
+              gmailThreadId = sent.providerThreadId
+            }
+            sendSucceeded = true
+          } else if (mockRuntime || params.allowLocalFallbackWhenNoToken) {
+            sendSucceeded = true
+          } else {
+            sendError =
+              providerName === 'gmail'
+                ? 'Connect Gmail to send email, or switch outbound provider in settings.'
+                : 'Outbound email provider is not available.'
           }
+        } catch (err) {
+          sendError = err instanceof Error ? err.message : 'Send failed'
         }
 
         const baseFrom = get().gmailAddress ?? 'me@crm.local'
@@ -346,7 +362,8 @@ export const useEmailStore = create<EmailStore>()(
           subject: params.subject,
           body: params.body,
           htmlBody: trackedHtmlBody,
-          status: 'sent',
+          status: sendSucceeded ? 'sent' : 'failed',
+          sendError: sendSucceeded ? undefined : sendError,
           isRead: true,
           contactId: params.contactId,
           dealId: params.dealId,
@@ -355,7 +372,7 @@ export const useEmailStore = create<EmailStore>()(
           providerMessageId,
           gmailMessageId,
           gmailThreadId,
-          sentAt: new Date().toISOString(),
+          sentAt: sendSucceeded ? new Date().toISOString() : undefined,
           trackingEnabled: params.trackingEnabled ?? false,
           createdAt: new Date().toISOString(),
         }
@@ -372,7 +389,17 @@ export const useEmailStore = create<EmailStore>()(
           }
         }
 
-        useAuditStore.getState().logAction('email_sent', 'email', email.id, params.subject, 'Email enviado')
+        if (sendSucceeded) {
+          useAuditStore.getState().logAction('email_sent', 'email', email.id, params.subject, 'Email enviado')
+        } else {
+          useAuditStore.getState().logAction(
+            'email_send_failed',
+            'email',
+            email.id,
+            params.subject,
+            sendError ?? 'Unknown error',
+          )
+        }
         return email
       },
 
@@ -535,34 +562,51 @@ export const useEmailStore = create<EmailStore>()(
               }
             }
             const shouldUseProvider = providerName !== 'gmail' || get().isGmailConnected()
-            if (shouldUseProvider) {
-              const sent = await emailProvider.send({
-                to: job.payload.to,
-                cc: job.payload.cc,
-                bcc: job.payload.bcc,
-                replyTo: job.payload.replyTo,
-                attachments: (job.payload.attachments ?? [])
-                  .filter((a) => !!a.dataBase64)
-                  .map((a) => ({
-                    name: a.name,
-                    mimeType: a.mimeType,
-                    dataBase64: a.dataBase64 as string,
-                  })),
-                subject: job.payload.subject,
-                body: job.payload.body,
-                htmlBody: trackedHtmlBody,
-                accessToken,
-              })
-              providerMessageId = sent.providerMessageId
-              if (sent.provider === 'gmail') {
-                gmailMessageId = sent.providerMessageId
-                gmailThreadId = sent.providerThreadId
+            const mockRuntime = !isSupabaseConfigured
+            let sendSucceeded = false
+            let sendError: string | undefined
+
+            try {
+              if (shouldUseProvider) {
+                const sent = await emailProvider.send({
+                  to: job.payload.to,
+                  cc: job.payload.cc,
+                  bcc: job.payload.bcc,
+                  replyTo: job.payload.replyTo,
+                  attachments: (job.payload.attachments ?? [])
+                    .filter((a) => !!a.dataBase64)
+                    .map((a) => ({
+                      name: a.name,
+                      mimeType: a.mimeType,
+                      dataBase64: a.dataBase64 as string,
+                    })),
+                  subject: job.payload.subject,
+                  body: job.payload.body,
+                  htmlBody: trackedHtmlBody,
+                  accessToken,
+                })
+                providerMessageId = sent.providerMessageId
+                if (sent.provider === 'gmail') {
+                  gmailMessageId = sent.providerMessageId
+                  gmailThreadId = sent.providerThreadId
+                }
+                sendSucceeded = true
+              } else if (mockRuntime) {
+                sendSucceeded = true
+              } else {
+                sendError =
+                  providerName === 'gmail'
+                    ? 'Connect Gmail to send scheduled email.'
+                    : 'Outbound email provider is not available.'
               }
+            } catch (err) {
+              sendError = err instanceof Error ? err.message : 'Send failed'
             }
 
             get().updateEmail(job.emailId, {
-              status: 'sent',
-              sentAt: new Date().toISOString(),
+              status: sendSucceeded ? 'sent' : 'failed',
+              sendError: sendSucceeded ? undefined : sendError,
+              sentAt: sendSucceeded ? new Date().toISOString() : undefined,
               scheduledFor: undefined,
               provider: providerName,
               providerMessageId,

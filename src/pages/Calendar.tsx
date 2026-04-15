@@ -207,7 +207,7 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
           <h3 className="text-sm font-semibold text-white capitalize">{dayLabel}</h3>
           <p className="text-xs text-slate-500 mt-0.5">{activities.length} {t.nav.activities.toLowerCase()}</p>
         </div>
-        <button
+        <button type="button"
           onClick={onClose}
           aria-label={t.common.close}
           title={t.common.close}
@@ -276,7 +276,7 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
                   {/* Quick actions */}
                   <div className="flex items-center gap-2 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     {activity.status === 'pending' && (
-                      <button
+                      <button type="button"
                         onClick={() => handleComplete(activity.id)}
                         className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition-colors"
                       >
@@ -284,7 +284,7 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
                         {t.activities.completed}
                       </button>
                     )}
-                    <button
+                    <button type="button"
                       onClick={() => handleDelete(activity.id)}
                       className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-rose-500/15 text-rose-400 hover:bg-rose-500/25 transition-colors ml-auto"
                     >
@@ -301,7 +301,7 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
 
       {/* Footer */}
       <div className="px-5 py-4 border-t border-white/6">
-        <button
+        <button type="button"
           onClick={onNewActivity}
           className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500/15 text-brand-400 border border-brand-500/20 hover:bg-brand-500/25 transition-colors text-sm font-medium"
         >
@@ -392,7 +392,7 @@ function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, o
           }
 
           return (
-            <button
+            <button type="button"
               key={key}
               onClick={() => onDayClick(day)}
               className={[
@@ -739,17 +739,17 @@ export function Calendar() {
   const showPanel = selectedDay !== null
 
   return (
-    <div className="flex flex-col h-full min-h-0 gap-4 p-6">
+    <div className="crm-page-full flex flex-col gap-4 py-4 sm:py-5">
       {/* ── Page Header ── */}
       <div className="flex items-center justify-between shrink-0">
-        <h1 className="text-xl font-semibold text-white">{t.calendar.title}</h1>
+        <h2 className="text-xl font-semibold text-white">{t.calendar.title}</h2>
       </div>
 
       {/* ── Toolbar ── */}
       <div className="glass rounded-2xl px-4 py-3 flex flex-wrap items-center gap-3 shrink-0">
         {/* View toggle */}
         <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5 border border-white/6">
-          <button
+          <button type="button"
             onClick={() => setViewMode('month')}
             className={[
               'px-3 py-1 rounded-md text-xs font-medium transition-all',
@@ -760,7 +760,7 @@ export function Calendar() {
           >
             {t.calendar.month}
           </button>
-          <button
+          <button type="button"
             onClick={() => setViewMode('week')}
             className={[
               'px-3 py-1 rounded-md text-xs font-medium transition-all',
@@ -775,7 +775,7 @@ export function Calendar() {
 
         {/* Navigation */}
         <div className="flex items-center gap-1">
-          <button
+          <button type="button"
             onClick={goBack}
             aria-label={`${t.common.previous} ${t.common.date}`}
             title={`${t.common.previous} ${t.common.date}`}
@@ -783,7 +783,7 @@ export function Calendar() {
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <button
+          <button type="button"
             onClick={goToToday}
             className={[
               'px-3 py-1 rounded-lg text-xs font-medium transition-colors border',
@@ -794,7 +794,7 @@ export function Calendar() {
           >
             {t.calendar.today}
           </button>
-          <button
+          <button type="button"
             onClick={goForward}
             aria-label={`${t.common.next} ${t.common.date}`}
             title={`${t.common.next} ${t.common.date}`}
@@ -816,7 +816,7 @@ export function Calendar() {
             const active = activeTypes.has(type)
             const colors = TYPE_COLORS[type]
             return (
-              <button
+              <button type="button"
                 key={type}
                 onClick={() => toggleType(type)}
                 className={[

@@ -91,7 +91,7 @@ function ActionEditor({
             <option key={k} value={k}>{actionLabels[k]}</option>
           ))}
         </select>
-        <button onClick={onRemove} title={t.common.delete} aria-label={t.common.delete} className="p-1.5 text-slate-500 hover:text-red-400 transition-colors">
+        <button type="button" onClick={onRemove} title={t.common.delete} aria-label={t.common.delete} className="p-1.5 text-slate-500 hover:text-red-400 transition-colors">
           <X size={13} />
         </button>
       </div>
@@ -210,7 +210,7 @@ function RuleModal({
           <h2 className="text-sm font-semibold text-white">
             {initial.name ? t.common.edit : t.automations.newRule}
           </h2>
-          <button onClick={onClose} title={t.common.close} aria-label={t.common.close} className="p-1.5 text-slate-500 hover:text-white transition-colors">
+          <button type="button" onClick={onClose} title={t.common.close} aria-label={t.common.close} className="p-1.5 text-slate-500 hover:text-white transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -298,7 +298,7 @@ function RuleModal({
                   onRemove={() => removeAction(i)}
                 />
               ))}
-              <button
+              <button type="button"
                 onClick={addAction}
                 className="w-full py-2 rounded-xl border border-dashed border-white/10 text-xs text-slate-500 hover:text-slate-300 hover:border-white/20 transition-colors"
               >
@@ -310,13 +310,13 @@ function RuleModal({
 
         {/* Footer */}
         <div className="flex gap-2 px-5 py-4 border-t border-white/6">
-          <button
+          <button type="button"
             onClick={onClose}
             className="flex-1 py-2 rounded-xl border border-white/10 text-xs text-slate-400 hover:text-white hover:bg-white/4 transition-colors"
           >
             {t.common.cancel}
           </button>
-          <button
+          <button type="button"
             onClick={handleSave}
             className="flex-1 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs text-white font-medium transition-colors"
           >
@@ -396,7 +396,7 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
 
             {/* Controls */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
-                <button
+                <button type="button"
                 onClick={() => setExpanded((v) => !v)}
                   title={expanded ? t.common.close : t.common.view}
                   aria-label={expanded ? t.common.close : t.common.view}
@@ -405,7 +405,7 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                 {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
               </button>
               <PermissionGate permission="automations:update">
-                <button
+                <button type="button"
                   onClick={() => setEditing(true)}
                   className="p-1.5 text-slate-500 hover:text-slate-200 transition-colors text-xs"
                 >
@@ -413,7 +413,7 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                 </button>
               </PermissionGate>
               <PermissionGate permission="automations:update">
-                <button
+                <button type="button"
                   onClick={() => toggleRule(rule.id)}
                   className="flex-shrink-0"
                   title={rule.isActive ? t.common.disabled : t.common.enabled}
@@ -425,7 +425,7 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                 </button>
               </PermissionGate>
               <PermissionGate permission="automations:delete">
-                <button
+                <button type="button"
                   onClick={() => { deleteRule(rule.id); toast.success(t.common.delete) }}
                   title={t.common.delete}
                   aria-label={t.common.delete}
@@ -489,7 +489,7 @@ export function Automations() {
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="crm-page space-y-5">
       {showNew && (
         <RuleModal initial={blankRule()} onSave={handleSave} onClose={() => setShowNew(false)} />
       )}
@@ -500,7 +500,7 @@ export function Automations() {
           {active} {t.sequences.active.toLowerCase()} · {totalExecutions} {t.automations.executionCount.toLowerCase()}
         </p>
         <PermissionGate permission="automations:create">
-          <button
+          <button type="button"
             onClick={() => setShowNew(true)}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs text-white font-medium transition-colors"
           >

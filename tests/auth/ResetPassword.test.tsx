@@ -11,6 +11,8 @@ const { mockUpdateUser, mockNavigate } = vi.hoisted(() => ({
 vi.mock('../../src/lib/supabase', () => ({
   supabase: { auth: { updateUser: mockUpdateUser } },
   isSupabaseConfigured: true,
+  isOfflineDemoMode: false,
+  isBootstrapFatalError: false,
 }))
 
 vi.mock('react-router-dom', async (importOriginal) => {

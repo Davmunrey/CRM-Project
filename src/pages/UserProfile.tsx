@@ -63,7 +63,7 @@ export function UserProfile() {
     'crm-themed-input py-2.5 text-sm rounded-xl border'
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="crm-page space-y-6">
       {/* Profile header */}
       <div className="glass rounded-2xl shadow-float border-white/10 p-8 text-center">
         <div className="relative inline-block mb-4">

@@ -1,14 +1,30 @@
-# CRM Pro Implementation History
+# Implementation history (master)
 
-This document consolidates the major implementation work completed in this repository so far.
-It is intended as the canonical handoff artifact for product, frontend, backend, and operations teams.
+> Consolidated **2026-04-15**. Full chronological handoff (foundation Part A + delivery Part B).
 
-## Document Control
+**Replaces:** implementation-history-sections-01-12, implementation-history (Part B).
 
-- Status: Active
-- Owner: Engineering
-- Last updated: 2026-04-14
-- Canonical: Yes
+## Table of contents
+
+- [Part A — Sections 1–12 (foundation)](#implementation-history-sections-01-12)
+- [Part B — Sections 13–21 (recent waves)](#implementation-history)
+
+---
+
+
+<a id="implementation-history-sections-01-12"></a>
+## Part A — Sections 1–12 (foundation)
+
+Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–21).
+
+## Document control
+
+- **Status:** Active  
+- **Owner:** Engineering  
+- **Last updated:** 2026-04-15  
+- **Canonical:** Yes (together with Part B)  
+
+This file is an **archive-stable** slice: it should change rarely. Prefer editing Part B for ongoing delivery narrative.
 
 ## 1) Platform and foundation
 
@@ -37,7 +53,7 @@ It is intended as the canonical handoff artifact for product, frontend, backend,
 
 ## 3) Authentication and onboarding
 
-- **User profile persistence (Supabase):** saving name, job title, phone, and avatar from the profile screen now calls `supabase.auth.updateUser` so `user_metadata` (e.g. `full_name`) survives logout/login. See **`docs/user-profile-display-names.md`** for full register, manual test checklist, and remaining gaps (CRM rows that still store display names as plain text, admin-editing other users, etc.).
+- **User profile persistence (Supabase):** saving name, job title, phone, and avatar from the profile screen now calls `supabase.auth.updateUser` so `user_metadata` (e.g. `full_name`) survives logout/login. See **[User profile display names](./master-design-ui.md#user-profile-display-names)** for full register, manual test checklist, and remaining gaps (CRM rows that still store display names as plain text, admin-editing other users, etc.).
 - Supabase auth session bootstrap integrated into app startup.
 - Login/register/forgot/reset flows connected to Supabase.
 - Protected route gate implemented with tenant-resolution routing:
@@ -145,7 +161,7 @@ It is intended as the canonical handoff artifact for product, frontend, backend,
 - Optional backend-driven SAML domain discovery contract added:
   - `VITE_AUTH_SAML_DISCOVERY_ENDPOINT`
   - `POST { email } -> { domain }`.
-- Backend handoff doc added at `docs/auth-sso-backend-handoff.md`.
+- Backend handoff doc added at [Auth / SSO backend handoff](./master-security-compliance.md#auth-sso-backend-handoff).
 
 ## 11) Test and regression coverage additions
 
@@ -165,12 +181,37 @@ It is intended as the canonical handoff artifact for product, frontend, backend,
   - custom SMTP setup
   - temporary user creation through admin channels for QA.
 
+---
+
+
+<a id="implementation-history"></a>
+## Part B — Sections 13–21 (recent waves)
+
+**Part B** is the active delivery narrative (sections 13–21). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
+
+## Document control
+
+- **Status:** Active  
+- **Owner:** Engineering  
+- **Last updated:** 2026-04-15  
+- **Canonical:** Yes (Part A + Part B together)  
+
+## Contents
+
+| Part | Location | Sections |
+|------|----------|----------|
+| **A** | [Anchor `#implementation-history-sections-01-12`](#implementation-history-sections-01-12) | 1–12: platform, tenancy, auth, org setup, security, email tracking, **leads**, i18n, UI, SSO, tests, ops notes |
+| **B** | *below in this section* | 13–21 |
+
+Cross-references elsewhere in the repo to **“section 19”**, **“section 21”**, etc. mean **Part B** in this file. References to **section 7** (leads baseline) mean **Part A** above.
+
 ## 13) Current status summary
 
 - CRM is multi-tenant, auth-protected, localized, and production-build stable.
 - Leads + tracking + conversion baseline is implemented and functioning.
 - SSO UI and backend handoff contract are in place.
-- Remaining PRO work is primarily advanced workflow automation, analytics depth,
+- **Workflow Automations v1** and **Lead Scoring v2** refinements are shipped (see section 21).
+- Remaining PRO work is primarily **manager analytics**, **onboarding depth**, **API/webhooks**,
   enterprise governance, and integration breadth.
 
 ## 14) Lead maintenance observability and operations
@@ -240,14 +281,10 @@ It is intended as the canonical handoff artifact for product, frontend, backend,
   - role-based visibility
   - submenu-ready custom items.
 - Supabase persistence path introduced via `navigation_preferences` (organization + user scoped).
-- Canonical technical/deployment runbook:
-  - `docs/navigation-settings-sidebar-runbook.md`.
-- Support/ops runbook added:
-  - `docs/email-mailbox-privacy-runbook.md`.
-- Email release gate checklist added:
-  - `docs/email-release-checklist.md`.
-- Guided smoke validation script added:
-  - `docs/email-smoke-test-15min.md` for QA/support reproducible verification.
+- Canonical technical/deployment runbook: [Navigation + Settings sidebar](./master-design-ui.md#navigation-settings-sidebar-runbook).
+- Support/ops runbook added: [Email mailbox privacy](./master-email-operations.md#email-mailbox-privacy-runbook).
+- Email release gate checklist added: [Email release checklist](./master-email-operations.md#email-release-checklist).
+- Guided smoke validation script added: [Email 15-minute smoke test](./master-email-operations.md#email-smoke-test-15min) for QA/support reproducible verification.
 
 ## 17) Email Ola 3 (productivity + reliability visibility)
 
@@ -264,3 +301,57 @@ It is intended as the canonical handoff artifact for product, frontend, backend,
   - `quick_replies` table (user + org scoped)
   - composer consumes dynamic quick replies
   - template surface supports quick reply CRUD.
+
+## 18) UI shell, design consistency, and documentation (April 2026)
+
+- **Page shells:** Global utilities `.crm-page` and `.crm-page-full` in `src/index.css` standardize max width (~1800px) and responsive padding for list/settings pages vs full-height views (Deals, Inbox, Calendar, Sequences, Email templates).
+- **Layout:** `main` uses `id="main-content"`, `min-h-0`, and smooth scrolling; skip-to-content link with i18n key `common.skipToMain`.
+- **Shared UI:** `PanelEmpty` component for panel/sidebar empty states; `EmptyState` retained for larger areas; `SlideOver` / `Modal` body padding unified (`px-6 py-5`).
+- **Auth surfaces:** Forgot/reset/register and org/invite flows aligned with `auth-page-bg`, optional blobs, and **branding** from `useSettingsStore` where applicable; Accept invite states use `glass` + primary actions via `Button` / `btn-gradient`.
+- **Style cleanup:** Broader migration from `zinc-*` to `slate-*` / theme-aligned surfaces in shared components (e.g. `ActivityItem`, `SkeletonRow`, `Badge`, `SearchBar`, `ErrorBoundary`, `Avatar`); `focus-visible` rings on `Input`, `Select`, `Textarea`, and key chrome buttons.
+- **Headings:** Calendar and templates/sequences list screens avoid duplicate `h1` where the Topbar already names the route.
+- **Canonical doc:** [Design system and layout](./master-design-ui.md#design-system-and-layout) (indexed from [README](./README.md)).
+
+## 19) Sell-ready external + internal hardening (April 2026)
+
+- **Outbound email (Edge):** `resend-send-email` hardened with payload limits, MIME allowlist, attachment size caps, optional sender/reply domain policy, per-user (and optional per-org) rate limits, structured logs, and post-success audit where service role is available.
+- **Production auth:** Fail-closed when Supabase env is missing in production (`isBootstrapFatalError`); offline demo only with explicit `VITE_ALLOW_DEMO_MODE` in non-production builds (`isOfflineDemoMode`).
+- **Auth persistence:** Zustand `partialize` / `merge` no longer restore demo `users` / `passwords` maps when Supabase is configured.
+- **Email truthfulness:** Outbound messages transition to `sent` only after provider success; failures use `failed` + `sendError` and `email_send_failed` audit where applicable.
+- **Tests / CI:** Vitest timeouts and deterministic worker policy in `vite.config.ts`; `npm audit --audit-level=critical` in `.gitea/workflows/ci.yml` and `.github/workflows/ci.yml`.
+- **Documentation:** [Sell-ready evidence index](./master-security-compliance.md#sell-ready-security-evidence-index), [Supabase external hardening checklist](./master-security-compliance.md#supabase-external-hardening-checklist), [Email deliverability](./master-email-operations.md#email-deliverability-resend), [DSAR playbook](./master-security-compliance.md#dsar-playbook), [Data retention runbook](./master-lead-management.md#data-retention-runbook); [Compliance mapping](./master-security-compliance.md#compliance-mapping) and [Gitea operations](./master-security-compliance.md#gitea-operations) updated for evidence and branch-protection notes.
+
+## 20) Sell-ready product baseline — archived two-week sprint (Q2 2026)
+
+The following sprint targeted the first **sell-ready product** baseline (heterogeneous tenants). It is **complete**; see [Go / No-Go — sell-ready baseline](./master-release-qa.md#go-no-go-sell-ready-baseline). This section preserves acceptance detail; active backlog is [Pro backlog](./master-roadmap-backlog.md#pro-backlog).
+
+### Goal
+
+Ship the first sell-ready baseline for heterogeneous companies with measurable acceptance criteria.
+
+### Sprint 1 (Week 1) — P0 foundation
+
+- **Story: Remove hardcoded UI text in critical workflows** — Done. Scope: contacts, companies, deals, activities, auth, settings primary forms/modals. Acceptance: EN/ES/PT i18n keys, no mixed-language UI, regression on create/edit flows.
+- **Story: Locale-aware formatting baseline** — Done. Scope: date/time, currency, number helpers. Acceptance: `en/es/pt` rendering, currency respects org + locale, formatter unit tests.
+- **Story: Pipeline naming configurability (MVP)** — Done. Scope: per-tenant labels for key nouns/stages. Acceptance: rename from Settings, labels in list/board/detail, safe fallback.
+
+### Sprint 2 (Week 2) — commercialization controls
+
+- **Story: RBAC profile presets + matrix editor (MVP)** — Done. Presets Admin/Manager/Rep/Read-only; clone/edit/assign; permission changes audited.
+- **Story: White-label starter** — Done. Logo, color, app name, domain, legal links; persisted per org; reset path.
+- **Story: Release readiness and QA gate** — Done. Sell-ready checklist, QA evidence EN/ES/PT + roles, go/no-go linked.
+
+### Definition of done (that cycle)
+
+- Critical journey EN/ES/PT (login, create contact/company/deal/activity, reports) per QA + release checklist.
+- Tenant customizable labels and basic branding; permission presets production-like; QA + release notes in [README](./README.md) and linked masters.
+
+### Execution board snapshot (all done)
+
+- i18n audit + locale wrappers + formatter tests; pipeline settings + dynamic labels; RBAC model, assignment UI, audit logging; white-label model + UI; release checklist + QA evidence template workstreams closed.
+
+## 21) Workflow Automations v1 and Lead Scoring v2 (2026)
+
+- **Automations v1:** execution logs persisted (status/errors); trigger evaluation on lead/deal transitions; actions for create-activity, assign owner, internal notification paths.
+- **Lead Scoring v2:** recency decay on events; structured reason metadata in score snapshots; confidence threshold strategy for hot vs cold classification.
+- **Backlog / roadmap:** execution board entries for these tracks are closed; forward scope is in [Pro backlog](./master-roadmap-backlog.md#pro-backlog) and phase deliverables in [Pro roadmap 30–60–90](./master-roadmap-backlog.md#pro-roadmap-30-60-90).

@@ -1,6 +1,6 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-04-10
+**Analysis Date:** 2026-04-15
 
 ## Naming Patterns
 
@@ -71,6 +71,12 @@
 
 **Path Aliases:**
 - `@/*` is configured but **not observed in use** — all imports use relative paths (`../../store/`, `../ui/`)
+
+## Frontend layout and styling
+
+- **Canonical product doc:** `docs/master-design-ui.md` (page shells `crm-page` / `crm-page-full`, `PanelEmpty`, auth patterns, modal padding).
+- **Theme variables and light mode:** same master (Theme system section).
+- New screens inside `Layout` should use the documented shells rather than one-off `p-6` wrappers.
 
 ## Component Patterns
 

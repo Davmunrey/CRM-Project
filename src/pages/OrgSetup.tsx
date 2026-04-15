@@ -98,8 +98,12 @@ export function OrgSetup() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="auth-bg-blob absolute top-1/4 left-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
+        <div className="auth-bg-blob absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-600/8 rounded-full blur-3xl" />
+      </div>
+      <div className="relative w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-brand-500/20 flex items-center justify-center mb-4">
             <Building2 size={28} className="text-brand-400" />
@@ -110,7 +114,7 @@ export function OrgSetup() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 glass rounded-2xl border border-white/10 p-6 shadow-float">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-1">
               {t.orgSetup.orgNameLabel}
@@ -120,7 +124,7 @@ export function OrgSetup() {
               value={orgName}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder={t.orgSetup.orgNamePlaceholder}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+              className="w-full px-3 py-2.5 bg-[#0d0e1a] border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
               disabled={isLoading}
               required
             />
@@ -130,7 +134,7 @@ export function OrgSetup() {
             <label className="block text-sm font-medium text-slate-300 mb-1">
               {t.orgSetup.slugLabel}
             </label>
-            <div className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500">
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#0d0e1a] border border-white/10 rounded-xl focus-within:border-brand-500/50 focus-within:ring-2 focus-within:ring-brand-500/30">
               <span className="text-slate-500 text-sm select-none">{t.orgSetup.slugPrefix}</span>
               <input
                 type="text"
@@ -152,7 +156,7 @@ export function OrgSetup() {
                 type="text"
                 value={legalName}
                 onChange={(e) => setLegalName(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2.5 bg-[#0d0e1a] border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
                 disabled={isLoading}
                 required
               />
@@ -163,7 +167,7 @@ export function OrgSetup() {
                 type="text"
                 value={taxId}
                 onChange={(e) => setTaxId(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2.5 bg-[#0d0e1a] border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
                 disabled={isLoading}
                 required
               />
@@ -174,7 +178,7 @@ export function OrgSetup() {
                 type="text"
                 value={addressLine1}
                 onChange={(e) => setAddressLine1(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2.5 bg-[#0d0e1a] border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
                 disabled={isLoading}
                 required
               />
@@ -185,7 +189,7 @@ export function OrgSetup() {
                 type="text"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2.5 bg-[#0d0e1a] border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
                 disabled={isLoading}
                 required
               />
@@ -196,7 +200,7 @@ export function OrgSetup() {
                 type="text"
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2.5 bg-[#0d0e1a] border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
                 disabled={isLoading}
                 required
               />
@@ -207,7 +211,7 @@ export function OrgSetup() {
                 type="email"
                 value={billingEmail}
                 onChange={(e) => setBillingEmail(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2.5 bg-[#0d0e1a] border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
                 disabled={isLoading}
                 required
               />
@@ -218,7 +222,7 @@ export function OrgSetup() {
                 type="tel"
                 value={billingPhone}
                 onChange={(e) => setBillingPhone(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                className="w-full px-3 py-2.5 bg-[#0d0e1a] border border-white/10 rounded-xl text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 focus:ring-2 focus:ring-brand-500/30"
                 disabled={isLoading}
               />
             </div>
@@ -233,7 +237,7 @@ export function OrgSetup() {
           <button
             type="submit"
             disabled={isLoading || !orgName.trim() || !slug.trim() || !legalName.trim() || !taxId.trim() || !addressLine1.trim() || !city.trim() || !country.trim() || !billingEmail.trim()}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl btn-gradient text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <Loader2 size={18} className="animate-spin" />

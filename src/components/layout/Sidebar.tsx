@@ -382,7 +382,7 @@ export function Sidebar() {
 
       {/* Collapse toggle */}
       <div className="border-t border-white/6 p-2 flex-shrink-0">
-        <button
+        <button type="button"
           onClick={() => setCollapsed((c) => !c)}
           aria-label={collapsed ? t.nav.expandSidebar : t.nav.collapseSidebar}
           className={`

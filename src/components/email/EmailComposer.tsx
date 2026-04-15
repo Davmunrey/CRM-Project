@@ -348,7 +348,7 @@ export function EmailComposer({
             }
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <button type="button"
               onClick={() => setShowTemplates((v) => !v)}
               className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full transition-colors ${
                 showTemplates ? 'bg-amber-500/20 text-amber-400' : 'bg-white/6 hover:bg-white/10 text-slate-400'
@@ -357,7 +357,7 @@ export function EmailComposer({
               <FileText size={12} />
               {t.nav.templates}
             </button>
-            <button onClick={requestClose} title={t.email.closeComposer} aria-label={t.email.closeComposer} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
+            <button type="button" onClick={requestClose} title={t.email.closeComposer} aria-label={t.email.closeComposer} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
               <span className="sr-only">{t.email.closeComposer}</span>
               <X size={16} />
             </button>
@@ -377,7 +377,7 @@ export function EmailComposer({
             ) : (
               <div className="p-2 space-y-1">
                 {templates.map((tpl) => (
-                  <button
+                  <button type="button"
                     key={tpl.id}
                     onClick={() => applyTemplate(tpl)}
                     className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/6 transition-colors group"
@@ -405,19 +405,19 @@ export function EmailComposer({
                 placeholder={t.common.searchPlaceholder}
                 className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 outline-none"
               />
-              <button
+              <button type="button"
                 onClick={() => setShowCc((v) => !v)}
                 className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors"
               >
                 {t.email.ccLabel} <ChevronDown size={11} className={showCc ? 'rotate-180' : ''} />
               </button>
-              <button
+              <button type="button"
                 onClick={() => setShowBcc((v) => !v)}
                 className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors"
               >
                 {t.email.bccLabel} <ChevronDown size={11} className={showBcc ? 'rotate-180' : ''} />
               </button>
-              <button
+              <button type="button"
                 onClick={() => setShowReplyTo((v) => !v)}
                 className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors"
               >
@@ -472,7 +472,7 @@ export function EmailComposer({
           {subjectPresets.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {subjectPresets.map((preset) => (
-                <button
+                <button type="button"
                   key={preset}
                   onClick={() => setSubject(preset)}
                   className="text-[10px] px-2 py-1 rounded-full bg-white/6 border border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-colors"
@@ -536,7 +536,7 @@ export function EmailComposer({
           />
           <div className="flex flex-wrap gap-1.5">
             {quickReplies.map((snippet) => (
-              <button
+              <button type="button"
                 key={snippet.id}
                 onClick={() => setBody((prev) => (prev.trim() ? `${prev}\n\n${snippet.body}` : snippet.body))}
                 className="text-[10px] px-2 py-1 rounded-full bg-white/6 border border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-colors"
@@ -586,7 +586,7 @@ export function EmailComposer({
                 {attachments.map((file, idx) => (
                   <span key={`${file.name}-${idx}`} className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-300 border border-white/10">
                     {file.name} ({Math.ceil(file.size / 1024)} KB)
-                    <button
+                    <button type="button"
                       onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
                       className="text-slate-500 hover:text-red-300"
                       title={t.common.remove}
@@ -644,7 +644,7 @@ export function EmailComposer({
               />
             )}
           </div>
-          <button
+          <button type="button"
             onClick={handleSend}
             disabled={sending || !to.trim() || !subject.trim() || (sendLater && !scheduledAt)}
             className="flex items-center gap-2 px-4 py-2 rounded-full btn-gradient text-white text-sm font-semibold disabled:opacity-40"

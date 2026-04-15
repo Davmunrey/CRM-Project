@@ -12,6 +12,8 @@ const { mockSignUp, mockNavigate } = vi.hoisted(() => ({
 vi.mock('../../src/lib/supabase', () => ({
   supabase: { auth: { signUp: mockSignUp } },
   isSupabaseConfigured: true,
+  isOfflineDemoMode: false,
+  isBootstrapFatalError: false,
 }))
 
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -28,7 +30,7 @@ function renderRegister() {
 }
 
 async function fillAndSubmit() {
-  const user = userEvent.setup()
+  const user = userEvent.setup({ delay: null })
   const companyInput = screen.getByPlaceholderText(/companies|empresa/i)
   await user.type(companyInput, 'Test Corp')
   await user.type(screen.getByPlaceholderText(/name|nombre/i), 'Test User')

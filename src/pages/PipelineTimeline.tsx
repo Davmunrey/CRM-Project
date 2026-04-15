@@ -124,7 +124,7 @@ export function PipelineTimeline() {
   const getCompany = (id: string) => companies.find((c) => c.id === id)
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="crm-page space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -140,6 +140,7 @@ export function PipelineTimeline() {
         {/* Nav */}
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
             className="p-2 rounded-xl glass border-white/8 text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
           >
@@ -149,6 +150,7 @@ export function PipelineTimeline() {
             {format(currentMonth, 'MMM yyyy', { locale: dateLocale })} — {format(addMonths(currentMonth, MONTHS_VISIBLE - 1), 'MMM yyyy', { locale: dateLocale })}
           </span>
           <button
+            type="button"
             onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
             className="p-2 rounded-xl glass border-white/8 text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
           >
@@ -204,6 +206,7 @@ export function PipelineTimeline() {
         </select>
         {(stageFilter || assigneeFilter) && (
           <button
+            type="button"
             onClick={() => { setStageFilter(''); setAssigneeFilter('') }}
             className="flex items-center gap-1 text-xs text-slate-400 hover:text-white px-2 py-1.5 rounded-lg hover:bg-white/6 transition-colors"
           >

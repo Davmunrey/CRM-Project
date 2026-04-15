@@ -1,4 +1,4 @@
-import { Bell, Search, LogOut, User, ChevronDown } from 'lucide-react'
+import { Bell, Search, LogOut, User, ChevronDown, Check } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -100,8 +100,9 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
 
       {/* Command palette trigger */}
       <button
+        type="button"
         onClick={onOpenCommandPalette}
-        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-navy-800/60 border border-white/8 hover:bg-white/6 hover:border-white/12 transition-all duration-150 text-slate-500 hover:text-slate-300 text-xs"
+        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-navy-800/60 border border-white/8 hover:bg-white/6 hover:border-white/12 transition-all duration-150 text-slate-500 hover:text-slate-300 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
       >
         <Search size={13} />
         <span>{t.common.search}...</span>
@@ -111,9 +112,11 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
       {/* Notification bell */}
       <div className="relative">
         <button
+          type="button"
           aria-label={t.nav.notifications}
+          aria-expanded={showNotifs}
           onClick={() => setShowNotifs((v) => !v)}
-          className="relative p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/6 transition-all duration-150 focus:outline-none"
+          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/6 transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <Bell size={17} />
           {(overdueActivities.length > 0 || urgentFollowUps.length > 0 || unreadNotifCount > 0) && (
@@ -134,7 +137,7 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
                   <p className="text-xs text-brand-400 mt-0.5">{unreadNotifCount}</p>
                 )}
               </div>
-              <button
+              <button type="button"
                 onClick={() => { setShowNotifs(false); navigate('/notifications') }}
                 className="text-xs text-brand-400 hover:text-brand-300 font-medium"
               >
@@ -212,12 +215,15 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
             {/* Footer */}
             {unreadNotifCount > 0 && (
               <div className="px-4 py-2 border-t border-white/6 text-center">
-                <button
-                  onClick={() => { useNotificationsStore.getState().markAllAsRead() }}
-                  className="text-xs text-slate-400 hover:text-white font-medium"
-                >
-                  ✓
-                </button>
+              <button
+                type="button"
+                aria-label={t.notifications.markAllRead}
+                title={t.notifications.markAllRead}
+                onClick={() => { useNotificationsStore.getState().markAllAsRead() }}
+                className="inline-flex items-center justify-center min-h-9 min-w-9 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+              >
+                <Check size={16} strokeWidth={2.5} aria-hidden />
+              </button>
               </div>
             )}
           </div>
@@ -231,8 +237,11 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
       {/* User menu */}
       <div className="relative">
         <button
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={showUserMenu}
           onClick={() => setShowUserMenu((v) => !v)}
-          className="flex items-center gap-2.5 pl-4 border-l border-white/8 hover:bg-white/4 -ml-2 px-3 py-1.5 rounded-xl transition-colors focus:outline-none"
+          className="flex items-center gap-2.5 pl-4 border-l border-white/8 hover:bg-white/4 -ml-2 px-3 py-1.5 rounded-xl transition-colors min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
         >
           <Avatar name={currentUser?.name || ''} size="sm" />
           <div className="hidden sm:block text-left">
@@ -250,14 +259,14 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
                 <p className="text-xs font-semibold text-white">{currentUser?.name}</p>
                 <p className="text-[10px] text-slate-500">{currentUser?.email}</p>
               </div>
-              <button
+              <button type="button"
                 onClick={() => { setShowUserMenu(false); navigate('/profile') }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
               >
                 <User size={13} /> {t.auth.profile}
               </button>
               <div className="border-t border-white/6 my-1" />
-              <button
+              <button type="button"
                 onClick={() => { void useAuthStore.getState().logout().then(() => navigate('/login')) }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 transition-colors"
               >

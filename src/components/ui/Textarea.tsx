@@ -11,7 +11,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label className="text-sm font-medium text-zinc-300">
+          <label className="text-sm font-medium text-slate-300">
             {label}
             {props.required && <span className="text-red-400 ml-1">*</span>}
           </label>
@@ -19,9 +19,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           ref={ref}
           className={`
-            w-full rounded-lg border bg-[#0d0e1a] text-slate-100 text-sm
+            w-full rounded-xl border bg-[#0d0e1a] text-slate-100 text-sm
             placeholder:text-slate-600
-            focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/50
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:border-brand-500/50
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-all duration-150 p-3 resize-none
             ${error ? 'border-red-500/50' : 'border-white/10 hover:border-white/15'}

@@ -177,6 +177,7 @@ function ProductCard({ product }: { product: Product }) {
           <div className="flex items-center gap-1 flex-shrink-0">
             <PermissionGate permission="products:update">
               <button
+                type="button"
                 onClick={() => updateProduct(product.id, { isActive: !product.isActive })}
                 title={product.isActive ? t.common.disabled : t.common.enabled}
               >
@@ -188,6 +189,7 @@ function ProductCard({ product }: { product: Product }) {
             </PermissionGate>
             <PermissionGate permission="products:update">
               <button
+                type="button"
                 onClick={() => setEditing(true)}
                 title={t.common.edit}
                 aria-label={t.common.edit}
@@ -198,6 +200,7 @@ function ProductCard({ product }: { product: Product }) {
             </PermissionGate>
             <PermissionGate permission="products:delete">
               <button
+                type="button"
                 onClick={() => { deleteProduct(product.id); toast.success(t.common.delete) }}
                 title={t.common.delete}
                 aria-label={t.common.delete}
@@ -249,7 +252,7 @@ export function Products() {
   }
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="crm-page space-y-5">
       {showNew && (
         <ProductModal initial={blankProduct()} onSave={handleSave} onClose={() => setShowNew(false)} />
       )}

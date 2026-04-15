@@ -40,7 +40,7 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
     activity.dueDate < new Date().toISOString().split('T')[0]
 
   return (
-    <div className={`flex gap-3 p-3 rounded-xl ${isOverdue ? 'bg-red-500/5 border border-red-500/20' : 'hover:bg-zinc-800/40'} transition-colors`}>
+    <div className={`flex gap-3 p-3 rounded-xl ${isOverdue ? 'bg-red-500/5 border border-red-500/20' : 'hover:bg-white/[0.04]'} transition-colors`}>
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${TYPE_COLORS[activity.type]}`}>
         {TYPE_ICONS[activity.type]}
       </div>
@@ -48,8 +48,8 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-zinc-200 truncate">{activity.subject}</p>
-            <p className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{activity.description}</p>
+            <p className="text-sm font-medium text-slate-200 truncate">{activity.subject}</p>
+            <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{activity.description}</p>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {activity.status === 'completed' ? (
@@ -66,18 +66,18 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
         </div>
 
         {activity.outcome && (
-          <p className="text-xs text-zinc-400 mt-1 italic">"{activity.outcome}"</p>
+          <p className="text-xs text-slate-400 mt-1 italic">"{activity.outcome}"</p>
         )}
 
         <div className="flex items-center gap-3 mt-2">
-          <span className="text-[10px] text-zinc-600">{t.activities.typeLabels[activity.type]}</span>
+          <span className="text-[10px] text-slate-600">{t.activities.typeLabels[activity.type]}</span>
           {activity.dueDate && (
-            <span className={`text-[10px] ${isOverdue ? 'text-red-400' : 'text-zinc-600'}`}>
+            <span className={`text-[10px] ${isOverdue ? 'text-red-400' : 'text-slate-600'}`}>
               {formatDate(activity.dueDate)}
             </span>
           )}
-          <span className="text-[10px] text-zinc-600">{activity.createdBy}</span>
-          <span className="text-[10px] text-zinc-700 ml-auto">{formatRelativeDate(activity.createdAt)}</span>
+          <span className="text-[10px] text-slate-600">{activity.createdBy}</span>
+          <span className="text-[10px] text-slate-600 ml-auto">{formatRelativeDate(activity.createdAt)}</span>
         </div>
       </div>
 

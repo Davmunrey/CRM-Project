@@ -39,7 +39,7 @@ export function Avatar({ name, size = 'md', imageUrl }: AvatarProps) {
       <img
         src={imageUrl}
         alt={name}
-        className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-zinc-800`}
+        className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-white/10`}
       />
     )
   }

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { UserPlus, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useTranslations } from '../i18n'
+import { Button } from '../components/ui/Button'
 
 interface InvitationRow {
   id: string
@@ -131,24 +132,24 @@ export function AcceptInvite() {
 
   if (pageState === 'loading') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 size={32} className="animate-spin text-brand-400" />
+      <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+        <Loader2 size={32} className="animate-spin text-brand-400" aria-label={t.common.loading} />
       </div>
     )
   }
 
   if (pageState === 'error') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
+      <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+        <div className="relative w-full max-w-md glass rounded-2xl border border-white/10 p-8 text-center shadow-float">
           <div className="w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center mx-auto mb-4">
-            <XCircle size={28} className="text-red-400" />
+            <XCircle size={28} className="text-red-400" aria-hidden />
           </div>
           <h1 className="text-xl font-bold text-white mb-2">{t.acceptInvite.invalidTitle}</h1>
-          <p className="text-sm text-slate-500 mb-6">{errorMsg}</p>
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed">{errorMsg}</p>
           <Link
             to="/login"
-            className="inline-flex items-center px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium rounded-lg transition-colors"
+            className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl btn-gradient text-white text-sm font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
           >
             {t.acceptInvite.loginCta}
           </Link>
@@ -159,10 +160,10 @@ export function AcceptInvite() {
 
   if (pageState === 'success') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <div className="w-full max-w-md text-center">
+      <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+        <div className="relative w-full max-w-md glass rounded-2xl border border-white/10 p-8 text-center shadow-float">
           <div className="w-14 h-14 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={28} className="text-emerald-400" />
+            <CheckCircle size={28} className="text-emerald-400" aria-hidden />
           </div>
           <h1 className="text-xl font-bold text-white mb-2">{t.acceptInvite.welcomeTo} {orgName}!</h1>
           <p className="text-sm text-slate-500">{t.acceptInvite.redirecting}</p>
@@ -180,19 +181,19 @@ export function AcceptInvite() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+      <div className="relative w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-brand-500/20 flex items-center justify-center mb-4">
-            <UserPlus size={28} className="text-brand-400" />
+          <div className="w-14 h-14 rounded-2xl bg-brand-500/20 flex items-center justify-center mb-4 border border-brand-500/25">
+            <UserPlus size={28} className="text-brand-400" aria-hidden />
           </div>
-          <h1 className="text-2xl font-bold text-white">{t.acceptInvite.joinOrg} {orgName}</h1>
+          <h1 className="text-2xl font-bold text-white text-center">{t.acceptInvite.joinOrg} {orgName}</h1>
           <p className="text-sm text-slate-500 mt-1 text-center">
             {t.acceptInvite.invitedToTeam}
           </p>
         </div>
 
-        <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 mb-6 space-y-3">
+        <div className="glass rounded-2xl border border-white/10 p-5 mb-6 space-y-3 shadow-float">
           <div className="flex justify-between text-sm">
             <span className="text-slate-500">{t.acceptInvite.organization}</span>
             <span className="text-white font-medium">{orgName}</span>
@@ -209,20 +210,16 @@ export function AcceptInvite() {
           </div>
         </div>
 
-        <button
+        <Button
+          type="button"
+          className="w-full"
           onClick={handleAccept}
           disabled={pageState === 'joining'}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+          loading={pageState === 'joining'}
+          leftIcon={<UserPlus size={18} />}
         >
-          {pageState === 'joining' ? (
-            <Loader2 size={18} className="animate-spin" />
-          ) : (
-            <>
-              <UserPlus size={18} />
-              {t.acceptInvite.acceptCta}
-            </>
-          )}
-        </button>
+          {t.acceptInvite.acceptCta}
+        </Button>
       </div>
     </div>
   )

@@ -35,7 +35,7 @@ export function ToastContainer() {
         >
           {iconMap[t.type]}
           <p className="flex-1 text-sm text-slate-100">{t.message}</p>
-          <button
+          <button type="button"
             onClick={() => removeToast(t.id)}
             aria-label={tr.common.close}
             className="text-slate-500 hover:text-slate-200 transition-colors"
