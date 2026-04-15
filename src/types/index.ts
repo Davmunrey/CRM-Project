@@ -276,6 +276,8 @@ export type EmailStatus = 'draft' | 'scheduled' | 'sent' | 'received' | 'snoozed
 export interface CRMEmail {
   id: string
   ownerUserId?: string
+  provider?: 'gmail' | 'resend'
+  providerMessageId?: string
   gmailMessageId?: string
   gmailThreadId?: string
   from: string

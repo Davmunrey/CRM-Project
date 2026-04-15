@@ -59,7 +59,19 @@ Create a `.env.local` file in the project root:
 ```bash
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Optional outbound provider (defaults to gmail)
+# VITE_EMAIL_PROVIDER=gmail
+
+# If using Resend as outbound provider
+# VITE_EMAIL_PROVIDER=resend
+# VITE_RESEND_SEND_FUNCTION=resend-send-email
 ```
+
+When `VITE_EMAIL_PROVIDER=resend`, deploy Supabase Edge Function `resend-send-email` and set server-side secrets in Supabase:
+
+- `RESEND_API_KEY`
+- `RESEND_FROM`
 
 Optional variables for maintenance scripts:
 
@@ -216,6 +228,8 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
   - `docs/hardening-matrix.md`
 - SOC2 / GDPR-lite compliance mapping:
   - `docs/compliance-mapping.md`
+- Gitea repository operations and CI runbook:
+  - `docs/gitea-operations.md`
 
 ## Seed Data
 In mock mode, the app ships with realistic Spanish/European B2B seed data:

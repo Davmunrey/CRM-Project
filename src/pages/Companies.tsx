@@ -119,7 +119,7 @@ export function Companies() {
         <div className="ml-auto flex items-center gap-2">
           {selectedIds.size > 0 && (
             <>
-              <span className="text-xs text-slate-400">{selectedIds.size} {t.common.selected}</span>
+              <span className="text-xs text-slate-500">{selectedIds.size} {t.common.selected}</span>
 
               {/* Mass Status Update */}
               <select
@@ -131,7 +131,7 @@ export function Companies() {
                   setSelectedIds(new Set())
                   e.target.value = ''
                 }}
-                className="bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none"
+                className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-700 outline-none focus:ring-2 focus:ring-brand-500/30"
                 defaultValue=""
               >
                 <option value="" disabled>{t.common.changeStatus}...</option>
@@ -162,7 +162,7 @@ export function Companies() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="flex gap-3 flex-wrap items-center bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+        <div className="flex gap-3 flex-wrap items-center glass p-4">
           <Select
             options={Object.entries(COMPANY_INDUSTRY_LABELS).map(([v, l]) => ({ value: v, label: l }))}
             placeholder={t.companies.industry}
@@ -197,7 +197,7 @@ export function Companies() {
         </div>
       )}
 
-      <p className="text-xs text-zinc-500">{filtered.length} {t.nav.companies.toLowerCase()}</p>
+      <p className="text-xs text-slate-500">{filtered.length} {t.nav.companies.toLowerCase()}</p>
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -207,10 +207,10 @@ export function Companies() {
           action={{ label: t.companies.newCompany, onClick: () => setIsFormOpen(true) }}
         />
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+        <div className="glass overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/50">
+              <tr className="contacts-table-head border-b border-white/8">
                 <th className="px-4 py-3 text-left w-10">
                   <input
                     type="checkbox"
@@ -219,24 +219,24 @@ export function Companies() {
                     className="rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">{t.companies.title}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">{t.companies.industry}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">{t.companies.size}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">{t.companies.country}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">{t.nav.contacts}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">{t.nav.deals}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">{t.common.status}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-zinc-500 uppercase tracking-wider">{t.common.actions}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.companies.title}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.companies.industry}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.companies.size}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.companies.country}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.nav.contacts}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.nav.deals}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.common.status}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.common.actions}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-800">
+            <tbody className="divide-y divide-white/6">
               {filtered.map((company) => {
                 const contactCount = contacts.filter((c) => c.companyId === company.id).length
                 const dealCount = deals.filter((d) => d.companyId === company.id).length
                 return (
                   <tr
                     key={company.id}
-                    className="hover:bg-zinc-800/40 cursor-pointer transition-colors"
+                    className="hover:bg-white/4 cursor-pointer transition-colors"
                     onClick={() => navigate(`/companies/${company.id}`)}
                   >
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -251,18 +251,18 @@ export function Companies() {
                       <div className="flex items-center gap-3">
                         <Avatar name={company.name} size="sm" />
                         <div>
-                          <p className="font-medium text-zinc-200">{company.name}</p>
-                          <p className="text-xs text-zinc-500">{company.domain || company.website}</p>
+                          <p className="font-medium text-slate-200">{company.name}</p>
+                          <p className="text-xs text-slate-500">{company.domain || company.website}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-zinc-400 text-xs">
+                    <td className="px-4 py-3 text-slate-400 text-xs">
                       {COMPANY_INDUSTRY_LABELS[company.industry] ?? company.industry}
                     </td>
-                    <td className="px-4 py-3 text-zinc-400 text-xs">{company.size || '—'}</td>
-                    <td className="px-4 py-3 text-zinc-400 text-xs">{company.country || '—'}</td>
-                    <td className="px-4 py-3 text-zinc-400 text-xs">{contactCount}</td>
-                    <td className="px-4 py-3 text-zinc-400 text-xs">{dealCount}</td>
+                    <td className="px-4 py-3 text-slate-400 text-xs">{company.size || '—'}</td>
+                    <td className="px-4 py-3 text-slate-400 text-xs">{company.country || '—'}</td>
+                    <td className="px-4 py-3 text-slate-400 text-xs">{contactCount}</td>
+                    <td className="px-4 py-3 text-slate-400 text-xs">{dealCount}</td>
                     <td className="px-4 py-3">
                       <Badge variant={STATUS_COLORS[company.status]}>
                         {statusLabel(company.status)}
@@ -272,7 +272,7 @@ export function Companies() {
                       <div className="flex gap-1">
                         <PermissionGate permission="companies:update">
                           <Button
-                            variant="ghost" size="xs"
+                            variant="secondary" size="xs"
                             onClick={() => { setEditCompany(company); setIsFormOpen(true) }}
                           >
                             {t.common.edit}
@@ -280,9 +280,8 @@ export function Companies() {
                         </PermissionGate>
                         <PermissionGate permission="companies:delete">
                           <Button
-                            variant="ghost" size="xs"
+                            variant="danger" size="xs"
                             onClick={() => setDeleteId(company.id)}
-                            className="text-red-400 hover:text-red-300"
                           >
                             {t.common.delete}
                           </Button>

@@ -2,7 +2,8 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { v4 as uuid } from 'uuid'
 import type { CRMEmail, GmailThread } from '../types'
-import { sendGmailEmail, getGmailProfile, listGmailThreads } from '../services/gmailService'
+import { getGmailProfile, listGmailThreads } from '../services/gmailService'
+import { getEmailProvider, resolveEmailProviderName } from '../services/emailProviders'
 import { useAuditStore } from './auditStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getOrgId, runSupabaseWrite } from '../lib/supabaseHelpers'
@@ -243,12 +244,20 @@ export const useEmailStore = create<EmailStore>()(
       sendEmail: async (params) => {
         const currentUserId = useAuthStore.getState().currentUser?.id
         const { accessToken } = params
+        const providerName = resolveEmailProviderName()
+        const emailProvider = getEmailProvider()
         let gmailMessageId: string | undefined
         let gmailThreadId: string | undefined
+        let providerMessageId: string | undefined
         const emailId = uuid()
 
-        const shouldUseProvider = get().isGmailConnected() && !!accessToken
-        if (get().isGmailConnected() && !accessToken && !params.allowLocalFallbackWhenNoToken) {
+        const shouldUseProvider = providerName !== 'gmail' || get().isGmailConnected()
+        if (
+          providerName === 'gmail'
+          && get().isGmailConnected()
+          && !accessToken
+          && !params.allowLocalFallbackWhenNoToken
+        ) {
           throw new Error('Gmail connected but no active access token. Reconnect and retry.')
         }
 
@@ -293,27 +302,28 @@ export const useEmailStore = create<EmailStore>()(
         }
 
         if (shouldUseProvider) {
-          const sent = await sendGmailEmail(
-            {
-              to: params.to,
-              cc: params.cc,
-              bcc: params.bcc,
-              replyTo: params.replyTo,
-              attachments: (params.attachments ?? [])
-                .filter((a) => !!a.dataBase64)
-                .map((a) => ({
-                  name: a.name,
-                  mimeType: a.mimeType,
-                  dataBase64: a.dataBase64 as string,
-                })),
-              subject: params.subject,
-              body: params.body,
-              htmlBody: trackedHtmlBody,
-            },
-                accessToken!,
-          )
-          gmailMessageId = sent.id
-          gmailThreadId = sent.threadId
+          const sent = await emailProvider.send({
+            to: params.to,
+            cc: params.cc,
+            bcc: params.bcc,
+            replyTo: params.replyTo,
+            attachments: (params.attachments ?? [])
+              .filter((a) => !!a.dataBase64)
+              .map((a) => ({
+                name: a.name,
+                mimeType: a.mimeType,
+                dataBase64: a.dataBase64 as string,
+              })),
+            subject: params.subject,
+            body: params.body,
+            htmlBody: trackedHtmlBody,
+            accessToken,
+          })
+          providerMessageId = sent.providerMessageId
+          if (sent.provider === 'gmail') {
+            gmailMessageId = sent.providerMessageId
+            gmailThreadId = sent.providerThreadId
+          }
         }
 
         const baseFrom = get().gmailAddress ?? 'me@crm.local'
@@ -341,6 +351,8 @@ export const useEmailStore = create<EmailStore>()(
           contactId: params.contactId,
           dealId: params.dealId,
           companyId: params.companyId,
+          provider: providerName,
+          providerMessageId,
           gmailMessageId,
           gmailThreadId,
           sentAt: new Date().toISOString(),
@@ -481,6 +493,9 @@ export const useEmailStore = create<EmailStore>()(
           try {
             let gmailMessageId: string | undefined
             let gmailThreadId: string | undefined
+            let providerMessageId: string | undefined
+            const providerName = resolveEmailProviderName()
+            const emailProvider = getEmailProvider()
             let trackedHtmlBody = job.payload.htmlBody
             if (job.payload.trackingEnabled && isSupabaseConfigured && supabase && job.payload.ownerUserId) {
               const supabaseBase = import.meta.env.VITE_SUPABASE_URL as string | undefined
@@ -519,35 +534,38 @@ export const useEmailStore = create<EmailStore>()(
                 }
               }
             }
-            if (get().isGmailConnected()) {
-              if (!accessToken) continue
-              const sent = await sendGmailEmail(
-                {
-                  to: job.payload.to,
-                  cc: job.payload.cc,
-                  bcc: job.payload.bcc,
-                  replyTo: job.payload.replyTo,
-                  attachments: (job.payload.attachments ?? [])
-                    .filter((a) => !!a.dataBase64)
-                    .map((a) => ({
-                      name: a.name,
-                      mimeType: a.mimeType,
-                      dataBase64: a.dataBase64 as string,
-                    })),
-                  subject: job.payload.subject,
-                  body: job.payload.body,
-                  htmlBody: trackedHtmlBody,
-                },
+            const shouldUseProvider = providerName !== 'gmail' || get().isGmailConnected()
+            if (shouldUseProvider) {
+              const sent = await emailProvider.send({
+                to: job.payload.to,
+                cc: job.payload.cc,
+                bcc: job.payload.bcc,
+                replyTo: job.payload.replyTo,
+                attachments: (job.payload.attachments ?? [])
+                  .filter((a) => !!a.dataBase64)
+                  .map((a) => ({
+                    name: a.name,
+                    mimeType: a.mimeType,
+                    dataBase64: a.dataBase64 as string,
+                  })),
+                subject: job.payload.subject,
+                body: job.payload.body,
+                htmlBody: trackedHtmlBody,
                 accessToken,
-              )
-              gmailMessageId = sent.id
-              gmailThreadId = sent.threadId
+              })
+              providerMessageId = sent.providerMessageId
+              if (sent.provider === 'gmail') {
+                gmailMessageId = sent.providerMessageId
+                gmailThreadId = sent.providerThreadId
+              }
             }
 
             get().updateEmail(job.emailId, {
               status: 'sent',
               sentAt: new Date().toISOString(),
               scheduledFor: undefined,
+              provider: providerName,
+              providerMessageId,
               gmailMessageId,
               gmailThreadId,
               htmlBody: trackedHtmlBody,

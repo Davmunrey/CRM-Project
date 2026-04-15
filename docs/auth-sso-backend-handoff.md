@@ -37,6 +37,38 @@ If your org maps users to SSO domains dynamically, expose:
 
 Error responses should use non-2xx status codes. Frontend displays a generic SSO resolution error.
 
+## Google enterprise discovery contract (recommended for multi-tenant buyers)
+
+Frontend now supports an enterprise guard before starting Google OAuth.
+
+- `POST /auth/sso/discovery`
+- Request body (Google flow):
+
+```json
+{
+  "identifier": "user@company.com",
+  "email": "user@company.com",
+  "domain": "company.com",
+  "provider": "google"
+}
+```
+
+- Response body:
+
+```json
+{
+  "allowGoogleOAuth": true,
+  "googleHostedDomain": "company.com",
+  "preferredProvider": "google"
+}
+```
+
+Notes:
+- `allowGoogleOAuth=false` blocks Google button flow for that tenant/account.
+- `googleHostedDomain` is passed as Google OAuth `hd` query param.
+- Frontend also sends `login_hint` (email when available) + `prompt=select_account`.
+- If `preferredProvider="saml"` and Google is denied, UI instructs users to use company SSO.
+
 ## Supabase provider setup responsibilities (backend/platform)
 
 - Enable providers in Supabase Auth:
@@ -56,5 +88,7 @@ Use `.env` or deployment variables:
 - `VITE_AUTH_APPLE_ENABLED=true|false`
 - `VITE_AUTH_SAML_ENABLED=true|false`
 - `VITE_AUTH_SAML_DISCOVERY_ENDPOINT=<url>` (optional)
+- `VITE_AUTH_GOOGLE_DISCOVERY_ENDPOINT=<url>` (optional, falls back to SAML endpoint if omitted)
+- `VITE_AUTH_GOOGLE_DISCOVERY_REQUIRED=true|false` (default: `true` in prod, `false` in dev/staging)
 
 These toggles only affect visible login options, so backend can roll out provider-by-provider safely.

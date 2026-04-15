@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { LANGUAGE_FLAGS, LANGUAGE_LABELS, useI18nStore, useTranslations } from '../i18n'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { authProviderConfig, resolveSamlDomain } from '../config/authProviders'
+import { authProviderConfig, resolveGoogleOAuthPolicy, resolveSamlDomain } from '../config/authProviders'
 import type { Language } from '../i18n'
 
 function GoogleLogo() {
@@ -60,9 +60,38 @@ export function Login() {
     if (!isSupabaseConfigured || !supabase) return
     setError('')
     setProviderLoading(provider)
+    const options: {
+      redirectTo: string
+      queryParams?: Record<string, string>
+    } = { redirectTo: `${window.location.origin}/` }
+
+    if (provider === 'google') {
+      try {
+        const policy = await resolveGoogleOAuthPolicy(email)
+        if (!policy.allowGoogleOAuth) {
+          setError(
+            policy.preferredProvider === 'saml'
+              ? 'Google SSO is disabled for this tenant. Use your company SSO.'
+              : 'Google SSO is not available for this account.',
+          )
+          setProviderLoading(null)
+          return
+        }
+
+        const queryParams: Record<string, string> = { prompt: 'select_account' }
+        if (policy.googleHostedDomain) queryParams.hd = policy.googleHostedDomain
+        if (policy.loginHint) queryParams.login_hint = policy.loginHint
+        options.queryParams = queryParams
+      } catch (e) {
+        setError((e as Error).message)
+        setProviderLoading(null)
+        return
+      }
+    }
+
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/` },
+      options,
     })
     if (oauthError) setError(oauthError.message)
     setProviderLoading(null)

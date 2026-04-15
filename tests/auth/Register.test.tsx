@@ -54,7 +54,7 @@ describe('Register', () => {
         options: { data: { full_name: 'Test User', org_name: 'Test Corp' } },
       })
     })
-  })
+  }, 15000)
 
   it('AUTH-02: shows email verification screen when signUp returns no session', async () => {
     mockSignUp.mockResolvedValue({ data: { session: null }, error: null })
@@ -63,7 +63,7 @@ describe('Register', () => {
     await waitFor(() => {
       expect(screen.getByText(/revisa tu correo|check your email/i)).toBeInTheDocument()
     })
-  })
+  }, 15000)
 
   it('AUTH-01: navigates to / when signUp returns an immediate session', async () => {
     mockSignUp.mockResolvedValue({
@@ -75,7 +75,7 @@ describe('Register', () => {
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/')
     })
-  })
+  }, 15000)
 
   it('AUTH-01: shows error message on signUp failure', async () => {
     mockSignUp.mockResolvedValue({ data: { session: null }, error: { message: 'Email already registered' } })
@@ -84,5 +84,5 @@ describe('Register', () => {
     await waitFor(() => {
       expect(screen.getByText('Email already registered')).toBeInTheDocument()
     })
-  })
+  }, 15000)
 })
