@@ -16,6 +16,9 @@ This directory contains the SQL artifacts required to run the CRM in Supabase mo
 3. Create a `.env.local` file in the project root:
 
 ```bash
+# Optional locally; required on CI for production/staging channels (see ../docs/deployment-spa-and-env.md)
+# VITE_APP_CHANNEL=staging
+
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
@@ -24,7 +27,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 5. Apply pending files under `supabase/migrations/` in chronological order.
 6. Restart the dev server (`npm run dev`).
 
-When Supabase is configured, the app uses real authentication and PostgreSQL. Without valid credentials, the app can run in mock/local mode.
+When Supabase is configured, the app uses real authentication and PostgreSQL. Without credentials, use **local** mock mode (`VITE_ALLOW_DEMO_MODE=true` in dev) or a **`demo`** channel build for hosted static demos — see root [`README.md`](../README.md) and [`src/lib/envChannel.ts`](../src/lib/envChannel.ts).
 
 ## Migration Notes
 

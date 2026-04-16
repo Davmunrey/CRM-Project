@@ -21,15 +21,19 @@ Vite inlines variables prefixed with `VITE_` at **build** time. Configure **sepa
 
 | Variable | Used in |
 |----------|---------|
+| `VITE_APP_CHANNEL` | [`src/lib/envChannel.ts`](../src/lib/envChannel.ts) — `production` \| `staging` \| `demo`; omit locally → `development` |
 | `VITE_SUPABASE_URL` | [`src/lib/supabase.ts`](../src/lib/supabase.ts) |
 | `VITE_SUPABASE_ANON_KEY` | Same |
 
-Production builds **fail closed** if these are missing when `import.meta.env.PROD` is true (`isBootstrapFatalError`).
+**Build:** `vite build` rejects **production** and **staging** channels unless Supabase env vars are valid ([`vite.config.ts`](../vite.config.ts)). **demo** channel allows a bundle without Supabase (offline mock for static hosting).
+
+**Runtime:** `production` / `staging` without Supabase show the bootstrap fatal screen (`isBootstrapFatalError` in [`src/lib/supabase.ts`](../src/lib/supabase.ts)). `demo` without Supabase enables offline mock. Local `npm run dev` defaults to `development`.
 
 Local template: [`.env.example`](../.env.example).
 
 ## Preview vs production Supabase (DEPLOY-03)
 
+- Set **`VITE_APP_CHANNEL=staging`** on preview / UAT pipelines so the UI banner and build-time checks match a non-production Supabase project.
 - Point **preview** builds at a **staging** Supabase project (or isolated branch DB), not production anon keys.
 - Add every preview origin (e.g. `https://*.vercel.app`) to **Supabase Auth → URL configuration** redirect allowlist as needed.
 - Align Gmail OAuth and Edge Function **CORS** with the same origins (see [`.planning/research/gmail-ai-features.md`](../.planning/research/gmail-ai-features.md) if present).

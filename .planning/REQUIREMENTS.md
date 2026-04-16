@@ -112,8 +112,8 @@
 ### Deployment
 
 - [ ] **DEPLOY-01**: Static SPA hosting configured so all client routes resolve to `index.html` on cold load (host-specific: e.g. `vercel.json` rewrites, Netlify `_redirects`, nginx `try_files`, CDN origin rules — critical for React Router)
-- [ ] **DEPLOY-02**: Production and preview/staging environments define `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the deployment pipeline or host dashboard (secrets never committed)
-- [ ] **DEPLOY-03**: Preview builds (e.g. on each PR) use a **staging** Supabase project; production credentials are production-only
+- [ ] **DEPLOY-02**: Production and preview/staging environments define `VITE_APP_CHANNEL` plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the deployment pipeline or host dashboard (secrets never committed); `demo` channel builds may omit Supabase for offline mock only
+- [ ] **DEPLOY-03**: Preview builds (e.g. on each PR) set `VITE_APP_CHANNEL=staging` and use a **staging** Supabase project; production uses `VITE_APP_CHANNEL=production` and production-only credentials
 - [ ] **DEPLOY-04**: Production deployment on merge to `main` (or your protected release branch) with a recorded smoke pass
 - [ ] **DEPLOY-05**: Custom domain + HTTPS (DNS + TLS per your hosting provider)
 

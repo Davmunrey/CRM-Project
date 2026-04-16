@@ -96,14 +96,21 @@ Environments: Production, Preview, Development (check all three)
 
 ```
 Production branch (main):
+  VITE_APP_CHANNEL      → production
   VITE_SUPABASE_URL     → https://prod-project.supabase.co
   VITE_SUPABASE_ANON_KEY → prod anon key
 
 Preview branches:
+  VITE_APP_CHANNEL      → staging
   VITE_SUPABASE_URL     → https://staging-project.supabase.co
   VITE_SUPABASE_ANON_KEY → staging anon key
 
+Static demo bundle (optional):
+  VITE_APP_CHANNEL      → demo
+  (Supabase vars omitted — offline mock; see src/lib/envChannel.ts)
+
 Local development (.env.local):
+  (omit VITE_APP_CHANNEL → development in Vite dev server)
   VITE_SUPABASE_URL     → https://staging-project.supabase.co (or local)
   VITE_SUPABASE_ANON_KEY → staging anon key
 ```

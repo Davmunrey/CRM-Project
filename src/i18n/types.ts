@@ -65,6 +65,8 @@ export interface Translations {
     noResults: string
     loading: string
     skipToMain: string
+    envBannerStaging: string
+    envBannerDemo: string
     export: string
     import: string
     reset: string

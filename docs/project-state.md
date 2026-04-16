@@ -25,8 +25,8 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 `.planning/REQUIREMENTS.md` still lists `DEPLOY-01`–`DEPLOY-05` with example filenames from one host; the **intent** is:
 
 1. **SPA routing** — every client-side route must resolve to the built `index.html` on cold load (configure the static host or reverse proxy accordingly). **Repo examples:** [`vercel.json`](../vercel.json), [`public/_redirects`](../public/_redirects) — explained in [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md).
-2. **Build-time env** — `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` per environment (production vs preview/staging), aligned with [`src/lib/supabase.ts`](../src/lib/supabase.ts). See [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md) and [`.env.example`](../.env.example).
-3. **Preview ↔ Supabase** — preview origins and OAuth redirects must match Supabase Auth allowlists and any Edge Function CORS (see research in `.planning/research/` if present).
+2. **Build-time env** — `VITE_APP_CHANNEL` (`production` \| `staging` \| `demo`) plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` where required; see [`src/lib/envChannel.ts`](../src/lib/envChannel.ts), [`src/lib/supabase.ts`](../src/lib/supabase.ts), and [`vite.config.ts`](../vite.config.ts). Canonical copy: [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md) and [`.env.example`](../.env.example).
+3. **Preview ↔ Supabase** — set **`VITE_APP_CHANNEL=staging`** on preview builds and point keys at a **non-production** Supabase project; add preview origins and OAuth redirects to Supabase Auth allowlists and Edge Function CORS (see research in `.planning/research/` if present).
 4. **Production pipeline** — deploy from protected `main` (or your release branch) with a recorded smoke pass — [`docs/smoke-checklist-production.md`](./smoke-checklist-production.md).
 5. **Custom domain + TLS** — DNS and certificate as required by your provider.
 
@@ -52,9 +52,9 @@ Track these explicitly until each is either implemented or moved into the right 
 ## Codebase map (for doc authors)
 
 - App entry and data bootstrap: `src/App.tsx`, `src/hooks/useDataInit.ts`, `src/lib/realtimeSubscriptions.ts`.
-- Supabase client gate: `src/lib/supabase.ts`.
+- Deploy channel + Supabase client gate: `src/lib/envChannel.ts`, `src/lib/supabase.ts`.
 - Planning artifacts: `.planning/PROJECT.md`, `.planning/codebase/STRUCTURE.md`, `.planning/codebase/CONVENTIONS.md` (UI canon points at `master-design-ui`).
 
 ---
 
-*Last updated: 2026-04-15 — deployment artifacts (`vercel.json`, `public/_redirects`), deploy/Gmail/smoke docs, org-member RPC + `fetchOrgUsers` hydration; gaps table updated for member identity.*
+*Last updated: 2026-04-16 — `VITE_APP_CHANNEL` (production / staging / demo), build-time Supabase validation in `vite.config.ts`, env/docs alignment; plus prior deployment artifacts and org-member RPC notes.*

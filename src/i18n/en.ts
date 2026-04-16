@@ -65,6 +65,8 @@ export const en: Translations = {
     noResults: 'No results found',
     loading: 'Loading...',
     skipToMain: 'Skip to main content',
+    envBannerStaging: 'Staging — data is not production.',
+    envBannerDemo: 'Demo — mock accounts and sample data only.',
     export: 'Export',
     import: 'Import',
     reset: 'Reset',

@@ -67,6 +67,8 @@ export const pt: Translations = {
     noResults: 'Nenhum resultado encontrado',
     loading: 'Carregando...',
     skipToMain: 'Ir para o conteúdo principal',
+    envBannerStaging: 'Ambiente de staging — os dados não são de produção.',
+    envBannerDemo: 'Demonstração — apenas contas simuladas e dados de exemplo.',
     export: 'Exportar',
     import: 'Importar',
     reset: 'Redefinir',

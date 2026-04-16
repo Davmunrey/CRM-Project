@@ -26,7 +26,7 @@
 **Stores (`src/store/*`):**
 - Domain-specific Zustand stores.
 - Supabase CRUD + realtime subscriptions where applicable.
-- Local mock/demo mode remains supported when Supabase config is absent.
+- Local or **demo-channel** mock mode remains supported when Supabase config is absent (`src/lib/envChannel.ts`, `src/lib/supabase.ts`); staging/production require Supabase.
 
 **Services (`src/services/*`):**
 - Stateless integration adapters (`gmailService`, `aiService`, etc.).

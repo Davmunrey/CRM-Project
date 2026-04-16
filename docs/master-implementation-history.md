@@ -21,7 +21,7 @@ Foundation through operational notes (platform, tenancy, auth, tracking, leads, 
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-15  
+- **Last updated:** 2026-04-16  
 - **Canonical:** Yes (together with Part B)  
 
 This file is an **archive-stable** slice: it should change rarely. Prefer editing Part B for ongoing delivery narrative.
@@ -193,7 +193,7 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-15  
+- **Last updated:** 2026-04-16  
 - **Canonical:** Yes (Part A + Part B together)  
 
 ## Contents
@@ -315,7 +315,7 @@ Cross-references elsewhere in the repo to **“section 19”**, **“section 21�
 ## 19) Sell-ready external + internal hardening (April 2026)
 
 - **Outbound email (Edge):** `resend-send-email` hardened with payload limits, MIME allowlist, attachment size caps, optional sender/reply domain policy, per-user (and optional per-org) rate limits, structured logs, and post-success audit where service role is available.
-- **Production auth:** Fail-closed when Supabase env is missing in production (`isBootstrapFatalError`); offline demo only with explicit `VITE_ALLOW_DEMO_MODE` in non-production builds (`isOfflineDemoMode`).
+- **Production auth / channels:** `VITE_APP_CHANNEL` (`production` \| `staging` \| `demo` \| local `development`); `vite build` requires Supabase env for **production** and **staging**; **demo** allows offline mock bundles. Runtime fail-closed via `isBootstrapFatalError` except hosted `demo`. Local mock: `VITE_ALLOW_DEMO_MODE`; hosted mock: `VITE_APP_CHANNEL=demo` (`src/lib/envChannel.ts`, `src/lib/supabase.ts`, `vite.config.ts`).
 - **Auth persistence:** Zustand `partialize` / `merge` no longer restore demo `users` / `passwords` maps when Supabase is configured.
 - **Email truthfulness:** Outbound messages transition to `sent` only after provider success; failures use `failed` + `sendError` and `email_send_failed` audit where applicable.
 - **Tests / CI:** Vitest timeouts and deterministic worker policy in `vite.config.ts`; `npm audit --audit-level=critical` in `.gitea/workflows/ci.yml` and `.github/workflows/ci.yml`.

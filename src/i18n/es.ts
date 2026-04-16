@@ -65,6 +65,8 @@ export const es: Translations = {
     noResults: 'Sin resultados',
     loading: 'Cargando...',
     skipToMain: 'Ir al contenido principal',
+    envBannerStaging: 'Entorno de staging: los datos no son de producción.',
+    envBannerDemo: 'Demo: cuentas simuladas y datos de ejemplo únicamente.',
     export: 'Exportar',
     import: 'Importar',
     reset: 'Restablecer',

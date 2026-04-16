@@ -26,7 +26,7 @@ This project is ready to integrate backend-managed SSO for Google, Azure, Apple,
 
 - Status: Active
 - Owner: Backend/Auth
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 ## Frontend contract already implemented
@@ -127,7 +127,7 @@ This matrix tracks production hardening posture across security, reliability, op
 
 - Status: Active
 - Owner: Security/Ops/Backend
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 ## Scoring Legend
@@ -185,7 +185,7 @@ This index ties **internal documentation**, **code controls**, and **external ch
 2. Map items to procurement questionnaires (SOC2-style, GDPR-style) using [Compliance mapping](#compliance-mapping).
 3. For application-level control depth, cross-check against [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard) Level 1–2.
 
-**Where to find buyer-facing artifacts:** this file holds **Gitea**, **Supabase external checklist**, **hardening matrix**, **DSAR**, and **SOC2/GDPR mapping**. Use [`master-email-operations`](./master-email-operations.md) (deliverability), [`master-lead-management`](./master-lead-management.md) (maintenance + retention), [`master-release-qa`](./master-release-qa.md) (go-live + QA), [`master-design-ui`](./master-design-ui.md) (UI evidence), [`master-implementation-history`](./master-implementation-history.md) (engineering narrative). Code anchors for outbound mail: `supabase/functions/resend-send-email/index.ts`; prod auth: `src/lib/supabase.ts`, `src/App.tsx`, `.env.example`.
+**Where to find buyer-facing artifacts:** this file holds **Gitea**, **Supabase external checklist**, **hardening matrix**, **DSAR**, and **SOC2/GDPR mapping**. Use [`master-email-operations`](./master-email-operations.md) (deliverability), [`master-lead-management`](./master-lead-management.md) (maintenance + retention), [`master-release-qa`](./master-release-qa.md) (go-live + QA), [`master-design-ui`](./master-design-ui.md) (UI evidence), [`master-implementation-history`](./master-implementation-history.md) (engineering narrative). Code anchors for outbound mail: `supabase/functions/resend-send-email/index.ts`; deploy channels + auth: `src/lib/envChannel.ts`, `src/lib/supabase.ts`, `src/App.tsx`, `vite.config.ts`, `.env.example`.
 
 ## ASVS (informal)
 
@@ -193,7 +193,7 @@ This index ties **internal documentation**, **code controls**, and **external ch
 - **V4 Access control** — RLS + app gates: [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist); `src/utils/permissions.ts`
 - **V9 Communications** — TLS to APIs + outbound mail controls: external CDN/infra; `supabase/functions/resend-send-email/index.ts`; [`master-email-operations`](./master-email-operations.md#email-deliverability-resend)
 - **V7 Error handling / logging** — `audit_log`, maintenance telemetry, failed send audit: [`master-lead-management`](./master-lead-management.md#lead-maintenance-runbook); [#hardening-matrix](#hardening-matrix); `src/store/emailStore.ts`
-- **V14 Configuration** — Prod requires Supabase env; demo gated: `src/lib/supabase.ts`, `.env.example`
+- **V14 Configuration** — Channels + Supabase: `src/lib/envChannel.ts`, `src/lib/supabase.ts`, `vite.config.ts`, `.env.example` (`VITE_APP_CHANNEL`, staging/prod build gates, hosted `demo` mock)
 - **V8 Data protection** — Tenant isolation + DSAR/retention: [#dsar-playbook](#dsar-playbook); [`master-lead-management`](./master-lead-management.md#data-retention-runbook)
 
 ## Revision history
@@ -266,7 +266,7 @@ It is a pragmatic engineering mapping (not legal advice and not a formal certifi
 
 - Status: Active
 - Owner: Security/Backend/Ops
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 **Related hub:** [`README`](./README.md) (status snapshot + index). DSAR and retention: [#dsar-playbook](#dsar-playbook), [`master-lead-management` — retention](./master-lead-management.md#data-retention-runbook).

@@ -8,6 +8,7 @@ import { CommandPalette } from './CommandPalette'
 import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../store/toastStore'
 import { useTranslations } from '../../i18n'
+import { EnvironmentBanner } from './EnvironmentBanner'
 
 interface LayoutProps {
   children: ReactNode
@@ -51,7 +52,9 @@ export function Layout({ children, title }: LayoutProps) {
   }, [])
 
   return (
-    <div className="flex h-screen bg-navy-900 overflow-hidden">
+    <div className="flex h-screen flex-col bg-navy-900 overflow-hidden">
+      <EnvironmentBanner />
+      <div className="flex min-h-0 flex-1 overflow-hidden">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-white/40"
@@ -67,6 +70,7 @@ export function Layout({ children, title }: LayoutProps) {
       </div>
       <ToastContainer />
       <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />
+      </div>
     </div>
   )
 }

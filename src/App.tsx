@@ -161,8 +161,11 @@ export default function App() {
         <div className="max-w-lg rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
           <h1 className="text-xl font-semibold text-white mb-2">Configuration error</h1>
           <p className="text-sm text-slate-300 mb-4">
-            This production build requires valid <code className="text-brand-300">VITE_SUPABASE_URL</code> and{' '}
-            <code className="text-brand-300">VITE_SUPABASE_ANON_KEY</code>. Demo/offline mode is disabled in production.
+            This build uses <code className="text-brand-300">VITE_APP_CHANNEL=production</code> or{' '}
+            <code className="text-brand-300">staging</code> and requires valid{' '}
+            <code className="text-brand-300">VITE_SUPABASE_URL</code> and{' '}
+            <code className="text-brand-300">VITE_SUPABASE_ANON_KEY</code>. For a static demo without Supabase, set{' '}
+            <code className="text-brand-300">VITE_APP_CHANNEL=demo</code> and rebuild.
           </p>
           <p className="text-xs text-slate-500">Set environment variables and redeploy.</p>
         </div>

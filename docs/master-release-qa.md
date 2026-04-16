@@ -24,7 +24,7 @@ Use this checklist before shipping a "sell-ready" baseline release.
 
 - Status: Active
 - Owner: Product/QA
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 ## Scope and Planning
@@ -66,7 +66,7 @@ Use this checklist before shipping a "sell-ready" baseline release.
 Cross-check before any **external** customer rollout (evidence lives in linked docs; platform tasks are org-specific):
 
 - [x] Outbound Resend function abuse controls and logging (`supabase/functions/resend-send-email`, index: [`master-security-compliance` — evidence](./master-security-compliance.md#sell-ready-security-evidence-index)).
-- [x] Production auth fail-closed + demo mode gated (`src/lib/supabase.ts`, `src/App.tsx`, `.env.example`).
+- [x] Deploy channels + auth fail-closed: `VITE_APP_CHANNEL` (`src/lib/envChannel.ts`), Supabase bootstrap (`src/lib/supabase.ts`, `src/App.tsx`), build validation (`vite.config.ts`), `.env.example`.
 - [x] Supabase mode auth persistence does not restore demo credentials (`src/store/authStore.ts`).
 - [x] Email send state matches provider outcome (`failed` + audit path where applicable).
 - [x] CI includes critical-level `npm audit` (`.gitea/workflows/ci.yml`, `.github/workflows/ci.yml`).
@@ -82,7 +82,7 @@ Cross-check before any **external** customer rollout (evidence lives in linked d
 
 - Status: Active
 - Owner: QA/Engineering
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 **Status:** Baseline evidence for the **product** sell-ready GO ([#go-no-go-sell-ready-baseline](#go-no-go-sell-ready-baseline)). Post–Apr 2026 **security** checks are listed in [#sell-ready-release-checklist](#sell-ready-release-checklist) (Security section) and [`master-security-compliance` — evidence](./master-security-compliance.md#sell-ready-security-evidence-index).
@@ -148,7 +148,7 @@ Fill this document for each release candidate.
 
 - Status: Active
 - Owner: QA
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 **Example (filled):** [#qa-evidence-sell-ready-baseline](#qa-evidence-sell-ready-baseline) — copy structure from this template for new releases.
@@ -186,7 +186,7 @@ Fill this document for each release candidate.
 
 - Status: Active
 - Owner: Product/Engineering
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 ## Decision
@@ -238,7 +238,7 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 
 - Status: Active
 - Owner: Ops/Engineering
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 **Related:** Security/compliance evidence map [`master-security-compliance`](./master-security-compliance.md#sell-ready-security-evidence-index); Supabase external checklist [`master-security-compliance`](./master-security-compliance.md#supabase-external-hardening-checklist); repo CI [`master-security-compliance`](./master-security-compliance.md#gitea-operations).
@@ -246,6 +246,7 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 ## 1) Pre-Go-Live (T-7 to T-1 days)
 
 - [ ] **Environment Variables**
+  - [ ] `VITE_APP_CHANNEL` (`production` on prod host; `staging` on preview/UAT; `demo` only for intentional mock bundles)
   - [ ] `VITE_SUPABASE_URL`
   - [ ] `VITE_SUPABASE_ANON_KEY`
   - [ ] `LEAD_MAINTENANCE_SECRET`

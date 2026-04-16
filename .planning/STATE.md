@@ -97,3 +97,5 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 ---
 *Initialized: 2026-03-31*
 *Last session: 2026-04-10 — Gmail hardening shipped (dynamic redirect URI, refresh+retry, persisted thread links + migration + function deploy, plus `gmail_thread_workspace` migration), Quote Builder extended with export/email actions, demo inbox seeded with linked deal emails, and chart-heavy routes lazy-loaded to keep production bundles healthy. Test/build remain green (105 tests).*
+
+*Session 2026-04-16 — `VITE_APP_CHANNEL` (production / staging / demo / local development), build-time Supabase validation in `vite.config.ts`, runtime alignment in `src/lib/envChannel.ts` + `src/lib/supabase.ts`, shell `EnvironmentBanner`, README + canonical docs + `.planning` requirements/stack/research updates.*

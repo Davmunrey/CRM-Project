@@ -51,17 +51,33 @@ npm run build
 npm run preview
 ```
 
-The app runs at `http://localhost:5173`. In mock mode it auto-seeds demo data; in Supabase mode data is fetched from your project.
+The app runs at `http://localhost:5173`. With **Supabase** configured, data and auth hit your project. Without it, you can use **offline demo** (see below).
+
+### Deploy channels (`VITE_APP_CHANNEL`)
+
+The SPA resolves a **channel** at build/runtime via [`src/lib/envChannel.ts`](src/lib/envChannel.ts). Set `VITE_APP_CHANNEL` in CI for every hosted build (local `npm run dev` omits it → `development`).
+
+| Channel | When to use | Supabase URL + anon key at `vite build` |
+|--------|-------------|----------------------------------------|
+| **`production`** | Live customers (`main` / prod host) | **Required** (build fails if missing/invalid) |
+| **`staging`** | Preview, UAT, pre-prod (separate Supabase project) | **Required** |
+| **`demo`** | Static sales / training demo (mock auth + seed data) | **Optional** (offline bundle) |
+| *(omit locally)* | `npm run dev` on your machine | Optional |
+
+Staging and production builds **must** use different Supabase projects in dashboard env vars. The app shows a **staging** or **demo** banner in the shell when the channel matches ([`src/components/layout/EnvironmentBanner.tsx`](src/components/layout/EnvironmentBanner.tsx)).
 
 ### Environment Variables
 
-Create a `.env.local` file in the project root:
+Create a `.env.local` file in the project root (see also [`.env.example`](.env.example)):
 
 ```bash
-VITE_SUPABASE_URL=your_supabase_project_url
+# Hosted builds: production | staging | demo (omit locally)
+# VITE_APP_CHANNEL=staging
+
+VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 
-# Local demo only (never in production): offline seed users when Supabase is unset
+# Local dev only: offline seed users + mock auth when Supabase is unset (ignored on staging/production bundles)
 # VITE_ALLOW_DEMO_MODE=true
 
 # Optional outbound provider (defaults to gmail)
@@ -72,7 +88,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 # VITE_RESEND_SEND_FUNCTION=resend-send-email
 ```
 
-**Deploy:** SPA rewrites (`vercel.json`, `public/_redirects`) and per-environment `VITE_*` setup are documented in [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md). Gmail OAuth verification kickoff: [`docs/google-gmail-oauth-verification.md`](docs/google-gmail-oauth-verification.md). Production smoke list: [`docs/smoke-checklist-production.md`](docs/smoke-checklist-production.md).
+**Deploy:** SPA rewrites, `VITE_APP_CHANNEL`, and Supabase vars per environment are documented in [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md). Gmail OAuth verification: [`docs/google-gmail-oauth-verification.md`](docs/google-gmail-oauth-verification.md). Post-deploy smoke: [`docs/smoke-checklist-production.md`](docs/smoke-checklist-production.md).
 
 When `VITE_EMAIL_PROVIDER=resend`, deploy Supabase Edge Function `resend-send-email` and set server-side secrets in Supabase:
 
@@ -182,7 +198,7 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
 
 - **Runtime:** Supabase Auth, org onboarding, RLS multi-tenancy, and core CRM stores with realtime are implemented.
 - **i18n:** EN / ES / PT (plus FR / DE / IT where keyed); run multilingual smoke before releases.
-- **Tests:** Vitest (`npm run test:run`); policy in `vite.config.ts` (single worker for stable CI/local runs).
+- **Tests:** Vitest (`npm run test:run`); pool + `maxWorkers` cap in `vite.config.ts` for stable Windows/CI runs.
 - **Gmail:** PKCE, server refresh, resilient inbox, persisted thread links; migration `20260410195500_gmail_thread_workspace.sql`.
 - **UX / shell:** Quote PDF/email from deals; lazy-loaded chart routes; `crm-page` / `crm-page-full`, `PanelEmpty`, auth/branding — see `docs/master-design-ui.md`.
 - **Sell-ready product baseline:** Checklist + QA + go/no-go — `docs/master-release-qa.md` (Apr 2026 internal/beta GO).
@@ -202,7 +218,7 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
 | Go-live operations | `docs/master-release-qa.md` (Production handoff section) |
 
 ## Seed Data
-Offline demo mode (non-production only) requires `VITE_ALLOW_DEMO_MODE=true` when Supabase env vars are absent; production builds require real Supabase configuration.
+**Local** offline demo: Supabase unset + `VITE_ALLOW_DEMO_MODE=true` in `.env.local` (not used on `staging` / `production` bundles). **Hosted** static demo: set `VITE_APP_CHANNEL=demo` at build time (mock auth without Supabase). Real **production** and **staging** channels require valid Supabase env vars; `vite build` enforces this for those channels.
 
 In mock mode, the app ships with realistic Spanish/European B2B seed data:
 - **25 contacts** across companies in fintech, SaaS, insurance, banking, retail

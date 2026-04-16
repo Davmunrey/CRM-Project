@@ -8,7 +8,7 @@
 |--------|------|
 | Need **v1 phases**, deploy checklist IDs, or latest milestone note | [`.planning/STATE.md`](../.planning/STATE.md) · [`.planning/ROADMAP.md`](../.planning/ROADMAP.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) |
 | Want **one map** of “docs vs `.planning`”, hosting intent, and **known gaps** | [**`project-state.md`**](./project-state.md) |
-| Ship **static hosting** (SPA rewrites, `VITE_*` per env, preview vs prod) | [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) |
+| Ship **static hosting** (SPA rewrites, `VITE_APP_CHANNEL`, `VITE_*` per env, preview vs prod) | [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) |
 | Start **Google Gmail** restricted-scope verification | [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md) |
 | Run **production smoke** after deploy | [`smoke-checklist-production.md`](./smoke-checklist-production.md) |
 | Own **roadmap / backlog** (30–60–90, GTM matrix) | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
@@ -76,5 +76,5 @@ One-time merge tooling (only if you restore legacy paths from git history): `scr
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-15  
+- **Last updated:** 2026-04-16  
 - **Canonical:** Yes  
