@@ -49,3 +49,6 @@ Follow your host’s DNS and certificate flow after the first successful deploy.
 ---
 
 *See also [`project-state.md`](./project-state.md) and [`master-release-qa.md`](./master-release-qa.md#production-handoff-checklist).*
+---
+
+*Last updated (git): **2026-04-16***

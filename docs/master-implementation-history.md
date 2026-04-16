@@ -7,7 +7,30 @@
 ## Table of contents
 
 - [Part A — Sections 1–12 (foundation)](#implementation-history-sections-01-12)
-- [Part B — Sections 13–21 (recent waves)](#implementation-history)
+- [Part B — Sections 13–23 (recent waves)](#implementation-history)
+- [Chronological index (oldest → newest)](#chronological-index-oldest--newest)
+
+---
+
+<a id="chronological-index-oldest--newest"></a>
+## Chronological index (oldest → newest)
+
+Approximate delivery dates for quick scanning. **Section numbers (1–23) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
+
+| Date | Section | Summary |
+|------|---------|---------|
+| 2026-03-31 | [Part A — §1–12](#implementation-history-sections-01-12) | Foundation: platform through operational notes (tenancy, auth, tracking, leads, i18n, SSO, tests). |
+| 2026-04-10 | [§13](#implementation-history-section-13) | Current status snapshot — multi-tenant CRM baseline. |
+| 2026-04-10 | [§14](#implementation-history-section-14) | Lead maintenance observability, ops dashboard, SLAs, and runbooks. |
+| 2026-04-10 | [§15](#implementation-history-section-15) | Email privacy hardening (per-user mailbox, RLS, tracking ownership). |
+| 2026-04-10 | [§16](#implementation-history-section-16) | Navigation pack (Settings tabs, customizable sidebar, preferences persistence). |
+| 2026-04-10 | [§17](#implementation-history-section-17) | Email Ola 3 — Inbox filters, saved views, sync observability, quick replies. |
+| 2026-04-12 | [§18](#implementation-history-section-18) | UI shell, design consistency, and documentation (April 2026). |
+| 2026-04-13 | [§19](#implementation-history-section-19) | Sell-ready external + internal hardening (April 2026). |
+| 2026-04-14 | [§20](#implementation-history-section-20) | Sell-ready product baseline — archived two-week sprint (Q2 2026). |
+| 2026-04-14 | [§21](#implementation-history-section-21) | Workflow Automations v1 and Lead Scoring v2 (2026). |
+| 2026-04-15 | [§22](#implementation-history-section-22) | Ola C — information consistency (i18n waves, QA template, backlog sequencing, research neutrality). |
+| 2026-04-16 | [§23](#implementation-history-section-23) | Manager Dashboard Pack + onboarding (`/manager`, checklist, UX telemetry). |
 
 ---
 
@@ -15,7 +38,7 @@
 <a id="implementation-history-sections-01-12"></a>
 ## Part A — Sections 1–12 (foundation)
 
-Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–21).
+Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–23).
 
 ## Document control
 
@@ -185,9 +208,9 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 
 
 <a id="implementation-history"></a>
-## Part B — Sections 13–21 (recent waves)
+## Part B — Sections 13–23 (recent waves)
 
-**Part B** is the active delivery narrative (sections 13–21). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
+**Part B** is the active delivery narrative (sections 13–23). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
 
 ## Document control
 
@@ -201,19 +224,20 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 | Part | Location | Sections |
 |------|----------|----------|
 | **A** | [Anchor `#implementation-history-sections-01-12`](#implementation-history-sections-01-12) | 1–12: platform, tenancy, auth, org setup, security, email tracking, **leads**, i18n, UI, SSO, tests, ops notes |
-| **B** | *below in this section* | 13–21 |
+| **B** | *below in this section* | 13–23 |
 
 Cross-references elsewhere in the repo to **“section 19”**, **“section 21”**, etc. mean **Part B** in this file. References to **section 7** (leads baseline) mean **Part A** above.
 
+<a id="implementation-history-section-13"></a>
 ## 13) Current status summary
 
 - CRM is multi-tenant, auth-protected, localized, and production-build stable.
 - Leads + tracking + conversion baseline is implemented and functioning.
 - SSO UI and backend handoff contract are in place.
 - **Workflow Automations v1** and **Lead Scoring v2** refinements are shipped (see section 21).
-- Remaining PRO work is primarily **manager analytics**, **onboarding depth**, **API/webhooks**,
-  enterprise governance, and integration breadth.
+- **Manager Dashboard Pack** and **workspace onboarding** (checklist + home banner) are shipped (see section 23); remaining PRO work is primarily **API/webhooks**, enterprise governance, and integration breadth.
 
+<a id="implementation-history-section-14"></a>
 ## 14) Lead maintenance observability and operations
 
 - Backend-first lead score maintenance shipped and deployed:
@@ -248,6 +272,7 @@ Cross-references elsewhere in the repo to **“section 19”**, **“section 21�
   - SOC2 / GDPR-lite control-to-implementation mapping
   - evidence references and 30-day compliance action plan.
 
+<a id="implementation-history-section-15"></a>
 ## 15) Email privacy hardening (per-user mailbox)
 
 - Mailbox privacy model hardened so each user sees/tracks only their own email telemetry.
@@ -267,6 +292,7 @@ Cross-references elsewhere in the repo to **“section 19”**, **“section 21�
   - `backfill_email_tracking_user(text[])` RPC claims old tracking rows (`user_id IS NULL`)
     for the authenticated user in the active organization.
 
+<a id="implementation-history-section-16"></a>
 ## 16) Navigation pack (Settings tabs + customizable sidebar)
 
 - Settings now supports internal tab navigation with deep-link query params:
@@ -286,6 +312,7 @@ Cross-references elsewhere in the repo to **“section 19”**, **“section 21�
 - Email release gate checklist added: [Email release checklist](./master-email-operations.md#email-release-checklist).
 - Guided smoke validation script added: [Email 15-minute smoke test](./master-email-operations.md#email-smoke-test-15min) for QA/support reproducible verification.
 
+<a id="implementation-history-section-17"></a>
 ## 17) Email Ola 3 (productivity + reliability visibility)
 
 - Inbox advanced filters expanded with high-impact operators:
@@ -302,6 +329,7 @@ Cross-references elsewhere in the repo to **“section 19”**, **“section 21�
   - composer consumes dynamic quick replies
   - template surface supports quick reply CRUD.
 
+<a id="implementation-history-section-18"></a>
 ## 18) UI shell, design consistency, and documentation (April 2026)
 
 - **Page shells:** Global utilities `.crm-page` and `.crm-page-full` in `src/index.css` standardize max width (~1800px) and responsive padding for list/settings pages vs full-height views (Deals, Inbox, Calendar, Sequences, Email templates).
@@ -312,6 +340,7 @@ Cross-references elsewhere in the repo to **“section 19”**, **“section 21�
 - **Headings:** Calendar and templates/sequences list screens avoid duplicate `h1` where the Topbar already names the route.
 - **Canonical doc:** [Design system and layout](./master-design-ui.md#design-system-and-layout) (indexed from [README](./README.md)).
 
+<a id="implementation-history-section-19"></a>
 ## 19) Sell-ready external + internal hardening (April 2026)
 
 - **Outbound email (Edge):** `resend-send-email` hardened with payload limits, MIME allowlist, attachment size caps, optional sender/reply domain policy, per-user (and optional per-org) rate limits, structured logs, and post-success audit where service role is available.
@@ -321,6 +350,7 @@ Cross-references elsewhere in the repo to **“section 19”**, **“section 21�
 - **Tests / CI:** Vitest timeouts and deterministic worker policy in `vite.config.ts`; `npm audit --audit-level=critical` in `.gitea/workflows/ci.yml` and `.github/workflows/ci.yml`.
 - **Documentation:** [Sell-ready evidence index](./master-security-compliance.md#sell-ready-security-evidence-index), [Supabase external hardening checklist](./master-security-compliance.md#supabase-external-hardening-checklist), [Email deliverability](./master-email-operations.md#email-deliverability-resend), [DSAR playbook](./master-security-compliance.md#dsar-playbook), [Data retention runbook](./master-lead-management.md#data-retention-runbook); [Compliance mapping](./master-security-compliance.md#compliance-mapping) and [Gitea operations](./master-security-compliance.md#gitea-operations) updated for evidence and branch-protection notes.
 
+<a id="implementation-history-section-20"></a>
 ## 20) Sell-ready product baseline — archived two-week sprint (Q2 2026)
 
 The following sprint targeted the first **sell-ready product** baseline (heterogeneous tenants). It is **complete**; see [Go / No-Go — sell-ready baseline](./master-release-qa.md#go-no-go-sell-ready-baseline). This section preserves acceptance detail; active backlog is [Pro backlog](./master-roadmap-backlog.md#pro-backlog).
@@ -350,8 +380,29 @@ Ship the first sell-ready baseline for heterogeneous companies with measurable a
 
 - i18n audit + locale wrappers + formatter tests; pipeline settings + dynamic labels; RBAC model, assignment UI, audit logging; white-label model + UI; release checklist + QA evidence template workstreams closed.
 
+<a id="implementation-history-section-21"></a>
 ## 21) Workflow Automations v1 and Lead Scoring v2 (2026)
 
 - **Automations v1:** execution logs persisted (status/errors); trigger evaluation on lead/deal transitions; actions for create-activity, assign owner, internal notification paths.
 - **Lead Scoring v2:** recency decay on events; structured reason metadata in score snapshots; confidence threshold strategy for hot vs cold classification.
 - **Backlog / roadmap:** execution board entries for these tracks are closed; forward scope is in [Pro backlog](./master-roadmap-backlog.md#pro-backlog) and phase deliverables in [Pro roadmap 30–60–90](./master-roadmap-backlog.md#pro-roadmap-30-60-90).
+
+<a id="implementation-history-section-22"></a>
+## 22) Ola C — information consistency (April 2026)
+
+- **i18n / GTM:** Documented [regionalization execution waves](./master-roadmap-backlog.md#i18n-regionalization-execution-waves) under Pro backlog **Next** (W1–W3: audit + critical paths, FR/DE/IT parity, locale depth).
+- **Release QA:** Added a repeatable [Translation QA checklist (per release)](./master-release-qa.md#translation-qa-checklist-per-release) in `master-release-qa.md`, linked from the backlog i18n bullets.
+- **Backlog sequencing:** Added [release assignment table](./master-roadmap-backlog.md#release-assignment-next-backlog) for large **Next** items (templates, role builder, webhooks, retention, DSR, etc.) mapped to **31–60** or **parallel** horizons so execution stays ordered after the shipped 0–30 dashboard + onboarding pack.
+- **Research neutrality:** `.planning/research/deploy-testing.md` reframed around vendor-neutral static hosting with [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md) as canonical; `project-state.md` Gaps row updated accordingly.
+- **i18n W1 (code):** `Forecast` pipeline health tier labels and related copy moved from hardcoded Spanish / English fragments to `forecast.*` keys in [`src/i18n`](../src/i18n) (EN/ES/PT; FR/DE/IT inherit EN via partial bundles until W2).
+- **i18n W1 (code, continued):** `PipelineTimeline` conversion-rate label uses `reports.conversionRate`; `FollowUps` removes a hardcoded `createdBy` name (uses signed-in user), drops `nav.contacts.toLowerCase()` for the toolbar summary, and adds `followUps.daysSinceBadge` (`{days}` placeholder) for the idle-contact line.
+- **i18n — stores + audit + demo notifications:** Centralized `errors.*` (auth/login/invitation/validation), `auditMessages.*` (audit log detail strings), `attachments.*`, `dealSync.*`, `dealNotifications.*`, `notificationSeeds.*`, and `email.subjectPreset*` in [`src/i18n`](../src/i18n) (EN/ES/PT; partial locales inherit via `...en`). Wired [`getTranslations()`](../src/i18n/index.ts) into `authStore`, `activitiesStore`, `contactsStore`, `dealsStore` (including move notifications), `emailStore`, `leadsStore`, `notificationsStore` seeds, plus `AttachmentsList` and `EmailComposer` user-visible strings. **Remaining work:** continue sweeping `src/pages`, `src/components`, Zod messages, placeholders, and `seedData` until no literal UI language remains (see roadmap i18n waves).
+
+<a id="implementation-history-section-23"></a>
+## 23) Manager Dashboard Pack + Onboarding (April 2026)
+
+- **Definitions / contract:** [`docs/manager-dashboard-metrics.md`](./manager-dashboard-metrics.md) — MQL/SQL snapshot from lead `lifecycleStage`, open-deal stage × aging buckets from `deal.updatedAt`, owner “first touch” median hours from completed call/email/meeting on the same deal where `createdBy` matches `assignedTo`. Route **`/manager`** requires `reports:read` (see `src/utils/permissions.ts`).
+- **UI:** lazy-loaded [`src/pages/ManagerDashboard.tsx`](../src/pages/ManagerDashboard.tsx) with methodology hints; unit tests in [`tests/utils/managerDashboardMetrics.test.ts`](../tests/utils/managerDashboardMetrics.test.ts).
+- **i18n (Apr 2026):** Full `managerDashboard.*` strings for **EN/ES/PT/DE/FR/IT**; shared `common.unassigned` for unassigned deals; `managerDashboard.hoursAbbrev` for the median-hours suffix; SQL share null state uses `common.notAvailable`. Metrics export **`MANAGER_DASHBOARD_UNASSIGNED_OWNER_KEY`** for the internal bucket key (UI maps to `common.unassigned`). Contract and key map are documented in [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md) (sections *Internationalization* and *Closed-stage detection*).
+- **Onboarding:** Zustand persist store [`src/store/onboardingStore.ts`](../src/store/onboardingStore.ts) (`crm_onboarding_v1`) keyed by `organizationId` — import contacts, first deal, first sequence, optional home-banner dismiss. **Settings** tab `?tab=onboarding` + **Dashboard** banner CTA; local UX telemetry via [`src/lib/uxMetrics.ts`](../src/lib/uxMetrics.ts) (`onboarding_*` actions, capped localStorage queue — not a substitute for server audit).
+- **Ola B/C docs:** Gmail verification kickoff unchanged but cross-linked; email analytics inventory added under [`master-email-operations.md` — Email open/click analytics inventory](./master-email-operations.md#email-openclick-analytics-inventory); deploy research neutrality and release-assignment table remain as in section 22.

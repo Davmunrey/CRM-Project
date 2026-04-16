@@ -7,6 +7,8 @@
 ## Table of contents
 
 - [Sell-ready release checklist](#sell-ready-release-checklist)
+- [Translation QA checklist (per release)](#translation-qa-checklist-per-release)
+- [Onboarding UAT (workspace checklist)](#onboarding-uat-workspace-checklist)
 - [QA evidence — sell-ready baseline](#qa-evidence-sell-ready-baseline)
 - [QA evidence template](#qa-evidence-template)
 - [Go / No-Go — sell-ready baseline](#go-no-go-sell-ready-baseline)
@@ -74,6 +76,62 @@ Cross-check before any **external** customer rollout (evidence lives in linked d
 
 ---
 
+<a id="translation-qa-checklist-per-release"></a>
+## Translation QA checklist (per release)
+
+Use this **short gate** on every release candidate when UI copy or locale behavior changed. Full matrices for major baselines live in [#qa-evidence-sell-ready-baseline](#qa-evidence-sell-ready-baseline); this section is the **repeatable minimum**.
+
+**Regionalization waves** (engineering plan, not a single RC): see [Pro backlog — i18n regionalization execution waves](./master-roadmap-backlog.md#i18n-regionalization-execution-waves).
+
+### Pre-flight
+
+- [ ] Release notes list **languages touched** (minimum: EN/ES/PT; note FR/DE/IT if keys changed).
+- [ ] No **new** user-visible hardcoded strings in changed files (grep / PR review); new copy uses `src/i18n` keys.
+- [ ] **Formatter paths** unchanged or re-run: `npm run test:run -- tests/utils/formatters.test.ts` (or full CI).
+
+### Per-language smoke (15–30 min)
+
+For each locale in scope, spot-check: **login**, **create contact**, **create/move deal**, **one Settings tab** touched by the release. If **`/manager`** or `managerDashboard` / `common.unassigned` keys changed in the release, also spot-check **Manager dashboard** (Reports read): nav label, methodology hints, heatmap headers, response list, unassigned row label, and SQL share empty state.
+
+- [ ] **EN** — no mixed-language fragments in those flows.
+- [ ] **ES** — same.
+- [ ] **PT** — same.
+- [ ] **FR / DE / IT** (if marked “supported this RC”) — no empty labels; fallbacks acceptable only where documented.
+
+### Locale and data
+
+- [ ] Dates and numbers match **org + user locale** expectations on Dashboard or Reports if those areas changed.
+- [ ] Currency sample (if deals/reports touched): symbol position and decimals look correct for the locale.
+
+### Sign-off line
+
+- [ ] Owner initials + date recorded in RC QA evidence (or PR checklist comment).
+
+---
+
+<a id="onboarding-uat-workspace-checklist"></a>
+## Onboarding UAT (workspace checklist)
+
+Use after changes to **Dashboard**, **Settings → Getting started**, or [`onboardingStore`](../src/store/onboardingStore.ts).
+
+### Preconditions
+
+- [ ] Signed-in user belongs to an organization (`organizationId` present in session / JWT as usual for Supabase mode).
+
+### Flow
+
+1. [ ] Open **Dashboard** — if checklist incomplete, **workspace setup** banner appears; **Open checklist** navigates to `/settings?tab=onboarding`.
+2. [ ] **Dismiss** hides the banner for this org+browser until reset (stored with onboarding flags).
+3. [ ] On **Settings → Getting started**, mark each milestone **Done** / **To-do**; reload — state persists (`localStorage` key `crm_onboarding_v1`).
+4. [ ] Links open **Contacts**, **Deals**, and **Sequences** in-app (`Link` targets).
+5. [ ] **Reset checklist** clears milestones for the active org (banner may reappear if steps incomplete).
+
+### Telemetry (non-blocking)
+
+- [ ] Optional: after QA, inspect `localStorage` key `crm_ux_metrics_v1` for `onboarding_*` events when toggles/dismiss/reset were exercised (local UX queue only; not server audit).
+
+---
+
 
 <a id="qa-evidence-sell-ready-baseline"></a>
 ## QA evidence — sell-ready baseline
@@ -105,6 +163,7 @@ Cross-check before any **external** customer rollout (evidence lives in linked d
 | Create/move deal | [x] | [x] | [x] | Dynamic stage labels + localized deal UI copy. |
 | Create/complete activity | [x] | [x] | [x] | Activity forms and timeline labels localized. |
 | Dashboard/reports formatting | [x] | [x] | [x] | Formatter utilities + tests validate locale behavior. |
+| Manager dashboard (`/manager`) | [x] | [x] | [x] | `managerDashboard.*` + `common.unassigned` / `notAvailable`; FR/DE/IT have explicit `managerDashboard` bundles (see [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md)). |
 
 ## Role Matrix
 

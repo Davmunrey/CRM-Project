@@ -14,7 +14,7 @@
 | Own **roadmap / backlog** (30–60–90, GTM matrix) | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
 | Need **what shipped** (chronological handoff) | [`master-implementation-history.md`](./master-implementation-history.md) |
 
-One-time merge tooling (only if you restore legacy paths from git history): `scripts/build-doc-masters.mjs`.
+Verify consolidated `docs/` layout (no legacy split sources; masters present): `npm run docs:verify-consolidation`. Normalize phase snapshot headers: `npm run docs:fix-phase-headers`.
 
 ---
 
@@ -27,8 +27,9 @@ One-time merge tooling (only if you restore legacy paths from git history): `scr
 | Leads: scoring backend, maintenance, retention | [`master-lead-management.md`](./master-lead-management.md) | Edge maintenance contract, Ops dashboard, runbook, data retention |
 | Design system, theme, navigation, profiles | [`master-design-ui.md`](./master-design-ui.md) | Page shells (`crm-page` / `crm-page-full`), navigation runbook, user display names |
 | Release, QA, go/no-go, production handoff | [`master-release-qa.md`](./master-release-qa.md) | Sell-ready checklist, QA evidence, go/no-go, production handoff |
-| Implementation history (full handoff) | [`master-implementation-history.md`](./master-implementation-history.md) | Part A §1–12 · Part B §13–21 |
+| Implementation history (full handoff) | [`master-implementation-history.md`](./master-implementation-history.md) | Part A §1–12 · Part B §13–23 |
 | Roadmap 30/60/90 + execution backlog | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Horizon roadmap · Pro backlog board |
+| Manager `/manager` KPI definitions (MQL/SQL, aging, first-touch) | [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md) | Data contract + i18n key map (narrative in implementation history §23) |
 
 ---
 

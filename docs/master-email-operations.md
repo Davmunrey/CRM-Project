@@ -121,6 +121,21 @@ This runbook helps support and operations teams validate and troubleshoot per-us
 - Verify events are stored with matching `user_id`.
 - Re-run local mailbox refresh and confirm counters change.
 
+<a id="email-openclick-analytics-inventory"></a>
+## Email open/click analytics inventory
+
+**Purpose (Ola B2):** single map from **UI → client helpers → Edge → Postgres** so “estimated” vs **server-backed** metrics stay honest.
+
+| Layer | Responsibility | Key paths |
+|-------|------------------|-----------|
+| **Outbound HTML** | Rewrite links + inject open pixel | [`src/lib/emailTracking.ts`](../src/lib/emailTracking.ts) (`rewriteLinksForTracking`, `injectOpenPixel`, `normalizeBodyToHtml`) consumed when sending tracked mail from [`emailStore`](../src/store/emailStore.ts). |
+| **Ingestion** | Stateless open/click endpoints | Supabase Edge `track-open`, `track-click` → `email_tracking_events` (see migrations + RLS in repo). |
+| **Persistence** | Per-message/link rows + events | `email_tracking_messages`, `email_tracking_links`, `email_tracking_events` (user-scoped RLS — see [`CONCERNS.md`](../.planning/codebase/CONCERNS.md)). |
+| **UI — Reports** | Shows **server** counts for the signed-in user’s sends | [`src/pages/Reports.tsx`](../src/pages/Reports.tsx); copy includes reliability note where applicable. |
+| **Demo / mock** | Simulated opens/clicks | Contact detail actions in non-Supabase mode only — **not** recipient truth. |
+
+**Future (optional):** org-wide manager rollups (RPC/materialized view), bot dedupe — tracked in Pro backlog / `CONCERNS.md`.
+
 ## Escalation Data
 
 When escalating to backend, include:
@@ -220,6 +235,7 @@ Purpose: quick manual validation for Inbox + tracking + per-user privacy before 
    - Opens >= 1
    - Clicks >= 1
    - `openedAt` and `lastOpenedAt` are populated and coherent.
+7. Open **Reports** with a date range that includes today and confirm the **server-based** outbound email section shows at least one open and one click for `User A` (RLS: only your own sends appear there).
 
 ## Flow B - Mailbox Privacy (4 min)
 

@@ -17,13 +17,13 @@
 
 This roadmap starts from the current implemented baseline and prioritizes features that move the product closer to HubSpot/Pipedrive-level value.
 
-> **Status refresh (2026-04-15):** Navigation customization, core i18n (EN/ES/PT + partial FR/DE/IT), sell-ready **product** baseline (checklist + QA + go/no-go), sell-ready **security/compliance** engineering baseline (section **19** in `docs/master-implementation-history.md#implementation-history`), and **Workflow Automations v1 + Lead Scoring v2** (section **21**) are shipped. This roadmap tracks **remaining** 0–30 work (manager dashboards, onboarding) and later horizons (API, SSO depth, AI).
+> **Status refresh (2026-04-16):** Navigation customization, core i18n (EN/ES/PT + partial FR/DE/IT), sell-ready **product** baseline (checklist + QA + go/no-go), sell-ready **security/compliance** engineering baseline (section **19** in `docs/master-implementation-history.md#implementation-history`), **Workflow Automations v1 + Lead Scoring v2** (section **21**), and **Manager Dashboard Pack + Onboarding** (section **23**) are shipped. This roadmap tracks **remaining** horizons (API, SSO depth, AI, org-wide email rollups). **Ola C (docs):** i18n execution waves, per-release translation QA template, **Next**→release assignment table, deploy research neutrality — see [`master-implementation-history` — section 22](./master-implementation-history.md#implementation-history-section-22).
 
 ## Document Control
 
 - Status: Active
 - Owner: Product
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 ## 0-30 days (Revenue + execution fundamentals)
@@ -37,14 +37,11 @@ Improve sales execution quality and manager visibility with measurable weekly im
 1. ~~**Workflow Automations v1**~~ **Shipped** — see `docs/master-implementation-history.md#implementation-history` (Part B, section 21).
 2. ~~**Lead Scoring v2**~~ **Shipped** — same section.
 
-3. **Manager Dashboard Pack**
-   - MQL->SQL conversion rate
-   - stage aging heatmap
-   - owner response-time KPI.
+3. ~~**Manager Dashboard Pack**~~ **Shipped** — route `/manager`, definitions in [`docs/manager-dashboard-metrics.md`](./manager-dashboard-metrics.md), narrative in [`master-implementation-history` — section 23](./master-implementation-history.md#implementation-history-section-23).
+   - MQL/SQL snapshot, stage aging heatmap, owner first-touch KPI (see metrics doc).
 
-4. **Onboarding + Activation**
-   - guided setup checklist per workspace,
-   - first-value milestones (import contacts, create first deal, send first sequence).
+4. ~~**Onboarding + Activation**~~ **Shipped** — Settings `?tab=onboarding`, Dashboard banner, persisted checklist per org (`onboardingStore`); same section **23** link.
+   - Guided checklist + first-value links (contacts, deals, sequences).
 
 ### Success criteria
 
@@ -125,20 +122,20 @@ Move from “feature parity” toward differentiation through intelligence and v
 
 1. ~~Automations v1~~ (done)
 2. ~~Lead Scoring v2~~ (done)
-3. Manager Dashboard Pack
-4. Onboarding + Activation (parallel where capacity allows)
+3. ~~Manager Dashboard Pack~~ (done)
+4. ~~Onboarding + Activation~~ (done)
 5. SSO/SCIM readiness
 6. API/Webhooks
 7. AI Copilot v2 + Forecasting
 
 ## Immediate sprint start (next coding block)
 
-**Manager Dashboard Pack** first (unblocks 0–30 success criteria), then **Onboarding + Activation**:
+~~**Manager Dashboard Pack**~~ and ~~**Onboarding + Activation**~~ **(done)** — see [`master-implementation-history` — section 23](./master-implementation-history.md#implementation-history-section-23) and [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md).
 
-1. Define KPI queries and empty/loading states per dashboard widget.
-2. Ship MQL→SQL + stage aging + response-time views with role-aware visibility.
-3. Guided setup checklist: persistence model + Settings entry point + completion telemetry.
-4. First-value milestones (import, first deal, first sequence) with progress persistence.
+1. ~~Define KPI queries and empty/loading states per dashboard widget.~~
+2. ~~Ship MQL→SQL + stage aging + response-time views with role-aware visibility.~~
+3. ~~Guided setup checklist: persistence model + Settings entry point + completion telemetry.~~
+4. ~~First-value milestones (import, first deal, first sequence) with progress persistence.~~
 
 ---
 
@@ -148,13 +145,13 @@ Move from “feature parity” toward differentiation through intelligence and v
 
 This is the actionable backlog derived from the 30/60/90 roadmap.
 
-> **Status refresh (2026-04-15):** This board lists **remaining** execution work. Shipped items live in **`docs/master-implementation-history.md#implementation-history-sections-01-12`** (Part A) + **`docs/master-implementation-history.md#implementation-history`** (Part B) and in the status table in **`docs/README.md`**. Keep long “done” narratives out of this file.
+> **Status refresh (2026-04-16):** This board lists **remaining** execution work. Shipped items live in **`docs/master-implementation-history.md#implementation-history-sections-01-12`** (Part A) + **`docs/master-implementation-history.md#implementation-history`** (Part B) and in the status table in **`docs/README.md`**. Keep long “done” narratives out of this file.
 
 ## Document Control
 
 - Status: Active
 - Owner: Product/Engineering
-- Last updated: 2026-04-15
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 ## Shipped tracks (do not duplicate here)
@@ -162,7 +159,7 @@ This is the actionable backlog derived from the 30/60/90 roadmap.
 All previously listed “in progress” packs (automations v1, scoring v2, lead maintenance ops, ops docs, email privacy/Ola 3, navigation, app shell, sell-ready security wave) are **done**. Narrative and ordering:
 
 - **`docs/master-implementation-history.md#implementation-history-sections-01-12`** — sections **1–12** (includes **section 7** leads baseline).  
-- **`docs/master-implementation-history.md#implementation-history`** (Part B) — sections **13–21** (status, maintenance, email hardening, navigation, UI shell, sell-ready, sprint archive, automations/scoring).
+- **`docs/master-implementation-history.md#implementation-history`** (Part B) — sections **13–23** (status, maintenance, email hardening, navigation, UI shell, sell-ready, sprint archive, automations/scoring, Ola C docs, manager dashboard + onboarding).
 - **`docs/README.md`** — status snapshot table.
 
 ## Reference docs (team register)
@@ -172,6 +169,17 @@ All previously listed “in progress” packs (automations v1, scoring v2, lead 
 - **User profile, display names, CRM consistency:** `docs/master-design-ui.md#user-profile-display-names` — what is implemented (`user_metadata` persistence), manual test checklist, and open gaps (CRM rows with plain-text names, editing other users from admin, etc.).
 
 ## Next
+
+<a id="i18n-regionalization-execution-waves"></a>
+### i18n / regionalization — execution waves
+
+Ship **incrementally** after the 0–30 manager + onboarding focus; do not block releases on “100% keys” unless a sell-ready gate explicitly requires it. Implementation lives in [`src/i18n`](../src/i18n) (`useTranslations`, locale formatters). **Per-release QA:** [`master-release-qa` — Translation QA checklist](./master-release-qa.md#translation-qa-checklist-per-release).
+
+| Wave | Goal | Exit signal |
+|------|------|-------------|
+| **W1 — Audit + critical paths** | Remove hardcoded strings in **high-traffic** screens (auth, deals, contacts, Settings tabs touched by roadmap work); extend keys in EN first, then ES/PT. | PR grep policy: no new literals in touched files; EN/ES/PT pass Translation QA. |
+| **W2 — FR / DE / IT parity** | Bring partial locales to **parity** with EN for the same key set (empty key = bug); keep fallback strategy documented in QA evidence. | FR/DE/IT columns filled for the same flows as the EN matrix row in QA evidence. |
+| **W3 — Locale depth** | Date/time **timezone defaults** (org or user), currency/number edge cases, long-lived list exports; align with `date-fns` usage and formatter tests. | Formatter tests extended if new patterns; Dashboard/Reports spot-check signed in QA. |
 
 - [ ] Productization Baseline (sell-ready across industries)
   - [x] Pipeline configurability **(MVP shipped)** — extend with templates / industry packs
@@ -185,7 +193,7 @@ All previously listed “in progress” packs (automations v1, scoring v2, lead 
   - [ ] Full regionalization (i18n + locale)
     - [ ] Remove remaining hardcoded UI strings
     - [ ] Locale-aware dates, currencies, number formats, timezone defaults
-    - [ ] Translation QA checklist per release (EN/ES/PT + fallback strategy)
+    - [ ] Translation QA checklist per release (EN/ES/PT + fallback strategy) — template: [`master-release-qa` — Translation QA checklist](./master-release-qa.md#translation-qa-checklist-per-release)
   - [x] White-label starter pack **(baseline shipped)**
     - [x] Tenant branding (logo, colors, app name)
     - [x] Custom domain/subdomain strategy
@@ -199,10 +207,10 @@ All previously listed “in progress” packs (automations v1, scoring v2, lead 
   - [ ] **Product:** per-tenant retention schedules and automated purge where required by contract
   - [ ] **Product:** in-app or operator-assisted DSR tooling (export/delete) beyond manual Supabase procedures
   - [ ] Backup/restore and DR **test cadence** executed and logged (checklist in Supabase doc; calendar owner = Ops)
-- [ ] Manager Dashboard Pack
-  - [ ] MQL->SQL conversion KPI
-  - [ ] Stage aging heatmap
-  - [ ] Owner response-time KPI
+- [x] Manager Dashboard Pack **(shipped)**
+  - [x] MQL/SQL snapshot + mix KPI (see metrics doc)
+  - [x] Stage aging heatmap (open deals × `updatedAt` buckets)
+  - [x] Owner first-touch / response-time KPI (median hours, completed touch activities)
 - [ ] API + Webhooks baseline
   - [ ] Public endpoint policy and versioning
   - [ ] Webhook subscriptions with retries
@@ -222,6 +230,7 @@ Use this matrix as release gates before onboarding broader customer segments.
 |---|---|---|---|
 | Multi-industry adaptability | Pipeline MVP (rename stages/probabilities) + custom fields; **industry templates** not shipped | Tenant-configurable pipelines + naming + templates | P0 |
 | Language/locale quality | EN/ES/PT + formatter baseline + sell-ready QA; FR/DE/IT partial; **residual hardcoded strings** possible in edge screens | 100% UI i18n + locale-aware formatting | P0 |
+| Manager / activation | **Shipped:** `/manager` KPI pack ([`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md)) + onboarding checklist/banner ([section 23](./master-implementation-history.md#implementation-history-section-23)) | Org-wide analytics (e.g. cross-rep email rollups), deeper cohort MQL→SQL | P0 |
 | Enterprise permissions | Preset matrix + audit shipped; custom role builder open | Dynamic RBAC with profile presets + auditability | P0 |
 | Branding/white-label | Baseline shipped (logo, color, domain, legal links) | Deeper white-label + partner flows | P1 |
 | Integrations | Partial (email-focused) | Connector abstraction + webhooks + import mapping | P1 |
@@ -229,6 +238,23 @@ Use this matrix as release gates before onboarding broader customer segments.
 | Sales enablement packaging | Low | Vertical onboarding templates + deployment playbooks | P2 |
 
 Execution order for GTM priorities matches **[Pro roadmap 30–60–90](#pro-roadmap-30-60-90)** (avoid duplicating here).
+
+<a id="release-assignment-next-backlog"></a>
+### Release assignment — “Next” items outside the immediate 0–30 sprint
+
+Use this table so **large** backlog rows have a single agreed horizon; execution order inside a horizon still follows **[Execution order recommendation](#execution-order-recommendation)** (SSO/API/AI after dashboard + onboarding).
+
+| Backlog item | Target horizon | Notes |
+|---------------|----------------|-------|
+| Multiple pipeline templates (industry packs) | **31–60 days** | Extends shipped pipeline MVP; pairs with vertical onboarding later. |
+| Role builder per organization (full matrix) | **31–60 days** | Enterprise readiness; builds on preset RBAC + audit shipped today. |
+| Full regionalization (remainder: hard strings, locale depth) | **Parallel** (0–30 **safe** + continues through **31–60**) | Follow [i18n waves](#i18n-regionalization-execution-waves); does not preempt manager dashboard / onboarding. |
+| Provider abstraction (Google / Microsoft email, calendar) | **31–60 days** | Integration baseline in roadmap. |
+| CRM import/export hardening | **31–60 days** | Same track as integration baseline / enterprise pilots. |
+| Webhooks v1 (retries, signed payloads) | **31–60 days** | Listed under **API + Webhooks** in [31–60 days](#pro-roadmap-30-60-90). |
+| Per-tenant retention schedules + automated purge | **31–60 days** | Governance pack; engineering runbooks already exist. |
+| In-app / operator-assisted DSR tooling | **31–60 days** | Enterprise trust; playbook exists, product automation open. |
+| Backup/restore + DR **test cadence** logged | **31–60 days** (Ops) | Calendar owner; evidence in compliance / ops docs per tenant. |
 
 ## Archived sprint (sell-ready product baseline)
 

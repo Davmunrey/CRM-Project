@@ -2,6 +2,8 @@
 
 Use this after a production deploy (or before marking **`DEPLOY-04`** done). Record pass/fail and who ran it.
 
+**Before ticking `DEPLOY-*` in [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md):** add a dated evidence line (host, channel, smoke outcome, commit) per the “Recording DEPLOY completion” note in that file — automated agents prepare docs; humans own the checked boxes.
+
 ## Preconditions
 
 - [ ] `VITE_APP_CHANNEL` is **`production`** for this deploy (not `staging` or `demo`).
@@ -18,6 +20,8 @@ Use this after a production deploy (or before marking **`DEPLOY-04`** done). Rec
 5. **Log activity** — Attach activity to contact or deal; visible after navigation away and back.
 6. **Team directory** — Open team / users UI; peer emails and names appear (backed by `list_organization_members_with_identity` RPC after migration `20260415120000_*`).
 7. **Optional — Gmail** — Connect Gmail on production domain only if OAuth verification allows your test user.
+8. **Manager dashboard** — As a user with **Reports read** (e.g. Manager preset), open `/manager` cold load; widgets render without console errors. Definitions, permissions, i18n keys, and tests: [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md).
+9. **Onboarding** — Open `/settings?tab=onboarding`; toggle a checklist step, reload; state persists for the org. Optional: Dashboard banner appears when steps incomplete and banner not dismissed.
 
 ## Automated smoke (local / CI)
 
@@ -30,3 +34,6 @@ Uses Playwright against the dev server by default. For an optional **hosted** UR
 ---
 
 *Aligns with Phase 10.4 narrative in [`.planning/ROADMAP.md`](../.planning/ROADMAP.md).*
+---
+
+*Last updated (git): **2026-04-16***
