@@ -16,10 +16,11 @@
 - Impact: Potential mismatch between organization members and UI assignment options in edge cases.
 - **Update (2026-04-15):** `list_organization_members_with_identity` RPC + `authStore.fetchOrgUsers` now hydrate peer email/display name from `auth.users` (org-scoped via JWT). Remaining risk: selectors that never call `fetchOrgUsers` after local mutations — audit assignee pickers on change.
 
-### Email Tracking Is Demo-Level
-- Issue: Open/click tracking is still local/demo oriented and not backed by reliable server telemetry.
-- Impact: Metrics can be misleading for production sales reporting.
-- Next step: add server-side event ingestion (pixel/webhook) and persist counters in Supabase.
+### Email tracking — server path vs legacy local simulation
+- **Shipped:** Edge Functions `track-open` / `track-click` persist to `email_tracking_events`; outbound sends with tracking insert `email_tracking_messages` / `email_tracking_links` ([`emailStore`](../../src/store/emailStore.ts)). Inbox refresh hydrates counts from the server.
+- **Product nuance:** Per-user RLS on tracking tables means **Reports** shows server opens/clicks **for the signed-in user’s sends only** — not an org-wide dashboard yet.
+- **Demo / offline:** Contact detail “simulate open/click” buttons only apply in mock (non-Supabase) mode; they do not represent recipient behavior in production.
+- **Next step (optional):** manager/org rollup RPC or materialized view for cross-rep reporting; dedupe bot opens if needed.
 
 ---
 
@@ -40,4 +41,7 @@
 
 ---
 
-*Concerns audit: 2026-04-10*
+*Concerns audit: 2026-04-10; email tracking subsection refreshed 2026-04-16 (Ola B — server telemetry + Reports + RLS scope).*
+---
+
+*Last updated (git): **2026-04-16***

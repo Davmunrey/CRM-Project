@@ -1,20 +1,22 @@
 # Deploy + Testing Research: CRM Pro
 
-**Topic:** Vercel deployment + Vitest testing for Vite + React + TypeScript SaaS
-**Researched:** 2026-03-31
-**Overall confidence:** HIGH (Vercel — official docs verified), MEDIUM (Vitest/testing — training knowledge, Vitest docs inaccessible during research)
+**Topic:** Static hosting for a Vite + React + TypeScript SPA, plus Vitest testing notes  
+**Researched:** 2026-03-31; **neutralized / cross-checked:** 2026-04-16  
+**Overall confidence:** HIGH for SPA routing and env **intent** (aligned with repo canonical `docs/deployment-spa-and-env.md`), MEDIUM for Vitest/testing (training knowledge; confirm versions at vitest.dev).
+
+> **Canonical deploy wording for this repo:** [`docs/deployment-spa-and-env.md`](../../docs/deployment-spa-and-env.md) (DEPLOY-01–05 intent, checked-in `vercel.json` + `public/_redirects`, Supabase env, smoke). Treat this file as **optional research**; when anything disagrees, the `docs/` file wins.
 
 ---
 
-## 1. Vercel Deployment for Vite 8 SPA
+## 1. SPA hosting for Vite (example: one popular static platform)
 
-### Confidence: HIGH (official Vercel docs verified)
+### Confidence: HIGH for “SPA needs a fallback to `index.html`” (provider docs vary)
 
-Vite is a first-class citizen on Vercel. The build framework is auto-detected when a `vite.config.ts` is present. No `vercel.json` is required for basic deployments, but SPAs with client-side routing REQUIRE a rewrite rule.
+Vite builds a static `dist/`. **Any** host must serve `index.html` for unknown paths so `react-router-dom` v6 client routes work on cold load and refresh. The repo ships **two** examples: root [`vercel.json`](../../vercel.json) and [`public/_redirects`](../../public/_redirects) (Netlify-style); see the canonical table in [`docs/deployment-spa-and-env.md`](../../docs/deployment-spa-and-env.md).
 
-### vercel.json — Required for React Router
+### Example `vercel.json` shape (only if you deploy there)
 
-This project uses `react-router-dom` v6 with client-side routing. Without a rewrite rule, any URL deeper than `/` will return a 404 on direct load or refresh. The fix is mandatory:
+This project uses `react-router-dom` v6 with client-side routing. On hosts that use a `vercel.json`-style rewrite table, a catch-all rewrite is the usual fix:
 
 ```json
 {
@@ -28,41 +30,32 @@ This project uses `react-router-dom` v6 with client-side routing. Without a rewr
 }
 ```
 
-Place this file at the repository root alongside `package.json`. This is the only config needed for a pure SPA — Vercel auto-detects the Vite framework, runs `tsc && vite build`, and serves `dist/`.
+Place this file at the repository root **only** if that host reads it. Other providers use `_redirects`, nginx `try_files`, S3/CloudFront error documents, etc. — again, see [`docs/deployment-spa-and-env.md`](../../docs/deployment-spa-and-env.md).
 
-**Note on `cleanUrls`:** If you later enable `"cleanUrls": true` in vercel.json, change the destination to `"/"` (no `.html` extension). Do not combine both at once.
+**Note on `cleanUrls`:** If you later enable `"cleanUrls": true` in `vercel.json`, change the destination to `"/"` (no `.html` extension). Do not combine both at once.
 
-### Build settings (auto-detected, but explicit is safer)
-
-Vercel will infer these from the Vite preset, but you can lock them in Project Settings:
+### Build settings (typical for Vite; set in your CI or host UI)
 
 | Setting | Value |
 |---|---|
-| Framework Preset | Vite |
-| Build Command | `tsc && vite build` |
+| Framework / preset | Vite (or plain static) |
+| Build Command | `tsc && vite build` (or your repo script) |
 | Output Directory | `dist` |
 | Install Command | `npm ci` |
 
-### Preview deployments
+### Preview / branch deployments
 
-Every push to a non-`main` branch automatically gets a preview URL in the format `crm-app-git-[branch-name]-[team].vercel.app`. Vercel posts a comment on PRs with the link. This is on by default — no configuration required.
+Most SaaS static hosts assign a **unique preview URL per branch or PR**. Add each preview origin to Supabase Auth redirect allowlists and Edge Function CORS the same way you do for production (see canonical doc above).
 
-To silence the PR bot comments: Project Settings > Git > disable "Comment on Pull Requests".
+### Custom domain + TLS
 
-### Custom domain
-
-Adding a custom domain (e.g., `app.yourdomain.com`) requires DNS configuration at your registrar:
-
-- **Subdomain** (`app.yourdomain.com`): Add a `CNAME` record pointing to Vercel's unique CNAME for your project (shown in Project Settings > Domains after adding the domain).
-- **Apex domain** (`yourdomain.com`): Add an `A` record pointing to `76.76.21.21` (Vercel's IP). Vercel recommends also adding `www` as a redirect.
-
-The Vercel dashboard shows the exact records needed for your project. DNS propagation takes 1-24 hours. After propagation Vercel auto-provisions a TLS certificate.
+Follow your DNS provider and your static host’s wizard for apex vs subdomain, CNAME/A records, and automatic certificates. Propagation often takes minutes to hours depending on TTL.
 
 ---
 
-## 2. Supabase Environment Variables on Vercel
+## 2. Supabase environment variables in the hosting dashboard
 
-### Confidence: HIGH
+### Confidence: HIGH (pattern verified against this repo)
 
 The project already uses the correct Vite env var naming convention (`VITE_` prefix = bundled into client). The `src/lib/supabase.ts` pattern confirms: the app works without Supabase (graceful `null` fallback), which makes the env vars optional but required for full functionality.
 
@@ -74,11 +67,11 @@ The project already uses the correct Vite env var naming convention (`VITE_` pre
 | `VITE_SUPABASE_ANON_KEY` | Public | YES — safe to expose | The anon key is designed to be public. Row Level Security (RLS) is what protects data, not key secrecy. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Secret | NO — never expose | Server-side only. Bypasses RLS entirely. Never use with `VITE_` prefix. Never expose to the client. |
 
-The project does NOT currently use the service role key, which is correct for a client-side app. Only ever add `SUPABASE_SERVICE_ROLE_KEY` to Vercel Functions (server-side), never as a `VITE_` variable.
+The project does NOT currently use the service role key, which is correct for a client-side app. Only ever add `SUPABASE_SERVICE_ROLE_KEY` to **server** runtimes (Edge Functions, CI secrets), never as a `VITE_` variable.
 
-### Setting env vars in Vercel
+### Setting env vars (example: host “Production / Preview / Development” scopes)
 
-In the Vercel dashboard, go to Project Settings > Environment Variables:
+In your host’s environment-variable UI (names vary), create entries similar to:
 
 ```
 Name:   VITE_SUPABASE_URL
@@ -90,7 +83,7 @@ Value:  eyJhbGci...
 Environments: Production, Preview, Development (check all three)
 ```
 
-**Per-environment scoping:** You can assign different values per environment. For preview deployments pointing to a Supabase staging project, assign the staging URL/key only to "Preview". This keeps production data isolated from preview testing.
+**Per-environment scoping:** Assign different values per environment. For preview deployments pointing to a Supabase staging project, assign the staging URL/key only to **preview/UAT** scopes. This keeps production data isolated from preview testing.
 
 ### Environment management strategy
 
@@ -115,7 +108,7 @@ Local development (.env.local):
   VITE_SUPABASE_ANON_KEY → staging anon key
 ```
 
-Pull env vars from Vercel to local with: `vercel env pull .env.local`
+Some CLIs can pull remote env into `.env.local` (e.g. vendor-specific `vercel env pull`); otherwise copy values manually from your host UI into [`.env.local`](../../.env.local) (gitignored).
 
 ### Local env file rules
 
@@ -484,22 +477,17 @@ it('shows validation error when title is empty', async () => {
 
 ---
 
-## 6. CI/CD with GitHub Actions + Vercel
+## 6. CI/CD with GitHub Actions + static host integration
 
-### Confidence: HIGH (Vercel docs verified)
+### Confidence: HIGH for “run tests on PR”; MEDIUM for vendor-specific deploy wiring
 
-### Default behavior (no GitHub Actions needed)
+### Default behavior (many teams)
 
-Vercel's native GitHub integration handles the core CD workflow automatically:
-- Push to `main` → production deployment
-- Push to any other branch → preview deployment
-- PR created → preview URL posted as comment
-
-For most projects, this is sufficient. You do NOT need GitHub Actions for deployments.
+If your static host’s Git integration builds on every push, you may rely on that alone for CD. You **do not** have to duplicate deploy logic in Actions unless you want stricter gates.
 
 ### When to add GitHub Actions
 
-Add a GitHub Actions workflow to run tests BEFORE Vercel deploys. This prevents a broken build from reaching preview/production.
+Add a GitHub Actions workflow to run **typecheck/tests before or independent of** the host build. This prevents a broken build from reaching preview/production.
 
 **Recommended workflow:**
 
@@ -540,57 +528,11 @@ jobs:
         if: github.event_name == 'pull_request'
 ```
 
-**About Vercel + GitHub Actions interaction:**
+**Host + Actions interaction:** Many hosts start a build as soon as Git receives a push, **without waiting** for Actions. To **gate** deploys on tests you can: (a) use the host’s “ignored build step” / build hook if it offers one, (b) run deploy only from Actions with a provider token, or (c) require green checks on `main` via branch protection and accept that previews may still fire (mitigate with staging Supabase only on preview). Pick one policy and document it in your ops runbook.
 
-Vercel deploys regardless of GitHub Actions status by default. To block Vercel from deploying until tests pass, use one of two approaches:
+**Example — deploy only from Actions (vendor-specific CLI names omitted):** pattern is `checkout` → `setup-node` → `npm ci` → `npm run test:run` → **then** invoke your host’s deploy CLI with repository secrets for org/project/token. Exact secret names depend on the provider.
 
-**Option A (simpler): Use Vercel's Ignored Build Step**
-
-In Project Settings > Git > Ignored Build Step, add a script that fails if tests haven't passed. Vercel checks this before building.
-
-**Option B (full control): Disable Vercel's GitHub integration and deploy via GitHub Actions**
-
-```yaml
-# .github/workflows/deploy.yml (replaces Vercel's native integration)
-name: Deploy
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  test-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run test:run
-      - name: Deploy to Vercel
-        run: |
-          npm install -g vercel@latest
-          vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-          vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-          vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-```
-
-This requires `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` as GitHub repository secrets. Get them from `vercel link` + `cat .vercel/project.json`.
-
-**Recommendation for CRM Pro:** Use Option A (native Vercel integration) + a separate CI workflow that runs `tsc --noEmit` and `vitest run`. This is lower friction and sufficient for a solo/small team project.
-
-### Required GitHub secrets (if using Option B)
-
-| Secret | How to get |
-|---|---|
-| `VERCEL_TOKEN` | vercel.com > Account Settings > Tokens |
-| `VERCEL_ORG_ID` | `cat .vercel/project.json` after `vercel link` |
-| `VERCEL_PROJECT_ID` | `cat .vercel/project.json` after `vercel link` |
+**Recommendation for CRM Pro:** Keep **canonical** routing/env in [`docs/deployment-spa-and-env.md`](../../docs/deployment-spa-and-env.md); add **CI** that runs `tsc --noEmit` and `vitest run` on PRs (this repo already has workflows under `.github/` and `.gitea/`).
 
 ---
 
@@ -614,7 +556,7 @@ For this project, the practical setup is:
 .env.local              # gitignored — actual values for local development
 ```
 
-Never create `.env.production` with real Supabase credentials — those belong in Vercel's dashboard, not in the repository.
+Never create `.env.production` with real Supabase credentials — those belong in the **hosting/CI secret store**, not in the repository.
 
 ### The two-Supabase-project pattern
 
@@ -626,7 +568,7 @@ Recommended for any production app:
 | Preview/Staging | `crm-staging` | Seed/test data | Branch previews, QA |
 | Local dev | `crm-staging` (same) or `localhost` | Seed data | Feature development |
 
-Configure Vercel to use different VITE_SUPABASE_URL values per environment (Production vs Preview). This prevents preview deployments from touching production data.
+Configure **production vs preview** builds with different `VITE_SUPABASE_URL` values. This prevents preview deployments from touching production data.
 
 For local Supabase (via `supabase start` CLI): the local URL is always `http://127.0.0.1:54321` and the anon key is a well-known test value. Use these in `.env.local` when developing offline.
 
@@ -652,17 +594,17 @@ Or use a `.env.test` file and configure `envFile` in Vitest config. For this pro
 
 ## Implementation Order
 
-Based on all findings, the recommended implementation sequence:
+Historical checklist when this research was written; **current repo truth** is in [`docs/deployment-spa-and-env.md`](../../docs/deployment-spa-and-env.md) and checked-in artifacts (`vercel.json`, `public/_redirects`). Suggested sequence in neutral terms:
 
-1. **Add `vercel.json`** at repo root (SPA rewrite rule) — 5 minutes, blocks production routing
-2. **Connect repo to Vercel** via dashboard, set env vars for Production and Preview environments
+1. **Confirm SPA fallback** for your host (repo already includes examples — see canonical doc).
+2. **Wire env vars** per environment (production vs preview/staging Supabase projects).
 3. **Install Vitest + testing deps** (`npm install -D vitest @vitest/coverage-v8 jsdom @testing-library/react @testing-library/user-event @testing-library/jest-dom`)
 4. **Create `vitest.config.ts`** and `src/test/setup.ts` with localStorage mock
 5. **Add test scripts** to `package.json`
 6. **Write first tests** — `leadScoring.ts` pure functions (no setup needed, immediate value)
 7. **Write store tests** — `dealsStore`, `contactsStore` with beforeEach state reset
-8. **Add `.github/workflows/ci.yml`** — type check + test run on PR
-9. **Configure two Supabase projects** (prod + staging) and assign to Vercel environments
+8. **Keep CI workflows** — type check + test run on PR (see `.github/workflows/` and `.gitea/workflows/` in this repo)
+9. **Configure two Supabase projects** (prod + staging) and map them to **production vs preview** build environments
 
 ---
 
@@ -676,7 +618,7 @@ npm install -D vitest @vitest/coverage-v8 jsdom @testing-library/react @testing-
 npm install -D @vitest/ui
 ```
 
-No production dependencies are needed for deployment — `vercel.json` is the only new file.
+No extra production npm dependencies are required for static deploy itself — routing is file-based config plus the Vite `dist/` output.
 
 ---
 
@@ -690,11 +632,11 @@ No production dependencies are needed for deployment — `vercel.json` is the on
 
 ## Sources
 
-- Vercel Vite deployment docs: https://vercel.com/docs/frameworks/vite (HIGH confidence, fetched 2026-03-31)
-- Vercel environment variables: https://vercel.com/docs/environment-variables (HIGH confidence, fetched 2026-03-31)
-- Vercel environments: https://vercel.com/docs/deployments/environments (HIGH confidence, fetched 2026-03-31)
-- Vercel GitHub integration: https://vercel.com/docs/git/vercel-for-github (HIGH confidence, fetched 2026-03-31)
-- Vercel custom domains: https://vercel.com/docs/domains/working-with-domains/add-a-domain (HIGH confidence, fetched 2026-03-31)
+- Example static-host docs (Vite): https://vercel.com/docs/frameworks/vite (fetched 2026-03-31) — **one** vendor’s rendering of generic Vite guidance
+- Same vendor: environment variables, environments, Git integration, custom domains (fetched 2026-03-31)
 - Vitest docs: https://vitest.dev — inaccessible during research session; findings based on training knowledge (MEDIUM confidence, knowledge cutoff August 2025)
 - Supabase env vars: Training knowledge confirmed against project's existing `src/lib/supabase.ts` and `.env.example` (MEDIUM confidence)
 - Project source: `src/lib/supabase.ts`, `src/store/dealsStore.ts`, `src/utils/leadScoring.ts`, `package.json`, `tsconfig.json`
+---
+
+*Last updated (git): **2026-04-16***

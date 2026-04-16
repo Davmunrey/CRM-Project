@@ -1110,3 +1110,6 @@ The `schema.sql` needs these additions in dependency order:
 | Edge Functions Deno runtime | MEDIUM | Runtime is stable but Deno std imports change version; pin versions |
 | Gmail authorization code flow | MEDIUM | Google OAuth2 is stable, but GCP console config required |
 | REPLICA IDENTITY FULL behavior | HIGH | Standard PostgreSQL feature, works with Supabase |
+---
+
+*Last updated (git): **2026-04-13***

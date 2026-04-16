@@ -117,6 +117,12 @@
 - [ ] **DEPLOY-04**: Production deployment on merge to `main` (or your protected release branch) with a recorded smoke pass
 - [ ] **DEPLOY-05**: Custom domain + HTTPS (DNS + TLS per your hosting provider)
 
+#### Recording DEPLOY completion (human-owned evidence)
+
+Check **`DEPLOY-*`** only after the work exists on the **target** environment (not when templates or docs are updated alone). Capture evidence in one of: this file (short dated bullet under Traceability), [`.planning/STATE.md`](./STATE.md) Notes, or [`docs/master-release-qa.md`](../docs/master-release-qa.md) — include **deploy URL**, **`VITE_APP_CHANNEL`**, **Supabase project** (staging vs prod), **smoke outcome** ([`docs/smoke-checklist-production.md`](../docs/smoke-checklist-production.md)), and **commit SHA or tag**.
+
+**Agent / doc-only prep (2026-04-16):** [`docs/smoke-checklist-production.md`](../docs/smoke-checklist-production.md) extended with manager + onboarding steps so Phase 10 evidence has explicit gates when a human runs production smoke — **does not** check `DEPLOY-*` by itself.
+
 ## v2 Requirements
 
 ### Billing & Monetization
@@ -177,4 +183,7 @@
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-04-15 — Deployment requirements (DEPLOY-*) wording made host-agnostic; see also `docs/project-state.md`.*
+*Last updated: 2026-04-16 — Phase 10: added “Recording DEPLOY completion” gate so `DEPLOY-*` boxes stay evidence-backed; see `docs/smoke-checklist-production.md`.*
+---
+
+*Last updated (git): **2026-04-16***

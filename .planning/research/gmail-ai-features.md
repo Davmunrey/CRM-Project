@@ -1016,3 +1016,6 @@ bundle, remove `dangerouslyAllowBrowser: true` and remove the direct SDK instant
 | DOMPurify sanitization behavior | HIGH | Battle-tested library, well-documented |
 | Supabase free tier limits | MEDIUM | Known at training cutoff; verify current limits at supabase.com/pricing |
 | Google OAuth verification timeline | MEDIUM | 4-6 weeks is historical average; current timeline may vary |
+---
+
+*Last updated (git): **2026-04-13***

@@ -4,7 +4,7 @@
 
 > [!NOTE]
 > Historical snapshot: this phase document is preserved for implementation history.
-> Source of truth for current status and priorities:  and .
+> Source of truth for current status and priorities: `.planning/STATE.md` and `.planning/ROADMAP.md`.
 
 > **Historical Snapshot:** This phase document is retained for historical context. Current source of truth is `.planning/STATE.md` and `.planning/ROADMAP.md`.
 
