@@ -167,6 +167,7 @@ All previously listed “in progress” packs (automations v1, scoring v2, lead 
 
 ## Reference docs (team register)
 
+- **Planning vs product docs:** [`docs/project-state.md`](./project-state.md) — when to use `.planning/` vs `master-*`, v1 deploy intent, and documented gaps.
 - **Layout, shells, and empty states:** `docs/master-design-ui.md#design-system-and-layout` — when to use `crm-page` vs `crm-page-full`, `PanelEmpty` vs `EmptyState`, auth surfaces, and pre-merge checks.
 - **User profile, display names, CRM consistency:** `docs/master-design-ui.md#user-profile-display-names` — what is implemented (`user_metadata` persistence), manual test checklist, and open gaps (CRM rows with plain-text names, editing other users from admin, etc.).
 

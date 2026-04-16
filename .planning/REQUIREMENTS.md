@@ -111,11 +111,11 @@
 
 ### Deployment
 
-- [ ] **DEPLOY-01**: `vercel.json` with SPA catch-all rewrite (`"destination": "/index.html"`) — critical for React Router
-- [ ] **DEPLOY-02**: Vercel project configured with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` env vars
-- [ ] **DEPLOY-03**: Preview deployments on PRs (connected to a Supabase staging project)
-- [ ] **DEPLOY-04**: Production deployment on merge to `main`
-- [ ] **DEPLOY-05**: Custom domain configured on Vercel
+- [ ] **DEPLOY-01**: Static SPA hosting configured so all client routes resolve to `index.html` on cold load (host-specific: e.g. `vercel.json` rewrites, Netlify `_redirects`, nginx `try_files`, CDN origin rules — critical for React Router)
+- [ ] **DEPLOY-02**: Production and preview/staging environments define `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the deployment pipeline or host dashboard (secrets never committed)
+- [ ] **DEPLOY-03**: Preview builds (e.g. on each PR) use a **staging** Supabase project; production credentials are production-only
+- [ ] **DEPLOY-04**: Production deployment on merge to `main` (or your protected release branch) with a recorded smoke pass
+- [ ] **DEPLOY-05**: Custom domain + HTTPS (DNS + TLS per your hosting provider)
 
 ## v2 Requirements
 
@@ -177,4 +177,4 @@
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-04-10 after phase-status reconciliation and post-phase UX/UI + inbox collaboration updates*
+*Last updated: 2026-04-15 — Deployment requirements (DEPLOY-*) wording made host-agnostic; see also `docs/project-state.md`.*

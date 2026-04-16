@@ -45,3 +45,13 @@ test.describe('CRM smoke', () => {
     await expect(page).not.toHaveURL(/\/login$/)
   })
 })
+
+test.describe('optional hosted staging', () => {
+  test('E2E_STAGING_URL login page loads primary action', async ({ page }) => {
+    const staging = process.env.E2E_STAGING_URL?.replace(/\/$/, '')
+    test.skip(!staging?.startsWith('http'), 'Set E2E_STAGING_URL (https://...) to run hosted smoke')
+
+    await page.goto(`${staging}/login`)
+    await expect(page.getByRole('button', { name: /login|iniciar sesion/i })).toBeVisible()
+  })
+})

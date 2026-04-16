@@ -27,8 +27,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     pool: 'threads',
-    /** Single worker: stable Vitest runs and avoids intermittent pool "Timeout waiting for worker to respond" under load. */
-    maxWorkers: 50,
+    /** Keep worker count modest on Windows to avoid pool hangs / "Timeout waiting for worker to respond". */
+    maxWorkers: 4,
     minWorkers: 1,
     testTimeout: 30_000,
     hookTimeout: 30_000,

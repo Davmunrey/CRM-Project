@@ -241,7 +241,22 @@ export interface Database {
       }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      list_organization_members_with_identity: {
+        Args: Record<string, never>
+        Returns: {
+          user_id: string
+          email: string
+          full_name: string
+          member_role: string
+          job_title: string | null
+          phone: string | null
+          avatar_url: string | null
+          is_active: boolean
+          created_at: string
+        }
+      }
+    }
     Enums: Record<string, never>
   }
 }

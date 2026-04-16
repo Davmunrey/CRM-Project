@@ -2,9 +2,9 @@
 
 ## What This Is
 
-CRM Pro is a full-featured B2B SaaS CRM for Spanish and European sales teams, built to compete with HubSpot and Pipedrive. It covers the full sales lifecycle — contacts, companies, deals pipeline, activities, sequences, forecasting, AI-assisted selling, and Gmail integration — with multi-tenant organization isolation so any business can sign up and use it independently.
+CRM Pro is a full-featured B2B SaaS CRM for Sales teams, built to compete with HubSpot and Pipedrive. It covers the full sales lifecycle — contacts, companies, deals pipeline, activities, sequences, forecasting, AI-assisted selling, and Gmail integration — with multi-tenant organization isolation so any business can sign up and use it independently.
 
-The product is now operating as a Supabase-backed SaaS app (auth, multi-tenant RLS, real-time stores, hardened Gmail OAuth/token flow, and 6-language i18n coverage). The next milestone is deployment hardening and production release on Vercel.
+The product is now operating as a Supabase-backed SaaS app (auth, multi-tenant RLS, real-time stores, hardened Gmail OAuth/token flow, and 6-language i18n coverage). The next milestone is deployment hardening and production release on a **static host / CDN** (see `.planning/ROADMAP.md` Phase 10 and `docs/project-state.md`).
 
 ## Core Value
 
@@ -41,7 +41,7 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 ### Active
 
-- [ ] Phase 10 Vercel deployment and release checklist
+- [ ] Phase 10 production deployment and release checklist
 - [ ] Production environment validation (Supabase vars, Edge Functions, redirects)
 - [ ] End-to-end UAT for organization bootstrap, team invitations, Gmail flows, and quote export/email flows
 - [ ] Optional: load org members from `organization_members` table into Team Management (currently uses session-scoped users in Zustand)
@@ -68,10 +68,10 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 ## Constraints
 
-- **Tech stack**: React + Supabase + Vercel — no backend server; Supabase Edge Functions for sensitive operations (API key proxying, Gmail OAuth token exchange)
+- **Tech stack**: React + Supabase + static hosting — no dedicated Node app server; Supabase Edge Functions for sensitive operations (API key proxying, Gmail OAuth token exchange)
 - **Auth**: Supabase Auth only — no custom auth, no third-party OAuth providers beyond Google (Gmail)
 - **Multi-tenancy**: RLS at database level — no application-layer tenant filtering
-- **Budget**: Free tier first — Supabase free, Vercel free, Anthropic pay-per-use
+- **Budget**: Free tier first — Supabase free tier + low-cost static hosting where applicable; Anthropic pay-per-use
 - **Backwards compatibility**: Seed data reset on first Supabase migration — localStorage data is not migrated
 
 ## Key Decisions

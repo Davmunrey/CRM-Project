@@ -6,6 +6,19 @@ import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supaba
 import { useAuditStore } from './auditStore'
 import { toast } from './toastStore'
 
+/** Row shape from `list_organization_members_with_identity` RPC (see supabase migration). */
+export interface OrgMemberIdentityRow {
+  user_id: string
+  email: string
+  full_name: string
+  member_role: string
+  job_title: string | null
+  phone: string | null
+  avatar_url: string | null
+  is_active: boolean
+  created_at: string
+}
+
 // Simple hash for demo purposes (in production, use bcrypt + backend)
 function simpleHash(str: string): string {
   let hash = 0
@@ -204,24 +217,27 @@ export const useAuthStore = create<AuthState>()(
       fetchOrgUsers: async (organizationId) => {
         if (!isSupabaseConfigured || !supabase || !organizationId) return
 
-        const { data, error } = await (supabase as any)
-          .from('organization_members')
-          .select('user_id, role, job_title, phone, avatar_url, is_active, created_at')
-          .eq('organization_id', organizationId)
+        const current = get().currentUser
+        if (current?.organizationId && organizationId !== current.organizationId) return
 
+        const { data, error } = await supabase.rpc('list_organization_members_with_identity')
         if (error) return
 
-        const current = get().currentUser
         const byId = new Map(get().users.map((u) => [u.id, u]))
+        const rows = (data ?? []) as OrgMemberIdentityRow[]
 
-        const users: AuthUser[] = (data ?? []).map((m: any) => {
+        const users: AuthUser[] = rows.map((m) => {
           const existing = byId.get(m.user_id)
           const isCurrent = current?.id === m.user_id
+          const email = (m.email && m.email.trim()) ? m.email : (existing?.email ?? (isCurrent ? (current?.email ?? '') : ''))
+          const name = (m.full_name && m.full_name.trim())
+            ? m.full_name
+            : (existing?.name ?? (isCurrent ? (current?.name ?? 'User') : `Member ${String(m.user_id).slice(0, 6)}`))
           return {
             id: m.user_id,
-            email: existing?.email ?? (isCurrent ? (current?.email ?? '') : ''),
-            name: existing?.name ?? (isCurrent ? (current?.name ?? 'User') : `Member ${String(m.user_id).slice(0, 6)}`),
-            role: normalizeRole(m.role),
+            email,
+            name,
+            role: normalizeRole(m.member_role),
             avatar: existing?.avatar ?? m.avatar_url ?? (isCurrent ? current?.avatar : undefined),
             jobTitle: existing?.jobTitle ?? m.job_title ?? (isCurrent ? (current?.jobTitle ?? '') : ''),
             phone: existing?.phone ?? m.phone ?? (isCurrent ? current?.phone : undefined),

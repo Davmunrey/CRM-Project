@@ -2,10 +2,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useAuthStore, initSupabaseAuth } from '../../src/store/authStore'
 import { supabase } from '../../src/lib/supabase'
 
-const { mockOnAuthStateChange, mockInvoke, mockRefreshSession } = vi.hoisted(() => ({
+const { mockOnAuthStateChange, mockInvoke, mockRefreshSession, mockRpc } = vi.hoisted(() => ({
   mockOnAuthStateChange: vi.fn(),
   mockInvoke: vi.fn(),
   mockRefreshSession: vi.fn(),
+  mockRpc: vi.fn().mockResolvedValue({ data: [], error: null }),
 }))
 
 vi.mock('../../src/lib/supabase', () => ({
@@ -18,6 +19,7 @@ vi.mock('../../src/lib/supabase', () => ({
     functions: {
       invoke: mockInvoke,
     },
+    rpc: mockRpc,
   },
   isSupabaseConfigured: true,
   isOfflineDemoMode: false,
@@ -29,6 +31,8 @@ describe('initSupabaseAuth', () => {
     mockOnAuthStateChange.mockReset()
     mockInvoke.mockReset()
     mockRefreshSession.mockReset()
+    mockRpc.mockReset()
+    mockRpc.mockResolvedValue({ data: [], error: null })
     useAuthStore.setState({
       currentUser: null,
       isLoadingAuth: true,

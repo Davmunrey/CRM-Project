@@ -6,6 +6,7 @@ A production-grade, full-featured CRM single-page application built with React 1
 
 - Main app: `README.md`
 - Documentation index: `docs/README.md`
+- Docs ↔ v1 planning bridge: `docs/project-state.md`
 - Supabase setup and migrations: `supabase/README.md`
 
 ## Features
@@ -70,6 +71,8 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 # VITE_EMAIL_PROVIDER=resend
 # VITE_RESEND_SEND_FUNCTION=resend-send-email
 ```
+
+**Deploy:** SPA rewrites (`vercel.json`, `public/_redirects`) and per-environment `VITE_*` setup are documented in [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md). Gmail OAuth verification kickoff: [`docs/google-gmail-oauth-verification.md`](docs/google-gmail-oauth-verification.md). Production smoke list: [`docs/smoke-checklist-production.md`](docs/smoke-checklist-production.md).
 
 When `VITE_EMAIL_PROVIDER=resend`, deploy Supabase Edge Function `resend-send-email` and set server-side secrets in Supabase:
 
@@ -192,6 +195,7 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
 
 | If you need… | Start here |
 |----------------|------------|
+| **v1 phases / DEPLOY checkboxes vs Pro docs** | [`docs/project-state.md`](docs/project-state.md) |
 | Full shipped narrative | `docs/master-implementation-history.md` |
 | Priorities and backlog | `docs/master-roadmap-backlog.md` |
 | Security / compliance evidence pack | `docs/master-security-compliance.md` |

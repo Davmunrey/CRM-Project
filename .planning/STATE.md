@@ -18,13 +18,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-10)
 
 **Core value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time with data persisted in Supabase and real-time sync across tabs.
-**Current focus:** Phase 10 - Vercel Deployment (pending deploy execution)
+**Current focus:** Phase 10 — production deployment (pending deploy execution)
 
 ## Current Status
 
 **Milestone:** v1.0 — Full SaaS Upgrade
 **Phase:** 9 of 10 — COMPLETE
-**Next:** Phase 10 (Vercel Deployment, pending)
+**Next:** Phase 10 (production deployment, pending)
 
 ## Completed Phases
 
@@ -54,7 +54,7 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 | react-markdown + rehype-sanitize | Replace dangerouslySetInnerHTML in AIAgent — live XSS vector | 2026-03-31 |
 | Anthropic SDK removed entirely (04.3) | dangerouslyAllowBrowser is a security anti-pattern; all AI calls go through OpenRouter fetch | 2026-04-05 |
 | openRouterKey replaces apiKey as the single AI key guard (04.1) | Anthropic key never stored in browser | 2026-04-05 |
-| Vercel for frontend deploy | Zero-config Vite support, free tier, global CDN | 2026-03-31 |
+| Static frontend hosting (provider TBD) | Ship Vite `dist/` to a static host or CDN (any vendor with SPA rewrites + preview envs); keeps client-only architecture | 2026-03-31 |
 | Free beta (no Stripe in v1.0) | Validate product before billing complexity | 2026-03-31 |
 | Per-file vi.mock() for Supabase (02.0) | Inline mocking gives explicit control over each test file vs auto-hoisting | 2026-03-31 |
 | vi.hoisted() for test mock factories (02.1–02.3) | vi.mock() is hoisted above const declarations — vi.hoisted() evaluates at hoist time | 2026-03-31 |
@@ -88,7 +88,7 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 - `onRehydrateStorage` seed hooks removed from all migrated stores
 - Google OAuth verification (restricted scopes) takes 4-6 weeks — start application process before Phase 10 deploy
 - Supabase service role key must NEVER get a VITE_ prefix
-- Phase 10 (Vercel Deployment) requires the repo to be pushed to GitHub first
+- Phase 10 requires the repo on your **remote Git host** and a **CD pipeline** (or host integration) so preview and production deploys are reproducible
 - Post-Phase 09 hardening: `authStore` Supabase branch starts with empty users/passwords and keeps runtime users org-scoped.
 - Post-Phase 09 hardening: calendar week labels no longer hardcoded in Spanish (`hour`/`all day` now language-aware).
 - Supabase remote already includes migration `20260410160000_gmail_thread_links.sql`.

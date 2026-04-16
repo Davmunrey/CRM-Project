@@ -31,3 +31,4 @@ When Supabase is configured, the app uses real authentication and PostgreSQL. Wi
 - Migration filenames are timestamped and should be applied in ascending order.
 - Never edit an already applied migration; create a new migration for follow-up changes.
 - Keep migration behavior aligned with related docs in `docs/` (runbooks/contracts).
+- `20260415120000_list_organization_members_with_identity.sql` — `list_organization_members_with_identity()` RPC (org-scoped member email + display name for the app directory); grant `EXECUTE` to `authenticated` only.

@@ -3,7 +3,7 @@
 **Milestone:** v1.0 — Full SaaS Upgrade
 **Status:** Phase 10 Pending Deploy
 **Phases:** 10
-**Last updated:** 2026-04-10
+**Last updated:** 2026-04-15
 
 ---
 
@@ -18,7 +18,7 @@
 - [x] **Phase 7: Gmail Integration** — Auth Code + PKCE OAuth flow; Edge Functions for token exchange and refresh; inbox, send, and contact linking (completed 2026-04-09)
 - [x] **Phase 8: i18n English** — English translation file and language switcher persistence (completed 2026-04-09)
 - [x] **Phase 9: Test Suite** — Vitest setup; unit tests for stores, Zod schemas, and GitHub Actions CI (completed 2026-04-10)
-- [ ] **Phase 10: Vercel Deployment** — vercel.json SPA rewrite, env vars, preview deployments, production deploy, custom domain
+- [ ] **Phase 10: Production deployment** — SPA routing for `dist/`, env vars per environment, preview vs staging Supabase, production deploy, custom domain + HTTPS
 
 ---
 
@@ -35,7 +35,7 @@
 | 7. Gmail Integration | 5/5 | ✅ Complete | 2026-04-09 |
 | 8. i18n English | 3/3 | ✅ Complete | 2026-04-09 |
 | 9. Test Suite | 6/6 | ✅ Complete | 2026-04-10 |
-| 10. Vercel Deployment | 0/5 | Pending Deploy | - |
+| 10. Production deployment | 0/5 | Pending Deploy | - |
 
 ---
 
@@ -284,18 +284,18 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 ---
 
-## Phase 10: Vercel Deployment
+## Phase 10: Production deployment
 
-**Goal:** The app is deployed to Vercel with correct SPA routing, staging and production environments pointing to separate Supabase projects, and a custom domain serving the production build.
+**Goal:** The built SPA (`dist/`) is served from a static host or CDN with correct client-side routing; staging and production use separate Supabase projects; production is served on a custom domain over HTTPS.
 **Dependencies:** Phase 9 (CI must pass before production deploy)
 
 ### Plans
 
-- 10.1: Create `vercel.json` — add SPA catch-all rewrite `{ "source": "/(.*)", "destination": "/index.html" }` at repo root; verify React Router deep links work on direct load
-- 10.2: Connect repo to Vercel and configure env vars — link GitHub repo to Vercel project; set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for Production and Preview environments separately
-- 10.3: Verify preview deployments — push a feature branch; confirm Vercel creates a preview URL hitting staging Supabase, not production
-- 10.4: Production deploy on main merge — merge to `main`; confirm Vercel deploys to production; smoke test: signup, login, create contact, log activity
-- 10.5: Configure custom domain — add domain in Vercel; add CNAME or A record at registrar; confirm TLS certificate is auto-provisioned by Vercel
+- 10.1: SPA catch-all routing — configure the host (or reverse proxy) so unknown paths serve `index.html`; verify React Router deep links on direct load. *Example (one provider):* `vercel.json` with `{ "source": "/(.*)", "destination": "/index.html" }` at repo root; use your host’s equivalent (`_redirects`, nginx `try_files`, etc.).
+- 10.2: Connect the repository to your deploy pipeline and set build-time env vars — `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` separately for **Production** vs **Preview/staging**
+- 10.3: Verify preview deployments — push a feature branch; confirm the **preview** URL uses **staging** Supabase (not production), e.g. via DevTools / network base URL
+- 10.4: Production deploy — merge to `main`; confirm production URL serves the expected build; smoke test: signup, login, create contact, log activity
+- 10.5: Custom domain — add DNS records per your host; confirm HTTPS/TLS is valid
 
 ### Requirements Covered
 
@@ -304,7 +304,7 @@ DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05
 ### Done When
 
 - [ ] Navigating directly to `/contacts` returns the Contacts page, not a 404
-- [ ] A PR branch gets an automatic preview URL
+- [ ] A PR branch gets an automatic preview URL (or equivalent staging URL)
 - [ ] The preview URL hits staging Supabase (verified in DevTools)
 - [ ] Merging to `main` triggers a production deployment that completes successfully
 - [ ] The custom domain serves the app over HTTPS with a valid TLS certificate

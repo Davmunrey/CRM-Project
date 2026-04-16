@@ -9,12 +9,12 @@
 ### Deployment Hardening Not Closed Yet
 - Issue: Phase 10 release hardening remains open (hosting/env/domain checklist).
 - Impact: App works locally, but production rollout risk remains until deployment/UAT is fully closed.
-- Next step: complete Vercel + env + smoke checklist and lock the release runbook.
+- Next step: complete static hosting + env + smoke checklist and lock the release runbook (`docs/master-release-qa.md`, `docs/project-state.md`).
 
 ### Team Directory Still Partially Session-Scoped
 - Issue: Team/user lists can still be partially influenced by session-scoped store state in some UX flows.
 - Impact: Potential mismatch between organization members and UI assignment options in edge cases.
-- Next step: enforce authoritative org-member hydration path everywhere user selectors are used.
+- **Update (2026-04-15):** `list_organization_members_with_identity` RPC + `authStore.fetchOrgUsers` now hydrate peer email/display name from `auth.users` (org-scoped via JWT). Remaining risk: selectors that never call `fetchOrgUsers` after local mutations — audit assignee pickers on change.
 
 ### Email Tracking Is Demo-Level
 - Issue: Open/click tracking is still local/demo oriented and not backed by reliable server telemetry.
