@@ -231,3 +231,6 @@ In mock mode, the app ships with realistic Spanish/European B2B seed data:
 To reset demo data: **Settings → Restaurar datos demo**.
 
 In Supabase mode, demo users are not rehydrated into organization sessions.
+---
+
+*Last updated (git): **2026-04-16***
