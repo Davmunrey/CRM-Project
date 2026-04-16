@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { Plus, Trash2, Download, Upload, RotateCcw, Tag, Mail, Wifi, WifiOff, FileSpreadsheet, SlidersHorizontal, Pencil, X, Check, Globe, Activity, RefreshCw, ShieldAlert, Lock, Bold, Italic, Link as LinkIcon, Image as ImageIcon } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import type { DropResult } from '@hello-pangea/dnd'
@@ -27,6 +27,8 @@ import { useNotificationsStore, ALL_NOTIFICATION_TYPES } from '../store/notifica
 import { useTranslations, useI18nStore, LANGUAGE_LABELS, LANGUAGE_FLAGS } from '../i18n'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
+import { useOnboardingStore } from '../store/onboardingStore'
+import { trackUxAction } from '../lib/uxMetrics'
 import { useAuditStore } from '../store/auditStore'
 import { useNavigationPrefsStore } from '../store/navigationPrefsStore'
 import type { NavigationPreferences, SidebarBuiltinItemId, SidebarCustomGroup, SidebarIconKey, SidebarSectionId } from '../types/navigation'
@@ -43,13 +45,14 @@ const FIELD_TYPES: CustomFieldType[] = [
   'checkbox', 'url', 'email', 'currency', 'textarea',
 ]
 
-type SettingsTab = 'general' | 'branding' | 'pipeline' | 'email' | 'permissions' | 'data' | 'navigation' | 'advanced'
+type SettingsTab = 'general' | 'onboarding' | 'branding' | 'pipeline' | 'email' | 'permissions' | 'data' | 'navigation' | 'advanced'
 
 export function Settings() {
   const [searchParams, setSearchParams] = useSearchParams()
   const t = useTranslations()
   const SETTINGS_TABS: Array<{ id: SettingsTab; label: string }> = [
     { id: 'general', label: t.settings.tabGeneral },
+    { id: 'onboarding', label: t.settings.tabOnboarding },
     { id: 'branding', label: t.settings.tabBranding },
     { id: 'pipeline', label: t.settings.tabPipeline },
     { id: 'email', label: t.settings.tabEmail },
@@ -67,6 +70,11 @@ export function Settings() {
   const activitiesStore = useActivitiesStore()
   const { isGmailConnected, gmailAddress, disconnectGmail, syncState, threadsLastSyncedAt, lastSyncErrorMessage } = useEmailStore()
   const orgUsers = useAuthStore((s) => s.users)
+  const organizationId = useAuthStore((s) => s.organizationId)
+  const onboardingGetFlags = useOnboardingStore((s) => s.getFlags)
+  const onboardingSetStep = useOnboardingStore((s) => s.setStep)
+  const onboardingResetOrg = useOnboardingStore((s) => s.resetOrg)
+  const onboardingFlags = onboardingGetFlags(organizationId ?? undefined)
   const navPrefs = useNavigationPrefsStore((s) => s.preferences)
   const updateNavPrefs = useNavigationPrefsStore((s) => s.updatePreferences)
   const resetNavPrefs = useNavigationPrefsStore((s) => s.resetPreferences)
@@ -681,6 +689,86 @@ export function Settings() {
         </div>
       </section>
 
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('onboarding') ? '' : 'hidden'}`}>
+        <h2 className="text-base font-semibold text-white mb-1">{t.settings.onboardingTitle}</h2>
+        <p className="text-xs text-slate-500 mb-4">{t.settings.onboardingIntro}</p>
+        <ul className="space-y-4">
+          <li className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-white/4 border border-white/8">
+            <div>
+              <p className="text-sm font-medium text-white">{t.settings.onboardingStepImport}</p>
+              <Link to="/contacts" className="text-xs text-brand-400 hover:underline mt-1 inline-block">
+                {t.settings.onboardingGoContacts}
+              </Link>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant={onboardingFlags.importContacts ? 'secondary' : 'primary'}
+              onClick={() => {
+                const next = !onboardingFlags.importContacts
+                onboardingSetStep(organizationId ?? undefined, 'importContacts', next)
+                trackUxAction('onboarding_checklist_toggle', { step: 'importContacts', done: next })
+              }}
+            >
+              {onboardingFlags.importContacts ? t.settings.onboardingMarkTodo : t.settings.onboardingMarkDone}
+            </Button>
+          </li>
+          <li className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-white/4 border border-white/8">
+            <div>
+              <p className="text-sm font-medium text-white">{t.settings.onboardingStepDeal}</p>
+              <Link to="/deals" className="text-xs text-brand-400 hover:underline mt-1 inline-block">
+                {t.settings.onboardingGoDeals}
+              </Link>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant={onboardingFlags.firstDeal ? 'secondary' : 'primary'}
+              onClick={() => {
+                const next = !onboardingFlags.firstDeal
+                onboardingSetStep(organizationId ?? undefined, 'firstDeal', next)
+                trackUxAction('onboarding_checklist_toggle', { step: 'firstDeal', done: next })
+              }}
+            >
+              {onboardingFlags.firstDeal ? t.settings.onboardingMarkTodo : t.settings.onboardingMarkDone}
+            </Button>
+          </li>
+          <li className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-white/4 border border-white/8">
+            <div>
+              <p className="text-sm font-medium text-white">{t.settings.onboardingStepSequence}</p>
+              <Link to="/sequences" className="text-xs text-brand-400 hover:underline mt-1 inline-block">
+                {t.settings.onboardingGoSequences}
+              </Link>
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant={onboardingFlags.firstSequence ? 'secondary' : 'primary'}
+              onClick={() => {
+                const next = !onboardingFlags.firstSequence
+                onboardingSetStep(organizationId ?? undefined, 'firstSequence', next)
+                trackUxAction('onboarding_checklist_toggle', { step: 'firstSequence', done: next })
+              }}
+            >
+              {onboardingFlags.firstSequence ? t.settings.onboardingMarkTodo : t.settings.onboardingMarkDone}
+            </Button>
+          </li>
+        </ul>
+        <div className="mt-4">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              onboardingResetOrg(organizationId ?? undefined)
+              trackUxAction('onboarding_checklist_reset', {})
+            }}
+          >
+            {t.settings.onboardingReset}
+          </Button>
+        </div>
+      </section>
+
       {/* ── Language Selector ──────────────────────────────────────────── */}
       <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
         <div className="flex items-center gap-2 mb-4">
@@ -776,7 +864,7 @@ export function Settings() {
               <input
                 value={googleClientId}
                 onChange={(e) => setGoogleClientId(e.target.value)}
-                placeholder="123456789-abc.apps.googleusercontent.com"
+                placeholder={t.settings.placeholderGoogleOAuthClientId}
                 className="w-full bg-[#0d0e1a] border border-white/8 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/40"
               />
             </div>
@@ -840,7 +928,7 @@ export function Settings() {
               onChange={(e) => setSignatureHtml(e.target.value)}
               rows={7}
               className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none"
-              placeholder="<p>Best regards,<br/>Your name</p>"
+              placeholder={t.settings.placeholderEmailSignatureHtml}
             />
             <div className="flex gap-2">
               <Button size="sm" onClick={handleSaveSignature}>{editingSignatureId ? t.common.save : t.common.create}</Button>
@@ -1134,19 +1222,19 @@ export function Settings() {
             label={t.settings.customDomain}
             value={brandingDraft.customDomain ?? ''}
             onChange={(e) => setBrandingDraft((prev) => ({ ...prev, customDomain: e.target.value }))}
-            placeholder="crm.yourcompany.com"
+            placeholder={t.settings.placeholderBrandingDomain}
           />
           <Input
             label={t.settings.privacyUrl}
             value={brandingDraft.privacyUrl ?? ''}
             onChange={(e) => setBrandingDraft((prev) => ({ ...prev, privacyUrl: e.target.value }))}
-            placeholder="https://yourcompany.com/privacy"
+            placeholder={t.settings.placeholderPrivacyPolicyUrl}
           />
           <Input
             label={t.settings.termsUrl}
             value={brandingDraft.termsUrl ?? ''}
             onChange={(e) => setBrandingDraft((prev) => ({ ...prev, termsUrl: e.target.value }))}
-            placeholder="https://yourcompany.com/terms"
+            placeholder={t.settings.placeholderTermsUrl}
           />
           <Input
             label={t.settings.legalCompanyName}

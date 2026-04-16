@@ -3,9 +3,12 @@ import type { Deal } from '../../types'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { DEAL_PRIORITY_COLORS } from '../../utils/constants'
 import { Avatar } from '../ui/Avatar'
+import { useMemo } from 'react'
 import { useContactsStore } from '../../store/contactsStore'
 import { useCompaniesStore } from '../../store/companiesStore'
 import { useActivitiesStore } from '../../store/activitiesStore'
+import { useI18nStore, getTranslations } from '../../i18n'
+import { localizedCompany, localizedContact, localizedDeal } from '../../i18n/localizeSeed'
 import { computeDealHealth, healthStatusColor, healthStatusBg } from '../../utils/dealHealth'
 import { CalendarDays } from 'lucide-react'
 
@@ -26,9 +29,19 @@ function getAgingColor(days: number): { bg: string; text: string } {
 }
 
 export function DealCard({ deal, index, onClick }: DealCardProps) {
-  const contact = useContactsStore((s) => s.contacts.find((c) => c.id === deal.contactId))
-  const company = useCompaniesStore((s) => s.companies.find((c) => c.id === deal.companyId))
+  const language = useI18nStore((s) => s.language)
+  const contactRaw = useContactsStore((s) => s.contacts.find((c) => c.id === deal.contactId))
+  const companyRaw = useCompaniesStore((s) => s.companies.find((c) => c.id === deal.companyId))
   const activities = useActivitiesStore((s) => s.activities)
+  const displayDeal = useMemo(() => localizedDeal(deal, getTranslations()), [deal, language])
+  const contact = useMemo(
+    () => (contactRaw ? localizedContact(contactRaw, getTranslations()) : undefined),
+    [contactRaw, language],
+  )
+  const company = useMemo(
+    () => (companyRaw ? localizedCompany(companyRaw, getTranslations()) : undefined),
+    [companyRaw, language],
+  )
   const health = computeDealHealth(deal, activities)
 
   const isOverdue = deal.expectedCloseDate < new Date().toISOString().split('T')[0]
@@ -57,7 +70,7 @@ export function DealCard({ deal, index, onClick }: DealCardProps) {
           {/* Title + priority dot + aging badge */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <p className="text-sm font-medium text-white leading-snug line-clamp-2">{deal.title}</p>
+              <p className="text-sm font-medium text-white leading-snug line-clamp-2">{displayDeal.title}</p>
               <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${aging.bg} ${aging.text}`}>
                 {ageDays}d
               </span>
@@ -87,7 +100,7 @@ export function DealCard({ deal, index, onClick }: DealCardProps) {
 
           {/* Value */}
           <p className="text-sm font-bold text-emerald-400 mb-2">
-            {formatCurrency(deal.value, deal.currency)}
+            {formatCurrency(displayDeal.value, displayDeal.currency)}
           </p>
 
           {/* Footer */}

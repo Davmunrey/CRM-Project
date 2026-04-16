@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type { CustomFieldDefinition, CustomFieldDefinitionI18n, CustomFieldEntityType, CustomFieldValue } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getOrgId } from '../lib/supabaseHelpers'
-import { useI18nStore } from '../i18n'
+import { getTranslations, useI18nStore } from '../i18n'
 import type { Language } from '../i18n'
 
 // ─── Seed Definitions ────────────────────────────────────────────────────────
@@ -235,13 +235,24 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
       .sort((a, b) => a.order - b.order)
       .map((def) => {
         const tx = findTranslation(translations, def.id, lang)
-        if (!tx) return def
-        return {
-          ...def,
-          label: tx.label || def.label,
-          placeholder: tx.placeholder ?? def.placeholder,
-          options: tx.options ?? def.options,
+        if (tx) {
+          return {
+            ...def,
+            label: tx.label || def.label,
+            placeholder: tx.placeholder ?? def.placeholder,
+            options: tx.options ?? def.options,
+          }
         }
+        const seed = getTranslations().seedDemo.customFields[def.id]
+        if (seed) {
+          return {
+            ...def,
+            label: seed.label,
+            placeholder: seed.placeholder ?? def.placeholder,
+            options: seed.options ?? def.options,
+          }
+        }
+        return def
       })
   },
 

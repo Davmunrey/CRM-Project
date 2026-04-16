@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslations } from '../i18n'
 import { RefreshCw, AlertTriangle, Clock, Phone, Mail, ClipboardList, User, Filter } from 'lucide-react'
+import { useAuthStore } from '../store/authStore'
 import { useContactsStore } from '../store/contactsStore'
 import { useActivitiesStore } from '../store/activitiesStore'
 import { useCompaniesStore } from '../store/companiesStore'
@@ -31,6 +32,7 @@ const URGENCY_BG: Record<FollowUpReminder['urgency'], string> = {
 export function FollowUps() {
   const t = useTranslations()
   const navigate = useNavigate()
+  const currentUserName = useAuthStore((s) => s.currentUser?.name ?? '')
   const contacts = useContactsStore((s) => s.contacts)
   const activities = useActivitiesStore((s) => s.activities)
   const addActivity = useActivitiesStore((s) => s.addActivity)
@@ -67,7 +69,7 @@ export function FollowUps() {
       description: `${t.activities.typeLabels.call} — ${t.nav.followUps}`,
       status: 'pending',
       contactId: reminder.contactId,
-      createdBy: 'David Muñoz',
+      createdBy: currentUserName || t.common.notAvailable,
     })
     toast.success(`${t.activities.typeLabels.call} — ${reminder.contactName}`)
   }
@@ -86,7 +88,7 @@ export function FollowUps() {
       description: `${t.activities.typeLabels.task} — ${t.nav.followUps}`,
       status: 'pending',
       contactId: reminder.contactId,
-      createdBy: 'David Muñoz',
+      createdBy: currentUserName || t.common.notAvailable,
     })
     toast.success(`${t.activities.typeLabels.task} — ${reminder.contactName}`)
   }
@@ -111,7 +113,7 @@ export function FollowUps() {
       {/* Toolbar row */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500">
-          {stats.total} {t.nav.contacts.toLowerCase()} — {t.followUps.title}
+          {stats.total} {t.contacts.title} — {t.followUps.title}
         </p>
         <button
           type="button"
@@ -220,7 +222,7 @@ export function FollowUps() {
                     <p className="text-xs text-slate-500 truncate">{reminder.companyName}</p>
                     <div className="flex items-center gap-3 mt-1">
                       <span className={`text-xs font-medium ${URGENCY_COLORS[reminder.urgency]}`}>
-                        {reminder.daysSinceContact}d {t.followUps.daysSince}
+                        {t.followUps.daysSinceBadge.replace(/\{days\}/g, String(reminder.daysSinceContact))}
                       </span>
                       {reminder.lastActivityType && (
                         <span className="text-[11px] text-slate-600">

@@ -2,12 +2,13 @@ import { useState, useEffect, useMemo } from 'react'
 import type { CustomFieldDefinition, CustomFieldValue, CustomFieldEntityType } from '../../types'
 import { useCustomFieldsStore } from '../../store/customFieldsStore'
 import { formatCurrency, formatDateShort } from '../../utils/formatters'
-import { useTranslations } from '../../i18n'
+import { useI18nStore, useTranslations } from '../../i18n'
 
 // ─── Display component (read-only) ──────────────────────────────────────────
 
 export function CustomFieldsDisplay({ entityId, entityType }: { entityId: string; entityType: CustomFieldEntityType }) {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
   const [definitions, setDefinitions] = useState<CustomFieldDefinition[]>([])
   const [values, setValues] = useState<CustomFieldValue[]>([])
 
@@ -18,7 +19,7 @@ export function CustomFieldsDisplay({ entityId, entityType }: { entityId: string
     }
     compute()
     return useCustomFieldsStore.subscribe(compute)
-  }, [entityId, entityType])
+  }, [entityId, entityType, language])
 
   const filledFields = useMemo(() => {
     return definitions
@@ -91,6 +92,7 @@ function FieldValueDisplay({
 
 export function CustomFieldsForm({ entityId, entityType }: { entityId: string; entityType: CustomFieldEntityType }) {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
   const [definitions, setDefinitions] = useState<CustomFieldDefinition[]>([])
   const [fieldValues, setFieldValues] = useState<Record<string, CustomFieldValue['value']>>({})
 
@@ -107,7 +109,7 @@ export function CustomFieldsForm({ entityId, entityType }: { entityId: string; e
     }
     compute()
     return useCustomFieldsStore.subscribe(compute)
-  }, [entityId, entityType])
+  }, [entityId, entityType, language])
 
   const handleChange = (fieldId: string, value: CustomFieldValue['value']) => {
     setFieldValues((prev) => ({ ...prev, [fieldId]: value }))

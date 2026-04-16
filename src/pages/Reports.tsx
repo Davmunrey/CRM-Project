@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -18,6 +18,7 @@ import { useAuthStore } from '../store/authStore'
 import type { DealStage, ActivityType } from '../types'
 import { subMonths, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns'
 import { useTranslations } from '../i18n'
+import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6']
 
@@ -39,6 +40,62 @@ export function Reports() {
     return subMonths(new Date(), 6).toISOString().split('T')[0]
   })
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0])
+
+  const [emailTrackingStats, setEmailTrackingStats] = useState<{
+    opens: number
+    clicks: number
+    loading: boolean
+    error: boolean
+  }>({ opens: 0, clicks: 0, loading: false, error: false })
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) {
+      setEmailTrackingStats({ opens: 0, clicks: 0, loading: false, error: false })
+      return
+    }
+    let cancelled = false
+    const load = async () => {
+      setEmailTrackingStats((s) => ({ ...s, loading: true, error: false }))
+      try {
+        const start = dateFrom
+          ? startOfDay(parseISO(dateFrom)).toISOString()
+          : startOfDay(subMonths(new Date(), 6)).toISOString()
+        const end = dateTo ? endOfDay(parseISO(dateTo)).toISOString() : endOfDay(new Date()).toISOString()
+        const sb = supabase as any
+        const [openRes, clickRes] = await Promise.all([
+          sb
+            .from('email_tracking_events')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_type', 'open')
+            .gte('created_at', start)
+            .lte('created_at', end),
+          sb
+            .from('email_tracking_events')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_type', 'click')
+            .gte('created_at', start)
+            .lte('created_at', end),
+        ])
+        if (cancelled) return
+        if (openRes.error || clickRes.error) {
+          setEmailTrackingStats({ opens: 0, clicks: 0, loading: false, error: true })
+          return
+        }
+        setEmailTrackingStats({
+          opens: openRes.count ?? 0,
+          clicks: clickRes.count ?? 0,
+          loading: false,
+          error: false,
+        })
+      } catch {
+        if (!cancelled) setEmailTrackingStats({ opens: 0, clicks: 0, loading: false, error: true })
+      }
+    }
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [dateFrom, dateTo])
 
   const filteredDeals = useMemo(() => {
     if (!dateFrom && !dateTo) return deals
@@ -186,6 +243,47 @@ export function Reports() {
             <p className={`text-2xl font-bold ${color}`}>{value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Server-tracked outbound email (RLS: current user’s sends) */}
+      <div className="glass p-5 space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-300">{t.reports.emailTrackingTitle}</h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-3xl">{t.reports.emailTrackingSubtitle}</p>
+          </div>
+          {isSupabaseConfigured && (
+            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+              {t.reports.emailTrackingServerBadge}
+            </span>
+          )}
+        </div>
+        {!isSupabaseConfigured ? (
+          <p className="text-sm text-slate-500">{t.reports.emailTrackingNotConfigured}</p>
+        ) : emailTrackingStats.error ? (
+          <p className="text-sm text-rose-400">{t.reports.emailTrackingLoadError}</p>
+        ) : emailTrackingStats.loading ? (
+          <p className="text-sm text-slate-500">{t.common.loading}</p>
+        ) : emailTrackingStats.opens === 0 && emailTrackingStats.clicks === 0 ? (
+          <p className="text-sm text-slate-500">{t.reports.emailTrackingEmpty}</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
+            <div>
+              <p className="text-xs text-slate-500 mb-1">{t.reports.emailTrackingOpens}</p>
+              <p className="text-2xl font-bold text-emerald-400">{emailTrackingStats.opens}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 mb-1">{t.reports.emailTrackingClicks}</p>
+              <p className="text-2xl font-bold text-blue-400">{emailTrackingStats.clicks}</p>
+            </div>
+          </div>
+        )}
+        {isSupabaseConfigured && (
+          <div className="text-[11px] text-slate-600 border-t border-white/6 pt-3 space-y-2">
+            <p>{t.reports.emailTrackingPrivacyNote}</p>
+            <p className="text-slate-500">{t.reports.emailTrackingReliabilityNote}</p>
+          </div>
+        )}
       </div>
 
       {/* Charts row 1 */}

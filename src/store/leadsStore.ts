@@ -8,6 +8,7 @@ import { useCompaniesStore } from './companiesStore'
 import { useAuditStore } from './auditStore'
 import { useNotificationsStore } from './notificationsStore'
 import { useAuthStore } from './authStore'
+import { getTranslations } from '../i18n'
 import { toast } from './toastStore'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -562,7 +563,9 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
         'lead',
         leadId,
         `${lead.firstName} ${lead.lastName}`.trim(),
-        `Score recomputed (${lead.score} -> ${nextScore})`,
+        getTranslations().auditMessages.leadScoreRecomputed
+          .replace('{from}', String(lead.score))
+          .replace('{to}', String(nextScore)),
       )
     }
 

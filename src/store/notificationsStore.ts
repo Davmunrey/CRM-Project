@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { CRMNotification, NotificationType } from '../types'
 import { useAuthStore } from './authStore'
+import { getTranslations } from '../i18n'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
 
@@ -49,61 +50,63 @@ function notificationToRow(n: Partial<CRMNotification>): Record<string, unknown>
 
 function getSeedNotifications(): CRMNotification[] {
   const now = new Date()
+  const s = getTranslations().notificationSeeds
+  const sys = s.triggeredBySystem
   return [
     {
       id: 'notif-seed-1',
       type: 'deal_won',
-      title: 'Deal ganado: Migracion Cloud TechStart',
-      message: 'El deal "Migracion Cloud TechStart" se ha cerrado exitosamente por 45.000 EUR',
+      title: s.dealWonTitle,
+      message: s.dealWonMessage,
       entityType: 'deal',
       entityId: 'deal-001',
       userId: 'user-001',
-      triggeredBy: 'David Munoz',
+      triggeredBy: 'David Muñoz',
       isRead: false,
       createdAt: new Date(now.getTime() - 2 * 3600000).toISOString(),
     },
     {
       id: 'notif-seed-2',
       type: 'deal_stage_changed',
-      title: 'ERP Integration avanzo',
-      message: 'De qualified a proposal',
+      title: s.dealStageTitle,
+      message: s.dealStageMessage,
       entityType: 'deal',
       entityId: 'deal-003',
       userId: 'user-001',
-      triggeredBy: 'Sara Garcia',
+      triggeredBy: 'Sara López',
       isRead: false,
       createdAt: new Date(now.getTime() - 5 * 3600000).toISOString(),
     },
     {
       id: 'notif-seed-3',
       type: 'activity_overdue',
-      title: 'Actividad vencida: Llamada de seguimiento',
-      message: 'La llamada programada con Laura Sanchez esta vencida',
+      title: s.activityOverdueTitle,
+      message: s.activityOverdueMessage,
       entityType: 'activity',
       entityId: 'act-001',
       userId: 'user-001',
-      triggeredBy: 'Sistema',
+      triggeredBy: sys,
       isRead: false,
       createdAt: new Date(now.getTime() - 24 * 3600000).toISOString(),
     },
     {
       id: 'notif-seed-4',
       type: 'goal_achieved',
-      title: 'Objetivo logrado: Actividades mensuales',
-      message: 'Has completado tu objetivo de 50 actividades este mes',
+      title: s.goalAchievedTitle,
+      message: s.goalAchievedMessage,
       entityType: 'goal',
       userId: 'user-001',
-      triggeredBy: 'Sistema',
+      triggeredBy: sys,
       isRead: true,
       createdAt: new Date(now.getTime() - 48 * 3600000).toISOString(),
     },
     {
       id: 'notif-seed-5',
       type: 'system',
-      title: 'Bienvenido a CRM Pro',
-      message: 'Tu cuenta ha sido configurada. Explora las funcionalidades del sistema.',
+      title: s.welcomeTitle,
+      message: s.welcomeMessage,
       userId: 'user-001',
-      triggeredBy: 'Sistema',
+      triggeredBy: sys,
       isRead: true,
       createdAt: new Date(now.getTime() - 72 * 3600000).toISOString(),
     },

@@ -9,6 +9,12 @@ import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/su
 import { useAuthStore } from './authStore'
 import { useAutomationsStore } from './automationsStore'
 import { toast } from './toastStore'
+import { getTranslations } from '../i18n'
+
+function dealStageLabel(stage: DealStage): string {
+  const labels = getTranslations().deals.stageLabels as Record<string, string>
+  return labels[stage] ?? stage
+}
 
 // ── Snake ↔ Camel mappers ───────────────────────────────────────────────────
 
@@ -189,7 +195,7 @@ export const useDealsStore = create<DealsState>()(
       const id = uuidv4()
       const deal: Deal = { ...dealData, id, createdAt: now, updatedAt: now }
       set((state) => ({ deals: [deal, ...state.deals] }))
-      useAuditStore.getState().logAction('deal_created', 'deal', deal.id, deal.title, 'Deal creado')
+      useAuditStore.getState().logAction('deal_created', 'deal', deal.id, deal.title, getTranslations().auditMessages.dealCreated)
 
       if (isSupabaseConfigured && supabase) {
         try {
@@ -204,7 +210,7 @@ export const useDealsStore = create<DealsState>()(
                 return
               }
               if (!data) {
-                const message = 'Empty Supabase insert response'
+                const message = getTranslations().dealSync.emptyInsertResponse
                 set({ error: message })
                 toast.error(message)
                 return
@@ -216,13 +222,13 @@ export const useDealsStore = create<DealsState>()(
               const message = getErrorMessage(error)
               upsertPendingDeal(deal)
               set({ error: message })
-              toast.error(`${message}. Deal saved locally and will retry sync.`)
+              toast.error(`${message}. ${getTranslations().dealSync.dealSavedRetrySuffix}`)
             })
         } catch (error) {
           const message = getErrorMessage(error)
           upsertPendingDeal(deal)
           set({ error: message })
-          toast.error(`${message}. Deal saved locally and will retry sync.`)
+          toast.error(`${message}. ${getTranslations().dealSync.dealSavedRetrySuffix}`)
         }
       }
 
@@ -236,7 +242,7 @@ export const useDealsStore = create<DealsState>()(
         ),
       }))
       const deal = get().getById(id)
-      useAuditStore.getState().logAction('deal_updated', 'deal', id, deal?.title ?? '', 'Deal actualizado')
+      useAuditStore.getState().logAction('deal_updated', 'deal', id, deal?.title ?? '', getTranslations().auditMessages.dealUpdated)
 
       if (isSupabaseConfigured && supabase) {
         const row = dealToRow(updates)
@@ -252,7 +258,7 @@ export const useDealsStore = create<DealsState>()(
     deleteDeal: (id) => {
       const deal = get().getById(id)
       set((state) => ({ deals: state.deals.filter((d) => d.id !== id) }))
-      useAuditStore.getState().logAction('deal_deleted', 'deal', id, deal?.title ?? '', 'Deal eliminado')
+      useAuditStore.getState().logAction('deal_deleted', 'deal', id, deal?.title ?? '', getTranslations().auditMessages.dealDeleted)
 
       if (isSupabaseConfigured && supabase) {
         sbDelete('deals', id).then(null, (e) => set({ error: (e as Error).message }))
@@ -274,22 +280,38 @@ export const useDealsStore = create<DealsState>()(
 
       const deal = get().getById(id)
       const title = deal?.title ?? ''
-      useAuditStore.getState().logAction('deal_stage_changed', 'deal', id, title, `Movido a ${newStage}`)
+      const tr = getTranslations()
+      const stageLabel = dealStageLabel(newStage)
+      useAuditStore.getState().logAction(
+        'deal_stage_changed',
+        'deal',
+        id,
+        title,
+        tr.auditMessages.dealMovedTo.replace('{stage}', stageLabel),
+      )
 
       // Trigger notifications
       const notify = useNotificationsStore.getState().notify
+      const dn = tr.dealNotifications
       if (newStage === 'closed_won') {
-        notify('deal_won', `Deal ganado: ${title}`, `El deal "${title}" se ha cerrado exitosamente.`, {
+        notify('deal_won', dn.wonTitle.replace('{title}', title), dn.wonMessage.replaceAll('{title}', title), {
           entityType: 'deal', entityId: id,
         })
       } else if (newStage === 'closed_lost') {
-        notify('deal_lost', `Deal perdido: ${title}`, `El deal "${title}" se ha marcado como perdido.`, {
+        notify('deal_lost', dn.lostTitle.replace('{title}', title), dn.lostMessage.replaceAll('{title}', title), {
           entityType: 'deal', entityId: id,
         })
       } else if (oldDeal && oldDeal.stage !== newStage) {
-        notify('deal_stage_changed', `${title} avanzó`, `De ${oldDeal.stage} a ${newStage}`, {
-          entityType: 'deal', entityId: id,
-        })
+        notify(
+          'deal_stage_changed',
+          dn.stageTitle.replace('{title}', title),
+          dn.stageMessage
+            .replace('{from}', dealStageLabel(oldDeal.stage))
+            .replace('{to}', stageLabel),
+          {
+            entityType: 'deal', entityId: id,
+          },
+        )
       }
 
       // Fire pipeline automations

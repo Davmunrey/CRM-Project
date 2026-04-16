@@ -5,7 +5,7 @@ import {
   Activity, BarChart3, Settings, ChevronLeft, ChevronRight,
   Zap, Mail, Sparkles, UserCheck, FileText, ScrollText, Target, UsersRound, BellRing, GanttChart,
   LineChart, ListOrdered, Workflow, Package, FunnelPlus,
-  Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays,
+  Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays, LayoutGrid,
 } from 'lucide-react'
 import { useViewsStore } from '../../store/viewsStore'
 import { useActivitiesStore } from '../../store/activitiesStore'
@@ -51,6 +51,7 @@ function buildSalesItems(t: Translations): NavItem[] {
     { id: 'activities', to: '/activities', icon: <Activity size={17} />, label: t.nav.activities },
     { id: 'followUps', to: '/follow-ups', icon: <UserCheck size={17} />, label: t.nav.followUps },
     { id: 'goals', to: '/goals', icon: <Target size={17} />, label: t.nav.goals },
+    { id: 'managerDashboard', to: '/manager', icon: <LayoutGrid size={17} />, label: t.nav.managerDashboard },
     { id: 'notifications', to: '/notifications', icon: <BellRing size={17} />, label: t.nav.notifications },
     { id: 'inbox', to: '/inbox', icon: <Mail size={17} />, label: t.nav.inbox },
     { id: 'reports', to: '/reports', icon: <BarChart3 size={17} />, label: t.nav.reports },
@@ -102,6 +103,7 @@ function iconForKey(iconKey?: SidebarIconKey): React.ReactNode {
     case 'handshake': return <Handshake size={17} />
     case 'cloud': return <Cloud size={17} />
     case 'trending-up': return <TrendingUp size={17} />
+    case 'layout-grid': return <LayoutGrid size={17} />
     default: return <Bookmark size={17} />
   }
 }

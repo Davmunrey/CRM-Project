@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Package, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Search } from 'lucide-react'
 import { useProductsStore } from '../store/productsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { toast } from '../store/toastStore'
-import { useTranslations } from '../i18n'
+import { getTranslations, useI18nStore, useTranslations } from '../i18n'
+import { localizedProduct } from '../i18n/localizeSeed'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
@@ -136,6 +137,8 @@ function ProductModal({
 
 function ProductCard({ product }: { product: Product }) {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
+  const displayProduct = useMemo(() => localizedProduct(product, getTranslations()), [product, language])
   const categoryLabels = getCategoryLabels(t)
   const { updateProduct, deleteProduct } = useProductsStore()
   const [editing, setEditing] = useState(false)
@@ -150,7 +153,7 @@ function ProductCard({ product }: { product: Product }) {
     <>
       {editing && (
         <ProductModal
-          initial={{ name: product.name, description: product.description, sku: product.sku, price: product.price, currency: product.currency, category: product.category, isActive: product.isActive }}
+          initial={{ name: displayProduct.name, description: displayProduct.description, sku: product.sku, price: product.price, currency: product.currency, category: product.category, isActive: product.isActive }}
           onSave={handleSave}
           onClose={() => setEditing(false)}
         />
@@ -160,7 +163,7 @@ function ProductCard({ product }: { product: Product }) {
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-white truncate">{product.name}</span>
+              <span className="text-sm font-semibold text-white truncate">{displayProduct.name}</span>
               <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${product.isActive ? 'border-white/10 text-slate-500' : 'border-white/6 text-slate-600'}`}>
                 {product.sku}
               </span>
@@ -212,8 +215,8 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
 
-        {product.description && (
-          <p className="text-xs text-slate-500 mb-2 line-clamp-2">{product.description}</p>
+        {displayProduct.description && (
+          <p className="text-xs text-slate-500 mb-2 line-clamp-2">{displayProduct.description}</p>
         )}
 
         <p className="text-lg font-bold text-white">
@@ -228,6 +231,7 @@ function ProductCard({ product }: { product: Product }) {
 
 export function Products() {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
   const categoryLabels = getCategoryLabels(t)
   const products = useProductsStore((s) => s.products)
   const addProduct = useProductsStore((s) => s.addProduct)
@@ -235,12 +239,16 @@ export function Products() {
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState<ProductCategory | ''>('')
 
-  const filtered = products.filter((p) => {
-    const q = search.toLowerCase()
-    if (q && !p.name.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q)) return false
-    if (categoryFilter && p.category !== categoryFilter) return false
-    return true
-  })
+  const filtered = useMemo(() => {
+    const tr = getTranslations()
+    return products.filter((p) => {
+      const loc = localizedProduct(p, tr)
+      const q = search.toLowerCase()
+      if (q && !loc.name.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q)) return false
+      if (categoryFilter && p.category !== categoryFilter) return false
+      return true
+    })
+  }, [products, search, categoryFilter, language])
 
   const active = products.filter((p) => p.isActive).length
   const totalValue = products.filter((p) => p.isActive).reduce((s, p) => s + p.price, 0)

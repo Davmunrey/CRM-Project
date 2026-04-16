@@ -43,6 +43,7 @@ import { isBootstrapFatalError } from './lib/supabase'
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
 const Reports = lazy(() => import('./pages/Reports').then((m) => ({ default: m.Reports })))
 const Forecast = lazy(() => import('./pages/Forecast').then((m) => ({ default: m.Forecast })))
+const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard').then((m) => ({ default: m.ManagerDashboard })))
 
 function ProtectedPage({ title, children, requiredPermission }: { title: string; children: React.ReactNode; requiredPermission?: import('./types/auth').Permission }) {
   return (
@@ -94,6 +95,16 @@ function AppRoutes() {
           <ProtectedPage title={t.nav.reports} requiredPermission="reports:read">
             <Suspense fallback={lazyFallback}>
               <Reports />
+            </Suspense>
+          </ProtectedPage>
+        }
+      />
+      <Route
+        path="/manager"
+        element={
+          <ProtectedPage title={t.nav.managerDashboard} requiredPermission="reports:read">
+            <Suspense fallback={lazyFallback}>
+              <ManagerDashboard />
             </Suspense>
           </ProtectedPage>
         }

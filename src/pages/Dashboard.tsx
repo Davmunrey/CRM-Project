@@ -16,6 +16,7 @@ import AnimatedCounter from '../components/ui/AnimatedCounter'
 import { formatCurrency, formatRelativeDate, formatDate } from '../utils/formatters'
 import { DEAL_STAGE_COLORS } from '../utils/constants'
 import { useAuthStore } from '../store/authStore'
+import { useOnboardingStore } from '../store/onboardingStore'
 import { useNotificationsStore } from '../store/notificationsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import type { DealStage, CRMNotification } from '../types'
@@ -61,6 +62,14 @@ export function Dashboard() {
   const deals = useDealsStore((s) => s.deals)
   const activities = useActivitiesStore((s) => s.activities)
   const companies = useCompaniesStore((s) => s.companies)
+  const organizationId = useAuthStore((s) => s.organizationId)
+  const getOnboardingFlags = useOnboardingStore((s) => s.getFlags)
+  const onboardingFlags = getOnboardingFlags(organizationId ?? undefined)
+  const dismissOnboardingBanner = useOnboardingStore((s) => s.dismissHomeBanner)
+  const onboardingComplete =
+    onboardingFlags.importContacts && onboardingFlags.firstDeal && onboardingFlags.firstSequence
+  const showOnboardingBanner =
+    Boolean(organizationId) && !onboardingComplete && !onboardingFlags.homeBannerDismissedAt
 
   // ── KPIs ─────────────────────────────────────────────────────────────────
   const stats = useMemo(() => {
@@ -194,6 +203,29 @@ export function Dashboard() {
 
   return (
     <div className="crm-page space-y-6">
+      {showOnboardingBanner && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-brand-500/30 bg-brand-500/10 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-white">{t.dashboard.onboardingBannerTitle}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{t.dashboard.onboardingBannerBody}</p>
+          </div>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Button size="sm" onClick={() => navigate('/settings?tab=onboarding')}>
+              {t.dashboard.onboardingBannerSettings}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                dismissOnboardingBanner(organizationId ?? undefined)
+                trackUxAction('onboarding_banner_dismiss', {})
+              }}
+            >
+              {t.dashboard.onboardingBannerDismiss}
+            </Button>
+          </div>
+        </div>
+      )}
       {/* ── Row 1: Quick actions ──────────────────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
         <PermissionGate permission="contacts:create">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import {
   Plus, Mail, Phone, Linkedin, Clock, Users, CheckCircle2,
   PauseCircle, XCircle, ListOrdered, Trash2, PlayCircle, ChevronRight,
@@ -8,7 +8,8 @@ import { useSequencesStore } from '../store/sequencesStore'
 import { useContactsStore } from '../store/contactsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { toast } from '../store/toastStore'
-import { useTranslations } from '../i18n'
+import { getTranslations, useI18nStore, useTranslations } from '../i18n'
+import { localizedEmailSequence } from '../i18n/localizeSeed'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
 import { formatDateShort } from '../utils/formatters'
 import type {
@@ -68,6 +69,8 @@ interface EnrollModalProps {
 
 function EnrollModal({ sequence, onClose }: EnrollModalProps) {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
+  const locSequence = useMemo(() => localizedEmailSequence(sequence, getTranslations()), [sequence, language])
   const [contacts, setContacts] = useState(useContactsStore.getState().contacts)
   const [selectedContactId, setSelectedContactId] = useState('')
   const { enrollContact } = useSequencesStore.getState()
@@ -82,7 +85,7 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
     const contact = contacts.find((c) => c.id === selectedContactId)
     if (!contact) return
     enrollContact(sequence.id, contact.id, `${contact.firstName} ${contact.lastName}`)
-    toast.success(`${contact.firstName} ${contact.lastName} — "${sequence.name}"`)
+    toast.success(`${contact.firstName} ${contact.lastName} — "${locSequence.name}"`)
     onClose()
   }
 
@@ -93,7 +96,7 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-lg font-semibold text-white">{t.sequences.enrolled}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">{sequence.name}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{locSequence.name}</p>
           </div>
           <button type="button"
             onClick={onClose}
@@ -429,6 +432,8 @@ interface SequenceDetailProps {
 
 function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps) {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
+  const viewSequence = useMemo(() => localizedEmailSequence(sequence, getTranslations()), [sequence, language])
   const stepTypeLabels = getStepTypeLabels(t)
   const enrollmentStatusLabels = getEnrollmentStatusLabels(t)
   const [tab, setTab] = useState<'steps' | 'enrolled'>('steps')
@@ -446,8 +451,8 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-xl font-bold text-white truncate">{sequence.name}</h2>
-              {sequence.isActive ? (
+              <h2 className="text-xl font-bold text-white truncate">{viewSequence.name}</h2>
+              {viewSequence.isActive ? (
                 <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full flex-shrink-0">
                   {t.sequences.active}
                 </span>
@@ -457,13 +462,13 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                 </span>
               )}
             </div>
-            {sequence.description && (
-              <p className="text-sm text-slate-400">{sequence.description}</p>
+            {viewSequence.description && (
+              <p className="text-sm text-slate-400">{viewSequence.description}</p>
             )}
             <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-              <span>{sequence.steps.length} {t.sequences.steps.toLowerCase()}</span>
-              <span>{sequence.enrolledCount} {t.sequences.enrolled.toLowerCase()}</span>
-              <span>{t.common.createdAt} {formatDate(sequence.createdAt)}</span>
+              <span>{viewSequence.steps.length} {t.sequences.steps.toLowerCase()}</span>
+              <span>{viewSequence.enrolledCount} {t.sequences.enrolled.toLowerCase()}</span>
+              <span>{t.common.createdAt} {formatDate(viewSequence.createdAt)}</span>
             </div>
           </div>
           <PermissionGate permission="sequences:enroll">
@@ -499,13 +504,13 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
       <div className="flex-1 overflow-y-auto p-6">
         {tab === 'steps' && (
           <div className="space-y-0">
-            {sequence.steps.length === 0 ? (
+            {viewSequence.steps.length === 0 ? (
               <div className="text-center py-12">
                 <ListOrdered size={32} className="mx-auto text-slate-600 mb-2" />
                 <p className="text-sm text-slate-500">{t.common.noResults}</p>
               </div>
             ) : (
-              sequence.steps
+              viewSequence.steps
                 .slice()
                 .sort((a, b) => a.order - b.order)
                 .map((step, idx) => (
@@ -515,13 +520,13 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                       <div className="w-9 h-9 rounded-xl bg-[#0d0e1a] border border-white/10 flex items-center justify-center">
                         <StepIcon type={step.type} size={15} />
                       </div>
-                      {idx < sequence.steps.length - 1 && (
+                      {idx < viewSequence.steps.length - 1 && (
                         <div className="w-px flex-1 bg-white/8 my-1 min-h-[32px]" />
                       )}
                     </div>
 
                     {/* Step content */}
-                    <div className={`flex-1 pb-6 ${idx === sequence.steps.length - 1 ? '' : ''}`}>
+                    <div className={`flex-1 pb-6 ${idx === viewSequence.steps.length - 1 ? '' : ''}`}>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xs font-semibold text-white">
                           {t.sequences.steps} {idx + 1} — {stepTypeLabels[step.type]}
@@ -616,7 +621,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                         </td>
                         <td className="py-3 pr-4">
                           <span className="text-xs text-slate-300">
-                            {enr.currentStep + 1} / {sequence.steps.length}
+                            {enr.currentStep + 1} / {viewSequence.steps.length}
                           </span>
                         </td>
                         <td className="py-3 pr-4">
@@ -677,6 +682,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
 
 export function Sequences() {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
   const [sequences, setSequences] = useState<EmailSequence[]>([])
   const [enrollments, setEnrollments] = useState<SequenceEnrollment[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -697,6 +703,10 @@ export function Sequences() {
   }, [syncState])
 
   const selectedSequence = sequences.find((s) => s.id === selectedId) ?? null
+  const selectedSequenceView = useMemo(
+    () => (selectedSequence ? localizedEmailSequence(selectedSequence, getTranslations()) : null),
+    [selectedSequence, language],
+  )
   const selectedEnrollments = selectedSequence
     ? enrollments.filter((e) => e.sequenceId === selectedSequence.id)
     : []
@@ -753,6 +763,7 @@ export function Sequences() {
               </div>
             ) : (
               sequences.map((seq) => {
+                const loc = localizedEmailSequence(seq, getTranslations())
                 const seqEnrollments = enrollments.filter((e) => e.sequenceId === seq.id)
                 const activeCount = seqEnrollments.filter((e) => e.status === 'active').length
 
@@ -769,7 +780,7 @@ export function Sequences() {
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-sm font-medium text-white truncate">{seq.name}</p>
+                          <p className="text-sm font-medium text-white truncate">{loc.name}</p>
                           {seq.isActive && (
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
                           )}
@@ -802,9 +813,9 @@ export function Sequences() {
 
         {/* ─── Right: Detail ───────────────────────────────────────────── */}
         <div className="flex-1 glass rounded-2xl overflow-hidden min-w-0">
-          {selectedSequence ? (
+          {selectedSequenceView ? (
             <SequenceDetail
-              sequence={selectedSequence}
+              sequence={selectedSequenceView}
               enrollments={selectedEnrollments}
               onEnroll={() => setShowEnrollModal(true)}
             />
@@ -833,8 +844,8 @@ export function Sequences() {
 
       {/* Modals / SlideOvers */}
       <NewSequenceSlideOver open={showNewSlideOver} onClose={() => setShowNewSlideOver(false)} />
-      {showEnrollModal && selectedSequence && (
-        <EnrollModal sequence={selectedSequence} onClose={() => setShowEnrollModal(false)} />
+      {showEnrollModal && selectedSequenceView && (
+        <EnrollModal sequence={selectedSequenceView} onClose={() => setShowEnrollModal(false)} />
       )}
     </div>
   )

@@ -5,6 +5,7 @@ import type { AuthUser, Organization, Invitation, UserRole, Session } from '../t
 import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supabase'
 import { useAuditStore } from './auditStore'
 import { toast } from './toastStore'
+import { getTranslations } from '../i18n'
 
 /** Row shape from `list_organization_members_with_identity` RPC (see supabase migration). */
 export interface OrgMemberIdentityRow {
@@ -232,7 +233,9 @@ export const useAuthStore = create<AuthState>()(
           const email = (m.email && m.email.trim()) ? m.email : (existing?.email ?? (isCurrent ? (current?.email ?? '') : ''))
           const name = (m.full_name && m.full_name.trim())
             ? m.full_name
-            : (existing?.name ?? (isCurrent ? (current?.name ?? 'User') : `Member ${String(m.user_id).slice(0, 6)}`))
+            : (existing?.name ?? (isCurrent
+              ? (current?.name ?? getTranslations().errors.defaultUserDisplayName)
+              : getTranslations().errors.memberWithoutName.replace('{id}', String(m.user_id).slice(0, 8))))
           return {
             id: m.user_id,
             email,
@@ -281,9 +284,10 @@ export const useAuthStore = create<AuthState>()(
         }
 
         if (payload.status === 'requires_invitation') {
+          const tr = getTranslations().errors
           const message = payload.organizationName
-            ? `Domain already belongs to ${payload.organizationName}. Ask for an invitation to join that workspace.`
-            : 'Your email domain already belongs to an existing workspace. Ask for an invitation to join.'
+            ? tr.tenantInvitationWithOrg.replace('{orgName}', payload.organizationName)
+            : tr.tenantInvitationGeneric
           set({ tenantResolutionStatus: 'needs_invitation', tenantResolutionMessage: message })
           return
         }
@@ -299,12 +303,13 @@ export const useAuthStore = create<AuthState>()(
 
       login: (email, password) => {
         const user = get().users.find((u) => u.email.toLowerCase() === email.toLowerCase())
-        if (!user) return { success: false, error: 'Usuario no encontrado' }
-        if (!user.isActive) return { success: false, error: 'Cuenta desactivada. Contacta al administrador.' }
+        const err = getTranslations().errors
+        if (!user) return { success: false, error: err.userNotFound }
+        if (!user.isActive) return { success: false, error: err.accountDeactivated }
 
         const hashed = simpleHash(password)
         if (get().passwords[user.id] !== hashed) {
-          return { success: false, error: 'Contraseña incorrecta' }
+          return { success: false, error: err.wrongPassword }
         }
 
         const now = new Date().toISOString()
@@ -347,7 +352,7 @@ export const useAuthStore = create<AuthState>()(
 
       register: (data) => {
         const existing = get().users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())
-        if (existing) return { success: false, error: 'Ya existe un usuario con este email' }
+        if (existing) return { success: false, error: getTranslations().errors.emailAlreadyExists }
 
         const orgId = uuidv4()
         const userId = uuidv4()
@@ -396,14 +401,14 @@ export const useAuthStore = create<AuthState>()(
       addUser: (data) => {
         const state = get()
         if (!state.currentUser || !state.organization) {
-          return { success: false, error: 'No autenticado' }
+          return { success: false, error: getTranslations().errors.notAuthenticated }
         }
 
         const existing = state.users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())
-        if (existing) return { success: false, error: 'Ya existe un usuario con este email' }
+        if (existing) return { success: false, error: getTranslations().errors.emailAlreadyExists }
 
         if (state.users.filter((u) => u.isActive).length >= state.organization.maxUsers) {
-          return { success: false, error: `Límite de usuarios alcanzado (${state.organization.maxUsers})` }
+          return { success: false, error: getTranslations().errors.userLimitReached.replace('{max}', String(state.organization.maxUsers)) }
         }
 
         const now = new Date().toISOString()
@@ -526,12 +531,14 @@ export const useAuthStore = create<AuthState>()(
             : state.currentUser,
         }))
         if (target) {
+          const tr = getTranslations()
+          const roleLabel = (tr.team.roleLabels as Record<string, string>)[role] ?? role
           useAuditStore.getState().logAction(
             'user_role_changed',
             'user',
             target.id,
             target.name,
-            `Role changed to ${role}`
+            tr.auditMessages.roleChangedTo.replace('{role}', roleLabel),
           )
         }
       },
@@ -555,7 +562,7 @@ export const useAuthStore = create<AuthState>()(
       changePassword: (userId, currentPassword, newPassword) => {
         const hashed = simpleHash(currentPassword)
         if (get().passwords[userId] !== hashed) {
-          return { success: false, error: 'Contraseña actual incorrecta' }
+          return { success: false, error: getTranslations().errors.wrongCurrentPassword }
         }
         set((state) => ({
           passwords: { ...state.passwords, [userId]: simpleHash(newPassword) },
@@ -588,9 +595,10 @@ export const useAuthStore = create<AuthState>()(
 
       acceptInvitation: (invitationId, name, password) => {
         const invitation = get().invitations.find((i) => i.id === invitationId)
-        if (!invitation) return { success: false, error: 'Invitación no encontrada' }
-        if (invitation.status !== 'pending') return { success: false, error: 'Invitación ya usada o expirada' }
-        if (new Date(invitation.expiresAt) < new Date()) return { success: false, error: 'Invitación expirada' }
+        const invErr = getTranslations().errors
+        if (!invitation) return { success: false, error: invErr.invitationNotFound }
+        if (invitation.status !== 'pending') return { success: false, error: invErr.invitationUsedOrExpired }
+        if (new Date(invitation.expiresAt) < new Date()) return { success: false, error: invErr.invitationExpired }
 
         const result = get().addUser({
           name,

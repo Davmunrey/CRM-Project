@@ -1,4 +1,5 @@
 import type { Translations } from './types'
+import { seedDemo } from './seed/en.demo'
 
 export const en: Translations = {
   // ─── Navigation ──────────────────────────────────────────────────────────────
@@ -16,6 +17,7 @@ export const en: Translations = {
     notifications: 'Notifications',
     inbox: 'Inbox',
     reports: 'Reports',
+    managerDashboard: 'Manager',
     forecast: 'Forecast',
     leaderboard: 'Leaderboard',
     templates: 'Templates',
@@ -108,6 +110,7 @@ export const en: Translations = {
     searchPlaceholder: 'Search...',
     continue: 'Continue',
     notAvailable: 'N/A',
+    unassigned: 'Unassigned',
   },
 
   // ─── Contact ─────────────────────────────────────────────────────────────────
@@ -215,6 +218,7 @@ export const en: Translations = {
     country: 'Country',
     city: 'City',
     website: 'Website',
+    websiteUrlPlaceholder: 'https://',
     revenue: 'Annual Revenue',
     contactCount: 'Contacts',
     dealCount: 'Deals',
@@ -321,6 +325,21 @@ export const en: Translations = {
       medium: 'Medium',
       high: 'High',
     },
+    quoteEmailGreeting: 'Hi,',
+    quoteEmailBodyIntro: 'Please find below the quote summary for "{dealTitle}":',
+    quoteEmailSignOff: 'Best regards,',
+    quoteEmailSubject: 'Quote — {dealTitle}',
+    quoteEmailTaxIdPrefix: 'Tax ID:',
+    quoteEmailBillingEmailPrefix: 'Email:',
+    quoteEmailBillingPhonePrefix: 'Phone:',
+    quoteDefaultPaymentMethod: 'Bank transfer',
+    quoteDefaultLateFeeClause: 'Statutory late payment interest may apply after the due date.',
+    quoteDefaultAcceptanceClause: 'Accepting this document means you agree with the terms stated herein.',
+    quotePdfWebPrefix: 'Web:',
+    quotePdfContactEmailPrefix: 'Email:',
+    quotePdfTotalLabel: 'TOTAL',
+    quotePdfVatRow: 'VAT ({percent}%)',
+    quotePdfWithholdingRow: 'Withholding ({percent}%)',
   },
 
   // ─── Activity ────────────────────────────────────────────────────────────────
@@ -389,6 +408,34 @@ export const en: Translations = {
     viewPipeline: 'View pipeline',
     viewNotifications: 'View all',
     noData: 'No data',
+    onboardingBannerTitle: 'Finish workspace setup',
+    onboardingBannerBody: 'Complete a few steps so your team gets value faster.',
+    onboardingBannerSettings: 'Open checklist',
+    onboardingBannerDismiss: 'Dismiss',
+  },
+
+  managerDashboard: {
+    title: 'Manager dashboard',
+    subtitle: 'Pipeline health, lead funnel snapshot, and owner response signals.',
+    methodologyHint:
+      'MQL/SQL counts use lifecycle stages on leads. SQL share is a snapshot mix, not historical cohort conversion. Deal aging uses days since last deal update.',
+    mqlCount: 'Leads in MQL',
+    sqlCount: 'Leads in SQL',
+    sqlShare: 'SQL share (MQL+SQL)',
+    sqlShareHint: 'Share of SQL among leads currently in MQL or SQL.',
+    heatmapTitle: 'Open deal aging by stage',
+    heatmapHint: 'Cells count open deals; columns are days since last update on the deal.',
+    stage: 'Stage',
+    bucket0_7: '0–7d',
+    bucket8_14: '8–14d',
+    bucket15_30: '15–30d',
+    bucket31p: '31d+',
+    responseTitle: 'Median first touch (hours)',
+    responseHint: 'Per owner: first completed call/email/meeting on their open deals, from deal creation.',
+    responseNoData: 'No qualifying completed activities on open deals yet.',
+    medianHours: 'Median',
+    linkReports: 'Open full reports',
+    hoursAbbrev: 'h',
   },
 
   // ─── Calendar ────────────────────────────────────────────────────────────────
@@ -481,6 +528,11 @@ export const en: Translations = {
     gmailSetupStep2: '2. Enable the Gmail API',
     gmailSetupStep3: '3. Create OAuth 2.0 credentials (Web application)',
     gmailSetupStep4: '4. Add {origin} as an authorized origin',
+    placeholderGoogleOAuthClientId: '123456789-abc.apps.googleusercontent.com',
+    placeholderEmailSignatureHtml: '<p>Best regards,<br/>Your name</p>',
+    placeholderBrandingDomain: 'crm.yourcompany.com',
+    placeholderPrivacyPolicyUrl: 'https://yourcompany.com/privacy',
+    placeholderTermsUrl: 'https://yourcompany.com/terms',
     fieldPlaceholderHint: 'e.g.: Sector, Budget...',
     optionsPlaceholder: 'Option 1\nOption 2\nOption 3',
     valuePlaceholderHint: 'e.g.: Enter the value...',
@@ -552,6 +604,18 @@ export const en: Translations = {
     tabData: 'Data',
     tabNavigation: 'Navigation',
     tabAdvanced: 'Advanced',
+    tabOnboarding: 'Getting started',
+    onboardingTitle: 'Workspace setup',
+    onboardingIntro: 'Track first-value milestones for this organization on this browser.',
+    onboardingStepImport: 'Import or add contacts',
+    onboardingStepDeal: 'Create your first deal',
+    onboardingStepSequence: 'Start a sequence',
+    onboardingMarkDone: 'Mark done',
+    onboardingMarkTodo: 'Mark to-do',
+    onboardingReset: 'Reset checklist',
+    onboardingGoContacts: 'Go to contacts',
+    onboardingGoDeals: 'Go to deals',
+    onboardingGoSequences: 'Go to sequences',
     legalCompanyName: 'Legal company name',
     taxIdVat: 'Tax ID / VAT',
     addressLine1: 'Address',
@@ -615,6 +679,19 @@ export const en: Translations = {
     lastMonth: 'Last Month',
     thisQuarter: 'This Quarter',
     thisYear: 'This Year',
+    emailTrackingTitle: 'Outbound email engagement (server)',
+    emailTrackingSubtitle:
+      'Opens and clicks recorded when recipients load the tracking pixel or follow a rewritten link. Edge Functions `track-open` and `track-click` write to `email_tracking_events`.',
+    emailTrackingServerBadge: 'Server-based',
+    emailTrackingOpens: 'Opens',
+    emailTrackingClicks: 'Clicks',
+    emailTrackingPrivacyNote:
+      'Mailbox privacy: you only see events for emails you sent (RLS). Org-wide rollups for managers are not in this view yet.',
+    emailTrackingEmpty: 'No server-tracked opens or clicks in this period for your sends.',
+    emailTrackingLoadError: 'Could not load email tracking stats.',
+    emailTrackingNotConfigured: 'Connect Supabase to see server-tracked email metrics.',
+    emailTrackingReliabilityNote:
+      'Product note: opens/clicks rely on server events when Supabase is configured; client-only or partial loads can under-report. Treat as directional until full ingestion is validated.',
   },
   csvImport: {
     title: 'Import CSV',
@@ -646,6 +723,7 @@ export const en: Translations = {
     title: 'Follow-ups',
     urgency: 'Urgency',
     daysSince: 'Days Since Last Contact',
+    daysSinceBadge: '{days} days without contact',
     suggestedAction: 'Suggested Action',
     critical: 'Critical',
     high: 'High',
@@ -666,6 +744,7 @@ export const en: Translations = {
     onTrack: 'On Track',
     atRisk: 'At Risk',
     behind: 'Behind',
+    targetValuePlaceholder: '50000',
   },
 
   forecast: {
@@ -674,6 +753,12 @@ export const en: Translations = {
     bestCase: 'Best Case',
     committed: 'Committed',
     expected: 'Expected',
+    healthScoreSubtitle: 'Composite score (0–100)',
+    healthExcellent: 'Excellent',
+    healthGood: 'Good',
+    healthFair: 'Fair',
+    healthLow: 'Low',
+    closingDealsSuffix: 'deals',
   },
 
   leaderboard: {
@@ -795,6 +880,7 @@ export const en: Translations = {
     placeholderFullName: 'Full name',
     placeholderEmail: 'email@company.com',
     placeholderMinPassword: 'Minimum 6 characters',
+    placeholderPhoneExample: '+1 555 000 0000',
     placeholderJobTitle: 'e.g. Account Executive',
     placeholderNewPassword: 'New password (min. 6 characters)',
     toastFillRequired: 'Please fill in all required fields',
@@ -839,6 +925,13 @@ export const en: Translations = {
       closing: 'Closing',
       nurture: 'Nurture',
       custom: 'Custom',
+    },
+    previewSamples: {
+      firstName: 'Alex',
+      lastName: 'Rivera',
+      company: 'Acme Corp',
+      dealTitle: 'Project Alpha',
+      dealValue: '€25,000',
     },
   },
 
@@ -900,6 +993,9 @@ export const en: Translations = {
     snoozeOneDay: 'Snooze 1 day',
     snoozeOneHour: 'Snooze 1h',
     snoozeOneWeek: 'Snooze 1w',
+    trackingDemoSimulate: 'Simulate (demo only)',
+    trackingServerMetricsHint:
+      'With Supabase, counts update when recipients open tracked mail or click tracked links. Refresh metrics from Inbox.',
   },
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -1005,10 +1101,98 @@ export const en: Translations = {
     supabaseNotConfigured: 'Supabase is not configured',
     generic: 'An error occurred',
     gmailConnectionError: 'Error connecting Gmail',
+    gmailThreadsLoadError: 'Could not load emails',
     invitationSendError: 'Error sending invitation',
     duplicateTag: 'Duplicate tag',
     noPermissionTitle: 'No permission',
     noPermissionDescription: "You don't have access to this section. Contact your administrator.",
+    userNotFound: 'User not found',
+    accountDeactivated: 'Account deactivated. Contact your administrator.',
+    wrongPassword: 'Incorrect password',
+    wrongCurrentPassword: 'Current password is incorrect',
+    emailAlreadyExists: 'A user with this email already exists',
+    notAuthenticated: 'Not authenticated',
+    userLimitReached: 'User limit reached ({max})',
+    invitationNotFound: 'Invitation not found',
+    invitationUsedOrExpired: 'Invitation already used or expired',
+    invitationExpired: 'Invitation expired',
+    invalidRecipientEmail: 'Invalid recipient email format',
+    invalidReplyToEmail: 'Invalid reply-to email format',
+    emptyServerResponse: 'Empty server response',
+    unknownError: 'Unknown error',
+    defaultUserDisplayName: 'User',
+    memberWithoutName: 'Member {id}',
+    tenantInvitationWithOrg: 'This domain already belongs to {orgName}. Ask for an invitation to join that workspace.',
+    tenantInvitationGeneric: 'Your email domain already belongs to an existing workspace. Ask for an invitation to join.',
+  },
+
+  auditMessages: {
+    activityCreated: 'Activity created',
+    activityDeleted: 'Activity deleted',
+    activityCompleted: 'Activity completed',
+    contactCreated: 'Contact created',
+    contactUpdated: 'Contact updated',
+    contactDeleted: 'Contact deleted',
+    dealCreated: 'Deal created',
+    dealUpdated: 'Deal updated',
+    dealDeleted: 'Deal deleted',
+    dealMovedTo: 'Moved to {stage}',
+    emailSent: 'Email sent',
+    roleChangedTo: 'Role changed to {role}',
+    leadScoreRecomputed: 'Score recalculated ({from} → {to})',
+  },
+
+  attachments: {
+    fileTooLarge: '{fileName} exceeds the 5 MB limit',
+    fileAttached: '{fileName} attached',
+    fileRemoved: '{fileName} removed',
+    fileSizeB: '{size} B',
+    fileSizeKb: '{size} KB',
+    fileSizeMb: '{size} MB',
+  },
+
+  dealSync: {
+    emptyInsertResponse: 'Empty insert response from server',
+    dealSavedRetrySuffix: 'Deal saved locally and will retry sync.',
+  },
+
+  dealNotifications: {
+    wonTitle: 'Deal won: {title}',
+    wonMessage: 'The deal "{title}" was closed successfully.',
+    lostTitle: 'Deal lost: {title}',
+    lostMessage: 'The deal "{title}" was marked as lost.',
+    stageTitle: '{title} updated',
+    stageMessage: 'From {from} to {to}',
+  },
+
+  notificationSeeds: {
+    dealWonTitle: 'Deal won: Cloud migration TechStart',
+    dealWonMessage: 'The deal "Cloud migration TechStart" closed successfully for EUR 45,000.',
+    dealStageTitle: 'ERP integration progressed',
+    dealStageMessage: 'From qualified to proposal',
+    activityOverdueTitle: 'Overdue activity: Follow-up call',
+    activityOverdueMessage: 'The scheduled call with Laura Sánchez is overdue',
+    goalAchievedTitle: 'Goal achieved: Monthly activities',
+    goalAchievedMessage: 'You completed your goal of 50 activities this month',
+    welcomeTitle: 'Welcome to CRM Pro',
+    welcomeMessage: 'Your account is set up. Explore the product.',
+    triggeredBySystem: 'System',
+  },
+
+  formErrors: {
+    invalidEmail: 'Invalid email address',
+    contactFirstNameRequired: 'First name is required',
+    contactLastNameRequired: 'Last name is required',
+    contactAssignedToRequired: 'Assigned to is required',
+    activitySubjectRequired: 'Subject is required',
+    activityCreatedByRequired: 'Created by is required',
+    dealTitleRequired: 'Title is required',
+    dealValueRequired: 'Value is required',
+    dealStageRequired: 'Stage is required',
+    dealStageInvalid: 'Invalid stage',
+    dealExpectedCloseRequired: 'Expected close date is required',
+    dealAssignedToRequired: 'Assigned to is required',
+    companyNameRequired: 'Company name is required',
   },
 
   // ─── Email ───────────────────────────────────────────────────────────────────
@@ -1034,6 +1218,9 @@ export const en: Translations = {
     undoSend: 'Undo send',
     undoSendSuccess: 'Send canceled',
     draftSaved: 'Draft saved',
+    subjectPresetFollowUp: 'Follow-up: {firstName} {lastName}',
+    subjectPresetNextSteps: '{companyName} — Next steps',
+    subjectPresetProposal: '{dealTitle} — Proposal follow-up',
   },
 
   // ─── Notifications page ──────────────────────────────────────────────────────
@@ -1073,4 +1260,6 @@ export const en: Translations = {
     closeLabel: 'Close',
     probabilityShort: 'prob',
   },
+
+  seedDemo,
 }

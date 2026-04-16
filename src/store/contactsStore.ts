@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type { Contact, ContactFilters } from '../types'
 import { seedContacts } from '../utils/seedData'
 import { useAuditStore } from './auditStore'
+import { getTranslations } from '../i18n'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getOrgId, sbDelete, sbBulkDelete } from '../lib/supabaseHelpers'
 import { toast } from './toastStore'
@@ -113,7 +114,7 @@ export const useContactsStore = create<ContactsState>()(
       const tempId = uuidv4()
       const optimistic: Contact = { ...contactData, id: tempId, createdAt: now, updatedAt: now }
       set((s) => ({ contacts: [optimistic, ...s.contacts] }))
-      useAuditStore.getState().logAction('contact_created', 'contact', tempId, contactData.firstName + ' ' + contactData.lastName, 'Contacto creado')
+      useAuditStore.getState().logAction('contact_created', 'contact', tempId, contactData.firstName + ' ' + contactData.lastName, getTranslations().auditMessages.contactCreated)
 
       if (isSupabaseConfigured && supabase) {
         try {
@@ -144,7 +145,7 @@ export const useContactsStore = create<ContactsState>()(
           c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c
         ),
       }))
-      useAuditStore.getState().logAction('contact_updated', 'contact', id, '', 'Contacto actualizado')
+      useAuditStore.getState().logAction('contact_updated', 'contact', id, '', getTranslations().auditMessages.contactUpdated)
 
       if (isSupabaseConfigured && supabase) {
         const row = contactToRow(updates)
@@ -154,7 +155,7 @@ export const useContactsStore = create<ContactsState>()(
 
     deleteContact: (id) => {
       set((state) => ({ contacts: state.contacts.filter((c) => c.id !== id) }))
-      useAuditStore.getState().logAction('contact_deleted', 'contact', id, '', 'Contacto eliminado')
+      useAuditStore.getState().logAction('contact_deleted', 'contact', id, '', getTranslations().auditMessages.contactDeleted)
 
       if (isSupabaseConfigured && supabase) {
         sbDelete('contacts', id)

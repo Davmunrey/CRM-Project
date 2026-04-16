@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { useTranslations, useI18nStore } from '../i18n'
+import { useLocalizedCompanies, useLocalizedContacts, useLocalizedOrgUsers, useTranslations, useI18nStore, getTranslations } from '../i18n'
+import { localizedActivity, localizedDeal, localizedProduct } from '../i18n/localizeSeed'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { DragDropContext } from '@hello-pangea/dnd'
@@ -130,13 +131,13 @@ function QuoteBuilder({
   const [contactPerson, setContactPerson] = useState('')
   const [globalDiscountPercent, setGlobalDiscountPercent] = useState(0)
   const [withholdingPercent, setWithholdingPercent] = useState(0)
-  const [paymentMethod, setPaymentMethod] = useState('Transferencia')
+  const [paymentMethod, setPaymentMethod] = useState('')
   const [paymentDays, setPaymentDays] = useState(30)
   const [bankIban, setBankIban] = useState('')
   const [bankName, setBankName] = useState('')
   const [accountHolder, setAccountHolder] = useState('')
-  const [lateFeeClause, setLateFeeClause] = useState('Se aplicará interés de demora legal tras vencimiento.')
-  const [acceptanceClause, setAcceptanceClause] = useState('La aceptación de este documento implica conformidad con las condiciones indicadas.')
+  const [lateFeeClause, setLateFeeClause] = useState('')
+  const [acceptanceClause, setAcceptanceClause] = useState('')
   const [additionalNotes, setAdditionalNotes] = useState('')
   const [reference, setReference] = useState('')
 
@@ -156,7 +157,8 @@ function QuoteBuilder({
   const addFromProduct = (productId: string) => {
     const p = products.find((pr) => pr.id === productId)
     if (!p) return
-    setItems((prev) => [...prev, { id: crypto.randomUUID(), productId: p.id, name: p.name, description: p.description, quantity: 1, unitPrice: p.price, discount: 0, total: p.price }])
+    const lp = localizedProduct(p, t)
+    setItems((prev) => [...prev, { id: crypto.randomUUID(), productId: lp.id, name: lp.name, description: lp.description, quantity: 1, unitPrice: lp.price, discount: 0, total: lp.price }])
     setSaved(false)
   }
 
@@ -188,6 +190,12 @@ function QuoteBuilder({
     setQuoteNumber(nextSequentialDocNumber(documentType))
   }, [documentType])
 
+  useEffect(() => {
+    setPaymentMethod(t.deals.quoteDefaultPaymentMethod)
+    setLateFeeClause(t.deals.quoteDefaultLateFeeClause)
+    setAcceptanceClause(t.deals.quoteDefaultAcceptanceClause)
+  }, [language, t.deals.quoteDefaultPaymentMethod, t.deals.quoteDefaultLateFeeClause, t.deals.quoteDefaultAcceptanceClause])
+
   const handleSave = () => {
     useDealsStore.getState().updateQuote(dealId, items)
     setSaved(true)
@@ -211,8 +219,8 @@ function QuoteBuilder({
         ? [[branding.addressLine1, branding.postalCode, branding.city, branding.country].filter(Boolean).join(', ')]
         : []),
       ...(branding.billingPhone ? [`${t.common.phone}: ${branding.billingPhone}`] : []),
-      ...(branding.billingEmail ? [`Email: ${branding.billingEmail}`] : []),
-      ...(branding.customDomain ? [`Web: ${branding.customDomain}`] : []),
+      ...(branding.billingEmail ? [`${t.deals.quoteEmailBillingEmailPrefix} ${branding.billingEmail}`] : []),
+      ...(branding.customDomain ? [`${t.deals.quotePdfWebPrefix} ${branding.customDomain}`] : []),
     ]
     doc.setFillColor(accent)
     doc.rect(0, 0, pageWidth, 30, 'F')
@@ -238,7 +246,7 @@ function QuoteBuilder({
       ...(clientTaxId ? [`${t.deals.clientTaxIdPlaceholder}: ${clientTaxId}`] : []),
       ...(clientAddress ? [clientAddress] : []),
       ...(contactPerson ? [`${t.deals.contactPersonPlaceholder}: ${contactPerson}`] : []),
-      ...(contactEmail ? [`Email: ${contactEmail}`] : []),
+      ...(contactEmail ? [`${t.deals.quotePdfContactEmailPrefix} ${contactEmail}`] : []),
       ...(reference ? [`${t.deals.referenceShort}: ${reference}`] : []),
     ]
     let clientY = 49
@@ -263,13 +271,13 @@ function QuoteBuilder({
     })
 
     const bodyRows = [
-      ['Subtotal', fmt(subtotal)],
+      [t.deals.subtotal, fmt(subtotal)],
       [t.deals.lineDiscountLabel, `-${fmt(lineDiscount)}`],
       [t.deals.globalDiscountLabel, `${globalDiscountPercent}% (-${fmt(globalDiscountAmount)})`],
       [t.deals.taxableBase, fmt(baseTaxable)],
-      [`IVA (${vatPercent}%)`, fmt(vatAmount)],
-      [`Retención IRPF (${withholdingPercent}%)`, `-${fmt(withholdingAmount)}`],
-      ['TOTAL', fmt(grandTotal)],
+      [t.deals.quotePdfVatRow.replace('{percent}', String(vatPercent)), fmt(vatAmount)],
+      [t.deals.quotePdfWithholdingRow.replace('{percent}', String(withholdingPercent)), `-${fmt(withholdingAmount)}`],
+      [t.deals.quotePdfTotalLabel, fmt(grandTotal)],
     ]
     const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 120
     let totalsY = finalY + 8
@@ -358,11 +366,11 @@ function QuoteBuilder({
       return
     }
     const body = [
-      `Hi,`,
+      t.deals.quoteEmailGreeting,
       '',
-      `Please find below the quote summary for "${dealTitle}":`,
+      t.deals.quoteEmailBodyIntro.replace('{dealTitle}', dealTitle),
       '',
-      `Quote number: ${quoteNumber}`,
+      `${t.deals.quoteNumber}: ${quoteNumber}`,
       `${t.deals.expectedClose}: ${formatDateForQuote(new Date(Date.now() + validityDays * 86400000))}`,
       '',
       ...items.map((item) => `- ${item.name || t.common.description}: ${item.quantity} x ${fmt(item.unitPrice)} (${item.discount}%) = ${fmt(item.total)}`),
@@ -373,20 +381,20 @@ function QuoteBuilder({
       `${t.common.total}: ${fmt(grandTotal)}`,
       '',
       ...(branding.legalName ? [branding.legalName] : []),
-      ...(branding.taxId ? [`Tax ID: ${branding.taxId}`] : []),
+      ...(branding.taxId ? [`${t.deals.quoteEmailTaxIdPrefix} ${branding.taxId}`] : []),
       ...((branding.addressLine1 || branding.postalCode || branding.city || branding.country)
         ? [[branding.addressLine1, branding.postalCode, branding.city, branding.country].filter(Boolean).join(', ')]
         : []),
-      ...(branding.billingEmail ? [`Email: ${branding.billingEmail}`] : []),
-      ...(branding.billingPhone ? [`Phone: ${branding.billingPhone}`] : []),
+      ...(branding.billingEmail ? [`${t.deals.quoteEmailBillingEmailPrefix} ${branding.billingEmail}`] : []),
+      ...(branding.billingPhone ? [`${t.deals.quoteEmailBillingPhonePrefix} ${branding.billingPhone}`] : []),
       ...(branding.quoteFooter ? [branding.quoteFooter] : []),
       '',
-      'Best regards,',
+      t.deals.quoteEmailSignOff,
     ].join('\n')
     const pdf = await generateQuotePdfAttachment()
     onComposeQuoteDraft({
       to: contactEmail ?? '',
-      subject: `Quote - ${dealTitle}`,
+      subject: t.deals.quoteEmailSubject.replace('{dealTitle}', dealTitle),
       body,
       attachments: [{
         name: pdf.fileName,
@@ -409,9 +417,12 @@ function QuoteBuilder({
           className="flex-1 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
         >
           <option value="" disabled>+ {t.deals.addItem}...</option>
-          {products.map((p) => (
-            <option key={p.id} value={p.id}>{p.name} — {fmt(p.price)}</option>
-          ))}
+          {products.map((p) => {
+            const lp = localizedProduct(p, t)
+            return (
+              <option key={p.id} value={p.id}>{lp.name} — {fmt(lp.price)}</option>
+            )
+          })}
         </select>
         <button
           type="button"
@@ -718,15 +729,18 @@ function QuoteBuilder({
 
 export function Deals() {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
   const [searchParams, setSearchParams] = useSearchParams()
   const { deals, addDeal, updateDeal, deleteDeal, moveDeal } = useDealsStore()
   const contacts = useContactsStore((s) => s.contacts)
+  const localizedContacts = useLocalizedContacts(contacts)
   const companies = useCompaniesStore((s) => s.companies)
+  const localizedCompanies = useLocalizedCompanies(companies)
   const { activities, addActivity, completeActivity, deleteActivity } = useActivitiesStore()
   const pipelineStages = useSettingsStore((s) => s.settings.pipelineStages)
 
   const currentUser = useAuthStore((s) => s.currentUser)
-  const orgUsers = useAuthStore((s) => s.users)
+  const orgUsers = useLocalizedOrgUsers(useAuthStore((s) => s.users))
   const isSalesRep = currentUser?.role === 'sales_rep'
 
   const [search, setSearch] = useState('')
@@ -800,11 +814,14 @@ export function Deals() {
     })
   }, [deals, search, assignedFilter, priorityFilter, myDataOnly, currentUser, viewFilters])
 
-  const getContact = useCallback((id: string) => contacts.find((c) => c.id === id), [contacts])
-  const getCompany = useCallback((id: string) => companies.find((c) => c.id === id), [companies])
+  const getContact = useCallback((id: string) => localizedContacts.find((c) => c.id === id), [localizedContacts])
+  const getCompany = useCallback((id: string) => localizedCompanies.find((c) => c.id === id), [localizedCompanies])
+  const stageLabelsI18n = t.deals.stageLabels as Record<string, string>
   const stageLabelById = useMemo(
-    () => Object.fromEntries(pipelineStages.map((stage) => [stage.id, stage.name])) as Record<DealStage, string>,
-    [pipelineStages]
+    () => Object.fromEntries(
+      pipelineStages.map((stage) => [stage.id, stageLabelsI18n[stage.id] ?? stage.name]),
+    ) as Record<DealStage, string>,
+    [pipelineStages, stageLabelsI18n]
   )
   const sortedPipelineStages = useMemo(
     () => pipelineStages.slice().sort((a, b) => a.order - b.order),
@@ -911,12 +928,19 @@ export function Deals() {
   }
 
 
+  const displaySelectedDeal = useMemo(
+    () => (selectedDeal ? localizedDeal(selectedDeal, getTranslations()) : null),
+    [selectedDeal, language],
+  )
+
   const dealActivities = useMemo(() => {
     if (!selectedDeal) return []
+    const tr = getTranslations()
     return activities
       .filter((a) => a.dealId === selectedDeal.id)
+      .map((a) => localizedActivity(a, tr))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-  }, [activities, selectedDeal])
+  }, [activities, selectedDeal, language])
 
   return (
     <div className="crm-page-full flex flex-col">
@@ -1091,6 +1115,7 @@ export function Deals() {
                 </thead>
                 <tbody className="divide-y divide-white/6">
                   {filtered.map((deal) => {
+                    const locDeal = localizedDeal(deal, t)
                     const contact = getContact(deal.contactId)
                     const company = getCompany(deal.companyId)
                     const ageDays = getDealAgeDays(deal.createdAt)
@@ -1109,15 +1134,15 @@ export function Deals() {
                             type="checkbox"
                             checked={selectedDealIds.has(deal.id)}
                             onChange={() => toggleDealSelect(deal.id)}
-                            aria-label={`${t.common.select} ${deal.title}`}
-                            title={`${t.common.select} ${deal.title}`}
+                            aria-label={`${t.common.select} ${locDeal.title}`}
+                            title={`${t.common.select} ${locDeal.title}`}
                             className="rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500"
                           />
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: DEAL_PRIORITY_COLORS[deal.priority] }} />
-                            <span className="font-medium text-white">{deal.title}</span>
+                            <span className="font-medium text-white">{locDeal.title}</span>
                             {showHealthDot && (
                               <span
                                 className={`w-2 h-2 rounded-full flex-shrink-0 ${health.status === 'at_risk' ? 'bg-red-400 animate-pulse' : 'bg-amber-400'} ${healthStatusColor(health.status)}`}
@@ -1209,7 +1234,7 @@ export function Deals() {
 
             {/* Info */}
             <div className="bg-white/4 rounded-xl p-4 space-y-1">
-              <h2 className="text-lg font-bold text-white mb-3">{selectedDeal.title}</h2>
+              <h2 className="text-lg font-bold text-white mb-3">{displaySelectedDeal?.title ?? selectedDeal.title}</h2>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {[
                   { label: t.common.value, value: formatCurrency(selectedDeal.value, selectedDeal.currency) },
@@ -1228,10 +1253,10 @@ export function Deals() {
                   </div>
                 ))}
               </div>
-              {selectedDeal.notes && (
+              {(displaySelectedDeal?.notes ?? selectedDeal.notes) && (
                 <div className="pt-3 border-t border-white/6 mt-3">
                   <p className="text-xs text-slate-500 mb-1">{t.common.notes}</p>
-                  <p className="text-sm text-slate-300">{selectedDeal.notes}</p>
+                  <p className="text-sm text-slate-300">{displaySelectedDeal?.notes ?? selectedDeal.notes}</p>
                 </div>
               )}
             </div>
@@ -1267,7 +1292,7 @@ export function Deals() {
               <h3 className="text-sm font-semibold text-slate-300">{t.deals.quoteBuilder}</h3>
               <QuoteBuilder
                 dealId={selectedDeal.id}
-                dealTitle={selectedDeal.title}
+                dealTitle={displaySelectedDeal?.title ?? selectedDeal.title}
                 initialItems={selectedDeal.quoteItems ?? []}
                 contactEmail={getContact(selectedDeal.contactId)?.email}
                 companyName={getCompany(selectedDeal.companyId)?.name}

@@ -7,6 +7,9 @@ type UxActionName =
   | 'activity_complete'
   | 'activity_edit'
   | 'activity_delete'
+  | 'onboarding_checklist_toggle'
+  | 'onboarding_banner_dismiss'
+  | 'onboarding_checklist_reset'
 
 interface UxMetricEvent {
   action: UxActionName

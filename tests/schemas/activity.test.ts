@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { activitySchema } from '../../src/lib/schemas/activity'
+import { createActivitySchema } from '../../src/lib/schemas/activity'
+import { en } from '../../src/i18n/en'
+
+const activitySchema = createActivitySchema(en)
 
 const validActivity = {
   type: 'call' as const,
@@ -13,7 +16,7 @@ const validActivity = {
   createdBy: 'user-1',
 }
 
-describe('activitySchema', () => {
+describe('createActivitySchema', () => {
   it('accepts a valid activity payload', () => {
     const result = activitySchema.safeParse(validActivity)
     expect(result.success).toBe(true)
@@ -23,8 +26,8 @@ describe('activitySchema', () => {
     const result = activitySchema.safeParse({ ...validActivity, subject: '' })
     expect(result.success).toBe(false)
     if (!result.success) {
-      const issue = result.error.issues.find(i => i.path[0] === 'subject')
-      expect(issue?.message).toBe('Asunto requerido')
+      const issue = result.error.issues.find((i) => i.path[0] === 'subject')
+      expect(issue?.message).toBe(en.formErrors.activitySubjectRequired)
     }
   })
 
@@ -32,8 +35,8 @@ describe('activitySchema', () => {
     const result = activitySchema.safeParse({ ...validActivity, createdBy: '' })
     expect(result.success).toBe(false)
     if (!result.success) {
-      const issue = result.error.issues.find(i => i.path[0] === 'createdBy')
-      expect(issue?.message).toBe('Requerido')
+      const issue = result.error.issues.find((i) => i.path[0] === 'createdBy')
+      expect(issue?.message).toBe(en.formErrors.activityCreatedByRequired)
     }
   })
 

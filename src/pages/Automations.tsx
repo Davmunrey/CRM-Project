@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import {
   Workflow, Plus, Trash2, ToggleLeft, ToggleRight, Zap, Bell,
   ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X,
@@ -7,7 +7,8 @@ import { useAutomationsStore } from '../store/automationsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { toast } from '../store/toastStore'
 import { formatRelativeDate } from '../utils/formatters'
-import { useTranslations } from '../i18n'
+import { getTranslations, useI18nStore, useTranslations } from '../i18n'
+import { localizedAutomationRule } from '../i18n/localizeSeed'
 import type {
   AutomationRule, AutomationTriggerType, AutomationActionType,
   AutomationTrigger, AutomationAction, DealStage, ActivityType,
@@ -332,6 +333,8 @@ function RuleModal({
 
 function RuleCard({ rule }: { rule: AutomationRule }) {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
+  const displayRule = useMemo(() => localizedAutomationRule(rule, getTranslations()), [rule, language])
   const triggerLabels = getTriggerLabels(t)
   const actionLabels = getActionLabels(t)
   const { toggleRule, deleteRule, updateRule } = useAutomationsStore()
@@ -365,7 +368,7 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-semibold text-white">{rule.name}</span>
+                <span className="text-sm font-semibold text-white">{displayRule.name}</span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${triggerColor(rule.trigger.type)}`}>
                   {triggerLabels[rule.trigger.type]}
                 </span>
@@ -373,8 +376,8 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                   {rule.actions.length} {t.automations.action.toLowerCase()}
                 </span>
               </div>
-              {rule.description && (
-                <p className="text-xs text-slate-500 mt-0.5 truncate">{rule.description}</p>
+              {displayRule.description && (
+                <p className="text-xs text-slate-500 mt-0.5 truncate">{displayRule.description}</p>
               )}
               <div className="flex items-center gap-3 mt-1.5">
                 {rule.executionCount > 0 ? (
@@ -450,11 +453,12 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                 )}
               </div>
               <ArrowRight size={12} className="text-slate-600" />
-              {rule.actions.map((a, i) => (
+              {displayRule.actions.map((a: AutomationAction, i: number) => (
                 <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/4 border border-white/6">
                   <Bell size={11} className="text-brand-400" />
                   <span className="text-slate-300">{actionLabels[a.type]}</span>
                   {a.activitySubject && <span className="text-slate-500">: {a.activitySubject}</span>}
+                  {a.notificationTitle && <span className="text-slate-500">: {a.notificationTitle}</span>}
                 </div>
               ))}
             </div>

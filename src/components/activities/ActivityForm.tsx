@@ -1,7 +1,8 @@
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { activitySchema } from '../../lib/schemas/activity'
+import { createActivitySchema } from '../../lib/schemas/activity'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { Textarea } from '../ui/Textarea'
@@ -10,9 +11,9 @@ import type { Activity } from '../../types'
 import { useContactsStore } from '../../store/contactsStore'
 import { useDealsStore } from '../../store/dealsStore'
 import { useAuthStore } from '../../store/authStore'
-import { useTranslations } from '../../i18n'
+import { useLocalizedContacts, useLocalizedDeals, useLocalizedOrgUsers, useTranslations } from '../../i18n'
 
-type FormValues = z.infer<typeof activitySchema>
+type FormValues = z.infer<ReturnType<typeof createActivitySchema>>
 
 interface ActivityFormProps {
   activity?: Activity
@@ -24,12 +25,13 @@ interface ActivityFormProps {
 
 export function ActivityForm({ activity, defaultContactId, defaultDealId, onSubmit, onCancel }: ActivityFormProps) {
   const t = useTranslations()
-  const contacts = useContactsStore((s) => s.contacts)
-  const deals = useDealsStore((s) => s.deals)
-  const orgUsers = useAuthStore((s) => s.users)
+  const contacts = useLocalizedContacts(useContactsStore((s) => s.contacts))
+  const deals = useLocalizedDeals(useDealsStore((s) => s.deals))
+  const orgUsers = useLocalizedOrgUsers(useAuthStore((s) => s.users))
+  const schema = useMemo(() => createActivitySchema(t), [t])
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(activitySchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       type: activity?.type ?? 'call',
       subject: activity?.subject ?? '',

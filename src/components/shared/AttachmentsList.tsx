@@ -3,6 +3,7 @@ import { Paperclip, Upload, Trash2, FileText, Image, File, Download } from 'luci
 import { useAttachmentsStore } from '../../store/attachmentsStore'
 import { toast } from '../../store/toastStore'
 import { useTranslations } from '../../i18n'
+import { useAuthStore } from '../../store/authStore'
 import type { Attachment } from '../../types'
 import { formatDateShort } from '../../utils/formatters'
 
@@ -11,10 +12,10 @@ interface AttachmentsListProps {
   entityId: string
 }
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+function formatFileSize(bytes: number, t: ReturnType<typeof useTranslations>): string {
+  if (bytes < 1024) return t.attachments.fileSizeB.replace('{size}', String(bytes))
+  if (bytes < 1024 * 1024) return t.attachments.fileSizeKb.replace('{size}', `${(bytes / 1024).toFixed(1)}`)
+  return t.attachments.fileSizeMb.replace('{size}', `${(bytes / (1024 * 1024)).toFixed(1)}`)
 }
 
 function getFileIcon(mimeType: string) {
@@ -25,6 +26,7 @@ function getFileIcon(mimeType: string) {
 
 export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) {
   const t = useTranslations()
+  const uploadedByName = useAuthStore((s) => s.currentUser?.name ?? '')
   // Manual subscription for persisted store
   const [allAttachments, setAllAttachments] = useState(() => useAttachmentsStore.getState().attachments)
   useEffect(() => useAttachmentsStore.subscribe((s) => setAllAttachments(s.attachments)), [])
@@ -39,7 +41,7 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
     if (!files) return
     Array.from(files).forEach(file => {
       if (file.size > MAX_FILE_SIZE) {
-        toast.error(`${file.name} excede el límite de 5MB`)
+        toast.error(t.attachments.fileTooLarge.replace('{fileName}', file.name))
         return
       }
       const reader = new FileReader()
@@ -52,9 +54,9 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
           fileSize: file.size,
           mimeType: file.type || 'application/octet-stream',
           data: base64,
-          uploadedBy: 'David Muñoz',
+          uploadedBy: uploadedByName || t.common.notAvailable,
         })
-        toast.success(`${file.name} adjuntado`)
+        toast.success(t.attachments.fileAttached.replace('{fileName}', file.name))
       }
       reader.readAsDataURL(file)
     })
@@ -76,7 +78,7 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
 
   const handleDelete = (id: string, fileName: string) => {
     useAttachmentsStore.getState().deleteAttachment(id)
-    toast.success(`${fileName} eliminado`)
+    toast.success(t.attachments.fileRemoved.replace('{fileName}', fileName))
   }
 
   return (
@@ -140,7 +142,7 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-slate-200 truncate">{att.fileName}</p>
                     <p className="text-[10px] text-slate-600">
-                      {formatFileSize(att.fileSize)} · {formatDateShort(att.uploadedAt)} · {att.uploadedBy}
+                      {formatFileSize(att.fileSize, t)} · {formatDateShort(att.uploadedAt)} · {att.uploadedBy}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

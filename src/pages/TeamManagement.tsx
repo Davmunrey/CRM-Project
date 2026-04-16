@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Users, Plus, Shield, ShieldCheck, ShieldAlert, Eye,
   MoreVertical, Mail, UserPlus, UserMinus, Edit2, X, Check,
@@ -10,7 +10,8 @@ import { ROLE_COLORS } from '../utils/permissions'
 import { Avatar } from '../components/ui/Avatar'
 import { toast } from '../store/toastStore'
 import type { UserRole } from '../types/auth'
-import { useTranslations } from '../i18n'
+import { useI18nStore, useLocalizedOrgUsers, useTranslations, getTranslations } from '../i18n'
+import { localizedOrganization } from '../i18n/localizeSeed'
 import { supabase } from '../lib/supabase'
 import { formatDateShort } from '../utils/formatters'
 
@@ -23,7 +24,25 @@ const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
 
 export function TeamManagement() {
   const t = useTranslations()
-  const { currentUser, users, invitations, addUser, changeUserRole, deactivateUser, reactivateUser, resetPassword, createInvitation, cancelInvitation } = useAuthStore()
+  const {
+    currentUser,
+    users: usersRaw,
+    invitations,
+    organization,
+    addUser,
+    changeUserRole,
+    deactivateUser,
+    reactivateUser,
+    resetPassword,
+    createInvitation,
+    cancelInvitation,
+  } = useAuthStore()
+  const language = useI18nStore((s) => s.language)
+  const users = useLocalizedOrgUsers(usersRaw)
+  const displayOrganization = useMemo(
+    () => localizedOrganization(organization, getTranslations()),
+    [organization, language],
+  )
   const [showAddUser, setShowAddUser] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
@@ -118,7 +137,7 @@ export function TeamManagement() {
       )
       const json = await res.json() as { success?: boolean; error?: string; invitationId?: string }
       if (!res.ok || json.error) {
-        toast.error(json.error ?? 'Error al enviar la invitación')
+        toast.error(json.error ?? t.errors.invitationSendError)
         return
       }
       toast.success(t.team.toastInviteSent.replace('{email}', inviteEmail))
@@ -242,7 +261,7 @@ export function TeamManagement() {
             </div>
             <div>
               <label className="block text-xs text-slate-500 mb-1">{t.common.phone}</label>
-              <input value={newUser.phone || ''} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} placeholder="+34 600 000 000" className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600" />
+              <input value={newUser.phone || ''} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} placeholder={t.team.placeholderPhoneExample} className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600" />
             </div>
           </div>
           <div className="flex justify-end gap-2">
@@ -461,16 +480,16 @@ export function TeamManagement() {
       )}
 
       {/* Org info */}
-      {useAuthStore.getState().organization && (
+      {displayOrganization && (
         <div className="glass rounded-2xl border-white/8 p-5">
           <div className="flex items-center gap-3 mb-3">
             <Building2 size={18} className="text-brand-400" />
             <div>
-              <p className="text-sm font-semibold text-white">{useAuthStore.getState().organization!.name}</p>
+              <p className="text-sm font-semibold text-white">{displayOrganization.name}</p>
               <p className="text-[10px] text-slate-500">
                 {t.team.planInfo
-                  .replace('{plan}', useAuthStore.getState().organization!.plan.toUpperCase())
-                  .replace('{max}', String(useAuthStore.getState().organization!.maxUsers))}
+                  .replace('{plan}', displayOrganization.plan.toUpperCase())
+                  .replace('{max}', String(displayOrganization.maxUsers))}
               </p>
             </div>
           </div>
@@ -480,7 +499,7 @@ export function TeamManagement() {
                 className={`h-full rounded-full bg-brand-500 transition-all ${usageWidthClass}`}
               />
             </div>
-            <span className="text-[10px] text-slate-500">{activeUsers.length}/{useAuthStore.getState().organization!.maxUsers}</span>
+            <span className="text-[10px] text-slate-500">{activeUsers.length}/{displayOrganization.maxUsers}</span>
           </div>
         </div>
       )}

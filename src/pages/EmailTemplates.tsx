@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, Copy, Trash2, Eye, EyeOff, Search, FileText, Mail } from 'lucide-react'
 import { useTemplateStore } from '../store/templateStore'
 import type { EmailTemplate } from '../types'
 import { toast } from '../store/toastStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
-import { useTranslations } from '../i18n'
+import { getTranslations, useI18nStore, useTranslations } from '../i18n'
+import { localizedEmailTemplate } from '../i18n/localizeSeed'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
@@ -43,14 +44,6 @@ function getTabs(t: ReturnType<typeof useTranslations>): { key: CategoryKey; lab
   ]
 }
 
-const SAMPLE_DATA: Record<string, string> = {
-  '{{firstName}}': 'Juan',
-  '{{lastName}}': 'García',
-  '{{company}}': 'Acme Corp',
-  '{{dealTitle}}': 'Proyecto Alpha',
-  '{{dealValue}}': '25.000 €',
-}
-
 // ─── Helper ─────────────────────────────────────────────────────────────────────
 
 function extractVariables(text: string): string[] {
@@ -59,14 +52,27 @@ function extractVariables(text: string): string[] {
   return [...new Set(matches)]
 }
 
-function replaceVariables(text: string): string {
-  return text.replace(/\{\{\w+\}\}/g, (match) => SAMPLE_DATA[match] ?? match)
+function previewVariableMap(t: ReturnType<typeof useTranslations>): Record<string, string> {
+  const s = t.emailTemplates.previewSamples
+  return {
+    '{{firstName}}': s.firstName,
+    '{{lastName}}': s.lastName,
+    '{{company}}': s.company,
+    '{{dealTitle}}': s.dealTitle,
+    '{{dealValue}}': s.dealValue,
+  }
+}
+
+function replaceVariables(text: string, t: ReturnType<typeof useTranslations>): string {
+  const map = previewVariableMap(t)
+  return text.replace(/\{\{\w+\}\}/g, (match) => map[match] ?? match)
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────────
 
 export function EmailTemplates() {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
   const categoryLabels = getCategoryLabels(t)
   const tabs = getTabs(t)
   const {
@@ -97,8 +103,13 @@ export function EmailTemplates() {
 
   // ─── Derived ────────────────────────────────────────────────────────────────
 
+  const localizedTemplates = useMemo(() => {
+    const tr = getTranslations()
+    return templates.map((tpl) => localizedEmailTemplate(tpl, tr))
+  }, [templates, language])
+
   const filtered = useMemo(() => {
-    return templates.filter((tpl) => {
+    return localizedTemplates.filter((tpl) => {
       if (categoryFilter !== 'all' && tpl.category !== categoryFilter) return false
       if (search) {
         const q = search.toLowerCase()
@@ -106,9 +117,19 @@ export function EmailTemplates() {
       }
       return true
     })
-  }, [templates, categoryFilter, search])
+  }, [localizedTemplates, categoryFilter, search])
 
-  const selected = useMemo(() => templates.find((tpl) => tpl.id === selectedId), [templates, selectedId])
+  const selected = useMemo(() => localizedTemplates.find((tpl) => tpl.id === selectedId) ?? null, [localizedTemplates, selectedId])
+
+  const previewVars = useMemo(() => previewVariableMap(getTranslations()), [language])
+
+  useEffect(() => {
+    if (!selected || isDirty) return
+    setDraftName(selected.name)
+    setDraftSubject(selected.subject)
+    setDraftBody(selected.body)
+    setDraftCategory(selected.category)
+  }, [selected, isDirty, language])
 
   const detectedVariables = useMemo(() => {
     return extractVariables(`${draftSubject} ${draftBody}`)
@@ -177,7 +198,7 @@ export function EmailTemplates() {
 
   function handleCopyBody() {
     if (!draftBody) return
-    const text = preview ? replaceVariables(draftBody) : draftBody
+    const text = preview ? replaceVariables(draftBody, t) : draftBody
     navigator.clipboard.writeText(text).then(() => {
       if (selectedId) incrementUsage(selectedId)
       toast.success(t.common.ok)
@@ -308,7 +329,7 @@ export function EmailTemplates() {
             {filtered.length === 0 ? (
               <PanelEmpty icon={<FileText size={32} />} primary={t.common.noResults} density="compact" />
             ) : (
-              filtered.map((tpl) => (
+              filtered.map((tpl: EmailTemplate) => (
                 <div
                   key={tpl.id}
                   onClick={() => selectTemplate(tpl)}
@@ -439,7 +460,7 @@ export function EmailTemplates() {
                   <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.activities.subject}</label>
                   {preview ? (
                     <p className="text-white text-sm bg-white/5 rounded-xl px-4 py-2.5 border border-white/6">
-                      {replaceVariables(draftSubject)}
+                      {replaceVariables(draftSubject, t)}
                     </p>
                   ) : (
                     <input
@@ -457,7 +478,7 @@ export function EmailTemplates() {
                   <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.common.description}</label>
                   {preview ? (
                     <div className="bg-white/5 border border-white/6 rounded-xl px-5 py-4 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed min-h-[200px]">
-                      {replaceVariables(draftBody)}
+                      {replaceVariables(draftBody, t)}
                     </div>
                   ) : (
                     <textarea
@@ -483,8 +504,8 @@ export function EmailTemplates() {
                           className="inline-flex items-center gap-1.5 text-xs font-mono bg-brand-500/15 text-brand-400 border border-brand-500/25 px-3 py-1.5 rounded-full"
                         >
                           {v}
-                          {SAMPLE_DATA[v] && preview && (
-                            <span className="text-brand-300 font-sans">= {SAMPLE_DATA[v]}</span>
+                          {previewVars[v] && preview && (
+                            <span className="text-brand-300 font-sans">= {previewVars[v]}</span>
                           )}
                         </span>
                       ))}

@@ -1,6 +1,17 @@
+import { useMemo } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Language, Translations } from './types'
+import type { Activity, Company, Contact, CRMEmail, Deal } from '../types'
+import type { AuthUser } from '../types/auth'
+import {
+  localizeActivities,
+  localizeAuthUsers,
+  localizeCompanies,
+  localizeContacts,
+  localizeCRMEmails,
+  localizeDeals,
+} from './localizeSeed'
 import { es } from './es'
 import { en } from './en'
 import { pt } from './pt'
@@ -61,4 +72,34 @@ export function getDateLocale() {
   const lang = useI18nStore.getState().language
   // Dynamic import not needed — just return the key for date-fns
   return lang
+}
+
+export function useLocalizedContacts(contacts: Contact[]) {
+  const language = useI18nStore((s) => s.language)
+  return useMemo(() => localizeContacts(contacts, getTranslations()), [contacts, language])
+}
+
+export function useLocalizedCompanies(companies: Company[]) {
+  const language = useI18nStore((s) => s.language)
+  return useMemo(() => localizeCompanies(companies, getTranslations()), [companies, language])
+}
+
+export function useLocalizedDeals(deals: Deal[]) {
+  const language = useI18nStore((s) => s.language)
+  return useMemo(() => localizeDeals(deals, getTranslations()), [deals, language])
+}
+
+export function useLocalizedActivities(activities: Activity[]) {
+  const language = useI18nStore((s) => s.language)
+  return useMemo(() => localizeActivities(activities, getTranslations()), [activities, language])
+}
+
+export function useLocalizedCRMEmails(emails: CRMEmail[]) {
+  const language = useI18nStore((s) => s.language)
+  return useMemo(() => localizeCRMEmails(emails, getTranslations()), [emails, language])
+}
+
+export function useLocalizedOrgUsers(users: AuthUser[]) {
+  const language = useI18nStore((s) => s.language)
+  return useMemo(() => localizeAuthUsers(users, getTranslations()), [users, language])
 }

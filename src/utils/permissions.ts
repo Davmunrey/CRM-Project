@@ -73,6 +73,7 @@ export const NAV_PERMISSIONS: NavPermission[] = [
   { path: '/goals', requiredPermission: 'goals:read' },
   { path: '/inbox', requiredPermission: 'email:read' },
   { path: '/reports', requiredPermission: 'reports:read' },
+  { path: '/manager', requiredPermission: 'reports:read' },
   { path: '/templates', requiredPermission: 'templates:read' },
   { path: '/ai-agent', requiredPermission: 'ai:use' },
   { path: '/settings', requiredPermission: 'settings:read' },

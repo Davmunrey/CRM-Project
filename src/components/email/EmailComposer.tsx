@@ -230,9 +230,13 @@ export function EmailComposer({
   }
 
   const subjectPresets = [
-    contact ? `Follow-up: ${contact.firstName} ${contact.lastName}` : '',
-    company ? `${company.name} - Next steps` : '',
-    deal ? `${deal.title} - Proposal follow-up` : '',
+    contact
+      ? t.email.subjectPresetFollowUp
+        .replace('{firstName}', contact.firstName)
+        .replace('{lastName}', contact.lastName)
+      : '',
+    company ? t.email.subjectPresetNextSteps.replace('{companyName}', company.name) : '',
+    deal ? t.email.subjectPresetProposal.replace('{dealTitle}', deal.title) : '',
   ].filter(Boolean)
 
   const normalizeEmail = (value: string) => value.trim().toLowerCase()
@@ -255,11 +259,11 @@ export function EmailComposer({
 
     const allRecipients = [...toList, ...ccList, ...bccList]
     if (allRecipients.some((email) => !isValidEmail(email))) {
-      toast.error(`Invalid recipient email format`)
+      toast.error(t.errors.invalidRecipientEmail)
       return
     }
     if (replyToValue && !isValidEmail(replyToValue)) {
-      toast.error(`Invalid reply-to email format`)
+      toast.error(t.errors.invalidReplyToEmail)
       return
     }
 

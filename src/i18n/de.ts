@@ -5,6 +5,7 @@ export const de: Translations = {
   ...en,
   nav: {
     ...en.nav,
+    managerDashboard: 'Manager-Dashboard',
     dashboard: 'Dashboard',
     contacts: 'Kontakte',
     companies: 'Unternehmen',
@@ -25,6 +26,7 @@ export const de: Translations = {
     edit: 'Bearbeiten',
     create: 'Erstellen',
     loading: 'Laden...',
+    unassigned: 'Nicht zugewiesen',
   },
   settings: {
     ...en.settings,
@@ -240,5 +242,29 @@ export const de: Translations = {
     importedSummary: '{imported} importiert · {errors} Fehler',
     importMore: 'Mehr importieren',
     close: 'Schließen',
+  },
+  managerDashboard: {
+    title: 'Manager-Dashboard',
+    subtitle: 'Pipeline-Gesundheit, Lead-Funnel-Snapshot und Reaktionszeiten nach Owner.',
+    methodologyHint:
+      'MQL/SQL nutzen Lead-Lebenszyklusphasen. Der SQL-Anteil ist eine Momentaufnahme des Mixes, keine historische Kohorten-Konversion. Deal-Alterung verwendet Tage seit dem letzten Deal-Update.',
+    mqlCount: 'Leads in MQL',
+    sqlCount: 'Leads in SQL',
+    sqlShare: 'SQL-Anteil (MQL+SQL)',
+    sqlShareHint: 'Anteil SQL unter Leads, die derzeit in MQL oder SQL sind.',
+    heatmapTitle: 'Alterung offener Deals nach Phase',
+    heatmapHint: 'Zellen zählen offene Deals; Spalten sind Tage seit dem letzten Update am Deal.',
+    stage: 'Phase',
+    bucket0_7: '0–7d',
+    bucket8_14: '8–14d',
+    bucket15_30: '15–30d',
+    bucket31p: '31d+',
+    responseTitle: 'Median erste Interaktion (Stunden)',
+    responseHint:
+      'Pro Owner: erster abgeschlossener Anruf, E-Mail oder Meeting auf offenen Deals, seit Deal-Erstellung.',
+    responseNoData: 'Noch keine qualifizierenden abgeschlossenen Aktivitäten auf offenen Deals.',
+    medianHours: 'Median',
+    linkReports: 'Vollständige Berichte öffnen',
+    hoursAbbrev: 'h',
   },
 }

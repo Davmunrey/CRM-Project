@@ -17,7 +17,8 @@ export function KanbanColumn({ stage, deals, onDealClick, color }: KanbanColumnP
   const pipelineStages = useSettingsStore((s) => s.settings.pipelineStages)
   const totalValue = deals.reduce((sum, d) => sum + d.value, 0)
   const customStageLabel = pipelineStages.find((s) => s.id === stage)?.name
-  const stageLabel = customStageLabel || stage
+  const stageLabels = t.deals.stageLabels as Record<string, string>
+  const stageLabel = stageLabels[stage] || customStageLabel || stage
 
   return (
     <div className="flex flex-col w-72 flex-shrink-0">

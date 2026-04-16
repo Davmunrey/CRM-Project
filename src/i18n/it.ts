@@ -5,6 +5,7 @@ export const it: Translations = {
   ...en,
   nav: {
     ...en.nav,
+    managerDashboard: 'Dashboard manager',
     dashboard: 'Dashboard',
     contacts: 'Contatti',
     companies: 'Aziende',
@@ -25,6 +26,7 @@ export const it: Translations = {
     edit: 'Modifica',
     create: 'Crea',
     loading: 'Caricamento...',
+    unassigned: 'Non assegnato',
   },
   settings: {
     ...en.settings,
@@ -240,5 +242,29 @@ export const it: Translations = {
     importedSummary: '{imported} importati · {errors} errori',
     importMore: 'Importa altro',
     close: 'Chiudi',
+  },
+  managerDashboard: {
+    title: 'Dashboard manager',
+    subtitle: 'Salute del pipeline, snapshot MQL/SQL e tempi di risposta per proprietario.',
+    methodologyHint:
+      "MQL/SQL usano le fasi del ciclo sui lead. La quota SQL è un'istantanea del mix, non una conversione storica per coorte. L'invecchiamento deal usa i giorni dall'ultimo aggiornamento del deal.",
+    mqlCount: 'Lead in MQL',
+    sqlCount: 'Lead in SQL',
+    sqlShare: 'Quota SQL (MQL+SQL)',
+    sqlShareHint: 'Quota di SQL tra i lead attualmente in MQL o SQL.',
+    heatmapTitle: 'Invecchiamento deal aperti per fase',
+    heatmapHint: 'Le celle contano i deal aperti; le colonne sono i giorni dall’ultimo aggiornamento sul deal.',
+    stage: 'Fase',
+    bucket0_7: '0–7g',
+    bucket8_14: '8–14g',
+    bucket15_30: '15–30g',
+    bucket31p: '31g+',
+    responseTitle: 'Mediana primo contatto (ore)',
+    responseHint:
+      'Per proprietario: prima chiamata, email o riunione completata sui deal aperti, dalla creazione del deal.',
+    responseNoData: 'Nessuna attività completata idonea sui deal aperti.',
+    medianHours: 'Mediana',
+    linkReports: 'Apri report completi',
+    hoursAbbrev: 'h',
   },
 }

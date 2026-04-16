@@ -6,6 +6,7 @@ import { useAuditStore } from './auditStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
 import { useAuthStore } from './authStore'
+import { getTranslations } from '../i18n'
 
 // ── Snake ↔ Camel mappers ───────────────────────────────────────────────────
 
@@ -120,7 +121,7 @@ export const useActivitiesStore = create<ActivitiesState>()(
       const id = uuidv4()
       const activity: Activity = { ...activityData, id, createdAt: now }
       set((state) => ({ activities: [activity, ...state.activities] }))
-      useAuditStore.getState().logAction('activity_created', 'activity', activity.id, activity.subject, 'Actividad creada')
+      useAuditStore.getState().logAction('activity_created', 'activity', activity.id, activity.subject, getTranslations().auditMessages.activityCreated)
 
       if (isSupabaseConfigured && supabase) {
         const row = activityToRow(activityData)
@@ -166,7 +167,7 @@ export const useActivitiesStore = create<ActivitiesState>()(
     deleteActivity: (id) => {
       const activity = get().getById(id)
       set((state) => ({ activities: state.activities.filter((a) => a.id !== id) }))
-      useAuditStore.getState().logAction('activity_deleted', 'activity', id, activity?.subject ?? '', 'Actividad eliminada')
+      useAuditStore.getState().logAction('activity_deleted', 'activity', id, activity?.subject ?? '', getTranslations().auditMessages.activityDeleted)
 
       if (isSupabaseConfigured && supabase) {
         sbDelete('activities', id).then(null, (e) => set({ error: (e as Error).message }))
@@ -183,7 +184,7 @@ export const useActivitiesStore = create<ActivitiesState>()(
         ),
       }))
       const activity = get().getById(id)
-      useAuditStore.getState().logAction('activity_completed', 'activity', id, activity?.subject ?? '', 'Actividad completada')
+      useAuditStore.getState().logAction('activity_completed', 'activity', id, activity?.subject ?? '', getTranslations().auditMessages.activityCompleted)
 
       if (isSupabaseConfigured && supabase) {
         const updates: Record<string, unknown> = { status: 'completed', completed_at: now, updated_at: now }

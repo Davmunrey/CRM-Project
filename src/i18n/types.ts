@@ -1,5 +1,95 @@
 export type Language = 'en' | 'es' | 'pt' | 'fr' | 'de' | 'it'
 
+export type SeedProductId = 'prod-001' | 'prod-002' | 'prod-003' | 'prod-004' | 'prod-005' | 'prod-006'
+
+export type SeedTemplateId = 'tpl-001' | 'tpl-002' | 'tpl-003' | 'tpl-004' | 'tpl-005'
+
+export type SeedQuickReplyId = 'qr-1' | 'qr-2'
+
+export type SeedAutomationId = 'auto-seed-1' | 'auto-seed-2' | 'auto-seed-3'
+
+export type SeedSequenceId = 'seq-001' | 'seq-002'
+
+export interface SeedCustomFieldDemo {
+  label: string
+  placeholder?: string
+  options?: string[]
+}
+
+export interface SeedAutomationDemoCopy {
+  name: string
+  description: string
+  createActivitySubject?: string
+  notificationTitle?: string
+  notificationMessage?: string
+}
+
+export interface SeedSequenceStepCopy {
+  subject?: string
+  bodyTemplate?: string
+  taskDescription?: string
+}
+
+export interface SeedSequenceDemoCopy {
+  name: string
+  description: string
+  steps: Record<string, SeedSequenceStepCopy>
+}
+
+/** Optional i18n overlays for offline demo CRM entities (keyed by stable seed ids). */
+export type SeedDemoAuthUserId = 'u1' | 'u2' | 'u3'
+
+export interface SeedDemoAuthOverlay {
+  organizationName: string
+  users: Partial<Record<SeedDemoAuthUserId, { jobTitle: string }>>
+}
+
+export interface SeedCompanyDemoOverlay {
+  name?: string
+  notes?: string
+  city?: string
+  country?: string
+}
+
+export interface SeedContactDemoOverlay {
+  firstName?: string
+  lastName?: string
+  jobTitle?: string
+  notes?: string
+}
+
+export interface SeedDealDemoOverlay {
+  title?: string
+  notes?: string
+}
+
+export interface SeedActivityDemoOverlay {
+  subject?: string
+  description?: string
+  outcome?: string
+}
+
+export interface SeedEmailDemoOverlay {
+  subject?: string
+  body?: string
+}
+
+export interface SeedDemoCatalog {
+  products: Record<SeedProductId, { name: string; description: string }>
+  emailTemplates: Record<SeedTemplateId, { name: string; subject: string; body: string }>
+  quickReplies: Record<SeedQuickReplyId, { title: string; body: string }>
+  automations: Record<SeedAutomationId, SeedAutomationDemoCopy>
+  sequences: Record<SeedSequenceId, SeedSequenceDemoCopy>
+  customFields: Record<string, SeedCustomFieldDemo>
+  /** Demo org + seed user job titles (names stay aligned with `assignedTo` in seed data). */
+  demoAuth?: SeedDemoAuthOverlay
+  demoCompanies?: Record<string, SeedCompanyDemoOverlay>
+  demoContacts?: Record<string, SeedContactDemoOverlay>
+  demoDeals?: Record<string, SeedDealDemoOverlay>
+  demoActivities?: Record<string, SeedActivityDemoOverlay>
+  demoEmails?: Record<string, SeedEmailDemoOverlay>
+}
+
 export interface Translations {
   // ─── Navigation ──────────────────────────────────────────────────────────────
   nav: {
@@ -16,6 +106,7 @@ export interface Translations {
     notifications: string
     inbox: string
     reports: string
+    managerDashboard: string
     forecast: string
     leaderboard: string
     templates: string
@@ -108,6 +199,7 @@ export interface Translations {
     searchPlaceholder: string
     continue: string
     notAvailable: string
+    unassigned: string
   }
 
   // ─── Contact ─────────────────────────────────────────────────────────────────
@@ -215,6 +307,7 @@ export interface Translations {
     country: string
     city: string
     website: string
+    websiteUrlPlaceholder: string
     revenue: string
     contactCount: string
     dealCount: string
@@ -321,6 +414,24 @@ export interface Translations {
       medium: string
       high: string
     }
+    /** Plain-text quote email draft (Gmail compose) — use `{dealTitle}` where needed */
+    quoteEmailGreeting: string
+    quoteEmailBodyIntro: string
+    quoteEmailSignOff: string
+    quoteEmailSubject: string
+    quoteEmailTaxIdPrefix: string
+    quoteEmailBillingEmailPrefix: string
+    quoteEmailBillingPhonePrefix: string
+    /** Default quote form values (reset when language changes in QuoteBuilder) */
+    quoteDefaultPaymentMethod: string
+    quoteDefaultLateFeeClause: string
+    quoteDefaultAcceptanceClause: string
+    quotePdfWebPrefix: string
+    quotePdfContactEmailPrefix: string
+    quotePdfTotalLabel: string
+    /** e.g. VAT ({percent}%) — `{percent}` replaced at runtime */
+    quotePdfVatRow: string
+    quotePdfWithholdingRow: string
   }
 
   // ─── Activity ────────────────────────────────────────────────────────────────
@@ -389,6 +500,34 @@ export interface Translations {
     viewPipeline: string
     viewNotifications: string
     noData: string
+    onboardingBannerTitle: string
+    onboardingBannerBody: string
+    onboardingBannerSettings: string
+    onboardingBannerDismiss: string
+  }
+
+  managerDashboard: {
+    title: string
+    subtitle: string
+    methodologyHint: string
+    mqlCount: string
+    sqlCount: string
+    sqlShare: string
+    sqlShareHint: string
+    heatmapTitle: string
+    heatmapHint: string
+    stage: string
+    bucket0_7: string
+    bucket8_14: string
+    bucket15_30: string
+    bucket31p: string
+    responseTitle: string
+    responseHint: string
+    responseNoData: string
+    medianHours: string
+    linkReports: string
+    /** Suffix after median hours value, e.g. "h" */
+    hoursAbbrev: string
   }
 
   // ─── Calendar ────────────────────────────────────────────────────────────────
@@ -482,6 +621,11 @@ export interface Translations {
     gmailSetupStep2: string
     gmailSetupStep3: string
     gmailSetupStep4: string
+    placeholderGoogleOAuthClientId: string
+    placeholderEmailSignatureHtml: string
+    placeholderBrandingDomain: string
+    placeholderPrivacyPolicyUrl: string
+    placeholderTermsUrl: string
     fieldPlaceholderHint: string
     optionsPlaceholder: string
     valuePlaceholderHint: string
@@ -558,6 +702,18 @@ export interface Translations {
     tabData: string
     tabNavigation: string
     tabAdvanced: string
+    tabOnboarding: string
+    onboardingTitle: string
+    onboardingIntro: string
+    onboardingStepImport: string
+    onboardingStepDeal: string
+    onboardingStepSequence: string
+    onboardingMarkDone: string
+    onboardingMarkTodo: string
+    onboardingReset: string
+    onboardingGoContacts: string
+    onboardingGoDeals: string
+    onboardingGoSequences: string
     legalCompanyName: string
     taxIdVat: string
     addressLine1: string
@@ -616,6 +772,16 @@ export interface Translations {
     lastMonth: string
     thisQuarter: string
     thisYear: string
+    emailTrackingTitle: string
+    emailTrackingSubtitle: string
+    emailTrackingServerBadge: string
+    emailTrackingOpens: string
+    emailTrackingClicks: string
+    emailTrackingPrivacyNote: string
+    emailTrackingEmpty: string
+    emailTrackingLoadError: string
+    emailTrackingNotConfigured: string
+    emailTrackingReliabilityNote: string
   }
 
   csvImport: {
@@ -648,6 +814,8 @@ export interface Translations {
     title: string
     urgency: string
     daysSince: string
+    /** `{days}` = number of days since last contact */
+    daysSinceBadge: string
     suggestedAction: string
     critical: string
     high: string
@@ -668,6 +836,7 @@ export interface Translations {
     onTrack: string
     atRisk: string
     behind: string
+    targetValuePlaceholder: string
   }
 
   forecast: {
@@ -676,6 +845,15 @@ export interface Translations {
     bestCase: string
     committed: string
     expected: string
+    /** Pipeline health composite (0–100), subtitle under section title */
+    healthScoreSubtitle: string
+    /** Tier labels for pipeline health score bands */
+    healthExcellent: string
+    healthGood: string
+    healthFair: string
+    healthLow: string
+    /** After a count: "3 deals" / "3 oportunidades" */
+    closingDealsSuffix: string
   }
 
   leaderboard: {
@@ -803,6 +981,7 @@ export interface Translations {
     placeholderFullName: string
     placeholderEmail: string
     placeholderMinPassword: string
+    placeholderPhoneExample: string
     placeholderJobTitle: string
     placeholderNewPassword: string
     // Toast messages
@@ -848,6 +1027,13 @@ export interface Translations {
       closing: string
       nurture: string
       custom: string
+    }
+    previewSamples: {
+      firstName: string
+      lastName: string
+      company: string
+      dealTitle: string
+      dealValue: string
     }
   }
 
@@ -909,6 +1095,8 @@ export interface Translations {
     snoozeOneDay: string
     snoozeOneHour: string
     snoozeOneWeek: string
+    trackingDemoSimulate: string
+    trackingServerMetricsHint: string
   }
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -1017,10 +1205,104 @@ export interface Translations {
     supabaseNotConfigured: string
     generic: string
     gmailConnectionError: string
+    gmailThreadsLoadError: string
     invitationSendError: string
     duplicateTag: string
     noPermissionTitle: string
     noPermissionDescription: string
+    userNotFound: string
+    accountDeactivated: string
+    wrongPassword: string
+    wrongCurrentPassword: string
+    emailAlreadyExists: string
+    notAuthenticated: string
+    userLimitReached: string
+    invitationNotFound: string
+    invitationUsedOrExpired: string
+    invitationExpired: string
+    invalidRecipientEmail: string
+    invalidReplyToEmail: string
+    emptyServerResponse: string
+    unknownError: string
+    defaultUserDisplayName: string
+    memberWithoutName: string
+    tenantInvitationWithOrg: string
+    tenantInvitationGeneric: string
+  }
+
+  /** Short descriptions written to the in-app audit log */
+  auditMessages: {
+    activityCreated: string
+    activityDeleted: string
+    activityCompleted: string
+    contactCreated: string
+    contactUpdated: string
+    contactDeleted: string
+    dealCreated: string
+    dealUpdated: string
+    dealDeleted: string
+    /** `{stage}` = localized stage label */
+    dealMovedTo: string
+    emailSent: string
+    /** `{role}` = new role key/label */
+    roleChangedTo: string
+    /** `{from}` `{to}` numeric scores */
+    leadScoreRecomputed: string
+  }
+
+  attachments: {
+    fileTooLarge: string
+    fileAttached: string
+    fileRemoved: string
+    fileSizeB: string
+    fileSizeKb: string
+    fileSizeMb: string
+  }
+
+  dealSync: {
+    emptyInsertResponse: string
+    /** Appended after server `message` (with a period before this suffix). */
+    dealSavedRetrySuffix: string
+  }
+
+  dealNotifications: {
+    wonTitle: string
+    wonMessage: string
+    lostTitle: string
+    lostMessage: string
+    stageTitle: string
+    stageMessage: string
+  }
+
+  notificationSeeds: {
+    dealWonTitle: string
+    dealWonMessage: string
+    dealStageTitle: string
+    dealStageMessage: string
+    activityOverdueTitle: string
+    activityOverdueMessage: string
+    goalAchievedTitle: string
+    goalAchievedMessage: string
+    welcomeTitle: string
+    welcomeMessage: string
+    triggeredBySystem: string
+  }
+
+  /** Zod / react-hook-form validation messages */
+  formErrors: {
+    invalidEmail: string
+    contactFirstNameRequired: string
+    contactLastNameRequired: string
+    contactAssignedToRequired: string
+    activitySubjectRequired: string
+    activityCreatedByRequired: string
+    dealTitleRequired: string
+    dealValueRequired: string
+    dealStageRequired: string
+    dealStageInvalid: string
+    dealExpectedCloseRequired: string
+    dealAssignedToRequired: string
+    companyNameRequired: string
   }
 
   // ─── Email ───────────────────────────────────────────────────────────────────
@@ -1046,6 +1328,9 @@ export interface Translations {
     useSignature: string
     signaturePlaceholder: string
     signatureSelectLabel: string
+    subjectPresetFollowUp: string
+    subjectPresetNextSteps: string
+    subjectPresetProposal: string
   }
 
   // ─── Notifications page ──────────────────────────────────────────────────────
@@ -1085,6 +1370,8 @@ export interface Translations {
     closeLabel: string
     probabilityShort: string
   }
+
+  seedDemo: SeedDemoCatalog
 
   // Additional inbox labels used by inbox views/actions
   // (kept here to preserve existing translation structure)

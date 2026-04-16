@@ -225,7 +225,7 @@ export function SalesGoals() {
                 type="number"
                 value={form.target || ''}
                 onChange={(e) => setForm({ ...form, target: Number(e.target.value) })}
-                placeholder="50000"
+                placeholder={t.goals.targetValuePlaceholder}
                 className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600"
               />
             </div>

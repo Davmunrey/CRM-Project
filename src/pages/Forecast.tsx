@@ -52,6 +52,8 @@ interface KPIData {
   hasGrowthData: boolean
 }
 
+type HealthTier = 'excellent' | 'good' | 'fair' | 'low'
+
 interface HealthScore {
   score: number                // 0-100
   activeDeals: number
@@ -59,7 +61,7 @@ interface HealthScore {
   activityRatioScore: number   // 0-25
   winRateScore: number         // 0-25
   diversityScore: number       // 0-25
-  label: string
+  tier: HealthTier
   color: string
 }
 
@@ -120,13 +122,12 @@ function computeHealthScore(
 
   const score = countScore + diversityScore + activityRatioScore + winRateScore
 
-  let label: string
+  let tier: HealthTier
   let color: string
-  if (score >= 80) { label = 'Excelente'; color = 'text-emerald-400' }
-  else if (score >= 60) { label = 'Bueno'; color = 'text-brand-400' }
-  else if (score >= 40) { label = 'Regular'; color = 'text-amber-400' }
-  else { label = 'Bajo'; color = 'text-red-400' }
-  // label will be overridden with translation in component
+  if (score >= 80) { tier = 'excellent'; color = 'text-emerald-400' }
+  else if (score >= 60) { tier = 'good'; color = 'text-brand-400' }
+  else if (score >= 40) { tier = 'fair'; color = 'text-amber-400' }
+  else { tier = 'low'; color = 'text-red-400' }
 
   return {
     score,
@@ -135,8 +136,21 @@ function computeHealthScore(
     activityRatioScore,
     winRateScore,
     diversityScore: countScore,
-    label,
+    tier,
     color,
+  }
+}
+
+function healthLabelForTier(tier: HealthTier, t: ReturnType<typeof useTranslations>): string {
+  switch (tier) {
+    case 'excellent':
+      return t.forecast.healthExcellent
+    case 'good':
+      return t.forecast.healthGood
+    case 'fair':
+      return t.forecast.healthFair
+    default:
+      return t.forecast.healthLow
   }
 }
 
@@ -383,10 +397,13 @@ export function Forecast() {
 
   // ── Pipeline health score ─────────────────────────────────────────────────
 
-  const health = useMemo(
-    () => computeHealthScore(deals, activities),
-    [deals, activities],
-  )
+  const health = useMemo(() => {
+    const raw = computeHealthScore(deals, activities)
+    return {
+      ...raw,
+      label: healthLabelForTier(raw.tier, t),
+    }
+  }, [deals, activities, t])
 
   // ── Best bets: top 5 by weighted value ───────────────────────────────────
 
@@ -549,7 +566,7 @@ export function Forecast() {
         <div className="glass p-5 flex flex-col items-center justify-center gap-3">
           <div className="w-full">
             <h3 className="text-sm font-semibold text-slate-300">{t.reports.pipeline}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{t.forecast.title} 0-100</p>
+            <p className="text-xs text-slate-500 mt-0.5">{t.forecast.healthScoreSubtitle}</p>
           </div>
 
           <HealthGauge value={health.score} color={health.color} />
@@ -593,7 +610,7 @@ export function Forecast() {
                   {formatCurrency(m.weighted)}
                 </p>
                 <p className="text-[11px] text-slate-600 mt-1">
-                  {m.dealCount} {t.deals.title.toLowerCase()}
+                  {m.dealCount} {t.forecast.closingDealsSuffix}
                 </p>
               </div>
             ))}

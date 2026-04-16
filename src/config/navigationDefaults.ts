@@ -4,7 +4,7 @@ export const SIDEBAR_SECTION_IDS: SidebarSectionId[] = ['main', 'sales', 'comms'
 
 export const DEFAULT_ITEM_ORDER_BY_SECTION: Record<SidebarSectionId, SidebarBuiltinItemId[]> = {
   main: ['dashboard', 'leads', 'contacts', 'companies', 'deals', 'timeline'],
-  sales: ['calendar', 'activities', 'followUps', 'goals', 'notifications', 'inbox', 'reports', 'forecast'],
+  sales: ['calendar', 'activities', 'followUps', 'goals', 'managerDashboard', 'notifications', 'inbox', 'reports', 'forecast'],
   comms: ['templates', 'sequences'],
   config: ['team', 'products', 'automations', 'settings', 'audit'],
 }

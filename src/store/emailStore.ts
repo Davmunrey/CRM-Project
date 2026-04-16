@@ -9,6 +9,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getOrgId, runSupabaseWrite } from '../lib/supabaseHelpers'
 import { useAuthStore } from './authStore'
 import { useLeadsStore } from './leadsStore'
+import { getTranslations } from '../i18n'
 import { seedEmails } from '../utils/seedData'
 import type { Database } from '../lib/database.types'
 import { injectOpenPixel, normalizeBodyToHtml, rewriteLinksForTracking } from '../lib/emailTracking'
@@ -390,14 +391,14 @@ export const useEmailStore = create<EmailStore>()(
         }
 
         if (sendSucceeded) {
-          useAuditStore.getState().logAction('email_sent', 'email', email.id, params.subject, 'Email enviado')
+          useAuditStore.getState().logAction('email_sent', 'email', email.id, params.subject, getTranslations().auditMessages.emailSent)
         } else {
           useAuditStore.getState().logAction(
             'email_send_failed',
             'email',
             email.id,
             params.subject,
-            sendError ?? 'Unknown error',
+            sendError ?? getTranslations().errors.unknownError,
           )
         }
         return email
@@ -643,7 +644,7 @@ export const useEmailStore = create<EmailStore>()(
             lastSyncErrorMessage: null,
           })
         } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : 'Error al cargar correos'
+          const errorMessage = err instanceof Error ? err.message : getTranslations().errors.gmailThreadsLoadError
           set({
             threadsLoading: false,
             threadsError: errorMessage,

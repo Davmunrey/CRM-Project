@@ -10,6 +10,7 @@ import { useCompaniesStore } from '../store/companiesStore'
 import { useDealsStore } from '../store/dealsStore'
 import { useActivitiesStore } from '../store/activitiesStore'
 import { useEmailStore } from '../store/emailStore'
+import { isSupabaseConfigured } from '../lib/supabase'
 import { Avatar } from '../components/ui/Avatar'
 import { Badge } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -24,7 +25,8 @@ import { toast } from '../store/toastStore'
 import { formatDate, formatCurrency, formatRelativeDate } from '../utils/formatters'
 import type { Contact, DealStage, ActivityType } from '../types'
 import { CustomFieldsDisplay } from '../components/shared/CustomFieldRenderer'
-import { useTranslations, useI18nStore } from '../i18n'
+import { getTranslations, useTranslations, useI18nStore } from '../i18n'
+import { localizedActivity, localizedCompany, localizedContact, localizedCRMEmail, localizedDeal } from '../i18n/localizeSeed'
 import { format } from 'date-fns'
 import type { Locale } from 'date-fns'
 import { es, enUS, ptBR, fr, de, it } from 'date-fns/locale'
@@ -67,7 +69,7 @@ export function ContactDetail() {
   const [notes, setNotes] = useState('')
   const [notesSaved, setNotesSaved] = useState(false)
 
-  const contact = useContactsStore((s) => s.contacts.find((c) => c.id === id))
+  const contactRaw = useContactsStore((s) => (id ? s.contacts.find((c) => c.id === id) : undefined))
   const { updateContact } = useContactsStore()
   const companies = useCompaniesStore((s) => s.companies)
   const deals = useDealsStore((s) => s.deals)
@@ -75,27 +77,42 @@ export function ContactDetail() {
   const emails = useEmailStore((s) => s.emails)
   const { trackEmailOpen, trackEmailClick } = useEmailStore()
 
-  if (!contact) {
-    return (
-      <div className="crm-page">
-        <Button variant="ghost" leftIcon={<ArrowLeft size={16} />} onClick={() => navigate('/contacts')}>
-          {t.common.back}
-        </Button>
-        <p className="text-slate-500 mt-4">{t.contacts.emptyTitle}</p>
-      </div>
-    )
-  }
-
-  const company = companies.find((c) => c.id === contact.companyId)
-  const contactDeals = deals.filter((d) => d.contactId === id || contact.linkedDeals.includes(d.id))
-  const contactActivities = activities
-    .filter((a) => a.contactId === id)
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-
-  const contactEmails = emails.filter(
-    (e) => e.contactId === id || e.to.some((addr) => addr === contact.email),
+  const displayContact = useMemo(
+    () => (contactRaw ? localizedContact(contactRaw, getTranslations()) : undefined),
+    [contactRaw, language],
   )
 
+  const companyRaw = useMemo(
+    () => (contactRaw ? companies.find((c) => c.id === contactRaw.companyId) : undefined),
+    [companies, contactRaw],
+  )
+
+  const displayCompany = useMemo(
+    () => (companyRaw ? localizedCompany(companyRaw, getTranslations()) : undefined),
+    [companyRaw, language],
+  )
+
+  const contactDeals = useMemo(() => {
+    if (!contactRaw || !id) return []
+    return deals
+      .filter((d) => d.contactId === id || contactRaw.linkedDeals.includes(d.id))
+      .map((d) => localizedDeal(d, getTranslations()))
+  }, [deals, id, contactRaw, language])
+
+  const contactActivities = useMemo(() => {
+    if (!id) return []
+    return activities
+      .filter((a) => a.contactId === id)
+      .map((a) => localizedActivity(a, getTranslations()))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  }, [activities, id, language])
+
+  const contactEmails = useMemo(() => {
+    if (!contactRaw) return []
+    return emails
+      .filter((e) => e.contactId === id || e.to.some((addr) => addr === contactRaw.email))
+      .map((e) => localizedCRMEmail(e, getTranslations()))
+  }, [emails, id, contactRaw, language])
 
   // Group activities by month for timeline
   const activitiesByMonth = useMemo(() => {
@@ -108,8 +125,19 @@ export function ContactDetail() {
     return groups
   }, [contactActivities, dateLocale])
 
+  if (!contactRaw || !displayContact) {
+    return (
+      <div className="crm-page">
+        <Button variant="ghost" leftIcon={<ArrowLeft size={16} />} onClick={() => navigate('/contacts')}>
+          {t.common.back}
+        </Button>
+        <p className="text-slate-500 mt-4">{t.contacts.emptyTitle}</p>
+      </div>
+    )
+  }
+
   const handleEdit = (data: Omit<Contact, 'id' | 'createdAt' | 'updatedAt' | 'tags' | 'linkedDeals' | 'lastContactedAt'>) => {
-    updateContact(contact.id, data)
+    updateContact(contactRaw.id, data)
     setIsEditOpen(false)
     toast.success(t.contacts.updated)
   }
@@ -121,7 +149,7 @@ export function ContactDetail() {
   }
 
   const handleSaveNotes = () => {
-    updateContact(contact.id, { notes })
+    updateContact(contactRaw.id, { notes })
     setNotesSaved(true)
     setTimeout(() => setNotesSaved(false), 2000)
     toast.success(t.common.save)
@@ -158,22 +186,22 @@ export function ContactDetail() {
       {/* Header */}
       <div className="glass border border-white/8 rounded-xl p-6 mb-4">
         <div className="flex items-start gap-5">
-          <Avatar name={`${contact.firstName} ${contact.lastName}`} size="xl" />
+          <Avatar name={`${displayContact.firstName} ${displayContact.lastName}`} size="xl" />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-100">
-                    {contact.firstName} {contact.lastName}
+                    {displayContact.firstName} {displayContact.lastName}
                   </h2>
-                  <p className="text-slate-400 mt-0.5">{contact.jobTitle || t.contacts.jobTitle}</p>
-                  {company && (
+                  <p className="text-slate-400 mt-0.5">{displayContact.jobTitle || t.contacts.jobTitle}</p>
+                  {displayCompany && (
                     <Link
-                      to={`/companies/${company.id}`}
+                      to={`/companies/${displayCompany.id}`}
                       className="flex items-center gap-1.5 text-sm text-brand-400 hover:text-brand-300 mt-1 transition-colors"
                     >
                       <Building2 size={14} />
-                      {company.name}
+                      {displayCompany.name}
                     </Link>
                   )}
                 </div>
@@ -187,9 +215,9 @@ export function ContactDetail() {
               </div>
             </div>
             <div className="flex items-center gap-2 mt-3 flex-wrap">
-              <ContactStatusBadge status={contact.status} />
-              <Badge variant="gray">{t.contacts.sourceLabels[contact.source]}</Badge>
-              {contact.tags.map((tag) => (
+              <ContactStatusBadge status={displayContact.status} />
+              <Badge variant="gray">{t.contacts.sourceLabels[displayContact.source]}</Badge>
+              {displayContact.tags.map((tag) => (
                 <Badge key={tag} variant="indigo">{tag}</Badge>
               ))}
             </div>
@@ -201,7 +229,7 @@ export function ContactDetail() {
       <div className="flex gap-2 mb-4 flex-wrap">
         <button
           type="button"
-          onClick={() => handleQuickActivity('call', `${t.activities.typeLabels.call} ${contact.firstName}`)}
+          onClick={() => handleQuickActivity('call', `${t.activities.typeLabels.call} ${displayContact.firstName}`)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
         >
           <Phone size={14} />
@@ -217,7 +245,7 @@ export function ContactDetail() {
         </button>
         <button
           type="button"
-          onClick={() => handleQuickActivity('meeting', `${t.activities.typeLabels.meeting} ${contact.firstName}`)}
+          onClick={() => handleQuickActivity('meeting', `${t.activities.typeLabels.meeting} ${displayContact.firstName}`)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
         >
           <Calendar size={14} />
@@ -225,7 +253,7 @@ export function ContactDetail() {
         </button>
         <button
           type="button"
-          onClick={() => handleQuickActivity('note', `${t.activities.typeLabels.note} ${contact.firstName}`)}
+          onClick={() => handleQuickActivity('note', `${t.activities.typeLabels.note} ${displayContact.firstName}`)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
         >
           <FileText size={14} />
@@ -258,16 +286,16 @@ export function ContactDetail() {
           <div className="glass border border-white/8 rounded-xl p-6">
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
               {[
-                { label: t.auth.email, value: contact.email },
-                { label: t.common.phone, value: contact.phone || '\u2014' },
-                { label: t.contacts.jobTitle, value: contact.jobTitle || '\u2014' },
-                { label: t.contacts.company, value: company?.name || '\u2014' },
-                { label: t.common.status, value: contact.status },
-                { label: t.contacts.source, value: t.contacts.sourceLabels[contact.source] },
-                { label: t.common.assignedTo, value: contact.assignedTo },
-                { label: t.contacts.lastContacted, value: formatDate(contact.lastContactedAt) },
-                { label: t.common.createdAt, value: formatDate(contact.createdAt) },
-                { label: t.common.updatedAt, value: formatDate(contact.updatedAt) },
+                { label: t.auth.email, value: displayContact.email },
+                { label: t.common.phone, value: displayContact.phone || '\u2014' },
+                { label: t.contacts.jobTitle, value: displayContact.jobTitle || '\u2014' },
+                { label: t.contacts.company, value: displayCompany?.name || '\u2014' },
+                { label: t.common.status, value: displayContact.status },
+                { label: t.contacts.source, value: t.contacts.sourceLabels[displayContact.source] },
+                { label: t.common.assignedTo, value: displayContact.assignedTo },
+                { label: t.contacts.lastContacted, value: formatDate(displayContact.lastContactedAt) },
+                { label: t.common.createdAt, value: formatDate(displayContact.createdAt) },
+                { label: t.common.updatedAt, value: formatDate(displayContact.updatedAt) },
               ].map(({ label, value }) => (
                 <div key={label}>
                   <p className="text-xs text-slate-500 mb-0.5">{label}</p>
@@ -278,7 +306,7 @@ export function ContactDetail() {
           </div>
 
           {/* Custom Fields */}
-          <CustomFieldsDisplay entityId={contact.id} entityType="contact" />
+          <CustomFieldsDisplay entityId={contactRaw.id} entityType="contact" />
         </div>
       )}
 
@@ -409,9 +437,10 @@ export function ContactDetail() {
                         )}
                       </div>
                     )}
-                    {/* Simulation buttons */}
-                    {email.trackingEnabled && (
-                      <div className="flex items-center gap-1.5 mt-1.5">
+                    {/* Local-only demo controls — do not mimic server opens/clicks in Supabase mode */}
+                    {email.trackingEnabled && !isSupabaseConfigured && (
+                      <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        <span className="text-[10px] text-slate-600">{t.inbox.trackingDemoSimulate}:</span>
                         <button
                           type="button"
                           onClick={() => trackEmailOpen(email.id)}
@@ -427,6 +456,9 @@ export function ContactDetail() {
                           {t.inbox.clicks}
                         </button>
                       </div>
+                    )}
+                    {email.trackingEnabled && isSupabaseConfigured && (
+                      <p className="text-[10px] text-slate-600 mt-1.5 max-w-xl">{t.inbox.trackingServerMetricsHint}</p>
                     )}
                   </div>
                   <span title={email.sendError}>
@@ -462,7 +494,7 @@ export function ContactDetail() {
         <div className="glass border border-white/8 rounded-xl p-6 space-y-4">
           <Textarea
             label={t.common.notes}
-            value={notes || contact.notes}
+            value={notes || contactRaw.notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={8}
             placeholder={t.common.notes}
@@ -476,7 +508,7 @@ export function ContactDetail() {
 
       {/* Edit slide-over */}
       <SlideOver isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title={t.contacts.editContact}>
-        <ContactForm contact={contact} onSubmit={handleEdit} onCancel={() => setIsEditOpen(false)} />
+        <ContactForm contact={contactRaw} onSubmit={handleEdit} onCancel={() => setIsEditOpen(false)} />
       </SlideOver>
 
       {/* Activity slide-over */}
@@ -489,9 +521,9 @@ export function ContactDetail() {
       <EmailComposer
         isOpen={isEmailOpen}
         onClose={() => setIsEmailOpen(false)}
-        defaultTo={contact.email}
-        contactId={contact.id}
-        companyId={contact.companyId}
+        defaultTo={contactRaw.email}
+        contactId={contactRaw.id}
+        companyId={contactRaw.companyId}
       />
     </div>
   )

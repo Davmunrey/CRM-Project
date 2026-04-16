@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { useTranslations } from '../i18n'
+import { useLocalizedCompanies, useLocalizedContacts, useLocalizedOrgUsers, useTranslations } from '../i18n'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Plus, Download, Trash2, LayoutGrid, LayoutList, Edit2,
@@ -38,11 +38,14 @@ export function Contacts() {
   const initialSearch = searchParams.get('search') ?? ''
 
   const currentUser = useAuthStore((s) => s.currentUser)
-  const orgUsers = useAuthStore((s) => s.users)
+  const orgUsersRaw = useAuthStore((s) => s.users)
+  const orgUsers = useLocalizedOrgUsers(orgUsersRaw)
   const isSalesRep = currentUser?.role === 'sales_rep'
 
   const { contacts, addContact, updateContact, deleteContact, bulkDelete } = useContactsStore()
+  const localizedContacts = useLocalizedContacts(contacts)
   const companies = useCompaniesStore((s) => s.companies)
+  const localizedCompanies = useLocalizedCompanies(companies)
   const activities = useActivitiesStore((s) => s.activities)
   const deals = useDealsStore((s) => s.deals)
 
@@ -63,8 +66,8 @@ export function Contacts() {
   const [viewFilters, setViewFilters] = useState<SmartViewFilter[]>([])
 
   const getCompanyName = useCallback(
-    (id: string) => companies.find((c) => c.id === id)?.name ?? '—',
-    [companies]
+    (id: string) => localizedCompanies.find((c) => c.id === id)?.name ?? '—',
+    [localizedCompanies]
   )
 
   const getContactScore = useCallback((contactId: string) => {
@@ -75,7 +78,7 @@ export function Contacts() {
   }, [activities, deals])
 
   const filtered = useMemo(() => {
-    const result = contacts.map((c) => ({ contact: c })).filter(({ contact: c }) => {
+    const result = localizedContacts.map((c) => ({ contact: c })).filter(({ contact: c }) => {
       const q = search.toLowerCase()
       if (q) {
         const name = `${c.firstName} ${c.lastName}`.toLowerCase()
@@ -104,7 +107,7 @@ export function Contacts() {
     })
 
     return result
-  }, [contacts, search, statusFilter, sourceFilter, assignedFilter, myDataOnly, currentUser, sortBy, viewFilters, getContactScore])
+  }, [localizedContacts, search, statusFilter, sourceFilter, assignedFilter, myDataOnly, currentUser, sortBy, viewFilters, getContactScore])
 
   useEffect(() => {
     if (searchParams.get('create') !== '1') return
@@ -479,7 +482,7 @@ export function Contacts() {
                         <Button
                           variant="secondary"
                           size="xs"
-                          onClick={() => { setEditContact(contact); setIsFormOpen(true) }}
+                          onClick={() => { setEditContact(contacts.find((c) => c.id === contact.id) ?? contact); setIsFormOpen(true) }}
                           leftIcon={<Edit2 size={12} />}
                         >
                           {t.common.edit}

@@ -18,7 +18,7 @@ import { formatCurrency } from '../utils/formatters'
 import { COMPANY_INDUSTRY_LABELS, COMPANY_SIZE_OPTIONS } from '../utils/constants'
 import type { Company, CompanyStatus, SmartViewFilter } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
-import { useTranslations } from '../i18n'
+import { useLocalizedCompanies, useTranslations } from '../i18n'
 
 type StatusBadge = 'yellow' | 'green' | 'indigo' | 'red'
 const STATUS_COLORS: Record<string, StatusBadge> = {
@@ -29,6 +29,7 @@ export function Companies() {
   const t = useTranslations()
   const navigate = useNavigate()
   const { companies, addCompany, updateCompany, deleteCompany } = useCompaniesStore()
+  const localizedCompanies = useLocalizedCompanies(companies)
   const contacts = useContactsStore((s) => s.contacts)
   const deals = useDealsStore((s) => s.deals)
 
@@ -47,7 +48,7 @@ export function Companies() {
   const [showBulkDelete, setShowBulkDelete] = useState(false)
 
   const filtered = useMemo(() => {
-    return companies.filter((c) => {
+    return localizedCompanies.filter((c) => {
       if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false
       if (industryFilter && c.industry !== industryFilter) return false
       if (statusFilter && c.status !== statusFilter) return false
@@ -61,7 +62,7 @@ export function Companies() {
       }
       return true
     })
-  }, [companies, search, industryFilter, statusFilter, sizeFilter, viewFilters])
+  }, [localizedCompanies, search, industryFilter, statusFilter, sizeFilter, viewFilters])
 
   const hasFilters = industryFilter || statusFilter || sizeFilter
 
@@ -273,7 +274,7 @@ export function Companies() {
                         <PermissionGate permission="companies:update">
                           <Button
                             variant="secondary" size="xs"
-                            onClick={() => { setEditCompany(company); setIsFormOpen(true) }}
+                            onClick={() => { setEditCompany(companies.find((c) => c.id === company.id) ?? company); setIsFormOpen(true) }}
                           >
                             {t.common.edit}
                           </Button>

@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { createCompanySchema } from '../../lib/schemas/company'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { Textarea } from '../ui/Textarea'
@@ -10,21 +12,7 @@ import { COMPANY_SIZE_OPTIONS } from '../../utils/constants'
 import { CustomFieldsForm } from '../shared/CustomFieldRenderer'
 import { useTranslations } from '../../i18n'
 
-const schema = z.object({
-  name: z.string().min(1, 'Nombre requerido'),
-  domain: z.string(),
-  industry: z.enum(['fintech', 'saas', 'consulting', 'insurance', 'banking', 'retail', 'healthcare', 'other']),
-  size: z.string(),
-  country: z.string(),
-  city: z.string(),
-  website: z.string(),
-  phone: z.string(),
-  status: z.enum(['prospect', 'customer', 'partner', 'churned']),
-  revenue: z.string(),
-  notes: z.string(),
-})
-
-type FormValues = z.infer<typeof schema>
+type FormValues = z.infer<ReturnType<typeof createCompanySchema>>
 
 interface CompanyFormProps {
   company?: Company
@@ -34,6 +22,7 @@ interface CompanyFormProps {
 
 export function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
   const t = useTranslations()
+  const schema = useMemo(() => createCompanySchema(t), [t])
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -92,7 +81,7 @@ export function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
         <Input label={t.companies.country} {...register('country')} />
         <Input label={t.companies.city} {...register('city')} />
       </div>
-      <Input label={t.companies.website} type="url" placeholder="https://" {...register('website')} />
+      <Input label={t.companies.website} type="url" placeholder={t.companies.websiteUrlPlaceholder} {...register('website')} />
       <div className="grid grid-cols-2 gap-4">
         <Select
           label={t.common.status}

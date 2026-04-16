@@ -5,6 +5,7 @@ export const fr: Translations = {
   ...en,
   nav: {
     ...en.nav,
+    managerDashboard: 'Pilotage manager',
     dashboard: 'Tableau de bord',
     contacts: 'Contacts',
     companies: 'Entreprises',
@@ -25,6 +26,7 @@ export const fr: Translations = {
     edit: 'Modifier',
     create: 'Creer',
     loading: 'Chargement...',
+    unassigned: 'Non assigné',
   },
   settings: {
     ...en.settings,
@@ -240,5 +242,30 @@ export const fr: Translations = {
     importedSummary: '{imported} importés · {errors} erreurs',
     importMore: 'Importer plus',
     close: 'Fermer',
+  },
+  managerDashboard: {
+    title: 'Pilotage manager',
+    subtitle: 'Santé du pipeline, instantané MQL/SQL et délais de réponse par propriétaire.',
+    methodologyHint:
+      'Les comptes MQL/SQL utilisent les étapes du cycle des leads. La part SQL est un instantané du mix, pas une conversion historique par cohorte. Le vieillissement des deals compte les jours depuis la dernière mise à jour du deal.',
+    mqlCount: 'Leads en MQL',
+    sqlCount: 'Leads en SQL',
+    sqlShare: 'Part SQL (MQL+SQL)',
+    sqlShareHint: 'Part de SQL parmi les leads actuellement en MQL ou SQL.',
+    heatmapTitle: 'Vieillissement des deals ouverts par étape',
+    heatmapHint:
+      'Les cellules comptent les deals ouverts ; les colonnes indiquent les jours depuis la dernière mise à jour.',
+    stage: 'Étape',
+    bucket0_7: '0–7j',
+    bucket8_14: '8–14j',
+    bucket15_30: '15–30j',
+    bucket31p: '31j+',
+    responseTitle: 'Médiane première interaction (heures)',
+    responseHint:
+      'Par propriétaire : premier appel, e-mail ou réunion terminé sur leurs deals ouverts, depuis la création du deal.',
+    responseNoData: "Aucune activité terminée pertinente sur les deals ouverts pour l'instant.",
+    medianHours: 'Médiane',
+    linkReports: 'Ouvrir les rapports complets',
+    hoursAbbrev: 'h',
   },
 }

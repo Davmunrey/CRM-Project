@@ -1,7 +1,8 @@
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { contactSchema } from '../../lib/schemas/contact'
+import { createContactSchema } from '../../lib/schemas/contact'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { Textarea } from '../ui/Textarea'
@@ -10,9 +11,9 @@ import type { Contact } from '../../types'
 import { useCompaniesStore } from '../../store/companiesStore'
 import { useAuthStore } from '../../store/authStore'
 import { CustomFieldsForm } from '../shared/CustomFieldRenderer'
-import { useTranslations } from '../../i18n'
+import { useLocalizedCompanies, useLocalizedOrgUsers, useTranslations } from '../../i18n'
 
-type FormValues = z.infer<typeof contactSchema>
+type FormValues = z.infer<ReturnType<typeof createContactSchema>>
 
 interface ContactFormProps {
   contact?: Contact
@@ -23,11 +24,12 @@ interface ContactFormProps {
 
 export function ContactForm({ contact, onSubmit, onCancel, isLoading }: ContactFormProps) {
   const t = useTranslations()
-  const companies = useCompaniesStore((s) => s.companies)
-  const orgUsers = useAuthStore((s) => s.users)
+  const companies = useLocalizedCompanies(useCompaniesStore((s) => s.companies))
+  const orgUsers = useLocalizedOrgUsers(useAuthStore((s) => s.users))
+  const schema = useMemo(() => createContactSchema(t), [t])
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(contactSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       firstName: contact?.firstName ?? '',
       lastName: contact?.lastName ?? '',

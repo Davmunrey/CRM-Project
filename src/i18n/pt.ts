@@ -1,5 +1,6 @@
 import type { Translations } from './types'
 import { en } from './en'
+import { seedDemo } from './seed/pt.demo'
 
 export const pt: Translations = {
   // ─── Navigation ──────────────────────────────────────────────────────────────
@@ -17,6 +18,7 @@ export const pt: Translations = {
     notifications: 'Notificações',
     inbox: 'Caixa de Entrada',
     reports: 'Relatórios',
+    managerDashboard: 'Gestor',
     forecast: 'Previsão',
     leaderboard: 'Ranking',
     templates: 'Modelos',
@@ -110,6 +112,7 @@ export const pt: Translations = {
     searchPlaceholder: 'Buscar...',
     continue: 'Continuar',
     notAvailable: 'N/D',
+    unassigned: 'Sem responsável',
   },
 
   // ─── Contact ─────────────────────────────────────────────────────────────────
@@ -217,6 +220,7 @@ export const pt: Translations = {
     country: 'País',
     city: 'Cidade',
     website: 'Site',
+    websiteUrlPlaceholder: 'https://',
     revenue: 'Receita',
     contactCount: 'Contatos',
     dealCount: 'Negócios',
@@ -323,6 +327,21 @@ export const pt: Translations = {
       medium: 'Média',
       high: 'Alta',
     },
+    quoteEmailGreeting: 'Olá,',
+    quoteEmailBodyIntro: 'Segue abaixo o resumo da cotação para "{dealTitle}":',
+    quoteEmailSignOff: 'Atenciosamente,',
+    quoteEmailSubject: 'Cotação — {dealTitle}',
+    quoteEmailTaxIdPrefix: 'NIF:',
+    quoteEmailBillingEmailPrefix: 'E-mail:',
+    quoteEmailBillingPhonePrefix: 'Telefone:',
+    quoteDefaultPaymentMethod: 'Transferência bancária',
+    quoteDefaultLateFeeClause: 'Juros de mora legais podem aplicar-se após o vencimento.',
+    quoteDefaultAcceptanceClause: 'Aceitar este documento implica concordância com os termos indicados.',
+    quotePdfWebPrefix: 'Web:',
+    quotePdfContactEmailPrefix: 'E-mail:',
+    quotePdfTotalLabel: 'TOTAL',
+    quotePdfVatRow: 'IVA ({percent}%)',
+    quotePdfWithholdingRow: 'Retenção na fonte ({percent}%)',
   },
 
   // ─── Activity ────────────────────────────────────────────────────────────────
@@ -391,6 +410,34 @@ export const pt: Translations = {
     viewPipeline: 'Ver pipeline',
     viewNotifications: 'Ver todas',
     noData: 'Sem dados',
+    onboardingBannerTitle: 'Conclua a configuração do espaço',
+    onboardingBannerBody: 'Alguns passos para a equipe obter valor mais rápido.',
+    onboardingBannerSettings: 'Abrir checklist',
+    onboardingBannerDismiss: 'Dispensar',
+  },
+
+  managerDashboard: {
+    title: 'Painel do gestor',
+    subtitle: 'Saúde do pipeline, snapshot MQL/SQL e sinais de resposta por proprietário.',
+    methodologyHint:
+      'MQL/SQL usam o estágio do ciclo em leads. A % SQL é um snapshot do mix entre MQL e SQL, não conversão histórica por coorte. O envelhecimento de negócios usa dias desde a última atualização do negócio.',
+    mqlCount: 'Leads em MQL',
+    sqlCount: 'Leads em SQL',
+    sqlShare: 'Participação SQL (MQL+SQL)',
+    sqlShareHint: 'Quota de SQL entre leads ainda em MQL ou SQL.',
+    heatmapTitle: 'Envelhecimento de negócios abertos por etapa',
+    heatmapHint: 'Células = negócios abertos; colunas = dias desde a última atualização.',
+    stage: 'Etapa',
+    bucket0_7: '0–7d',
+    bucket8_14: '8–14d',
+    bucket15_30: '15–30d',
+    bucket31p: '31d+',
+    responseTitle: 'Mediana da primeira interação (horas)',
+    responseHint: 'Por proprietário: primeira chamada/e-mail/reunião concluída nos negócios abertos, desde a criação do negócio.',
+    responseNoData: 'Ainda não há atividades concluídas qualificadas em negócios abertos.',
+    medianHours: 'Mediana',
+    linkReports: 'Abrir relatórios completos',
+    hoursAbbrev: 'h',
   },
 
   // ─── Calendar ────────────────────────────────────────────────────────────────
@@ -483,6 +530,11 @@ export const pt: Translations = {
     gmailSetupStep2: '2. Ative a Gmail API',
     gmailSetupStep3: '3. Crie credenciais OAuth 2.0 (Aplicação web)',
     gmailSetupStep4: '4. Adicione {origin} como origem autorizada',
+    placeholderGoogleOAuthClientId: '123456789-abc.apps.googleusercontent.com',
+    placeholderEmailSignatureHtml: '<p>Atenciosamente,<br/>Seu nome</p>',
+    placeholderBrandingDomain: 'crm.suaempresa.com',
+    placeholderPrivacyPolicyUrl: 'https://suaempresa.com/privacidade',
+    placeholderTermsUrl: 'https://suaempresa.com/termos',
     fieldPlaceholderHint: 'Ex: Setor, Orçamento...',
     optionsPlaceholder: 'Opção 1\nOpção 2\nOpção 3',
     valuePlaceholderHint: 'Ex: Insira o valor...',
@@ -554,6 +606,18 @@ export const pt: Translations = {
     tabData: 'Dados',
     tabNavigation: 'Navegação',
     tabAdvanced: 'Avançado',
+    tabOnboarding: 'Primeiros passos',
+    onboardingTitle: 'Configuração do espaço de trabalho',
+    onboardingIntro: 'Acompanhe marcos iniciais para esta organização neste navegador.',
+    onboardingStepImport: 'Importar ou adicionar contatos',
+    onboardingStepDeal: 'Criar seu primeiro negócio',
+    onboardingStepSequence: 'Iniciar uma sequência',
+    onboardingMarkDone: 'Marcar feito',
+    onboardingMarkTodo: 'Marcar pendente',
+    onboardingReset: 'Redefinir checklist',
+    onboardingGoContacts: 'Ir para contatos',
+    onboardingGoDeals: 'Ir para negócios',
+    onboardingGoSequences: 'Ir para sequências',
     legalCompanyName: 'Razão social',
     taxIdVat: 'CPF/CNPJ / VAT',
     addressLine1: 'Endereço',
@@ -617,6 +681,19 @@ export const pt: Translations = {
     lastMonth: 'Mês Passado',
     thisQuarter: 'Este Trimestre',
     thisYear: 'Este Ano',
+    emailTrackingTitle: 'Engajamento de e-mail de saída (servidor)',
+    emailTrackingSubtitle:
+      'Aberturas e cliques registrados quando o destinatário carrega o pixel ou segue um link reescrito. As Edge Functions `track-open` e `track-click` gravam em `email_tracking_events`.',
+    emailTrackingServerBadge: 'Baseado no servidor',
+    emailTrackingOpens: 'Aberturas',
+    emailTrackingClicks: 'Cliques',
+    emailTrackingPrivacyNote:
+      'Privacidade da caixa de entrada: você só vê eventos de e-mails que você enviou (RLS). Agregação para toda a organização ainda não está nesta tela.',
+    emailTrackingEmpty: 'Sem aberturas ou cliques registrados no servidor neste período para os seus envios.',
+    emailTrackingLoadError: 'Não foi possível carregar as métricas de rastreamento de e-mail.',
+    emailTrackingNotConfigured: 'Conecte o Supabase para ver métricas de e-mail baseadas no servidor.',
+    emailTrackingReliabilityNote:
+      'Nota de produto: aberturas/cliques dependem de eventos no servidor com Supabase; cargas parciais ou só cliente podem sub-notificar. Trate como direcional até validar a ingestão completa.',
   },
   csvImport: {
     title: 'Importar CSV',
@@ -648,6 +725,7 @@ export const pt: Translations = {
     title: 'Acompanhamentos',
     urgency: 'Urgência',
     daysSince: 'Dias desde o último contato',
+    daysSinceBadge: '{days} dias sem contato',
     suggestedAction: 'Ação Sugerida',
     critical: 'Crítico',
     high: 'Alta',
@@ -669,6 +747,7 @@ export const pt: Translations = {
     onTrack: 'No Caminho Certo',
     atRisk: 'Em Risco',
     behind: 'Atrasado',
+    targetValuePlaceholder: '50000',
   },
 
   // ─── Forecast ────────────────────────────────────────────────────────────────
@@ -678,6 +757,12 @@ export const pt: Translations = {
     bestCase: 'Melhor Cenário',
     committed: 'Comprometido',
     expected: 'Esperado',
+    healthScoreSubtitle: 'Pontuação composta (0–100)',
+    healthExcellent: 'Excelente',
+    healthGood: 'Bom',
+    healthFair: 'Regular',
+    healthLow: 'Baixo',
+    closingDealsSuffix: 'negócios',
   },
 
   // ─── Leaderboard ─────────────────────────────────────────────────────────────
@@ -804,6 +889,7 @@ export const pt: Translations = {
     placeholderFullName: 'Nome completo',
     placeholderEmail: 'email@empresa.com',
     placeholderMinPassword: 'Mínimo 6 caracteres',
+    placeholderPhoneExample: '+55 11 90000-0000',
     placeholderJobTitle: 'Ex: Account Executive',
     placeholderNewPassword: 'Nova senha (mín. 6 caracteres)',
     toastFillRequired: 'Preencha todos os campos obrigatórios',
@@ -850,6 +936,13 @@ export const pt: Translations = {
       closing: 'Fechamento',
       nurture: 'Nutrição',
       custom: 'Personalizado',
+    },
+    previewSamples: {
+      firstName: 'João',
+      lastName: 'Silva',
+      company: 'Acme Corp',
+      dealTitle: 'Projeto Alpha',
+      dealValue: '25.000 €',
     },
   },
 
@@ -912,6 +1005,9 @@ export const pt: Translations = {
     snoozeOneDay: 'Adiar 1 dia',
     snoozeOneHour: 'Adiar 1h',
     snoozeOneWeek: 'Adiar 1w',
+    trackingDemoSimulate: 'Simular (somente demo)',
+    trackingServerMetricsHint:
+      'Com o Supabase, os totais atualizam quando o destinatário abre o e-mail rastreado ou clica em links rastreados. Atualize as métricas na caixa de entrada.',
   },
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -1018,10 +1114,98 @@ export const pt: Translations = {
     supabaseNotConfigured: 'Supabase não está configurado',
     generic: 'Ocorreu um erro',
     gmailConnectionError: 'Erro ao conectar Gmail',
+    gmailThreadsLoadError: 'Não foi possível carregar os e-mails',
     invitationSendError: 'Erro ao enviar o convite',
     duplicateTag: 'Tag duplicada',
     noPermissionTitle: 'Sem permissão',
     noPermissionDescription: 'Você não tem acesso a esta seção. Fale com seu administrador.',
+    userNotFound: 'Usuário não encontrado',
+    accountDeactivated: 'Conta desativada. Fale com o administrador.',
+    wrongPassword: 'Senha incorreta',
+    wrongCurrentPassword: 'Senha atual incorreta',
+    emailAlreadyExists: 'Já existe um usuário com este e-mail',
+    notAuthenticated: 'Não autenticado',
+    userLimitReached: 'Limite de usuários atingido ({max})',
+    invitationNotFound: 'Convite não encontrado',
+    invitationUsedOrExpired: 'Convite já usado ou expirado',
+    invitationExpired: 'Convite expirado',
+    invalidRecipientEmail: 'Formato de e-mail do destinatário inválido',
+    invalidReplyToEmail: 'Formato de e-mail de resposta (Reply-To) inválido',
+    emptyServerResponse: 'Resposta vazia do servidor',
+    unknownError: 'Erro desconhecido',
+    defaultUserDisplayName: 'Usuário',
+    memberWithoutName: 'Membro {id}',
+    tenantInvitationWithOrg: 'Este domínio já pertence a {orgName}. Peça um convite para entrar nesse espaço de trabalho.',
+    tenantInvitationGeneric: 'O domínio do seu e-mail já pertence a um espaço de trabalho existente. Peça um convite para entrar.',
+  },
+
+  auditMessages: {
+    activityCreated: 'Atividade criada',
+    activityDeleted: 'Atividade excluída',
+    activityCompleted: 'Atividade concluída',
+    contactCreated: 'Contato criado',
+    contactUpdated: 'Contato atualizado',
+    contactDeleted: 'Contato excluído',
+    dealCreated: 'Negócio criado',
+    dealUpdated: 'Negócio atualizado',
+    dealDeleted: 'Negócio excluído',
+    dealMovedTo: 'Movido para {stage}',
+    emailSent: 'E-mail enviado',
+    roleChangedTo: 'Função alterada para {role}',
+    leadScoreRecomputed: 'Pontuação recalculada ({from} → {to})',
+  },
+
+  attachments: {
+    fileTooLarge: '{fileName} excede o limite de 5 MB',
+    fileAttached: '{fileName} anexado',
+    fileRemoved: '{fileName} removido',
+    fileSizeB: '{size} B',
+    fileSizeKb: '{size} KB',
+    fileSizeMb: '{size} MB',
+  },
+
+  dealSync: {
+    emptyInsertResponse: 'Resposta vazia ao inserir no servidor',
+    dealSavedRetrySuffix: 'O negócio foi salvo localmente e a sincronização será tentada novamente.',
+  },
+
+  dealNotifications: {
+    wonTitle: 'Negócio ganho: {title}',
+    wonMessage: 'O negócio "{title}" foi fechado com sucesso.',
+    lostTitle: 'Negócio perdido: {title}',
+    lostMessage: 'O negócio "{title}" foi marcado como perdido.',
+    stageTitle: '{title} avançou',
+    stageMessage: 'De {from} para {to}',
+  },
+
+  notificationSeeds: {
+    dealWonTitle: 'Negócio ganho: Migração Cloud TechStart',
+    dealWonMessage: 'O negócio "Migração Cloud TechStart" foi fechado com sucesso por 45.000 EUR',
+    dealStageTitle: 'Integração ERP avançou',
+    dealStageMessage: 'De qualificado para proposta',
+    activityOverdueTitle: 'Atividade atrasada: Ligação de acompanhamento',
+    activityOverdueMessage: 'A ligação agendada com Laura Sánchez está atrasada',
+    goalAchievedTitle: 'Meta atingida: Atividades mensais',
+    goalAchievedMessage: 'Você completou sua meta de 50 atividades neste mês',
+    welcomeTitle: 'Bem-vindo ao CRM Pro',
+    welcomeMessage: 'Sua conta foi configurada. Explore o produto.',
+    triggeredBySystem: 'Sistema',
+  },
+
+  formErrors: {
+    invalidEmail: 'E-mail inválido',
+    contactFirstNameRequired: 'Nome obrigatório',
+    contactLastNameRequired: 'Sobrenome obrigatório',
+    contactAssignedToRequired: 'Responsável obrigatório',
+    activitySubjectRequired: 'Assunto obrigatório',
+    activityCreatedByRequired: 'Obrigatório',
+    dealTitleRequired: 'Título obrigatório',
+    dealValueRequired: 'Valor obrigatório',
+    dealStageRequired: 'Etapa obrigatória',
+    dealStageInvalid: 'Etapa inválida',
+    dealExpectedCloseRequired: 'Data obrigatória',
+    dealAssignedToRequired: 'Obrigatório',
+    companyNameRequired: 'Nome da empresa obrigatório',
   },
 
   // ─── Email ───────────────────────────────────────────────────────────────────
@@ -1047,6 +1231,9 @@ export const pt: Translations = {
     undoSend: 'Desfazer envio',
     undoSendSuccess: 'Envio cancelado',
     draftSaved: 'Rascunho salvo',
+    subjectPresetFollowUp: 'Acompanhamento: {firstName} {lastName}',
+    subjectPresetNextSteps: '{companyName} — Próximos passos',
+    subjectPresetProposal: '{dealTitle} — Acompanhamento de proposta',
   },
 
   // ─── Notifications page ──────────────────────────────────────────────────────
@@ -1086,4 +1273,6 @@ export const pt: Translations = {
     closeLabel: 'Fechamento',
     probabilityShort: 'prob',
   },
+
+  seedDemo,
 }

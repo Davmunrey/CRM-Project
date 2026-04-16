@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { contactSchema } from '../../src/lib/schemas/contact'
+import { createContactSchema } from '../../src/lib/schemas/contact'
+import { en } from '../../src/i18n/en'
+
+const contactSchema = createContactSchema(en)
 
 const validContact = {
   firstName: 'Ana',
@@ -14,7 +17,7 @@ const validContact = {
   notes: '',
 }
 
-describe('contactSchema', () => {
+describe('createContactSchema', () => {
   it('accepts a valid contact payload', () => {
     const result = contactSchema.safeParse(validContact)
     expect(result.success).toBe(true)
@@ -24,8 +27,8 @@ describe('contactSchema', () => {
     const result = contactSchema.safeParse({ ...validContact, firstName: '' })
     expect(result.success).toBe(false)
     if (!result.success) {
-      const issue = result.error.issues.find(i => i.path[0] === 'firstName')
-      expect(issue?.message).toBe('Nombre requerido')
+      const issue = result.error.issues.find((i) => i.path[0] === 'firstName')
+      expect(issue?.message).toBe(en.formErrors.contactFirstNameRequired)
     }
   })
 
@@ -33,8 +36,8 @@ describe('contactSchema', () => {
     const result = contactSchema.safeParse({ ...validContact, lastName: '' })
     expect(result.success).toBe(false)
     if (!result.success) {
-      const issue = result.error.issues.find(i => i.path[0] === 'lastName')
-      expect(issue?.message).toBe('Apellido requerido')
+      const issue = result.error.issues.find((i) => i.path[0] === 'lastName')
+      expect(issue?.message).toBe(en.formErrors.contactLastNameRequired)
     }
   })
 
@@ -42,7 +45,7 @@ describe('contactSchema', () => {
     const result = contactSchema.safeParse({ ...validContact, email: 'not-an-email' })
     expect(result.success).toBe(false)
     if (!result.success) {
-      const issue = result.error.issues.find(i => i.path[0] === 'email')
+      const issue = result.error.issues.find((i) => i.path[0] === 'email')
       expect(issue).toBeDefined()
     }
   })
@@ -51,8 +54,8 @@ describe('contactSchema', () => {
     const result = contactSchema.safeParse({ ...validContact, assignedTo: '' })
     expect(result.success).toBe(false)
     if (!result.success) {
-      const issue = result.error.issues.find(i => i.path[0] === 'assignedTo')
-      expect(issue?.message).toBe('Asignado a requerido')
+      const issue = result.error.issues.find((i) => i.path[0] === 'assignedTo')
+      expect(issue?.message).toBe(en.formErrors.contactAssignedToRequired)
     }
   })
 

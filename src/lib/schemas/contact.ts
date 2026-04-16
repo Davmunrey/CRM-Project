@@ -1,16 +1,18 @@
 import { z } from 'zod'
+import type { Translations } from '../../i18n/types'
 
-export const contactSchema = z.object({
-  firstName: z.string().min(1, 'Nombre requerido'),
-  lastName: z.string().min(1, 'Apellido requerido'),
-  email: z.string().email('Email inválido'),
-  phone: z.string(),
-  jobTitle: z.string(),
-  companyId: z.string(),
-  status: z.enum(['prospect', 'customer', 'churned']),
-  source: z.enum(['website', 'referral', 'outbound', 'event', 'linkedin', 'other']),
-  assignedTo: z.string().min(1, 'Asignado a requerido'),
-  notes: z.string(),
-})
+export const createContactSchema = (t: Translations) =>
+  z.object({
+    firstName: z.string().min(1, t.formErrors.contactFirstNameRequired),
+    lastName: z.string().min(1, t.formErrors.contactLastNameRequired),
+    email: z.string().email(t.formErrors.invalidEmail),
+    phone: z.string(),
+    jobTitle: z.string(),
+    companyId: z.string(),
+    status: z.enum(['prospect', 'customer', 'churned']),
+    source: z.enum(['website', 'referral', 'outbound', 'event', 'linkedin', 'other']),
+    assignedTo: z.string().min(1, t.formErrors.contactAssignedToRequired),
+    notes: z.string(),
+  })
 
-export type ContactFormData = z.infer<typeof contactSchema>
+export type ContactFormData = z.infer<ReturnType<typeof createContactSchema>>

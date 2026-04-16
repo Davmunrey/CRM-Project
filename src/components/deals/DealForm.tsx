@@ -12,7 +12,7 @@ import { useContactsStore } from '../../store/contactsStore'
 import { useAuthStore } from '../../store/authStore'
 import { useCompaniesStore } from '../../store/companiesStore'
 import { useSettingsStore } from '../../store/settingsStore'
-import { useTranslations } from '../../i18n'
+import { useLocalizedContacts, useLocalizedCompanies, useLocalizedOrgUsers, useTranslations } from '../../i18n'
 
 type FormValues = z.infer<ReturnType<typeof createDealSchema>>
 
@@ -24,19 +24,20 @@ interface DealFormProps {
 
 export function DealForm({ deal, onSubmit, onCancel }: DealFormProps) {
   const t = useTranslations()
-  const contacts = useContactsStore((s) => s.contacts)
-  const companies = useCompaniesStore((s) => s.companies)
-  const orgUsers = useAuthStore((s) => s.users)
+  const contacts = useLocalizedContacts(useContactsStore((s) => s.contacts))
+  const companies = useLocalizedCompanies(useCompaniesStore((s) => s.companies))
+  const orgUsers = useLocalizedOrgUsers(useAuthStore((s) => s.users))
   const pipelineStages = useSettingsStore((s) => s.settings.pipelineStages)
+  const stageLabels = t.deals.stageLabels as Record<string, string>
   const stageOptions = useMemo(
     () => pipelineStages
       .slice()
       .sort((a, b) => a.order - b.order)
-      .map((stage) => ({ value: stage.id, label: stage.name })),
-    [pipelineStages]
+      .map((stage) => ({ value: stage.id, label: stageLabels[stage.id] ?? stage.name })),
+    [pipelineStages, stageLabels]
   )
   const availableStages = useMemo(() => stageOptions.map((opt) => opt.value), [stageOptions])
-  const schema = useMemo(() => createDealSchema(availableStages), [availableStages])
+  const schema = useMemo(() => createDealSchema(t, availableStages), [t, availableStages])
   const defaultStage = stageOptions[0]?.value ?? 'lead'
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({

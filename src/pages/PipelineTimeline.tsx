@@ -174,7 +174,7 @@ export function PipelineTimeline() {
           <p className="text-2xl font-bold text-emerald-400">{formatCurrency(expectedThisQuarter)}</p>
         </div>
         <div className="glass p-4 rounded-xl">
-          <p className="text-xs text-slate-500 mb-1">{'Tasa de conversión'}</p>
+          <p className="text-xs text-slate-500 mb-1">{t.reports.conversionRate}</p>
           <p className="text-2xl font-bold text-amber-400">
             {filteredDeals.length > 0
               ? `${Math.round(filteredDeals.reduce((s, d) => s + d.probability, 0) / filteredDeals.length)}%`
