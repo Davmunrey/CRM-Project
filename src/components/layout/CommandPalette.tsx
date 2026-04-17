@@ -4,7 +4,8 @@ import { Search, Users, Building2, KanbanSquare, Activity, LayoutDashboard, BarC
 import { useContactsStore } from '../../store/contactsStore'
 import { useCompaniesStore } from '../../store/companiesStore'
 import { useDealsStore } from '../../store/dealsStore'
-import { useTranslations } from '../../i18n'
+import { useTranslations, useUiLanguage } from '../../i18n'
+import { getIndustryLabel } from '../../lib/industries'
 import { formatCurrency } from '../../utils/formatters'
 
 interface CommandItem {
@@ -23,6 +24,7 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const t = useTranslations()
+  const uiLang = useUiLanguage()
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -64,7 +66,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
       results.push({
         id: `company-${c.id}`,
         label: c.name,
-        sublabel: c.industry,
+        sublabel: getIndustryLabel(c.industry, uiLang),
         icon: <Building2 size={15} />,
         action: () => go(`/companies/${c.id}`),
         category: t.nav.companies,
@@ -83,7 +85,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     })
 
     return results
-  }, [query, contacts, companies, deals])
+  }, [query, contacts, companies, deals, t, uiLang])
 
   const filteredStatic = query.length < 2
     ? staticItems

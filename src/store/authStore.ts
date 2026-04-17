@@ -7,6 +7,7 @@ import { devConsole } from '../lib/devConsole'
 import { useAuditStore } from './auditStore'
 import { toast } from './toastStore'
 import { getTranslations } from '../i18n'
+import { workspaceNameFromEmail } from '../lib/workspaceFromEmail'
 
 /** Row shape from `list_organization_members_with_identity` RPC (see supabase migration). */
 export interface OrgMemberIdentityRow {
@@ -55,12 +56,7 @@ export interface AuthState {
   // Actions
   login: (email: string, password: string) => { success: boolean; error?: string }
   logout: () => Promise<void>
-  register: (data: {
-    name: string
-    email: string
-    password: string
-    orgName: string
-  }) => { success: boolean; error?: string }
+  register: (data: { name: string; email: string; password: string }) => { success: boolean; error?: string }
 
   // Supabase session actions
   setCurrentUser: (user: AuthUser | null) => void
@@ -358,10 +354,11 @@ export const useAuthStore = create<AuthState>()(
         const orgId = uuidv4()
         const userId = uuidv4()
         const now = new Date().toISOString()
+        const orgDisplayName = workspaceNameFromEmail(data.email)
 
         const org: Organization = {
           id: orgId,
-          name: data.orgName,
+          name: orgDisplayName,
           plan: 'free',
           maxUsers: 5,
           createdAt: now,

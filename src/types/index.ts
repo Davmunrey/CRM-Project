@@ -53,15 +53,8 @@ export interface Lead {
 // ─── Company ─────────────────────────────────────────────────────────────────
 
 export type CompanyStatus = 'prospect' | 'customer' | 'partner' | 'churned'
-export type CompanyIndustry =
-  | 'fintech'
-  | 'saas'
-  | 'consulting'
-  | 'insurance'
-  | 'banking'
-  | 'retail'
-  | 'healthcare'
-  | 'other'
+/** LinkedIn Industry Codes V2 id (string) or legacy slug normalized on read. */
+export type CompanyIndustry = string
 
 export interface Company {
   id: string

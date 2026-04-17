@@ -29,7 +29,7 @@ const CATEGORY_COLORS: Record<ProductCategory, string> = {
   software: 'bg-accent-500/15 text-accent-400 border-accent-500/20',
   hardware: 'bg-warning/15 text-warning border-warning/20',
   service: 'bg-success/15 text-success border-success/20',
-  consulting: 'bg-accent-500/15 text-accent-400 border-purple-500/20',
+  consulting: 'bg-accent-500/15 text-accent-400 border-accent-500/25',
   support: 'bg-info/15 text-info border-info/20',
   other: 'bg-fg/8 text-fg-muted border-fg/10',
 }

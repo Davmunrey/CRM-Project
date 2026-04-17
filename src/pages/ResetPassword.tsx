@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Zap, Lock, ArrowRight } from 'lucide-react'
+import { Lock, ArrowRight } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
+import { AuthLayout } from '../components/auth/AuthLayout'
 
 export function ResetPassword() {
   const t = useTranslations()
@@ -47,74 +48,60 @@ export function ResetPassword() {
   }
 
   return (
-    <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="auth-bg-blob absolute top-1/4 left-1/4 w-96 h-96 bg-accent-600/10 rounded-full blur-3xl" />
-        <div className="auth-bg-blob absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/8 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative w-full max-w-md">
-        <div className="text-center mb-8">
-          <div
-            className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto shadow-brand-sm mb-4 overflow-hidden"
-            style={{ backgroundColor: branding.primaryColor }}
-          >
-            {branding.logoUrl ? (
-              <img src={branding.logoUrl} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <Zap size={24} className="text-fg" />
-            )}
-          </div>
+    <AuthLayout
+      variant="centered"
+      title={(
+        <>
           <h1 className="text-2xl font-bold text-fg">{branding.appName}</h1>
           <p className="text-sm text-fg-muted mt-1">{t.auth.resetPasswordPageTitle}</p>
-        </div>
+        </>
+      )}
+    >
+      <Card className="p-8">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <p className="text-sm text-fg-muted">{t.auth.checkEmailInstructions}</p>
 
-        <Card className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <p className="text-sm text-fg-muted">{t.auth.checkEmailInstructions}</p>
+          {error && (
+            <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">
+              {error}
+            </div>
+          )}
 
-            {error && (
-              <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">
-                {error}
-              </div>
-            )}
+          <Input
+            label={t.auth.password}
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t.auth.password}
+            required
+            minLength={6}
+            autoFocus
+            leftIcon={<Lock size={16} aria-hidden />}
+          />
 
-            <Input
-              label={t.auth.password}
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder={t.auth.password}
-              required
-              minLength={6}
-              autoFocus
-              leftIcon={<Lock size={16} aria-hidden />}
-            />
+          <Input
+            label={t.auth.confirmPassword}
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder={t.auth.confirmPassword}
+            required
+            minLength={6}
+            leftIcon={<Lock size={16} aria-hidden />}
+          />
 
-            <Input
-              label={t.auth.confirmPassword}
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder={t.auth.confirmPassword}
-              required
-              minLength={6}
-              leftIcon={<Lock size={16} aria-hidden />}
-            />
-
-            <Button
-              type="submit"
-              className="w-full rounded-xl"
-              size="lg"
-              disabled={loading || !password || !confirmPassword}
-              loading={loading}
-              rightIcon={<ArrowRight size={16} aria-hidden />}
-            >
-              {t.auth.savePassword}
-            </Button>
-          </form>
-        </Card>
-      </div>
-    </div>
+          <Button
+            type="submit"
+            className="w-full rounded-xl"
+            size="lg"
+            disabled={loading || !password || !confirmPassword}
+            loading={loading}
+            rightIcon={<ArrowRight size={16} aria-hidden />}
+          >
+            {t.auth.savePassword}
+          </Button>
+        </form>
+      </Card>
+    </AuthLayout>
   )
 }

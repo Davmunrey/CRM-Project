@@ -10,6 +10,8 @@ import { Radio } from '../../src/components/ui/Radio'
 import { Skeleton } from '../../src/components/ui/Skeleton'
 import { SkeletonRow } from '../../src/components/ui/SkeletonRow'
 import { DropdownMenu, DropdownMenuItem } from '../../src/components/ui/DropdownMenu'
+import { ThemeSwitcher } from '../../src/components/ui/ThemeSwitcher'
+import { LanguageSwitcher } from '../../src/components/shared/LanguageSwitcher'
 
 describe('UI primitives (a11y smoke)', () => {
   it('EmptyState has no critical axe violations', async () => {
@@ -114,6 +116,27 @@ describe('UI primitives (a11y smoke)', () => {
         <DropdownMenuItem onClick={() => {}}>Item</DropdownMenuItem>
       </DropdownMenu>,
     )
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+
+  it('ThemeSwitcher (inline) has no critical axe violations', async () => {
+    const { container } = render(<ThemeSwitcher variant="inline" />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+
+  it('LanguageSwitcher (closed) has no critical axe violations', async () => {
+    const { container } = render(<LanguageSwitcher variant="inline" />)
+    const results = await axe(container)
+    expect(results).toHaveNoViolations()
+  })
+
+  it('LanguageSwitcher (open) has no critical axe violations', async () => {
+    const { container } = render(<LanguageSwitcher variant="inline" />)
+    const btn = container.querySelector('button[aria-haspopup="menu"]')
+    expect(btn).toBeTruthy()
+    btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     const results = await axe(container)
     expect(results).toHaveNoViolations()
   })

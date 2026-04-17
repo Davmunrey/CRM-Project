@@ -11,6 +11,7 @@ import { DEAL_STAGE_COLORS } from '../utils/constants'
 import { useAuthStore } from '../store/authStore'
 import type { Deal, DealStage } from '../types'
 import { useTranslations, useI18nStore } from '../i18n'
+import { Select } from '../components/ui/Select'
 
 const STAGE_HEX: Record<DealStage, string> = {
   lead: '#3b82f6',
@@ -186,24 +187,33 @@ export function PipelineTimeline() {
       {/* Filters */}
       <div className="flex items-center gap-2 flex-wrap glass rounded-xl p-3">
         <Filter size={14} className="text-fg-subtle" />
-        <select
-          value={stageFilter}
-          onChange={(e) => setStageFilter(e.target.value as DealStage | '')}
-          className="bg-surface-2 border border-fg/8 rounded-lg px-3 py-1.5 text-sm text-fg focus:outline-none focus:border-accent-500/40"
-        >
-          <option value="">{t.deals.stage}</option>
-          {(['lead', 'qualified', 'proposal', 'negotiation', 'closed_won'] as DealStage[]).map((s) => (
-            <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>
-          ))}
-        </select>
-        <select
-          value={assigneeFilter}
-          onChange={(e) => setAssigneeFilter(e.target.value)}
-          className="bg-surface-2 border border-fg/8 rounded-lg px-3 py-1.5 text-sm text-fg focus:outline-none focus:border-accent-500/40"
-        >
-          <option value="">{t.common.assignedTo}</option>
-          {orgUsers.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
-        </select>
+        <div className="min-w-[10rem] max-w-[14rem]">
+          <Select
+            ariaLabel={t.deals.stage}
+            value={stageFilter}
+            onChange={(e) => setStageFilter(e.target.value as DealStage | '')}
+            options={[
+              { value: '', label: t.deals.stage },
+              ...(['lead', 'qualified', 'proposal', 'negotiation', 'closed_won'] as DealStage[]).map((s) => ({
+                value: s,
+                label: t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s,
+              })),
+            ]}
+            listMaxHeightClass="max-h-48"
+          />
+        </div>
+        <div className="min-w-[10rem] max-w-[14rem]">
+          <Select
+            ariaLabel={t.common.assignedTo}
+            value={assigneeFilter}
+            onChange={(e) => setAssigneeFilter(e.target.value)}
+            options={[
+              { value: '', label: t.common.assignedTo },
+              ...orgUsers.map((u) => ({ value: u.name, label: u.name })),
+            ]}
+            listMaxHeightClass="max-h-56"
+          />
+        </div>
         {(stageFilter || assigneeFilter) && (
           <button
             type="button"

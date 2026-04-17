@@ -5,6 +5,7 @@ import {
 } from 'lucide-react'
 import { useAutomationsStore } from '../store/automationsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
+import { Select } from '../components/ui/Select'
 import { toast } from '../store/toastStore'
 import { formatRelativeDate } from '../utils/formatters'
 import { getTranslations, useI18nStore, useTranslations } from '../i18n'
@@ -47,7 +48,7 @@ function triggerColor(type: AutomationTriggerType) {
   if (type === 'deal_closed_won') return 'bg-success/15 text-success border-success/20'
   if (type === 'deal_closed_lost') return 'bg-danger/15 text-danger border-danger/20'
   if (type.startsWith('deal')) return 'bg-accent-500/15 text-accent-400 border-accent-500/20'
-  if (type.startsWith('activity')) return 'bg-accent-500/15 text-accent-400 border-purple-500/20'
+  if (type.startsWith('activity')) return 'bg-accent-500/15 text-accent-400 border-accent-500/25'
   return 'bg-fg/8 text-fg-muted border-fg/10'
 }
 
@@ -80,18 +81,16 @@ function ActionEditor({
 }) {
   return (
     <div className="glass rounded-xl p-3 border border-fg/6 space-y-2">
-      <div className="flex items-center gap-2">
-        <select
-          value={action.type}
-          onChange={(e) => onChange({ type: e.target.value as AutomationActionType })}
-          aria-label={t.automations.action}
-          title={t.automations.action}
-          className="flex-1 bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
-        >
-          {(Object.keys(actionLabels) as AutomationActionType[]).map((k) => (
-            <option key={k} value={k}>{actionLabels[k]}</option>
-          ))}
-        </select>
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="flex-1 min-w-0">
+          <Select
+            ariaLabel={t.automations.action}
+            value={action.type}
+            onChange={(e) => onChange({ type: e.target.value as AutomationActionType })}
+            options={(Object.keys(actionLabels) as AutomationActionType[]).map((k) => ({ value: k, label: actionLabels[k] }))}
+            listMaxHeightClass="max-h-48"
+          />
+        </div>
         <button type="button" onClick={onRemove} title={t.common.delete} aria-label={t.common.delete} className="p-1.5 text-fg-subtle hover:text-danger transition-colors">
           <X size={13} />
         </button>
@@ -99,17 +98,13 @@ function ActionEditor({
 
       {action.type === 'create_activity' && (
         <>
-          <select
+          <Select
+            ariaLabel={t.common.type}
             value={action.activityType ?? 'task'}
             onChange={(e) => onChange({ ...action, activityType: e.target.value as ActivityType })}
-            aria-label={t.common.type}
-            title={t.common.type}
-            className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
-          >
-            {ACTIVITY_TYPE_OPTIONS.map((k) => (
-              <option key={k} value={k}>{t.activities.typeLabels[k]}</option>
-            ))}
-          </select>
+            options={ACTIVITY_TYPE_OPTIONS.map((k) => ({ value: k, label: t.activities.typeLabels[k] }))}
+            listMaxHeightClass="max-h-48"
+          />
           <input
             type="text"
             placeholder={t.activities.subject}
@@ -153,17 +148,16 @@ function ActionEditor({
       )}
 
       {action.type === 'update_deal_stage' && (
-        <select
+        <Select
+          ariaLabel={t.deals.stage}
           value={action.newStage ?? 'qualified'}
           onChange={(e) => onChange({ ...action, newStage: e.target.value as DealStage })}
-          aria-label={t.deals.stage}
-          title={t.deals.stage}
-          className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
-        >
-          {STAGE_OPTIONS.map((s) => (
-            <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>
-          ))}
-        </select>
+          options={STAGE_OPTIONS.map((s) => ({
+            value: s,
+            label: t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s,
+          }))}
+          listMaxHeightClass="max-h-48"
+        />
       )}
     </div>
   )
@@ -240,45 +234,52 @@ function RuleModal({
           <div>
             <p className="text-xs font-semibold text-fg-muted mb-2 uppercase tracking-wide">{t.automations.trigger}</p>
             <div className="glass rounded-xl p-3 border border-fg/6 space-y-2">
-              <select
+              <Select
+                ariaLabel={t.automations.trigger}
                 value={form.trigger.type}
                 onChange={(e) => setTrigger({ type: e.target.value as AutomationTriggerType })}
-                aria-label={t.automations.trigger}
-                title={t.automations.trigger}
-                className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
-              >
-                {(Object.keys(triggerLabels) as AutomationTriggerType[]).map((k) => (
-                  <option key={k} value={k}>{triggerLabels[k]}</option>
-                ))}
-              </select>
+                options={(Object.keys(triggerLabels) as AutomationTriggerType[]).map((k) => ({
+                  value: k,
+                  label: triggerLabels[k],
+                }))}
+                listMaxHeightClass="max-h-56"
+              />
 
               {form.trigger.type === 'deal_stage_changed' && (
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-[10px] text-fg-subtle mb-1">{t.common.from}</p>
-                    <select
+                    <Select
+                      ariaLabel={t.common.from}
+                      label={t.common.from}
                       value={form.trigger.fromStage ?? ''}
                       onChange={(e) => setTrigger({ ...form.trigger, fromStage: (e.target.value as DealStage) || undefined })}
-                      aria-label={t.common.from}
-                      title={t.common.from}
-                      className="w-full bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
-                    >
-                      <option value="">{t.common.all}</option>
-                      {STAGE_OPTIONS.map((s) => <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>)}
-                    </select>
+                      options={[
+                        { value: '', label: t.common.all },
+                        ...STAGE_OPTIONS.map((s) => ({
+                          value: s,
+                          label: t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s,
+                        })),
+                      ]}
+                      listMaxHeightClass="max-h-48"
+                    />
                   </div>
                   <div>
                     <p className="text-[10px] text-fg-subtle mb-1">{t.common.to}</p>
-                    <select
+                    <Select
+                      ariaLabel={t.common.to}
+                      label={t.common.to}
                       value={form.trigger.toStage ?? ''}
                       onChange={(e) => setTrigger({ ...form.trigger, toStage: (e.target.value as DealStage) || undefined })}
-                      aria-label={t.common.to}
-                      title={t.common.to}
-                      className="w-full bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
-                    >
-                      <option value="">{t.common.all}</option>
-                      {STAGE_OPTIONS.map((s) => <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>)}
-                    </select>
+                      options={[
+                        { value: '', label: t.common.all },
+                        ...STAGE_OPTIONS.map((s) => ({
+                          value: s,
+                          label: t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s,
+                        })),
+                      ]}
+                      listMaxHeightClass="max-h-48"
+                    />
                   </div>
                 </div>
               )}

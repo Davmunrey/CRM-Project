@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useTranslations } from '../i18n'
+import { useTranslations, useUiLanguage } from '../i18n'
 import {
   ArrowLeft, Edit2, Plus, Globe, Phone, Users, TrendingUp,
   DollarSign, Activity as ActivityIcon, Building2, Mail, Calendar,
@@ -21,7 +21,8 @@ import { ContactStatusBadge } from '../components/contacts/ContactStatusBadge'
 import { EmailComposer } from '../components/email/EmailComposer'
 import { toast } from '../store/toastStore'
 import { formatDate, formatCurrency, formatRelativeDate } from '../utils/formatters'
-import { COMPANY_INDUSTRY_LABELS, DEAL_STAGE_COLORS, ACTIVITY_TYPE_COLORS } from '../utils/constants'
+import { DEAL_STAGE_COLORS, ACTIVITY_TYPE_COLORS } from '../utils/constants'
+import { getIndustryLabel } from '../lib/industries'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import type { Company, Deal, Contact, Activity, CRMEmail, DealStage } from '../types'
 import { CustomFieldsDisplay } from '../components/shared/CustomFieldRenderer'
@@ -46,6 +47,7 @@ const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
 
 export function CompanyDetail() {
   const t = useTranslations()
+  const uiLang = useUiLanguage()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
@@ -150,7 +152,7 @@ export function CompanyDetail() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-fg">{company.name}</h2>
-                <p className="text-fg-muted mt-0.5">{COMPANY_INDUSTRY_LABELS[company.industry]}</p>
+                <p className="text-fg-muted mt-0.5">{getIndustryLabel(company.industry, uiLang)}</p>
                 <div className="flex items-center gap-3 mt-2 text-sm text-fg-subtle">
                   {company.website && (
                     <a href={company.website} target="_blank" rel="noopener noreferrer"
@@ -235,7 +237,7 @@ export function CompanyDetail() {
             {[
               { label: t.common.name, value: company.name },
               { label: t.companies.website, value: company.domain || '\u2014' },
-              { label: t.companies.industry, value: COMPANY_INDUSTRY_LABELS[company.industry] },
+              { label: t.companies.industry, value: getIndustryLabel(company.industry, uiLang) },
               { label: t.companies.size, value: company.size || '\u2014' },
               { label: t.companies.country, value: company.country || '\u2014' },
               { label: t.companies.city, value: company.city || '\u2014' },

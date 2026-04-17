@@ -3,6 +3,7 @@ import type { CustomFieldDefinition, CustomFieldValue, CustomFieldEntityType } f
 import { useCustomFieldsStore } from '../../store/customFieldsStore'
 import { formatCurrency, formatDateShort } from '../../utils/formatters'
 import { useI18nStore, useTranslations } from '../../i18n'
+import { Select } from '../ui/Select'
 
 // ─── Display component (read-only) ──────────────────────────────────────────
 
@@ -148,7 +149,6 @@ function FieldInput({
 }) {
   const t = useTranslations()
   const base = 'w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50'
-  const selectBase = `${base} appearance-none`
 
   switch (def.fieldType) {
     case 'text':
@@ -212,17 +212,16 @@ function FieldInput({
 
     case 'select':
       return (
-        <div>
-          <label className="text-xs text-fg-subtle mb-1 block">{def.label}{def.required && <span className="text-danger">*</span>}</label>
-          <select
-            value={String(value ?? '')}
-            onChange={(e) => onChange(e.target.value || null)}
-            className={selectBase}
-          >
-            <option value="">{t.common.select}...</option>
-            {(def.options || []).map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
-        </div>
+        <Select
+          label={def.label}
+          required={def.required}
+          options={[
+            { value: '', label: `${t.common.select}...` },
+            ...(def.options || []).map((opt) => ({ value: opt, label: opt })),
+          ]}
+          value={String(value ?? '')}
+          onChange={(e) => onChange(e.target.value === '' ? null : e.target.value)}
+        />
       )
 
     case 'multiselect': {

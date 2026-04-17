@@ -6,6 +6,8 @@ import { useAuditStore } from '../../store/auditStore'
 import { toast } from '../../store/toastStore'
 import type { ContactStatus, ContactSource } from '../../types'
 import { useTranslations } from '../../i18n'
+import { normalizeIndustryValue } from '../../lib/industries'
+import { Select } from '../ui/Select'
 
 interface CSVImportProps {
   isOpen: boolean
@@ -256,7 +258,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
           addCompany({
             name: record.name,
             domain: record.domain || '',
-            industry: record.industry || 'other',
+            industry: normalizeIndustryValue(record.industry || ''),
             size: record.size || '',
             country: record.country || '',
             city: record.city || '',
@@ -393,16 +395,18 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                       </span>
                     </div>
                     <ArrowRight size={12} className="text-fg-subtle flex-shrink-0" />
-                    <select
-                      value={mapping[field.key] || ''}
-                      onChange={(e) => setMapping({ ...mapping, [field.key]: e.target.value })}
-                      className="flex-1 bg-surface-0 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg outline-none focus:border-accent-500/40"
-                    >
-                      <option value="">— {t.csvImport.doNotMap} —</option>
-                      {csvHeaders.map((h) => (
-                        <option key={h} value={h}>{h}</option>
-                      ))}
-                    </select>
+                    <div className="flex-1 min-w-0">
+                      <Select
+                        ariaLabel={field.label}
+                        value={mapping[field.key] || ''}
+                        onChange={(e) => setMapping({ ...mapping, [field.key]: e.target.value })}
+                        options={[
+                          { value: '', label: `— ${t.csvImport.doNotMap} —` },
+                          ...csvHeaders.map((h) => ({ value: h, label: h })),
+                        ]}
+                        listMaxHeightClass="max-h-48"
+                      />
+                    </div>
                   </div>
                 ))}
               </div>

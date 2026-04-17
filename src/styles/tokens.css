@@ -109,7 +109,11 @@
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.36);
   --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.4);
   --shadow-float: 0 8px 30px rgba(0, 0, 0, 0.28);
-  --shadow-brand-sm: 0 0 16px rgba(37, 99, 235, 0.28);
+  --shadow-brand-sm: 0 0 16px rgb(var(--color-accent-600) / 0.28);
+
+  /* Auth shell gradients (used by `.auth-page-bg` in index.css) */
+  --auth-page-gradient-dark: linear-gradient(180deg, rgb(6 7 15) 0%, rgb(17 18 40) 100%);
+  --auth-page-gradient-light: linear-gradient(180deg, rgb(248 250 252) 0%, rgb(238 242 255) 100%);
 
   /* Z-index scale */
   --z-base: 0;
@@ -161,7 +165,7 @@ html.light {
   --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.12);
   --shadow-xl: 0 12px 40px rgba(15, 23, 42, 0.14);
   --shadow-float: 0 8px 30px rgba(15, 23, 42, 0.12);
-  --shadow-brand-sm: 0 0 16px rgba(79, 70, 229, 0.22);
+  --shadow-brand-sm: 0 0 16px rgb(var(--color-accent-500) / 0.22);
 
   --bg-main: rgb(var(--color-surface-0));
   --bg-panel: rgb(var(--color-surface-1));

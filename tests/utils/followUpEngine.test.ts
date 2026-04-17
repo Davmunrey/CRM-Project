@@ -14,7 +14,7 @@ const baseCompany: Company = {
   id: 'company-1',
   name: 'Acme Corp',
   domain: 'acme.com',
-  industry: 'saas',
+  industry: '4',
   size: '50',
   country: 'ES',
   city: 'Madrid',

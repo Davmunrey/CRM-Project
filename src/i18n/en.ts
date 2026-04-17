@@ -457,6 +457,10 @@ export const en: Translations = {
     general: 'General',
     currency: 'Currency',
     language: 'Language',
+    languageModeBrowser: 'Follow browser language',
+    languageModeManual: 'Fixed language',
+    languageModeHelp:
+      'Browser mode updates when your OS or browser language changes. Fixed keeps the language you pick below.',
     theme: 'Theme',
     themeSystem: 'System',
     themeLight: 'Light',
@@ -1040,6 +1044,15 @@ export const en: Translations = {
     connecting: 'Connecting',
     companyDomainRequired: 'Enter your company email or domain to continue with SAML SSO.',
     demoLogin: 'Demo login',
+    landingTagline: 'Pipeline, inbox, and team in one calm workspace.',
+    landingFeature1: 'Enterprise-ready permissions and audit-friendly workflows.',
+    landingFeature2: 'Fast views for leads, deals, and follow-ups.',
+    landingFeature3: 'Built for small teams who still want serious CRM.',
+    demoCredentialsTitle: 'Demo credentials',
+    googleSsoUseCompanySso: 'Google SSO is disabled for this tenant. Use your company SSO.',
+    googleSsoUnavailable: 'Google SSO is not available for this account.',
+    passwordShowAria: 'Show password',
+    passwordHideAria: 'Hide password',
   },
 
   // ─── Org Setup ───────────────────────────────────────────────────────────────
@@ -1208,6 +1221,7 @@ export const en: Translations = {
     dealExpectedCloseRequired: 'Expected close date is required',
     dealAssignedToRequired: 'Assigned to is required',
     companyNameRequired: 'Company name is required',
+    companyIndustryRequired: 'Industry is required',
   },
 
   // ─── Email ───────────────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@ export const createCompanySchema = (t: Translations) =>
   z.object({
     name: z.string().min(1, t.formErrors.companyNameRequired),
     domain: z.string(),
-    industry: z.enum(['fintech', 'saas', 'consulting', 'insurance', 'banking', 'retail', 'healthcare', 'other']),
+    industry: z.string().min(1, t.formErrors.companyIndustryRequired),
     size: z.string(),
     country: z.string(),
     city: z.string(),

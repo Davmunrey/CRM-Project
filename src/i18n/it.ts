@@ -32,6 +32,10 @@ export const it: Translations = {
     ...en.settings,
     title: 'Impostazioni',
     language: 'Lingua',
+    languageModeBrowser: 'Segui la lingua del browser',
+    languageModeManual: 'Lingua fissa',
+    languageModeHelp:
+      'In modalita browser si usa navigator.languages e la UI si aggiorna quando cambia la lingua di sistema (languagechange). Fissa mantiene la lingua scelta sotto.',
     currency: 'Valuta',
     notifications: 'Notifiche',
     tabGeneral: 'Generale',
@@ -180,6 +184,11 @@ export const it: Translations = {
     checkEmailConfirmation: 'Abbiamo inviato un link di conferma a',
     passwordsDoNotMatch: 'Le password non coincidono',
     passwordMinLength: 'La password deve contenere almeno 6 caratteri',
+    landingTagline: 'Pipeline, posta in arrivo e team in un unico spazio ordinato.',
+    landingFeature1: 'Permessi pronti per la compliance e flussi adatti alle revisioni.',
+    landingFeature2: 'Viste rapide per lead, trattative e follow-up.',
+    landingFeature3: 'Pensato per team piccoli che vogliono un CRM serio.',
+    demoCredentialsTitle: 'Credenziali demo',
   },
   errors: {
     ...en.errors,

@@ -32,6 +32,10 @@ export const de: Translations = {
     ...en.settings,
     title: 'Einstellungen',
     language: 'Sprache',
+    languageModeBrowser: 'Browsersprache folgen',
+    languageModeManual: 'Festgelegte Sprache',
+    languageModeHelp:
+      'Im Browser-Modus nutzt die App navigator.languages und aktualisiert sich bei Anderungen der Systemsprache (languagechange). Festgelegt behalt die unten gewahlte Sprache.',
     currency: 'Wahrung',
     notifications: 'Benachrichtigungen',
     tabGeneral: 'Allgemein',
@@ -180,6 +184,11 @@ export const de: Translations = {
     checkEmailConfirmation: 'Wir haben einen Bestatigungslink gesendet an',
     passwordsDoNotMatch: 'Passworter stimmen nicht uberein',
     passwordMinLength: 'Das Passwort muss mindestens 6 Zeichen haben',
+    landingTagline: 'Pipeline, Posteingang und Team an einem ruhigen Ort.',
+    landingFeature1: 'Unternehmensreife Berechtigungen und pruffreundliche Ablaufe.',
+    landingFeature2: 'Schnelle Ansichten fur Leads, Deals und Follow-ups.',
+    landingFeature3: 'Fur kleine Teams, die trotzdem ein serioses CRM wollen.',
+    demoCredentialsTitle: 'Demo-Zugangsdaten',
   },
   errors: {
     ...en.errors,

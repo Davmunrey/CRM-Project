@@ -32,6 +32,10 @@ export const fr: Translations = {
     ...en.settings,
     title: 'Parametres',
     language: 'Langue',
+    languageModeBrowser: 'Suivre la langue du navigateur',
+    languageModeManual: 'Langue fixe',
+    languageModeHelp:
+      'Le mode navigateur suit navigator.languages et se met a jour quand la langue du systeme change (evenement languagechange). Le mode fixe garde la langue choisie ci-dessous.',
     currency: 'Devise',
     notifications: 'Notifications',
     tabGeneral: 'General',
@@ -180,6 +184,11 @@ export const fr: Translations = {
     checkEmailConfirmation: 'Nous avons envoye un lien de confirmation a',
     passwordsDoNotMatch: 'Les mots de passe ne correspondent pas',
     passwordMinLength: 'Le mot de passe doit contenir au moins 6 caracteres',
+    landingTagline: 'Pipeline, boite de reception et equipe dans un espace calme.',
+    landingFeature1: 'Permissions adaptees a lentreprise et flux compatibles audit.',
+    landingFeature2: 'Vues rapides pour leads, affaires et relances.',
+    landingFeature3: 'Pense pour les petites equipes qui veulent un CRM serieux.',
+    demoCredentialsTitle: 'Identifiants de demonstration',
   },
   errors: {
     ...en.errors,

@@ -14,6 +14,7 @@ import { useI18nStore, useLocalizedOrgUsers, useTranslations, getTranslations } 
 import { localizedOrganization } from '../i18n/localizeSeed'
 import { supabase } from '../lib/supabase'
 import { formatDateShort } from '../utils/formatters'
+import { Select } from '../components/ui/Select'
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   admin: <Crown size={14} />,
@@ -247,13 +248,18 @@ export function TeamManagement() {
               <input type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder={t.team.placeholderMinPassword} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
             </div>
             <div>
-              <label className="block text-xs text-fg-subtle mb-1">{t.team.role}</label>
-              <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value as UserRole })} aria-label={t.team.role} title={t.team.role} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40">
-                <option value="admin">{t.team.roleLabels.admin}</option>
-                <option value="manager">{t.team.roleLabels.manager}</option>
-                <option value="sales_rep">{t.team.roleLabels.sales_rep}</option>
-                <option value="viewer">{t.team.roleLabels.viewer}</option>
-              </select>
+              <Select
+                label={t.team.role}
+                value={newUser.role}
+                onChange={(e) => setNewUser({ ...newUser, role: e.target.value as UserRole })}
+                options={[
+                  { value: 'admin', label: t.team.roleLabels.admin },
+                  { value: 'manager', label: t.team.roleLabels.manager },
+                  { value: 'sales_rep', label: t.team.roleLabels.sales_rep },
+                  { value: 'viewer', label: t.team.roleLabels.viewer },
+                ]}
+                listMaxHeightClass="max-h-40"
+              />
             </div>
             <div>
               <label className="block text-xs text-fg-subtle mb-1">{t.team.labelJobTitle}</label>
@@ -287,11 +293,19 @@ export function TeamManagement() {
           </div>
           <div className="flex gap-3 mb-4">
             <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder={t.team.placeholderEmail} className="flex-1 bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
-            <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as UserRole)} aria-label={t.team.role} title={t.team.role} className="bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40">
-              <option value="manager">{t.team.roleLabels.manager}</option>
-              <option value="sales_rep">{t.team.roleLabels.sales_rep}</option>
-              <option value="viewer">{t.team.roleLabels.viewer}</option>
-            </select>
+            <div className="min-w-[9rem] shrink-0">
+              <Select
+                ariaLabel={t.team.role}
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value as UserRole)}
+                options={[
+                  { value: 'manager', label: t.team.roleLabels.manager },
+                  { value: 'sales_rep', label: t.team.roleLabels.sales_rep },
+                  { value: 'viewer', label: t.team.roleLabels.viewer },
+                ]}
+                listMaxHeightClass="max-h-40"
+              />
+            </div>
             <button type="button" onClick={handleInvite} disabled={isInviting} className="px-4 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">{isInviting ? t.common.loading : t.team.invite}</button>
           </div>
           <p className="text-[10px] text-fg-subtle">{t.team.invitationValidity}</p>
@@ -347,24 +361,23 @@ export function TeamManagement() {
 
                 {/* Role badge */}
                 {editingRole === user.id ? (
-                  <div className="flex items-center gap-2">
-                    <select
-                      defaultValue={user.role}
+                  <div className="flex items-center gap-2 min-w-[9rem]">
+                    <Select
+                      ariaLabel={t.team.changeRole}
+                      value={user.role}
                       onChange={(e) => {
                         changeUserRole(user.id, e.target.value as UserRole)
                         setEditingRole(null)
                         toast.success(t.team.toastRoleUpdated.replace('{name}', user.name))
                       }}
-                      className="bg-surface-2 border border-fg/10 rounded-lg px-2 py-1 text-xs text-fg outline-none appearance-none"
-                      aria-label={t.team.changeRole}
-                      title={t.team.changeRole}
-                      autoFocus
-                    >
-                      <option value="admin">{t.team.roleLabels.admin}</option>
-                      <option value="manager">{t.team.roleLabels.manager}</option>
-                      <option value="sales_rep">{t.team.roleLabels.sales_rep}</option>
-                      <option value="viewer">{t.team.roleLabels.viewer}</option>
-                    </select>
+                      options={[
+                        { value: 'admin', label: t.team.roleLabels.admin },
+                        { value: 'manager', label: t.team.roleLabels.manager },
+                        { value: 'sales_rep', label: t.team.roleLabels.sales_rep },
+                        { value: 'viewer', label: t.team.roleLabels.viewer },
+                      ]}
+                      listMaxHeightClass="max-h-40"
+                    />
                     <button type="button" onClick={() => setEditingRole(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-fg-subtle hover:text-fg">
                       <X size={12} />
                     </button>

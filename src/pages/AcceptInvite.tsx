@@ -5,6 +5,7 @@ import { Spinner } from '../components/ui/Spinner'
 import { supabase } from '../lib/supabase'
 import { useTranslations } from '../i18n'
 import { Button } from '../components/ui/Button'
+import { AuthLayout } from '../components/auth/AuthLayout'
 
 interface InvitationRow {
   id: string
@@ -76,8 +77,8 @@ export function AcceptInvite() {
       setPageState('ready')
     }
 
-    fetchInvitation()
-  }, [token])
+    void fetchInvitation()
+  }, [token, t])
 
   const handleAccept = async () => {
     if (!invitation || !supabase) return
@@ -85,16 +86,13 @@ export function AcceptInvite() {
     setPageState('joining')
 
     try {
-      // Get current authenticated user
       const { data: { user }, error: userErr } = await supabase!.auth.getUser()
 
       if (userErr || !user) {
-        // Not authenticated — redirect to login, preserve the token in returnUrl
         navigate(`/login?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`)
         return
       }
 
-      // Insert organization_members row — DB trigger will write organization_id into JWT app_metadata
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: memberErr } = await (supabase! as any)
         .from('organization_members')
@@ -106,20 +104,16 @@ export function AcceptInvite() {
 
       if (memberErr) throw new Error(memberErr.message)
 
-      // Mark invitation as accepted
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase! as any)
         .from('invitations')
         .update({ status: 'accepted' })
         .eq('id', invitation.id)
 
-      // Refresh session — the DB trigger has now set organization_id in app_metadata.
-      // After this call, onAuthStateChange fires and updates authStore.organizationId.
       const { error: refreshErr } = await supabase!.auth.refreshSession()
       if (refreshErr) throw new Error(refreshErr.message)
 
       setPageState('success')
-      // Small delay so user sees the success state before redirect
       setTimeout(() => navigate('/', { replace: true }), 1500)
     } catch (err) {
       setErrorMsg((err as Error).message)
@@ -129,20 +123,27 @@ export function AcceptInvite() {
 
   const orgName = invitation?.organizations?.name ?? t.acceptInvite.organization
 
-  // ── Render states ──────────────────────────────────────────
+  const ROLE_LABELS: Record<string, string> = {
+    admin: t.acceptInvite.roleAdmin,
+    manager: t.acceptInvite.roleManager,
+    sales_rep: t.acceptInvite.roleSalesRep,
+    viewer: t.acceptInvite.roleViewer,
+  }
 
   if (pageState === 'loading') {
     return (
-      <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
-        <Spinner size={32} className="text-accent-400" label={t.common.loading} />
-      </div>
+      <AuthLayout variant="centered" showBrandingHeader={false}>
+        <div className="flex justify-center py-12">
+          <Spinner size={32} className="text-accent-400" label={t.common.loading} />
+        </div>
+      </AuthLayout>
     )
   }
 
   if (pageState === 'error') {
     return (
-      <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
-        <div className="relative w-full max-w-md glass rounded-2xl border border-fg/10 p-8 text-center shadow-float">
+      <AuthLayout variant="centered" showBrandingHeader={false}>
+        <div className="glass rounded-2xl border border-fg/10 p-8 text-center shadow-float">
           <div className="w-14 h-14 rounded-full bg-danger/15 flex items-center justify-center mx-auto mb-4">
             <XCircle size={28} className="text-danger" aria-hidden />
           </div>
@@ -155,73 +156,62 @@ export function AcceptInvite() {
             {t.acceptInvite.loginCta}
           </Link>
         </div>
-      </div>
+      </AuthLayout>
     )
   }
 
   if (pageState === 'success') {
     return (
-      <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
-        <div className="relative w-full max-w-md glass rounded-2xl border border-fg/10 p-8 text-center shadow-float">
+      <AuthLayout variant="centered" showBrandingHeader={false}>
+        <div className="glass rounded-2xl border border-fg/10 p-8 text-center shadow-float">
           <div className="w-14 h-14 rounded-full bg-success/15 flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={28} className="text-success" aria-hidden />
           </div>
           <h1 className="text-xl font-bold text-fg mb-2">{t.acceptInvite.welcomeTo} {orgName}!</h1>
           <p className="text-sm text-fg-subtle">{t.acceptInvite.redirecting}</p>
         </div>
-      </div>
+      </AuthLayout>
     )
   }
 
-  // pageState === 'ready' || 'joining'
-  const ROLE_LABELS: Record<string, string> = {
-    admin: t.acceptInvite.roleAdmin,
-    manager: t.acceptInvite.roleManager,
-    sales_rep: t.acceptInvite.roleSalesRep,
-    viewer: t.acceptInvite.roleViewer,
-  }
-
   return (
-    <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-accent-500/20 flex items-center justify-center mb-4 border border-accent-500/25">
-            <UserPlus size={28} className="text-accent-400" aria-hidden />
-          </div>
-          <h1 className="text-2xl font-bold text-fg text-center">{t.acceptInvite.joinOrg} {orgName}</h1>
-          <p className="text-sm text-fg-subtle mt-1 text-center">
-            {t.acceptInvite.invitedToTeam}
-          </p>
+    <AuthLayout
+      variant="centered"
+      logo={(
+        <div className="w-14 h-14 rounded-2xl bg-accent-500/20 flex items-center justify-center mx-auto mb-4 border border-accent-500/25">
+          <UserPlus size={28} className="text-accent-400" aria-hidden />
         </div>
-
-        <div className="glass rounded-2xl border border-fg/10 p-5 mb-6 space-y-3 shadow-float">
-          <div className="flex justify-between text-sm">
-            <span className="text-fg-subtle">{t.acceptInvite.organization}</span>
-            <span className="text-fg font-medium">{orgName}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-fg-subtle">{t.auth.email}</span>
-            <span className="text-fg">{invitation?.email}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-fg-subtle">{t.acceptInvite.assignedRole}</span>
-            <span className="text-accent-400 font-medium">
-              {ROLE_LABELS[invitation?.role ?? ''] ?? invitation?.role}
-            </span>
-          </div>
+      )}
+      title={<h1 className="text-2xl font-bold text-fg text-center">{t.acceptInvite.joinOrg} {orgName}</h1>}
+      subtitle={<p className="text-sm text-fg-subtle mt-1 text-center">{t.acceptInvite.invitedToTeam}</p>}
+    >
+      <div className="glass rounded-2xl border border-fg/10 p-5 mb-6 space-y-3 shadow-float">
+        <div className="flex justify-between text-sm">
+          <span className="text-fg-subtle">{t.acceptInvite.organization}</span>
+          <span className="text-fg font-medium">{orgName}</span>
         </div>
-
-        <Button
-          type="button"
-          className="w-full"
-          onClick={handleAccept}
-          disabled={pageState === 'joining'}
-          loading={pageState === 'joining'}
-          leftIcon={<UserPlus size={18} />}
-        >
-          {t.acceptInvite.acceptCta}
-        </Button>
+        <div className="flex justify-between text-sm">
+          <span className="text-fg-subtle">{t.auth.email}</span>
+          <span className="text-fg">{invitation?.email}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-fg-subtle">{t.acceptInvite.assignedRole}</span>
+          <span className="text-accent-400 font-medium">
+            {ROLE_LABELS[invitation?.role ?? ''] ?? invitation?.role}
+          </span>
+        </div>
       </div>
-    </div>
+
+      <Button
+        type="button"
+        className="w-full"
+        onClick={handleAccept}
+        disabled={pageState === 'joining'}
+        loading={pageState === 'joining'}
+        leftIcon={<UserPlus size={18} aria-hidden />}
+      >
+        {t.acceptInvite.acceptCta}
+      </Button>
+    </AuthLayout>
   )
 }

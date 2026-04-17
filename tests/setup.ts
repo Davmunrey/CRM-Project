@@ -7,5 +7,5 @@ expect.extend(axeMatchers)
 
 beforeEach(() => {
   window.localStorage.clear()
-  useI18nStore.setState({ language: 'en' })
+  useI18nStore.setState({ language: 'en', languageMode: 'manual' })
 })

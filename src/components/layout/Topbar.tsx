@@ -1,6 +1,7 @@
-import { Bell, Search, LogOut, User, ChevronDown, Check, Sun, Moon, Monitor } from 'lucide-react'
+import { Bell, Search, LogOut, User, ChevronDown, Check } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
-import { DropdownMenu, DropdownMenuItem } from '../ui/DropdownMenu'
+import { DropdownMenuItem } from '../ui/DropdownMenu'
+import { ThemeSwitcher } from '../ui/ThemeSwitcher'
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useActivitiesStore } from '../../store/activitiesStore'
@@ -15,7 +16,6 @@ import { formatRelativeDate } from '../../utils/formatters'
 import { useTranslations } from '../../i18n'
 import type { Activity, CRMNotification } from '../../types'
 import type { FollowUpReminder } from '../../types'
-import type { ThemePreference } from '../../lib/theme'
 
 interface TopbarProps {
   title: string
@@ -31,10 +31,6 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
   const t = useTranslations()
   const [showNotifs, setShowNotifs] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showThemeMenu, setShowThemeMenu] = useState(false)
-  const [themePreference, setThemePreference] = useState<ThemePreference>(
-    () => useSettingsStore.getState().settings.themePreference ?? 'system',
-  )
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
   const navigate = useNavigate()
 
@@ -47,7 +43,6 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
   useEffect(() => {
     const unsub = useSettingsStore.subscribe((s) => {
       setBranding(s.settings.branding)
-      setThemePreference(s.settings.themePreference ?? 'system')
     })
     return unsub
   }, [])
@@ -97,7 +92,6 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowNotifs(false)
-        setShowThemeMenu(false)
       }
     }
     document.addEventListener('keydown', handleKey)
@@ -110,43 +104,7 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
         <span className="text-fg-subtle mr-1">{branding.appName} ·</span> {title}
       </h1>
 
-      {/* Theme (persists via settings store; App applies document theme) */}
-      <DropdownMenu
-        open={showThemeMenu}
-        onOpenChange={setShowThemeMenu}
-        align="end"
-        trigger={(
-          <button
-            type="button"
-            aria-haspopup="menu"
-            aria-expanded={showThemeMenu}
-            aria-label={t.settings.theme}
-            title={t.settings.theme}
-            onClick={() => setShowThemeMenu((v) => !v)}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
-          >
-            {themePreference === 'light' ? <Sun size={18} /> : themePreference === 'dark' ? <Moon size={18} /> : <Monitor size={18} />}
-          </button>
-        )}
-      >
-        {(['light', 'dark', 'system'] as const).map((pref) => (
-          <DropdownMenuItem
-            key={pref}
-            onClick={() => {
-              useSettingsStore.getState().updateThemePreference(pref)
-              setShowThemeMenu(false)
-            }}
-          >
-            <span className="flex w-full items-center justify-between gap-2">
-              <span className="flex items-center gap-2">
-                {pref === 'light' ? <Sun size={14} /> : pref === 'dark' ? <Moon size={14} /> : <Monitor size={14} />}
-                {pref === 'light' ? t.settings.themeLight : pref === 'dark' ? t.settings.themeDark : t.settings.themeSystem}
-              </span>
-              {themePreference === pref ? <Check size={14} className="text-accent-400 shrink-0" /> : null}
-            </span>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenu>
+      <ThemeSwitcher variant="inline" />
 
       {/* Command palette trigger */}
       <button

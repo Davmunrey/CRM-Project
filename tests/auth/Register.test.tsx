@@ -31,8 +31,6 @@ function renderRegister() {
 
 async function fillAndSubmit() {
   const user = userEvent.setup({ delay: null })
-  const companyInput = screen.getByPlaceholderText(/companies|empresa/i)
-  await user.type(companyInput, 'Test Corp')
   await user.type(screen.getByPlaceholderText(/name|nombre/i), 'Test User')
   await user.type(screen.getByPlaceholderText(/you@company\.com|tu@empresa\.com/i), 'test@example.com')
   await user.type(screen.getByPlaceholderText(/password|contraseña/i), 'password123')
@@ -53,7 +51,7 @@ describe('Register', () => {
       expect(mockSignUp).toHaveBeenCalledWith({
         email: 'test@example.com',
         password: 'password123',
-        options: { data: { full_name: 'Test User', org_name: 'Test Corp' } },
+        options: { data: { full_name: 'Test User', org_name: 'example.com' } },
       })
     })
   }, 15000)

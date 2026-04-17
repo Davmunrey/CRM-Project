@@ -28,7 +28,7 @@ export function ContactForm({ contact, onSubmit, onCancel, isLoading }: ContactF
   const orgUsers = useLocalizedOrgUsers(useAuthStore((s) => s.users))
   const schema = useMemo(() => createContactSchema(t), [t])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       firstName: contact?.firstName ?? '',
@@ -55,16 +55,19 @@ export function ContactForm({ contact, onSubmit, onCancel, isLoading }: ContactF
       <Input label={t.contacts.jobTitle} {...register('jobTitle')} />
 
       <Select
+        control={control}
+        name="companyId"
         label={t.contacts.company}
         options={[
           { value: '', label: t.contacts.noCompany },
           ...companies.map((c) => ({ value: c.id, label: c.name })),
         ]}
-        {...register('companyId')}
       />
 
       <div className="grid grid-cols-2 gap-4">
         <Select
+          control={control}
+          name="status"
           label={t.common.status}
           required
           options={[
@@ -73,9 +76,10 @@ export function ContactForm({ contact, onSubmit, onCancel, isLoading }: ContactF
             { value: 'churned', label: t.contacts.statusLabels.churned },
           ]}
           error={errors.status?.message}
-          {...register('status')}
         />
         <Select
+          control={control}
+          name="source"
           label={t.contacts.source}
           required
           options={[
@@ -87,16 +91,16 @@ export function ContactForm({ contact, onSubmit, onCancel, isLoading }: ContactF
             { value: 'other', label: t.contacts.sourceLabels.other },
           ]}
           error={errors.source?.message}
-          {...register('source')}
         />
       </div>
 
       <Select
+        control={control}
+        name="assignedTo"
         label={t.common.assignedTo}
         required
         options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
         error={errors.assignedTo?.message}
-        {...register('assignedTo')}
       />
 
       <Textarea label={t.common.notes} rows={3} {...register('notes')} />

@@ -43,17 +43,6 @@ export const COMPANY_SIZE_OPTIONS = [
   '1000+',
 ]
 
-export const COMPANY_INDUSTRY_LABELS: Record<string, string> = {
-  fintech: 'Fintech',
-  saas: 'SaaS',
-  consulting: 'Consultoría',
-  insurance: 'Seguros',
-  banking: 'Banca',
-  retail: 'Retail',
-  healthcare: 'Salud',
-  other: 'Otro',
-}
-
 // ─── Deal ─────────────────────────────────────────────────────────────────────
 
 export const DEAL_STAGE_LABELS: Record<DealStage, string> = {

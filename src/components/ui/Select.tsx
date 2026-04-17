@@ -1,77 +1,74 @@
-import type { SelectHTMLAttributes } from 'react'
-import { forwardRef, useId } from 'react'
-import { ChevronDown } from 'lucide-react'
+import type { ChangeEvent } from 'react'
+import type { Control, FieldPath, FieldValues } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
+import { SearchableSelect, type SearchableSelectProps } from './SearchableSelect'
+import { useTranslations } from '../../i18n'
 
-interface SelectOption {
-  value: string
-  label: string
-}
+export type { SearchableSelectOption as SelectOption } from './SearchableSelect'
 
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string
-  hint?: string
-  error?: string
-  options: SelectOption[]
-  placeholder?: string
-}
+type SearchableBase = Omit<SearchableSelectProps, 'value' | 'onChange' | 'onBlur'>
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, hint, error, options, placeholder, className = '', id, ...props }, ref) => {
-    const genId = useId()
-    const selectId = id ?? genId
-    const errId = `${selectId}-error`
-    const hintId = `${selectId}-hint`
-    const describedBy = [hint ? hintId : '', error ? errId : ''].filter(Boolean).join(' ') || undefined
+export type SelectProps<T extends FieldValues = FieldValues> =
+  | (SearchableBase & {
+      control: Control<T>
+      name: FieldPath<T>
+      value?: never
+      onChange?: never
+      onBlur?: never
+    })
+  | (SearchableBase & {
+      value: string
+      onChange: (e: ChangeEvent<HTMLSelectElement>) => void
+      onBlur?: () => void
+      control?: never
+      name?: never
+    })
 
+/**
+ * All dropdowns use the searchable panel (`SearchableSelect`).
+ * - Forms: pass `control` + `name` (react-hook-form `Controller` inside).
+ * - Filters / settings: pass `value` + `onChange` (synthetic change event for `e.target.value`).
+ */
+export function Select<T extends FieldValues>(props: SelectProps<T>) {
+  const t = useTranslations()
+  const searchPlaceholder = props.searchPlaceholder ?? t.common.searchPlaceholder
+  const emptyLabel = props.emptyLabel ?? t.common.noResults
+
+  if ('control' in props && props.control) {
+    const { control, name, ...rest } = props
     return (
-      <div className="flex flex-col gap-1.5">
-        {label && (
-          <label htmlFor={selectId} className="text-sm font-medium text-fg-muted">
-            {label}
-            {props.required && <span className="text-danger ml-1">*</span>}
-          </label>
-        )}
-        <div className="relative">
-          <select
-            id={selectId}
-            ref={ref}
-            aria-invalid={error ? true : undefined}
-            aria-describedby={describedBy}
-            className={`
-              focus-ring w-full appearance-none rounded-xl border bg-surface-2 text-fg text-sm
-              focus-visible:border-accent-500/50
-              disabled:opacity-50 disabled:cursor-not-allowed
-              transition-all duration-base pl-3 pr-8 py-2 min-h-control hover:border-border-strong
-              ${error ? 'border-danger/50 focus-visible:ring-danger/30' : 'border-border-subtle'}
-              ${className}
-            `}
-            {...props}
-          >
-            {placeholder && <option value="">{placeholder}</option>}
-            {options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            size={14}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none"
+      <Controller
+        control={control}
+        name={name}
+        render={({ field, fieldState }) => (
+          <SearchableSelect
+            {...rest}
+            searchPlaceholder={searchPlaceholder}
+            emptyLabel={emptyLabel}
+            value={field.value ?? ''}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+            error={fieldState.error?.message ?? rest.error}
           />
-        </div>
-        {hint && (
-          <p id={hintId} className="text-xs text-fg-muted">
-            {hint}
-          </p>
         )}
-        {error && (
-          <p id={errId} role="alert" className="text-xs text-danger">
-            {error}
-          </p>
-        )}
-      </div>
+      />
     )
-  },
-)
+  }
 
-Select.displayName = 'Select'
+  const { value, onChange, onBlur, ...rest } = props as SearchableBase & {
+    value: string
+    onChange: (e: ChangeEvent<HTMLSelectElement>) => void
+    onBlur?: () => void
+  }
+
+  return (
+    <SearchableSelect
+      {...rest}
+      searchPlaceholder={searchPlaceholder}
+      emptyLabel={emptyLabel}
+      value={value}
+      onChange={(v) => onChange({ target: { value: v } } as ChangeEvent<HTMLSelectElement>)}
+      onBlur={onBlur}
+    />
+  )
+}

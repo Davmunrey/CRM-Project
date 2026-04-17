@@ -10,7 +10,8 @@ import { Button } from '../ui/Button'
 import type { Company } from '../../types'
 import { COMPANY_SIZE_OPTIONS } from '../../utils/constants'
 import { CustomFieldsForm } from '../shared/CustomFieldRenderer'
-import { useTranslations } from '../../i18n'
+import { useTranslations, useUiLanguage } from '../../i18n'
+import { getIndustryOptions, normalizeIndustryValue } from '../../lib/industries'
 
 type FormValues = z.infer<ReturnType<typeof createCompanySchema>>
 
@@ -22,13 +23,15 @@ interface CompanyFormProps {
 
 export function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
   const t = useTranslations()
+  const uiLang = useUiLanguage()
+  const industryOptions = useMemo(() => getIndustryOptions(uiLang), [uiLang])
   const schema = useMemo(() => createCompanySchema(t), [t])
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: company?.name ?? '',
       domain: company?.domain ?? '',
-      industry: company?.industry ?? 'saas',
+      industry: normalizeIndustryValue(company?.industry ?? '4'),
       size: company?.size ?? '',
       country: company?.country ?? '',
       city: company?.city ?? '',
@@ -56,25 +59,20 @@ export function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <Select
+          control={control}
+          name="industry"
           label={t.companies.industry}
           required
-          options={[
-            { value: 'fintech', label: t.companies.industryLabels.fintech },
-            { value: 'saas', label: t.companies.industryLabels.saas },
-            { value: 'consulting', label: t.companies.industryLabels.consulting },
-            { value: 'insurance', label: t.companies.industryLabels.insurance },
-            { value: 'banking', label: t.companies.industryLabels.banking },
-            { value: 'retail', label: t.companies.industryLabels.retail },
-            { value: 'healthcare', label: t.companies.industryLabels.healthcare },
-            { value: 'other', label: t.companies.industryLabels.other },
-          ]}
-          {...register('industry')}
+          options={industryOptions}
+          error={errors.industry?.message}
+          listMaxHeightClass="max-h-64"
         />
         <Select
+          control={control}
+          name="size"
           label={t.companies.size}
           options={COMPANY_SIZE_OPTIONS.map((s) => ({ value: s, label: s }))}
           placeholder={t.common.select}
-          {...register('size')}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -84,6 +82,8 @@ export function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
       <Input label={t.companies.website} type="url" placeholder={t.companies.websiteUrlPlaceholder} {...register('website')} />
       <div className="grid grid-cols-2 gap-4">
         <Select
+          control={control}
+          name="status"
           label={t.common.status}
           options={[
             { value: 'prospect', label: t.companies.statusLabels.prospect },
@@ -91,7 +91,6 @@ export function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
             { value: 'partner', label: t.companies.statusLabels.partner },
             { value: 'churned', label: t.companies.statusLabels.churned },
           ]}
-          {...register('status')}
         />
         <Input label={t.companies.revenue} type="number" {...register('revenue')} />
       </div>

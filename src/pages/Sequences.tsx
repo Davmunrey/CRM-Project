@@ -11,6 +11,7 @@ import { toast } from '../store/toastStore'
 import { getTranslations, useI18nStore, useTranslations } from '../i18n'
 import { localizedEmailSequence } from '../i18n/localizeSeed'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
+import { Select } from '../components/ui/Select'
 import { formatDateShort } from '../utils/formatters'
 import type {
   EmailSequence,
@@ -110,21 +111,19 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-fg-muted mb-2">{t.contacts.title}</label>
-            <select
+            <Select
+              label={t.contacts.title}
               value={selectedContactId}
               onChange={(e) => setSelectedContactId(e.target.value)}
-              aria-label={t.contacts.title}
-              title={t.contacts.title}
-              className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-2.5 text-fg text-sm focus:outline-none focus:border-accent-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
-            >
-              <option value="">— {t.common.selectAll} —</option>
-              {contacts.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.firstName} {c.lastName} {c.email ? `(${c.email})` : ''}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: `— ${t.common.selectAll} —` },
+                ...contacts.map((c) => ({
+                  value: c.id,
+                  label: `${c.firstName} ${c.lastName}${c.email ? ` (${c.email})` : ''}`,
+                })),
+              ]}
+              listMaxHeightClass="max-h-64"
+            />
           </div>
 
           <div className="flex items-center gap-3 pt-2">
@@ -171,18 +170,16 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
       <div className="flex-1 grid grid-cols-2 gap-3">
         {/* Type */}
         <div>
-          <label className="block text-[10px] font-medium text-fg-subtle mb-1">{t.common.type}</label>
-          <select
+          <Select
+            label={t.common.type}
             value={step.type}
             onChange={(e) => onChange({ ...step, type: e.target.value as SequenceStepType })}
-            aria-label={t.common.type}
-            title={t.common.type}
-            className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-fg text-xs focus:outline-none focus:border-accent-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
-          >
-            {(Object.keys(stepTypeLabels) as SequenceStepType[]).map((k) => (
-              <option key={k} value={k}>{stepTypeLabels[k]}</option>
-            ))}
-          </select>
+            options={(Object.keys(stepTypeLabels) as SequenceStepType[]).map((k) => ({
+              value: k,
+              label: stepTypeLabels[k],
+            }))}
+            listMaxHeightClass="max-h-48"
+          />
         </div>
 
         {/* Delay */}

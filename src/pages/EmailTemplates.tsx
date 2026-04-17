@@ -7,6 +7,7 @@ import { PermissionGate } from '../components/auth/PermissionGate'
 import { getTranslations, useI18nStore, useTranslations } from '../i18n'
 import { localizedEmailTemplate } from '../i18n/localizeSeed'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
+import { Select } from '../components/ui/Select'
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -437,21 +438,27 @@ export function EmailTemplates() {
 
                 {/* Category */}
                 <div>
-                  <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.emailTemplates.category}</label>
                   {preview ? (
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${CATEGORY_COLORS[draftCategory]}`}>
-                      {categoryLabels[draftCategory]}
-                    </span>
+                    <>
+                      <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.emailTemplates.category}</label>
+                      <span className={`text-xs font-medium px-3 py-1 rounded-full ${CATEGORY_COLORS[draftCategory]}`}>
+                        {categoryLabels[draftCategory]}
+                      </span>
+                    </>
                   ) : (
-                    <select
+                    <Select
+                      label={t.emailTemplates.category}
                       value={draftCategory}
-                      onChange={(e) => { setDraftCategory(e.target.value as EmailTemplate['category']); markDirty() }}
-                      className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-2.5 text-fg text-sm focus:outline-none focus:border-accent-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
-                    >
-                      {Object.entries(categoryLabels).map(([val, label]) => (
-                        <option key={val} value={val}>{label}</option>
-                      ))}
-                    </select>
+                      onChange={(e) => {
+                        setDraftCategory(e.target.value as EmailTemplate['category'])
+                        markDirty()
+                      }}
+                      options={Object.entries(categoryLabels).map(([val, lab]) => ({
+                        value: val,
+                        label: lab,
+                      }))}
+                      listMaxHeightClass="max-h-56"
+                    />
                   )}
                 </div>
 

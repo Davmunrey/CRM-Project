@@ -8,6 +8,8 @@ interface DropdownMenuProps {
   children: ReactNode
   align?: 'start' | 'end'
   className?: string
+  /** Appended to the floating menu panel (e.g. z-index, max-height). */
+  contentClassName?: string
 }
 
 /**
@@ -20,6 +22,7 @@ export function DropdownMenu({
   children,
   align = 'end',
   className = '',
+  contentClassName = '',
 }: DropdownMenuProps) {
   useEffect(() => {
     if (!open) return
@@ -42,7 +45,7 @@ export function DropdownMenu({
           />
           <div
             className={`absolute z-dropdown top-full mt-1 min-w-[200px] rounded-xl border border-border-subtle bg-surface-1 py-1 shadow-lg
-              ${align === 'end' ? 'right-0' : 'left-0'}`}
+              ${align === 'end' ? 'right-0' : 'left-0'} ${contentClassName}`.trim()}
             role="menu"
           >
             {children}

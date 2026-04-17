@@ -12,7 +12,7 @@ import { useI18nStore } from '../../src/i18n'
 import { useSettingsStore } from '../../src/store/settingsStore'
 
 beforeEach(() => {
-  useI18nStore.setState({ language: 'es' })
+  useI18nStore.setState({ language: 'es', languageMode: 'manual' })
   useSettingsStore.setState((state) => ({
     settings: {
       ...state.settings,

@@ -458,6 +458,10 @@ export const es: Translations = {
     general: 'General',
     currency: 'Moneda',
     language: 'Idioma',
+    languageModeBrowser: 'Seguir idioma del navegador',
+    languageModeManual: 'Idioma fijo',
+    languageModeHelp:
+      'El modo navegador se actualiza si cambias el idioma del SO o del navegador. El modo fijo mantiene el idioma que elijas abajo.',
     theme: 'Tema',
     themeSystem: 'Sistema',
     themeLight: 'Claro',
@@ -1052,6 +1056,15 @@ export const es: Translations = {
     connecting: 'Conectando',
     companyDomainRequired: 'Introduce el correo o dominio de tu empresa para continuar con SAML SSO.',
     demoLogin: 'Acceso demo',
+    landingTagline: 'Pipeline, bandeja y equipo en un solo espacio tranquilo.',
+    landingFeature1: 'Permisos listos para empresa y flujos compatibles con auditoría.',
+    landingFeature2: 'Vistas rápidas para leads, negocios y seguimientos.',
+    landingFeature3: 'Pensado para equipos pequeños que quieren un CRM serio.',
+    demoCredentialsTitle: 'Credenciales de demo',
+    googleSsoUseCompanySso: 'Google SSO está desactivado para este tenant. Usa el SSO de tu empresa.',
+    googleSsoUnavailable: 'Google SSO no está disponible para esta cuenta.',
+    passwordShowAria: 'Mostrar contraseña',
+    passwordHideAria: 'Ocultar contraseña',
   },
 
   // ─── Org Setup ───────────────────────────────────────────────────────────────
@@ -1220,6 +1233,7 @@ export const es: Translations = {
     dealExpectedCloseRequired: 'Fecha obligatoria',
     dealAssignedToRequired: 'Obligatorio',
     companyNameRequired: 'Nombre de empresa obligatorio',
+    companyIndustryRequired: 'La industria es obligatoria',
   },
 
   // ─── Email ───────────────────────────────────────────────────────────────────

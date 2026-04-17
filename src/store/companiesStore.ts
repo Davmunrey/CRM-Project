@@ -4,6 +4,7 @@ import type { Company, CompanyFilters } from '../types'
 import { seedCompanies } from '../utils/seedData'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
+import { normalizeIndustryValue } from '../lib/industries'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = () => supabase as any
@@ -13,7 +14,7 @@ function rowToCompany(row: Record<string, unknown>): Company {
     id: row.id as string,
     name: (row.name as string) ?? '',
     domain: (row.domain as string) ?? '',
-    industry: (row.industry as Company['industry']) ?? 'other',
+    industry: normalizeIndustryValue(String(row.industry ?? '')),
     size: (row.size as string) ?? '',
     country: (row.country as string) ?? '',
     city: (row.city as string) ?? '',

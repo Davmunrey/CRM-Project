@@ -8,6 +8,7 @@ import { useTranslations } from '../i18n'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
+import { AuthLayout } from '../components/auth/AuthLayout'
 
 export function OrgSetup() {
   const navigate = useNavigate()
@@ -97,23 +98,17 @@ export function OrgSetup() {
   }
 
   return (
-    <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="auth-bg-blob absolute top-1/4 left-1/4 w-96 h-96 bg-accent-600/10 rounded-full blur-3xl" />
-        <div className="auth-bg-blob absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-600/8 rounded-full blur-3xl" />
-      </div>
-      <div className="relative w-full max-w-md">
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-accent-500/20 flex items-center justify-center mb-4">
-            <Building2 size={28} className="text-accent-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-fg">{t.orgSetup.title}</h1>
-          <p className="text-sm text-fg-muted mt-1 text-center">
-            {t.orgSetup.subtitle}
-          </p>
+    <AuthLayout
+      variant="centered"
+      logo={(
+        <div className="w-14 h-14 rounded-2xl bg-accent-500/20 flex items-center justify-center mx-auto mb-4 border border-accent-500/25">
+          <Building2 size={28} className="text-accent-400" aria-hidden />
         </div>
-
-        <Card className="p-6">
+      )}
+      title={<h1 className="text-2xl font-bold text-fg">{t.orgSetup.title}</h1>}
+      subtitle={<p className="text-sm text-fg-muted mt-1 text-center">{t.orgSetup.subtitle}</p>}
+    >
+      <Card className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label={t.orgSetup.orgNameLabel}
@@ -229,8 +224,7 @@ export function OrgSetup() {
             {t.orgSetup.createButton}
           </Button>
         </form>
-        </Card>
-      </div>
-    </div>
+      </Card>
+    </AuthLayout>
   )
 }

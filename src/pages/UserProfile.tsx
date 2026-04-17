@@ -93,7 +93,7 @@ export function UserProfile() {
             <button
               type="button"
               onClick={() => { setForm({ name: currentUser.name, jobTitle: currentUser.jobTitle, phone: currentUser.phone || '' }); setEditing(true) }}
-              className="text-xs text-accent-500 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 font-medium transition-colors"
+              className="text-xs text-accent-400 hover:text-accent-300 font-medium transition-colors"
             >
               {t.common.edit}
             </button>
@@ -180,7 +180,7 @@ export function UserProfile() {
             <button
               type="button"
               onClick={() => setChangingPw(true)}
-              className="text-xs text-accent-500 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 font-medium transition-colors"
+              className="text-xs text-accent-400 hover:text-accent-300 font-medium transition-colors"
             >
               {t.auth.savePassword}
             </button>

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
+import { useState } from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { Button } from '../../src/components/ui/Button'
 import { Input } from '../../src/components/ui/Input'
@@ -86,17 +87,22 @@ describe('Select', () => {
   ]
 
   it('links a hint paragraph via aria-describedby', () => {
-    render(
-      <Select
-        label="Density"
-        hint="Controls row height."
-        id="density"
-        options={options}
-        defaultValue="comfortable"
-      />,
-    )
-    const select = screen.getByLabelText('Density') as HTMLSelectElement
-    const describedBy = select.getAttribute('aria-describedby') || ''
+    function DensitySelect() {
+      const [v, setV] = useState('comfortable')
+      return (
+        <Select
+          label="Density"
+          hint="Controls row height."
+          id="density"
+          options={options}
+          value={v}
+          onChange={(e) => setV(e.target.value)}
+        />
+      )
+    }
+    render(<DensitySelect />)
+    const trigger = screen.getByLabelText('Density')
+    const describedBy = trigger.getAttribute('aria-describedby') || ''
     expect(describedBy).toContain('density-hint')
     const hint = document.getElementById('density-hint')
     expect(hint).not.toBeNull()
@@ -104,7 +110,13 @@ describe('Select', () => {
   })
 
   it('surfaces validation error with role alert', () => {
-    render(<Select label="X" error="Invalid" options={options} />)
+    function ErrSelect() {
+      const [v, setV] = useState('')
+      return (
+        <Select label="X" error="Invalid" options={options} value={v} onChange={(e) => setV(e.target.value)} />
+      )
+    }
+    render(<ErrSelect />)
     expect(screen.getByRole('alert')).toHaveTextContent('Invalid')
   })
 })

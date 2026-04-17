@@ -128,6 +128,12 @@
     border-color: color-mix(in srgb, var(--border-soft) 85%, #000 15%);
   }
 
+  /* Auth shell: gradient over semantic base (pair with `bg-surface-0` for min surface). */
+  .auth-page-bg {
+    background-image: var(--auth-page-gradient-dark);
+    background-color: rgb(var(--color-surface-0));
+  }
+
   /* ── Gradient text ───────────────────────────────────── */
   .text-gradient {
     background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
@@ -324,7 +330,8 @@
      overrides where Tailwind utility colors still need a readable light pass. */
 
   .light .auth-page-bg {
-    background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%) !important;
+    background-image: var(--auth-page-gradient-light);
+    background-color: rgb(var(--color-surface-0));
   }
 
   .light .auth-bg-blob {

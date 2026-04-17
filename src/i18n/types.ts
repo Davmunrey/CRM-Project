@@ -549,6 +549,9 @@ export interface Translations {
     general: string
     currency: string
     language: string
+    languageModeBrowser: string
+    languageModeManual: string
+    languageModeHelp: string
     theme: string
     themeSystem: string
     themeLight: string
@@ -1141,6 +1144,15 @@ export interface Translations {
     connecting: string
     companyDomainRequired: string
     demoLogin: string
+    landingTagline: string
+    landingFeature1: string
+    landingFeature2: string
+    landingFeature3: string
+    demoCredentialsTitle: string
+    googleSsoUseCompanySso: string
+    googleSsoUnavailable: string
+    passwordShowAria: string
+    passwordHideAria: string
   }
 
   // ─── Org Setup ───────────────────────────────────────────────────────────────
@@ -1319,6 +1331,7 @@ export interface Translations {
     dealExpectedCloseRequired: string
     dealAssignedToRequired: string
     companyNameRequired: string
+    companyIndustryRequired: string
   }
 
   // ─── Email ───────────────────────────────────────────────────────────────────

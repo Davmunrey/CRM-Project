@@ -62,7 +62,8 @@ export function Settings() {
     { id: 'navigation', label: t.settings.tabNavigation },
     { id: 'advanced', label: t.settings.tabAdvanced },
   ]
-  const { language, setLanguage } = useI18nStore()
+  const { language, setLanguage, languageMode, setLanguageMode } = useI18nStore()
+  const resolvedLanguageMode = languageMode ?? 'manual'
   const { settings, updateThemePreference, updateUiDensity, updateCurrency, updateLeadSlaHours, updatePermissionProfile, updateBranding, updateGoogleClientId, addTag, removeTag, resetToDefaults, reorderStages, addPipelineStage } = useSettingsStore()
   const { disabledTypes, toggleType } = useNotificationsStore()
   const contactsStore = useContactsStore()
@@ -799,6 +800,34 @@ export function Settings() {
           ))}
         </div>
 
+        <div className="mt-5 space-y-2">
+          <p className="text-xs font-medium text-fg-muted">{t.settings.languageModeHelp}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setLanguageMode('browser')}
+              className={`inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+                resolvedLanguageMode === 'browser'
+                  ? 'bg-accent-500/15 border-accent-500/40 text-fg shadow-brand-sm'
+                  : 'bg-fg/4 border-fg/8 text-fg-muted hover:text-fg hover:border-fg/15'
+              }`}
+            >
+              {t.settings.languageModeBrowser}
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanguageMode('manual')}
+              className={`inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+                resolvedLanguageMode === 'manual'
+                  ? 'bg-accent-500/15 border-accent-500/40 text-fg shadow-brand-sm'
+                  : 'bg-fg/4 border-fg/8 text-fg-muted hover:text-fg hover:border-fg/15'
+              }`}
+            >
+              {t.settings.languageModeManual}
+            </button>
+          </div>
+        </div>
+
         <div className="mt-4 max-w-xs space-y-4">
           <Select
             label={t.settings.theme}
@@ -1036,21 +1065,14 @@ export function Settings() {
                   className="w-full bg-surface-2 border border-fg/8 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/40"
                 />
               </div>
-              <div className="w-44">
-                <label className="text-xs font-medium text-fg-muted block mb-1">{t.settings.fieldType}</label>
-                <select
+              <div className="w-44 min-w-0">
+                <Select
+                  label={t.settings.fieldType}
                   value={cfFieldType}
                   onChange={(e) => setCfFieldType(e.target.value as CustomFieldType)}
-                  aria-label={t.settings.fieldType}
-                  title={t.settings.fieldType}
-                  className="w-full bg-surface-2 border border-fg/8 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 appearance-none cursor-pointer"
-                >
-                  {FIELD_TYPES.map((ft) => (
-                    <option key={ft} value={ft} className="bg-surface-1 text-fg">
-                      {t.settings.fieldTypeLabels[ft]}
-                    </option>
-                  ))}
-                </select>
+                  options={FIELD_TYPES.map((ft) => ({ value: ft, label: t.settings.fieldTypeLabels[ft] }))}
+                  listMaxHeightClass="max-h-56"
+                />
               </div>
             </div>
 

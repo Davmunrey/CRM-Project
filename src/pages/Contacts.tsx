@@ -66,6 +66,8 @@ export function Contacts() {
   const [showBulkDelete, setShowBulkDelete] = useState(false)
   const [showDuplicates, setShowDuplicates] = useState(false)
   const [viewFilters, setViewFilters] = useState<SmartViewFilter[]>([])
+  const [bulkContactStatus, setBulkContactStatus] = useState('')
+  const [bulkContactAssign, setBulkContactAssign] = useState('')
 
   const getCompanyName = useCallback(
     (id: string) => localizedCompanies.find((c) => c.id === id)?.name ?? '—',
@@ -224,43 +226,48 @@ export function Contacts() {
               <span className="text-xs text-fg-muted">{selectedIds.size} {t.common.selected}</span>
 
               {/* Mass Status Update */}
-              <select
-                onChange={(e) => {
-                  if (!e.target.value) return
-                  const status = e.target.value as ContactStatus
-                  selectedIds.forEach(id => updateContact(id, { status }))
-                  toast.success(`${selectedIds.size} ${t.common.selected} → ${t.contacts.statusLabels[status]}`)
-                  setSelectedIds(new Set())
-                  e.target.value = ''
-                }}
-                className="bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-xs text-fg-muted outline-none"
-                defaultValue=""
-                aria-label={t.common.changeStatus}
-                title={t.common.changeStatus}
-              >
-                <option value="" disabled>{t.common.changeStatus}...</option>
-                <option value="prospect">{t.contacts.statusLabels.prospect}</option>
-                <option value="customer">{t.contacts.statusLabels.customer}</option>
-                <option value="churned">{t.contacts.statusLabels.churned}</option>
-              </select>
+              <div className="min-w-[9rem] max-w-[13rem]">
+                <Select
+                  ariaLabel={t.common.changeStatus}
+                  value={bulkContactStatus}
+                  onChange={(e) => {
+                    const status = e.target.value as ContactStatus
+                    if (!status) return
+                    selectedIds.forEach((id) => updateContact(id, { status }))
+                    toast.success(`${selectedIds.size} ${t.common.selected} → ${t.contacts.statusLabels[status]}`)
+                    setSelectedIds(new Set())
+                    setBulkContactStatus('')
+                  }}
+                  options={[
+                    { value: '', label: `${t.common.changeStatus}...` },
+                    { value: 'prospect', label: t.contacts.statusLabels.prospect },
+                    { value: 'customer', label: t.contacts.statusLabels.customer },
+                    { value: 'churned', label: t.contacts.statusLabels.churned },
+                  ]}
+                  listMaxHeightClass="max-h-48"
+                />
+              </div>
 
               {/* Mass Assign */}
-              <select
-                onChange={(e) => {
-                  if (!e.target.value) return
-                  selectedIds.forEach(id => updateContact(id, { assignedTo: e.target.value }))
-                  toast.success(`${selectedIds.size} ${t.common.assignedTo}`)
-                  setSelectedIds(new Set())
-                  e.target.value = ''
-                }}
-                className="bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-xs text-fg-muted outline-none"
-                defaultValue=""
-                aria-label={t.common.assignedTo}
-                title={t.common.assignedTo}
-              >
-                <option value="" disabled>{t.common.assignedTo}...</option>
-                {orgUsers.map(u => <option key={u.id} value={u.name}>{u.name}</option>)}
-              </select>
+              <div className="min-w-[9rem] max-w-[13rem]">
+                <Select
+                  ariaLabel={t.common.assignedTo}
+                  value={bulkContactAssign}
+                  onChange={(e) => {
+                    const name = e.target.value
+                    if (!name) return
+                    selectedIds.forEach((id) => updateContact(id, { assignedTo: name }))
+                    toast.success(`${selectedIds.size} ${t.common.assignedTo}`)
+                    setSelectedIds(new Set())
+                    setBulkContactAssign('')
+                  }}
+                  options={[
+                    { value: '', label: `${t.common.assignedTo}...` },
+                    ...orgUsers.map((u) => ({ value: u.name, label: u.name })),
+                  ]}
+                  listMaxHeightClass="max-h-56"
+                />
+              </div>
 
               {/* Mass Tag */}
               <div className="flex items-center gap-1">
@@ -608,7 +615,7 @@ export function Contacts() {
                     ? 'bg-info/15 text-info border-info/20'
                     : group.matchType === 'name'
                       ? 'bg-warning/15 text-warning border-warning/20'
-                      : 'bg-accent-500/15 text-accent-400 border-purple-500/20'
+                      : 'bg-accent-500/15 text-accent-400 border-accent-500/25'
 
                 return (
                   <div key={groupIndex} className="glass border border-fg/8 rounded-xl p-4 space-y-3">

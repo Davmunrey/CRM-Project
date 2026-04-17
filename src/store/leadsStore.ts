@@ -9,6 +9,7 @@ import { useAuditStore } from './auditStore'
 import { useNotificationsStore } from './notificationsStore'
 import { useAuthStore } from './authStore'
 import { getTranslations } from '../i18n'
+import { normalizeIndustryValue } from '../lib/industries'
 import { toast } from './toastStore'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -609,7 +610,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
           const company = useCompaniesStore.getState().addCompany({
             name: lead.companyName,
             domain: '',
-            industry: 'other',
+            industry: normalizeIndustryValue('other'),
             size: '0-10',
             country: '',
             city: '',

@@ -40,7 +40,7 @@ export function DealForm({ deal, onSubmit, onCancel }: DealFormProps) {
   const schema = useMemo(() => createDealSchema(t, availableStages), [t, availableStages])
   const defaultStage = stageOptions[0]?.value ?? 'lead'
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: deal?.title ?? '',
@@ -81,25 +81,28 @@ export function DealForm({ deal, onSubmit, onCancel }: DealFormProps) {
       <div className="grid grid-cols-2 gap-4">
         <Input label={t.common.value} type="number" required error={errors.value?.message} {...register('value')} />
         <Select
+          control={control}
+          name="currency"
           label={t.settings.currency}
           options={[{ value: 'EUR', label: 'EUR €' }, { value: 'USD', label: 'USD $' }, { value: 'GBP', label: 'GBP £' }]}
-          {...register('currency')}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <Select
+          control={control}
+          name="stage"
           label={t.deals.stage}
           options={stageOptions}
-          {...register('stage')}
         />
         <Select
+          control={control}
+          name="priority"
           label={t.common.priority}
           options={[
             { value: 'low', label: t.deals.priorityLabels.low },
             { value: 'medium', label: t.deals.priorityLabels.medium },
             { value: 'high', label: t.deals.priorityLabels.high },
           ]}
-          {...register('priority')}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -107,21 +110,24 @@ export function DealForm({ deal, onSubmit, onCancel }: DealFormProps) {
         <Input label={t.deals.expectedClose} type="date" required error={errors.expectedCloseDate?.message} {...register('expectedCloseDate')} />
       </div>
       <Select
+        control={control}
+        name="contactId"
         label={t.deals.contact}
         options={[{ value: '', label: t.common.noResults }, ...contacts.map((c) => ({ value: c.id, label: `${c.firstName} ${c.lastName}` }))]}
-        {...register('contactId')}
       />
       <Select
+        control={control}
+        name="companyId"
         label={t.deals.company}
         options={[{ value: '', label: t.common.noResults }, ...companies.map((c) => ({ value: c.id, label: c.name }))]}
-        {...register('companyId')}
       />
       <div className="grid grid-cols-2 gap-4">
         <Select
+          control={control}
+          name="assignedTo"
           label={t.common.assignedTo}
           required
           options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
-          {...register('assignedTo')}
         />
         <Input label={t.contacts.source} placeholder={t.common.searchPlaceholder} {...register('source')} />
       </div>

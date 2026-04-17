@@ -11,6 +11,7 @@ import { useAuthStore } from '../../store/authStore'
 import { formatCurrency } from '../../utils/formatters'
 import { toast } from '../../store/toastStore'
 import { useTranslations } from '../../i18n'
+import { Select } from '../ui/Select'
 
 interface EmailComposerProps {
   isOpen: boolean
@@ -512,7 +513,8 @@ export function EmailComposer({
             </label>
           </div>
           {savedSignatures.length > 0 && (
-            <select
+            <Select
+              ariaLabel={t.email.signatureSelectLabel}
               value={activeSignatureId}
               onChange={(e) => {
                 const nextId = e.target.value
@@ -520,16 +522,9 @@ export function EmailComposer({
                 const next = savedSignatures.find((s) => s.id === nextId)
                 setSignature(next?.html ?? '')
               }}
-              className="w-full bg-surface-2/45 border border-fg/8 rounded-xl px-3 py-2 text-xs text-fg outline-none"
-              aria-label={t.email.signatureSelectLabel}
-              title={t.email.signatureSelectLabel}
-            >
-              {savedSignatures.map((sig) => (
-                <option key={sig.id} value={sig.id} className="bg-surface-1 text-fg">
-                  {sig.name}
-                </option>
-              ))}
-            </select>
+              options={savedSignatures.map((sig) => ({ value: sig.id, label: sig.name }))}
+              listMaxHeightClass="max-h-48"
+            />
           )}
           <textarea
             value={signature}

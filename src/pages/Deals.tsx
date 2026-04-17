@@ -142,6 +142,7 @@ function QuoteBuilder({
   const [acceptanceClause, setAcceptanceClause] = useState('')
   const [additionalNotes, setAdditionalNotes] = useState('')
   const [reference, setReference] = useState('')
+  const [productPick, setProductPick] = useState('')
 
   const updateItem = (id: string, patch: Partial<QuoteItem>) => {
     setItems((prev) =>
@@ -410,22 +411,28 @@ function QuoteBuilder({
   return (
     <div className="space-y-3">
       {/* Add controls */}
-      <div className="flex items-center gap-2">
-        <select
-          defaultValue=""
-          onChange={(e) => { if (e.target.value) { addFromProduct(e.target.value); e.target.value = '' } }}
-          aria-label={`${t.common.add} ${t.products.title.toLowerCase()} ${t.deals.quote.toLowerCase()}`}
-          title={`${t.common.add} ${t.products.title.toLowerCase()} ${t.deals.quote.toLowerCase()}`}
-          className="flex-1 bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
-        >
-          <option value="" disabled>+ {t.deals.addItem}...</option>
-          {products.map((p) => {
-            const lp = localizedProduct(p, t)
-            return (
-              <option key={p.id} value={p.id}>{lp.name} — {fmt(lp.price)}</option>
-            )
-          })}
-        </select>
+      <div className="flex items-center gap-2 min-w-0">
+        <div className="flex-1 min-w-0">
+          <Select
+            ariaLabel={`${t.common.add} ${t.products.title.toLowerCase()} ${t.deals.quote.toLowerCase()}`}
+            value={productPick}
+            onChange={(e) => {
+              const id = e.target.value
+              if (id) {
+                addFromProduct(id)
+                setProductPick('')
+              }
+            }}
+            options={[
+              { value: '', label: `+ ${t.deals.addItem}...` },
+              ...products.map((p) => {
+                const lp = localizedProduct(p, t)
+                return { value: p.id, label: `${lp.name} — ${fmt(lp.price)}` }
+              }),
+            ]}
+            listMaxHeightClass="max-h-56"
+          />
+        </div>
         <button
           type="button"
           onClick={addBlank}
@@ -550,17 +557,17 @@ function QuoteBuilder({
 
       {/* Commercial metadata */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <select
+        <Select
+          ariaLabel={t.deals.documentType}
           value={documentType}
           onChange={(e) => setDocumentType(e.target.value as QuoteDocumentType)}
-          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
-          aria-label={t.deals.documentType}
-          title={t.deals.documentType}
-        >
-          <option value="quote">{t.deals.documentTypeQuote}</option>
-          <option value="invoice">{t.deals.documentTypeInvoice}</option>
-          <option value="proforma">{t.deals.documentTypeProforma}</option>
-        </select>
+          options={[
+            { value: 'quote', label: t.deals.documentTypeQuote },
+            { value: 'invoice', label: t.deals.documentTypeInvoice },
+            { value: 'proforma', label: t.deals.documentTypeProforma },
+          ]}
+          listMaxHeightClass="max-h-40"
+        />
         <input
           type="text"
           value={quoteNumber}

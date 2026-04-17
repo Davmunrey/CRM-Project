@@ -30,7 +30,7 @@ export function ActivityForm({ activity, defaultContactId, defaultDealId, onSubm
   const orgUsers = useLocalizedOrgUsers(useAuthStore((s) => s.users))
   const schema = useMemo(() => createActivitySchema(t), [t])
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const { register, handleSubmit, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       type: activity?.type ?? 'call',
@@ -63,6 +63,8 @@ export function ActivityForm({ activity, defaultContactId, defaultDealId, onSubm
     <form onSubmit={handleSubmit(handleFormSubmit)} className="p-6 space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <Select
+          control={control}
+          name="type"
           label={t.common.type}
           required
           options={[
@@ -74,9 +76,10 @@ export function ActivityForm({ activity, defaultContactId, defaultDealId, onSubm
             { value: 'linkedin', label: t.activities.typeLabels.linkedin },
           ]}
           error={errors.type?.message}
-          {...register('type')}
         />
         <Select
+          control={control}
+          name="status"
           label={t.common.status}
           required
           options={[
@@ -84,7 +87,6 @@ export function ActivityForm({ activity, defaultContactId, defaultDealId, onSubm
             { value: 'completed', label: t.activities.statusLabels.completed },
             { value: 'cancelled', label: t.activities.statusLabels.cancelled },
           ]}
-          {...register('status')}
         />
       </div>
 
@@ -94,28 +96,31 @@ export function ActivityForm({ activity, defaultContactId, defaultDealId, onSubm
       <Input label={t.activities.dueDate} type="date" {...register('dueDate')} />
 
       <Select
+        control={control}
+        name="contactId"
         label={t.contacts.title}
         options={[
           { value: '', label: t.common.noResults },
           ...contacts.map((c) => ({ value: c.id, label: `${c.firstName} ${c.lastName}` })),
         ]}
-        {...register('contactId')}
       />
 
       <Select
+        control={control}
+        name="dealId"
         label={t.deals.title}
         options={[
           { value: '', label: t.common.noResults },
           ...deals.map((d) => ({ value: d.id, label: d.title })),
         ]}
-        {...register('dealId')}
       />
 
       <Select
+        control={control}
+        name="createdBy"
         label={t.common.assignedTo}
         required
         options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
-        {...register('createdBy')}
       />
 
       <div className="flex gap-3 pt-2">

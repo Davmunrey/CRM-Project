@@ -10,6 +10,7 @@ import { toast } from '../store/toastStore'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Toolbar } from '../components/ui/Toolbar'
 import { Button } from '../components/ui/Button'
+import { Select } from '../components/ui/Select'
 
 const STAGES: LeadLifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'opportunity', 'customer']
 
@@ -189,24 +190,28 @@ export function Leads() {
           placeholder={t.leads.searchPlaceholder}
           className="md:col-span-2 bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none"
         />
-        <select
+        <Select
+          ariaLabel={t.leads.allStages}
           value={stageFilter}
           onChange={(e) => setStageFilter((e.target.value as LeadLifecycleStage) || '')}
-          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none"
-        >
-          <option value="">{t.leads.allStages}</option>
-          {STAGES.map((stage) => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}
-        </select>
-        <select
+          options={[
+            { value: '', label: t.leads.allStages },
+            ...STAGES.map((stage) => ({ value: stage, label: stageLabels[stage] })),
+          ]}
+          listMaxHeightClass="max-h-56"
+        />
+        <Select
+          ariaLabel={t.leads.allScores}
           value={scoreFilter}
           onChange={(e) => setScoreFilter((e.target.value as 'hot' | 'warm' | 'cold') || '')}
-          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none"
-        >
-          <option value="">{t.leads.allScores}</option>
-          <option value="hot">{t.leads.hot} (70+)</option>
-          <option value="warm">{t.leads.warm} (40-69)</option>
-          <option value="cold">{t.leads.cold} (&lt;40)</option>
-        </select>
+          options={[
+            { value: '', label: t.leads.allScores },
+            { value: 'hot', label: `${t.leads.hot} (70+)` },
+            { value: 'warm', label: `${t.leads.warm} (40-69)` },
+            { value: 'cold', label: `${t.leads.cold} (<40)` },
+          ]}
+          listMaxHeightClass="max-h-40"
+        />
       </div>
       </Toolbar>
 

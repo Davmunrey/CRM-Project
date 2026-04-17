@@ -134,11 +134,24 @@ Under `src/components/ui/`: `Button`, `Input`, `Select`, `Textarea`, `Modal`, `I
 
 ## Industry catalog guardrail
 
-- Canonical source for company industries: `src/lib/industries.ts` (`LINKEDIN_INDUSTRY_OPTIONS`).
+- Canonical data: `src/data/linkedin-industries-v2.json` (LinkedIn Industry Codes V2, English labels). Refresh with `node scripts/sync-linkedin-industries.mjs`.
+- API: `src/lib/industries.ts` — `getIndustryOptions(language)`, `getIndustryLabel(value, language)`, `normalizeIndustryValue(raw)` for legacy slugs.
 - Do not hardcode industry option arrays in forms, filters, imports, or views.
-- Use `getIndustryOptions(language)` for select controls and `getIndustryLabel(value, language)` for rendering.
-- Normalize legacy values (`saas`, `fintech`, `consulting`, `healthcare`) with `normalizeIndustryValue()` before persisting/filtering.
-- Any industry expansion must ship with labels for all supported locales (`en`, `es`, `pt`, `fr`, `de`, `it`).
+- Optional translated overrides: extend `overrides` in `industries.ts`; otherwise labels fall back to English `nameEn`.
+
+---
+
+## Auth shell (`AuthLayout`)
+
+- Component: `src/components/auth/AuthLayout.tsx`.
+- **`variant="centered"`** — single column (`max-w-md`), default branding logo + optional `title` / `subtitle` / `footer`, floating `LanguageSwitcher` + `ThemeSwitcher`.
+- **`variant="split"`** — `lg` grid: left `splitPanel` (marketing), right column for the form; on small screens `splitPanel` stacks above the form. Use for Login.
+- Background: class `auth-page-bg` uses `--auth-page-gradient-dark` / `--auth-page-gradient-light` from `tokens.css` (see `src/index.css`).
+
+## Theme & language switchers
+
+- **`ThemeSwitcher`** (`src/components/ui/ThemeSwitcher.tsx`): `variant="floating"` (`fixed top-4 right-20 z-modal`) or `variant="inline"` (for `Topbar`). Persists via `useSettingsStore`.
+- **`LanguageSwitcher`** (`src/components/shared/LanguageSwitcher.tsx`): flag + ISO code trigger, `DropdownMenu` options, `size="sm" | "md"`. Respects `languageMode` from `useI18nStore` (browser vs manual).
 
 ---
 
@@ -164,7 +177,15 @@ Script: `scripts/ui-lint.mjs`.
 
 Allowlist: `src/lib/brandingAccent.ts` and `src/lib/theme.ts` (which write CSS variables from raw hex).
 
-CI: `.github/workflows/ci.yml` runs `npm run ui:lint` after `npm ci`.
+CI: `.github/workflows/ci.yml` runs `npm run ui:lint` and `npm run i18n:lint` after `npm ci`.
+
+### i18n guardrails (`i18n:lint`)
+
+```bash
+npm run i18n:lint
+```
+
+Script: `scripts/i18n-lint.mjs` — blocks long hardcoded strings in `setError('…')` outside `src/i18n` and `src/components/ui`.
 
 E2E (`npm run test:e2e`): `playwright.config.ts` runs **`npm run build` before `vite preview`** so static routes (including the `*` catch-all) always match the current `App.tsx`.
 
@@ -175,14 +196,14 @@ E2E (`npm run test:e2e`): `playwright.config.ts` runs **`npm run build` before `
 ## Accessibility smoke (axe)
 
 - Dependency: `vitest-axe` (extends `expect` in `tests/setup.ts`).
-- Covered pages: `Login`, `Register`, `ForgotPassword` (see `tests/auth/*.test.tsx`); UI primitives smoke in `tests/ui/primitives.test.tsx`.
+- Covered pages: `Login`, `Register`, `ForgotPassword` (see `tests/auth/*.test.tsx`); UI primitives smoke in `tests/ui/primitives.test.tsx` (includes `ThemeSwitcher` + `LanguageSwitcher`).
 - **Note:** jsdom + static HTML may report false positives for color contrast; tune `axe()` options per case if needed.
 
 ---
 
 ## Cursor rule
 
-Persistent hints for agents: `.cursor/rules/ui-consistency.mdc` (tokens, primitives, lint, no navy/hex in components).
+Persistent hints for agents: `.cursor/rules/ui-consistency.mdc` (tokens, primitives, lint, no navy/hex in components), `.cursor/rules/i18n.mdc` (user-facing copy via `t.*` / `getTranslations()`).
 
 ---
 
@@ -190,4 +211,4 @@ Persistent hints for agents: `.cursor/rules/ui-consistency.mdc` (tokens, primiti
 
 - **Status:** Active  
 - **Owner:** Frontend  
-- **Last updated:** 2026-04-16  
+- **Last updated:** 2026-04-17  

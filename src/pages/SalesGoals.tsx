@@ -13,6 +13,7 @@ import { formatCurrency } from '../utils/formatters'
 import { toast } from '../store/toastStore'
 import type { SalesGoal } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
+import { Select } from '../components/ui/Select'
 
 // GOAL_TYPE_CONFIG and PERIOD_LABELS are built inside the component using translations
 
@@ -207,17 +208,18 @@ export function SalesGoals() {
           </div>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-xs text-fg-subtle mb-1">{t.common.type}</label>
-              <select
+              <Select
+                label={t.common.type}
                 value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value as SalesGoal['type'] })}
-                className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40"
-              >
-                <option value="revenue">{t.goals.revenue}</option>
-                <option value="deals_closed">{t.goals.dealsClosed}</option>
-                <option value="activities">{t.goals.activitiesCompleted}</option>
-                <option value="contacts_added">{t.goals.contactsAdded}</option>
-              </select>
+                options={[
+                  { value: 'revenue', label: t.goals.revenue },
+                  { value: 'deals_closed', label: t.goals.dealsClosed },
+                  { value: 'activities', label: t.goals.activitiesCompleted },
+                  { value: 'contacts_added', label: t.goals.contactsAdded },
+                ]}
+                listMaxHeightClass="max-h-40"
+              />
             </div>
             <div>
               <label className="block text-xs text-fg-subtle mb-1">{t.goals.title}</label>
@@ -230,16 +232,17 @@ export function SalesGoals() {
               />
             </div>
             <div>
-              <label className="block text-xs text-fg-subtle mb-1">{t.reports.periodLabel}</label>
-              <select
+              <Select
+                label={t.reports.periodLabel}
                 value={form.period}
                 onChange={(e) => setForm({ ...form, period: e.target.value as SalesGoal['period'] })}
-                className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40"
-              >
-                <option value="monthly">{t.goals.monthly}</option>
-                <option value="quarterly">{t.goals.quarterly}</option>
-                <option value="yearly">{t.goals.yearly}</option>
-              </select>
+                options={[
+                  { value: 'monthly', label: t.goals.monthly },
+                  { value: 'quarterly', label: t.goals.quarterly },
+                  { value: 'yearly', label: t.goals.yearly },
+                ]}
+                listMaxHeightClass="max-h-40"
+              />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>

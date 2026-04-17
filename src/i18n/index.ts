@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Language, Translations } from './types'
@@ -21,6 +21,8 @@ import { it } from './it'
 
 export type { Language, Translations }
 
+export type LanguageMode = 'manual' | 'browser'
+
 const translations: Record<Language, Translations> = { en, es, pt, fr, de, it }
 
 export const LANGUAGE_LABELS: Record<Language, string> = {
@@ -33,7 +35,8 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 }
 
 export const LANGUAGE_FLAGS: Record<Language, string> = {
-  en: '🇬🇧',
+  /** US flag reads as “EN” more reliably than 🇬🇧 (often shown as “GB” without color emoji). */
+  en: '🇺🇸',
   es: '🇪🇸',
   pt: '🇧🇷',
   fr: '🇫🇷',
@@ -44,9 +47,8 @@ export const LANGUAGE_FLAGS: Record<Language, string> = {
 export const SUPPORTED_LANGUAGES: Language[] = ['en', 'es', 'pt', 'fr', 'de', 'it']
 
 /**
- * Resolve the initial UI language from the browser. Used only as the default
- * when no user preference has been persisted yet (first visit). Persisted
- * choices in `crm_language` always win via zustand persist rehydration.
+ * Resolve the initial UI language from the browser. Used when `languageMode` is `browser`,
+ * and as the default `language` value on first visit before persist rehydrates.
  */
 export function detectBrowserLanguage(): Language {
   if (typeof navigator === 'undefined') return 'en'
@@ -63,63 +65,105 @@ export function detectBrowserLanguage(): Language {
 
 interface I18nState {
   language: Language
+  /** When omitted (legacy persisted state), treated as `manual`. */
+  languageMode?: LanguageMode
   setLanguage: (lang: Language) => void
+  setLanguageMode: (mode: LanguageMode) => void
 }
 
 export const useI18nStore = create<I18nState>()(
   persist(
     (set) => ({
       language: detectBrowserLanguage(),
-      setLanguage: (language) => set({ language }),
+      languageMode: 'browser',
+      setLanguage: (language) => set({ language, languageMode: 'manual' }),
+      setLanguageMode: (languageMode) => set({ languageMode }),
     }),
-    { name: 'crm_language' }
-  )
+    { name: 'crm_language' },
+  ),
 )
+
+function resolveEffectiveLanguage(): Language {
+  const { language, languageMode } = useI18nStore.getState()
+  const mode = languageMode ?? 'manual'
+  return mode === 'browser' ? detectBrowserLanguage() : language
+}
 
 /** Hook that returns the current translations object */
 export function useTranslations(): Translations {
   const language = useI18nStore((s) => s.language)
-  return translations[language]
+  const languageMode = useI18nStore((s) => s.languageMode ?? 'manual')
+  const [browserTick, setBrowserTick] = useState(0)
+
+  useEffect(() => {
+    if (languageMode !== 'browser') return
+    const onChange = () => setBrowserTick((n) => n + 1)
+    window.addEventListener('languagechange', onChange)
+    return () => window.removeEventListener('languagechange', onChange)
+  }, [languageMode])
+
+  return useMemo(() => {
+    void browserTick
+    const effective = languageMode === 'browser' ? detectBrowserLanguage() : language
+    return translations[effective]
+  }, [language, languageMode, browserTick])
+}
+
+/** BCP-47 base language used for labels (respects browser mode + `languagechange`). */
+export function useUiLanguage(): Language {
+  const stored = useI18nStore((s) => s.language)
+  const languageMode = useI18nStore((s) => s.languageMode ?? 'manual')
+  const [browserTick, setBrowserTick] = useState(0)
+
+  useEffect(() => {
+    if (languageMode !== 'browser') return
+    const onChange = () => setBrowserTick((n) => n + 1)
+    window.addEventListener('languagechange', onChange)
+    return () => window.removeEventListener('languagechange', onChange)
+  }, [languageMode])
+
+  return useMemo(() => {
+    void browserTick
+    return languageMode === 'browser' ? detectBrowserLanguage() : stored
+  }, [stored, languageMode, browserTick])
 }
 
 /** Get translations outside of React (for stores, utils) */
 export function getTranslations(): Translations {
-  return translations[useI18nStore.getState().language]
+  return translations[resolveEffectiveLanguage()]
 }
 
 /** Get date-fns locale for current language */
 export function getDateLocale() {
-  const lang = useI18nStore.getState().language
-  // Dynamic import not needed — just return the key for date-fns
-  return lang
+  return resolveEffectiveLanguage()
 }
 
 export function useLocalizedContacts(contacts: Contact[]) {
-  const language = useI18nStore((s) => s.language)
-  return useMemo(() => localizeContacts(contacts, getTranslations()), [contacts, language])
+  const t = useTranslations()
+  return useMemo(() => localizeContacts(contacts, t), [contacts, t])
 }
 
 export function useLocalizedCompanies(companies: Company[]) {
-  const language = useI18nStore((s) => s.language)
-  return useMemo(() => localizeCompanies(companies, getTranslations()), [companies, language])
+  const t = useTranslations()
+  return useMemo(() => localizeCompanies(companies, t), [companies, t])
 }
 
 export function useLocalizedDeals(deals: Deal[]) {
-  const language = useI18nStore((s) => s.language)
-  return useMemo(() => localizeDeals(deals, getTranslations()), [deals, language])
+  const t = useTranslations()
+  return useMemo(() => localizeDeals(deals, t), [deals, t])
 }
 
 export function useLocalizedActivities(activities: Activity[]) {
-  const language = useI18nStore((s) => s.language)
-  return useMemo(() => localizeActivities(activities, getTranslations()), [activities, language])
+  const t = useTranslations()
+  return useMemo(() => localizeActivities(activities, t), [activities, t])
 }
 
 export function useLocalizedCRMEmails(emails: CRMEmail[]) {
-  const language = useI18nStore((s) => s.language)
-  return useMemo(() => localizeCRMEmails(emails, getTranslations()), [emails, language])
+  const t = useTranslations()
+  return useMemo(() => localizeCRMEmails(emails, t), [emails, t])
 }
 
 export function useLocalizedOrgUsers(users: AuthUser[]) {
-  const language = useI18nStore((s) => s.language)
-  return useMemo(() => localizeAuthUsers(users, getTranslations()), [users, language])
+  const t = useTranslations()
+  return useMemo(() => localizeAuthUsers(users, t), [users, t])
 }

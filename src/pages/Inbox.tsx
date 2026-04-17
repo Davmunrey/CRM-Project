@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Mail, Send, Inbox as InboxIcon, Loader2, RefreshCw, Wifi, WifiOff, User, Clock, Reply, Plus, Eye, MousePointerClick, Paperclip, Download, Search, ChevronDown } from 'lucide-react'
+import { Mail, Send, Inbox as InboxIcon, Loader2, RefreshCw, Wifi, WifiOff, User, Clock, Reply, Plus, Eye, MousePointerClick, Paperclip, Download, Search } from 'lucide-react'
 import { Spinner } from '../components/ui/Spinner'
 import { Link } from 'react-router-dom'
 import { useEmailStore } from '../store/emailStore'
@@ -23,6 +23,7 @@ import { formatDateTime, formatRelativeDate } from '../utils/formatters'
 import { trackUxAction } from '../lib/uxMetrics'
 import { buildInboxQueryMatcher } from '../utils/inboxQuery'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
+import { Select } from '../components/ui/Select'
 
 // ─── Thread item ──────────────────────────────────────────────────────────────
 function extractEmail(from: string): string {
@@ -177,6 +178,17 @@ function LocalEmailItem({
 }) {
   const t = useTranslations()
   const contact = email.contactId ? contacts.find((c) => c.id === email.contactId) : undefined
+  const quickActionOptions = useMemo(
+    () => [
+      { value: 'mark_read', label: t.inbox.markRead },
+      { value: 'mark_unread', label: t.inbox.markUnread },
+      { value: 'snooze_1h', label: t.inbox.snoozeOneHour },
+      { value: 'snooze_1d', label: t.inbox.snoozeOneDay },
+      { value: 'snooze_1w', label: t.inbox.snoozeOneWeek },
+      { value: 'delete', label: t.common.delete },
+    ],
+    [t],
+  )
 
   const unread = email.isRead === false
 
@@ -239,27 +251,20 @@ function LocalEmailItem({
               </button>
             </div>
           )}
-          <div className="mt-2" onClick={(e) => e.stopPropagation()}>
-            <select
+          <div className="mt-2 max-w-xs" onClick={(e) => e.stopPropagation()}>
+            <Select
+              ariaLabel={t.common.actions}
               value=""
+              placeholder={t.common.actions}
               onChange={(e) => {
                 const action = e.target.value as 'mark_read' | 'mark_unread' | 'delete' | 'snooze_1h' | 'snooze_1d' | 'snooze_1w'
                 if (!action) return
                 onAction(action, email)
-                e.currentTarget.value = ''
               }}
-              className="text-[10px] px-2 py-1 rounded-lg bg-fg/6 border border-fg/10 text-fg-muted"
-              aria-label={t.common.actions}
-              title={t.common.actions}
-            >
-              <option value="">{t.common.actions}</option>
-              <option value="mark_read">{t.inbox.markRead}</option>
-              <option value="mark_unread">{t.inbox.markUnread}</option>
-              <option value="snooze_1h">{t.inbox.snoozeOneHour}</option>
-              <option value="snooze_1d">{t.inbox.snoozeOneDay}</option>
-              <option value="snooze_1w">{t.inbox.snoozeOneWeek}</option>
-              <option value="delete">{t.common.delete}</option>
-            </select>
+              options={quickActionOptions}
+              listMaxHeightClass="max-h-56"
+              className="[&_button]:text-[10px] [&_button]:rounded-lg [&_button]:py-1 [&_button]:px-2 [&_button]:min-h-0"
+            />
           </div>
         </div>
       </div>
@@ -308,6 +313,23 @@ function ThreadView({
   const t = useTranslations()
   const [manualContactId, setManualContactId] = useState(match?.contact?.id ?? '')
   const [manualDealId, setManualDealId] = useState(match?.dealId ?? '')
+  const manualContactOptions = useMemo(
+    () => [
+      { value: '', label: t.inbox.contactPlaceholder },
+      ...allContacts.map((c) => ({
+        value: c.id,
+        label: `${c.firstName} ${c.lastName}`,
+      })),
+    ],
+    [allContacts, t.inbox.contactPlaceholder],
+  )
+  const manualDealOptions = useMemo(
+    () => [
+      { value: '', label: t.inbox.dealPlaceholder },
+      ...allDeals.map((d) => ({ value: d.id, label: d.title })),
+    ],
+    [allDeals, t.inbox.dealPlaceholder],
+  )
 
   useEffect(() => {
     setManualContactId(match?.contact?.id ?? '')
@@ -412,31 +434,27 @@ function ThreadView({
           >
             {t.inbox.trash}
           </button>
-          {canEditLinks && <div className="flex items-center gap-1">
-            <select
-              value={manualContactId}
-              onChange={(e) => setManualContactId(e.target.value)}
-              className="bg-surface-2 border border-fg/10 rounded-full px-2 py-0.5 text-[10px] text-fg-muted"
-              title={t.inbox.contactPlaceholder}
-              aria-label={t.inbox.contactPlaceholder}
-            >
-              <option value="">{t.inbox.contactPlaceholder}</option>
-              {allContacts.map((c) => (
-                <option key={c.id} value={c.id}>{c.firstName} {c.lastName}</option>
-              ))}
-            </select>
-            <select
-              value={manualDealId}
-              onChange={(e) => setManualDealId(e.target.value)}
-              className="bg-surface-2 border border-fg/10 rounded-full px-2 py-0.5 text-[10px] text-fg-muted"
-              title={t.inbox.dealPlaceholder}
-              aria-label={t.inbox.dealPlaceholder}
-            >
-              <option value="">{t.inbox.dealPlaceholder}</option>
-              {allDeals.map((d) => (
-                <option key={d.id} value={d.id}>{d.title}</option>
-              ))}
-            </select>
+          {canEditLinks && <div className="flex items-center gap-1 min-w-0 flex-wrap">
+            <div className="min-w-[7rem] max-w-[10rem]">
+              <Select
+                ariaLabel={t.inbox.contactPlaceholder}
+                value={manualContactId}
+                onChange={(e) => setManualContactId(e.target.value)}
+                options={manualContactOptions}
+                listMaxHeightClass="max-h-48"
+                className="[&_button]:rounded-full [&_button]:text-[10px] [&_button]:py-0.5 [&_button]:px-2 [&_button]:min-h-0"
+              />
+            </div>
+            <div className="min-w-[7rem] max-w-[10rem]">
+              <Select
+                ariaLabel={t.inbox.dealPlaceholder}
+                value={manualDealId}
+                onChange={(e) => setManualDealId(e.target.value)}
+                options={manualDealOptions}
+                listMaxHeightClass="max-h-48"
+                className="[&_button]:rounded-full [&_button]:text-[10px] [&_button]:py-0.5 [&_button]:px-2 [&_button]:min-h-0"
+              />
+            </div>
             <button type="button"
               onClick={() => onManualLinkSave(thread, manualContactId || undefined, manualDealId || undefined)}
               className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-600/20 text-accent-300 border border-accent-500/30 hover:bg-accent-600/30 transition-colors"
@@ -541,6 +559,18 @@ function LocalEmailView({
   canDeleteEmails: boolean
 }) {
   const t = useTranslations()
+  const headerActionOptions = useMemo(() => {
+    const opts = [
+      { value: 'mark_read', label: t.inbox.markRead },
+      { value: 'mark_unread', label: t.inbox.markUnread },
+      { value: 'snooze_1h', label: t.inbox.snoozeOneHour },
+      { value: 'snooze_1d', label: t.inbox.snoozeOneDay },
+      { value: 'snooze_1w', label: t.inbox.snoozeOneWeek },
+    ]
+    if (canDeleteEmails) opts.push({ value: 'delete', label: t.common.delete })
+    return opts
+  }, [t, canDeleteEmails])
+
   if (!email) return (
     <div className="flex items-center justify-center h-full text-fg-subtle text-sm">
       {t.inbox.noMessages}
@@ -567,29 +597,21 @@ function LocalEmailView({
             <Reply size={12} />
             {t.common.back}
           </button>
-          <div className="relative inline-flex items-center">
-            <select
+          <div className="min-w-[7.5rem] max-w-[14rem]">
+            <Select
+              ariaLabel={t.common.actions}
               value=""
+              placeholder={t.common.actions}
               onChange={(e) => {
                 const action = e.target.value as 'mark_read' | 'mark_unread' | 'delete' | 'snooze_1h' | 'snooze_1d' | 'snooze_1w'
                 if (!action) return
                 if (action === 'delete' && !canDeleteEmails) return
                 onEmailAction(action, email)
-                e.currentTarget.value = ''
               }}
-              className="appearance-none cursor-pointer text-xs pl-3 pr-9 py-1.5 rounded-full bg-fg/6 border border-fg/10 text-fg hover:bg-fg/10 hover:border-fg/15 outline-none focus:ring-2 focus:ring-accent-500/30 min-w-[7.5rem]"
-              aria-label={t.common.actions}
-              title={t.common.actions}
-            >
-              <option value="">{t.common.actions}</option>
-              <option value="mark_read">{t.inbox.markRead}</option>
-              <option value="mark_unread">{t.inbox.markUnread}</option>
-              <option value="snooze_1h">{t.inbox.snoozeOneHour}</option>
-              <option value="snooze_1d">{t.inbox.snoozeOneDay}</option>
-              <option value="snooze_1w">{t.inbox.snoozeOneWeek}</option>
-              {canDeleteEmails ? <option value="delete">{t.common.delete}</option> : null}
-            </select>
-            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none" aria-hidden />
+              options={headerActionOptions}
+              listMaxHeightClass="max-h-56"
+              className="[&_button]:rounded-full [&_button]:text-xs [&_button]:py-1.5 [&_button]:min-h-0"
+            />
           </div>
         </div>
       </div>
@@ -1537,17 +1559,20 @@ export function Inbox() {
         )}
         {folder === 'inbox' && (
           <div className="px-3 py-2 border-b border-fg/6 space-y-2">
-            <div className="flex items-center gap-2">
-              <select
-                value={selectedInboxViewId}
-                onChange={(e) => applyInboxSavedView(e.target.value)}
-                className="flex-1 bg-surface-2 border border-fg/10 rounded-lg px-2 py-1 text-xs text-fg"
-              >
-                <option value="">{t.inbox.savedViews}</option>
-                {inboxViews.map((view) => (
-                  <option key={view.id} value={view.id}>{view.name}</option>
-                ))}
-              </select>
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex-1 min-w-0">
+                <Select
+                  ariaLabel={t.inbox.savedViews}
+                  value={selectedInboxViewId}
+                  onChange={(e) => applyInboxSavedView(e.target.value)}
+                  options={[
+                    { value: '', label: t.inbox.savedViews },
+                    ...inboxViews.map((view) => ({ value: view.id, label: view.name })),
+                  ]}
+                  listMaxHeightClass="max-h-48"
+                  className="[&_button]:text-xs [&_button]:py-1 [&_button]:min-h-0"
+                />
+              </div>
               {selectedInboxViewId && (
                 <button type="button"
                   onClick={() => {
@@ -1773,17 +1798,19 @@ export function Inbox() {
       <div className="flex-1 min-w-0 overflow-hidden border border-fg/8 rounded-2xl bg-surface-1/25">
         {folder === 'inbox' && selectedThread && (
           <div className="px-3 py-2 border-b border-fg/6 flex items-center gap-2 flex-wrap">
-            <select
-              aria-label={t.common.assignedTo}
-              value={selectedWorkspace?.ownerUserId ?? ''}
-              onChange={(e) => setThreadOwner(selectedThread.id, e.target.value || undefined)}
-              className="bg-surface-2 border border-fg/10 rounded-lg px-2.5 py-1.5 text-xs text-fg-muted"
-            >
-              <option value="">{t.common.assignedTo}</option>
-              {orgUsers.map((u) => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </select>
+            <div className="min-w-[10rem] max-w-[14rem]">
+              <Select
+                ariaLabel={t.common.assignedTo}
+                value={selectedWorkspace?.ownerUserId ?? ''}
+                onChange={(e) => setThreadOwner(selectedThread.id, e.target.value || undefined)}
+                options={[
+                  { value: '', label: t.common.assignedTo },
+                  ...orgUsers.map((u) => ({ value: u.id, label: u.name })),
+                ]}
+                listMaxHeightClass="max-h-48"
+                className="[&_button]:text-xs [&_button]:py-1.5 [&_button]:min-h-0"
+              />
+            </div>
             <input
               value={selectedWorkspace?.internalNote ?? ''}
               onChange={(e) => setThreadNote(selectedThread.id, e.target.value)}

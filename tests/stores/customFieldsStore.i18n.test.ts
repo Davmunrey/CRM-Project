@@ -11,7 +11,7 @@ vi.mock('../../src/lib/supabase', () => ({
 
 describe('customFieldsStore i18n', () => {
   beforeEach(() => {
-    useI18nStore.setState({ language: 'en' })
+    useI18nStore.setState({ language: 'en', languageMode: 'manual' })
     useCustomFieldsStore.setState({
       definitions: [{
         id: 'cf-1',
@@ -43,7 +43,7 @@ describe('customFieldsStore i18n', () => {
       options: ['Ventas', 'Marketing'],
       placeholder: 'Selecciona un departamento',
     })
-    useI18nStore.setState({ language: 'es' })
+    useI18nStore.setState({ language: 'es', languageMode: 'manual' })
 
     const defs = useCustomFieldsStore.getState().getDefinitionsForEntity('contact')
     expect(defs[0]?.label).toBe('Departamento')

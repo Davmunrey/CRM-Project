@@ -15,10 +15,11 @@ import { CompanyForm } from '../components/companies/CompanyForm'
 import { Select } from '../components/ui/Select'
 import { toast } from '../store/toastStore'
 import { formatCurrency } from '../utils/formatters'
-import { COMPANY_INDUSTRY_LABELS, COMPANY_SIZE_OPTIONS } from '../utils/constants'
+import { COMPANY_SIZE_OPTIONS } from '../utils/constants'
 import type { Company, CompanyStatus, SmartViewFilter } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
-import { useLocalizedCompanies, useTranslations } from '../i18n'
+import { useLocalizedCompanies, useTranslations, useUiLanguage } from '../i18n'
+import { getIndustryLabel, getIndustryOptions } from '../lib/industries'
 
 const STATUS_COLORS: Record<string, BadgeVariant> = {
   prospect: 'warning',
@@ -29,6 +30,7 @@ const STATUS_COLORS: Record<string, BadgeVariant> = {
 
 export function Companies() {
   const t = useTranslations()
+  const uiLang = useUiLanguage()
   const navigate = useNavigate()
   const { companies, addCompany, updateCompany, deleteCompany } = useCompaniesStore()
   const localizedCompanies = useLocalizedCompanies(companies)
@@ -48,6 +50,7 @@ export function Companies() {
   const [viewFilters, setViewFilters] = useState<SmartViewFilter[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showBulkDelete, setShowBulkDelete] = useState(false)
+  const [bulkCompanyStatus, setBulkCompanyStatus] = useState('')
 
   const filtered = useMemo(() => {
     return localizedCompanies.filter((c) => {
@@ -67,6 +70,11 @@ export function Companies() {
   }, [localizedCompanies, search, industryFilter, statusFilter, sizeFilter, viewFilters])
 
   const hasFilters = industryFilter || statusFilter || sizeFilter
+
+  const industryFilterOptions = useMemo(
+    () => [{ value: '', label: t.common.all }, ...getIndustryOptions(uiLang)],
+    [t.common.all, uiLang],
+  )
 
   const handleCreate = (data: Omit<Company, 'id' | 'createdAt' | 'updatedAt' | 'contacts' | 'deals' | 'tags'>) => {
     addCompany({ ...data, contacts: [], deals: [], tags: [] })
@@ -125,24 +133,28 @@ export function Companies() {
               <span className="text-xs text-fg-subtle">{selectedIds.size} {t.common.selected}</span>
 
               {/* Mass Status Update */}
-              <select
-                onChange={(e) => {
-                  if (!e.target.value) return
-                  const status = e.target.value as CompanyStatus
-                  selectedIds.forEach(id => useCompaniesStore.getState().updateCompany(id, { status }))
-                  toast.success(`${selectedIds.size} ${t.nav.companies.toLowerCase()} ${t.common.changeStatus.toLowerCase()} ${statusLabel(status)}`)
-                  setSelectedIds(new Set())
-                  e.target.value = ''
-                }}
-                className="bg-surface-1 border border-border-subtle rounded-lg px-2 py-1.5 text-xs text-fg outline-none focus:ring-2 focus:ring-accent-500/30"
-                defaultValue=""
-              >
-                <option value="" disabled>{t.common.changeStatus}...</option>
-                <option value="prospect">{t.companies.statusLabels.prospect}</option>
-                <option value="customer">{t.companies.statusLabels.customer}</option>
-                <option value="partner">{t.companies.statusLabels.partner}</option>
-                <option value="churned">{t.companies.statusLabels.churned}</option>
-              </select>
+              <div className="min-w-[10rem] max-w-[14rem]">
+                <Select
+                  ariaLabel={t.common.changeStatus}
+                  value={bulkCompanyStatus}
+                  onChange={(e) => {
+                    const status = e.target.value as CompanyStatus
+                    if (!status) return
+                    selectedIds.forEach((id) => useCompaniesStore.getState().updateCompany(id, { status }))
+                    toast.success(`${selectedIds.size} ${t.nav.companies.toLowerCase()} ${t.common.changeStatus.toLowerCase()} ${statusLabel(status)}`)
+                    setSelectedIds(new Set())
+                    setBulkCompanyStatus('')
+                  }}
+                  options={[
+                    { value: '', label: `${t.common.changeStatus}...` },
+                    { value: 'prospect', label: t.companies.statusLabels.prospect },
+                    { value: 'customer', label: t.companies.statusLabels.customer },
+                    { value: 'partner', label: t.companies.statusLabels.partner },
+                    { value: 'churned', label: t.companies.statusLabels.churned },
+                  ]}
+                  listMaxHeightClass="max-h-48"
+                />
+              </div>
 
               <PermissionGate permission="companies:delete">
                 <Button variant="danger" size="sm" leftIcon={<Trash2 size={14} />}
@@ -167,10 +179,11 @@ export function Companies() {
       {showFilters && (
         <div className="flex gap-3 flex-wrap items-center glass p-4">
           <Select
-            options={Object.entries(COMPANY_INDUSTRY_LABELS).map(([v, l]) => ({ value: v, label: l }))}
+            options={industryFilterOptions}
             placeholder={t.companies.industry}
             value={industryFilter}
             onChange={(e) => setIndustryFilter(e.target.value)}
+            listMaxHeightClass="max-h-64"
           />
           <Select
             options={[
@@ -260,7 +273,7 @@ export function Companies() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-fg-muted text-xs">
-                      {COMPANY_INDUSTRY_LABELS[company.industry] ?? company.industry}
+                      {getIndustryLabel(company.industry, uiLang)}
                     </td>
                     <td className="px-4 py-3 text-fg-muted text-xs">{company.size || '—'}</td>
                     <td className="px-4 py-3 text-fg-muted text-xs">{company.country || '—'}</td>
