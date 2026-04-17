@@ -41,6 +41,26 @@ export const LANGUAGE_FLAGS: Record<Language, string> = {
   it: '🇮🇹',
 }
 
+export const SUPPORTED_LANGUAGES: Language[] = ['en', 'es', 'pt', 'fr', 'de', 'it']
+
+/**
+ * Resolve the initial UI language from the browser. Used only as the default
+ * when no user preference has been persisted yet (first visit). Persisted
+ * choices in `crm_language` always win via zustand persist rehydration.
+ */
+export function detectBrowserLanguage(): Language {
+  if (typeof navigator === 'undefined') return 'en'
+  const candidates: string[] = []
+  if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages)
+  if (navigator.language) candidates.push(navigator.language)
+  for (const raw of candidates) {
+    if (!raw) continue
+    const base = raw.toLowerCase().split('-')[0] as Language
+    if (SUPPORTED_LANGUAGES.includes(base)) return base
+  }
+  return 'en'
+}
+
 interface I18nState {
   language: Language
   setLanguage: (lang: Language) => void
@@ -49,7 +69,7 @@ interface I18nState {
 export const useI18nStore = create<I18nState>()(
   persist(
     (set) => ({
-      language: 'en',
+      language: detectBrowserLanguage(),
       setLanguage: (language) => set({ language }),
     }),
     { name: 'crm_language' }

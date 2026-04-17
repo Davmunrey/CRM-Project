@@ -184,6 +184,7 @@ export function EmailComposer({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isOpen, sending, to, subject, sendLater, scheduledAt, body, cc, bcc, replyTo, trackingEnabled, attachments])
 
+  // Rules of Hooks: keep every hook above this line — do not return before hooks when `isOpen` changes.
   if (!isOpen) return null
 
   const contact = contactId ? contacts.find((c) => c.id === contactId) : undefined
