@@ -7,12 +7,10 @@ interface ContactStatusBadgeProps {
   status: ContactStatus
 }
 
-type BadgeColor = 'blue' | 'yellow' | 'green' | 'red'
-
 export function ContactStatusBadge({ status }: ContactStatusBadgeProps) {
   const t = useTranslations()
   return (
-    <Badge variant={CONTACT_STATUS_COLORS[status] as BadgeColor}>
+    <Badge variant={CONTACT_STATUS_COLORS[status]}>
       {t.contacts.statusLabels[status]}
     </Badge>
   )

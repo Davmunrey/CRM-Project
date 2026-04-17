@@ -28,68 +28,68 @@ export function Notifications() {
   }> = {
     deal_won: {
       icon: <Trophy size={16} />,
-      color: 'text-emerald-400',
-      bgColor: 'bg-emerald-500/15',
+      color: 'text-success',
+      bgColor: 'bg-success/15',
       label: t.settings.notifTypeLabels.deal_won,
     },
     deal_lost: {
       icon: <XCircle size={16} />,
-      color: 'text-red-400',
-      bgColor: 'bg-red-500/15',
+      color: 'text-danger',
+      bgColor: 'bg-danger/15',
       label: t.settings.notifTypeLabels.deal_lost,
     },
     deal_stage_changed: {
       icon: <ArrowRightLeft size={16} />,
-      color: 'text-brand-400',
-      bgColor: 'bg-brand-500/15',
+      color: 'text-accent-400',
+      bgColor: 'bg-accent-500/15',
       label: t.settings.notifTypeLabels.deal_stage_changed,
     },
     activity_overdue: {
       icon: <Clock size={16} />,
-      color: 'text-amber-400',
-      bgColor: 'bg-amber-500/15',
+      color: 'text-warning',
+      bgColor: 'bg-warning/15',
       label: t.settings.notifTypeLabels.activity_overdue,
     },
     activity_assigned: {
       icon: <UserPlus size={16} />,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/15',
+      color: 'text-info',
+      bgColor: 'bg-info/15',
       label: t.settings.notifTypeLabels.activity_assigned,
     },
     follow_up_due: {
       icon: <Clock size={16} />,
-      color: 'text-orange-400',
-      bgColor: 'bg-orange-500/15',
+      color: 'text-warning',
+      bgColor: 'bg-warning/15',
       label: t.settings.notifTypeLabels.follow_up_due,
     },
     contact_assigned: {
       icon: <UserPlus size={16} />,
-      color: 'text-violet-400',
-      bgColor: 'bg-violet-500/15',
+      color: 'text-accent-400',
+      bgColor: 'bg-accent-500/15',
       label: t.settings.notifTypeLabels.contact_assigned,
     },
     goal_achieved: {
       icon: <Target size={16} />,
-      color: 'text-emerald-400',
-      bgColor: 'bg-emerald-500/15',
+      color: 'text-success',
+      bgColor: 'bg-success/15',
       label: t.settings.notifTypeLabels.goal_achieved,
     },
     goal_at_risk: {
       icon: <AlertTriangle size={16} />,
-      color: 'text-amber-400',
-      bgColor: 'bg-amber-500/15',
+      color: 'text-warning',
+      bgColor: 'bg-warning/15',
       label: t.settings.notifTypeLabels.goal_at_risk,
     },
     mention: {
       icon: <MessageSquare size={16} />,
-      color: 'text-brand-400',
-      bgColor: 'bg-brand-500/15',
+      color: 'text-accent-400',
+      bgColor: 'bg-accent-500/15',
       label: t.settings.notifTypeLabels.mention,
     },
     system: {
       icon: <Settings size={16} />,
-      color: 'text-slate-400',
-      bgColor: 'bg-white/8',
+      color: 'text-fg-muted',
+      bgColor: 'bg-fg/8',
       label: t.settings.notifTypeLabels.system,
     },
   }
@@ -152,11 +152,11 @@ export function Notifications() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Bell size={22} className="text-brand-400" />
+          <h2 className="text-xl font-bold text-fg flex items-center gap-2">
+            <Bell size={22} className="text-accent-400" />
             {t.nav.notifications}
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-fg-subtle mt-1">
             {unreadCount > 0 ? `${unreadCount} ${t.common.selected}` : t.common.ok} · {notifications.length} {t.common.total}
           </p>
         </div>
@@ -167,7 +167,7 @@ export function Notifications() {
             </Button>
           )}
           {notifications.length > 0 && (
-            <Button variant="ghost" size="sm" leftIcon={<Trash2 size={14} />} onClick={clearAll} className="text-red-400 hover:text-red-300">
+            <Button variant="ghost" size="sm" leftIcon={<Trash2 size={14} />} onClick={clearAll} className="text-danger hover:text-danger">
               {t.common.bulkDelete}
             </Button>
           )}
@@ -179,40 +179,40 @@ export function Notifications() {
         <button
           type="button"
           onClick={() => setFilter('all')}
-          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'all' ? 'ring-1 ring-brand-500/50 bg-brand-500/5' : 'hover:bg-white/4'}`}
+          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'all' ? 'ring-1 ring-accent-500/50 bg-accent-500/5' : 'hover:bg-fg/4'}`}
         >
-          <p className="text-2xl font-bold text-white">{notifications.length}</p>
-          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.common.total}</p>
+          <p className="text-2xl font-bold text-fg">{notifications.length}</p>
+          <p className="text-[10px] text-fg-subtle uppercase tracking-wider font-semibold">{t.common.total}</p>
         </button>
         <button
           type="button"
           onClick={() => setFilter('unread')}
-          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'unread' ? 'ring-1 ring-brand-500/50 bg-brand-500/5' : 'hover:bg-white/4'}`}
+          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'unread' ? 'ring-1 ring-accent-500/50 bg-accent-500/5' : 'hover:bg-fg/4'}`}
         >
-          <p className="text-2xl font-bold text-brand-400">{unreadCount}</p>
-          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.common.selected}</p>
+          <p className="text-2xl font-bold text-accent-400">{unreadCount}</p>
+          <p className="text-[10px] text-fg-subtle uppercase tracking-wider font-semibold">{t.common.selected}</p>
         </button>
         <button
           type="button"
           onClick={() => setFilter('deal_won')}
-          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'deal_won' ? 'ring-1 ring-emerald-500/50 bg-emerald-500/5' : 'hover:bg-white/4'}`}
+          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'deal_won' ? 'ring-1 ring-success/50 bg-success/5' : 'hover:bg-fg/4'}`}
         >
-          <p className="text-2xl font-bold text-emerald-400">{typeGroups.deal_won || 0}</p>
-          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.deals.won}</p>
+          <p className="text-2xl font-bold text-success">{typeGroups.deal_won || 0}</p>
+          <p className="text-[10px] text-fg-subtle uppercase tracking-wider font-semibold">{t.deals.won}</p>
         </button>
         <button
           type="button"
           onClick={() => setFilter('activity_overdue')}
-          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'activity_overdue' ? 'ring-1 ring-amber-500/50 bg-amber-500/5' : 'hover:bg-white/4'}`}
+          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'activity_overdue' ? 'ring-1 ring-warning/50 bg-warning/5' : 'hover:bg-fg/4'}`}
         >
-          <p className="text-2xl font-bold text-amber-400">{typeGroups.activity_overdue || 0}</p>
-          <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">{t.activities.overdue}</p>
+          <p className="text-2xl font-bold text-warning">{typeGroups.activity_overdue || 0}</p>
+          <p className="text-[10px] text-fg-subtle uppercase tracking-wider font-semibold">{t.activities.overdue}</p>
         </button>
       </div>
 
       {/* Filter bar */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Filter size={14} className="text-slate-500" />
+        <Filter size={14} className="text-fg-subtle" />
         {(['all', 'unread', 'deal_won', 'deal_lost', 'deal_stage_changed', 'activity_overdue', 'follow_up_due', 'goal_achieved', 'system'] as FilterType[]).map((f) => {
           const cfg = f !== 'all' && f !== 'unread' ? NOTIFICATION_CONFIG[f as NotificationType] : null
           const label = f === 'all' ? t.common.all : f === 'unread' ? t.common.selected : cfg?.label || f
@@ -223,8 +223,8 @@ export function Notifications() {
               onClick={() => setFilter(f)}
               className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${
                 filter === f
-                  ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
-                  : 'bg-white/5 text-slate-400 border border-white/8 hover:bg-white/8 hover:text-white'
+                  ? 'bg-accent-500/20 text-accent-400 border border-accent-500/30'
+                  : 'bg-fg/5 text-fg-muted border border-fg/8 hover:bg-fg/8 hover:text-fg'
               }`}
             >
               {label}
@@ -232,7 +232,7 @@ export function Notifications() {
           )
         })}
         {filter !== 'all' && (
-          <button type="button" onClick={() => setFilter('all')} className="text-xs text-slate-500 hover:text-white ml-1 flex items-center gap-1">
+          <button type="button" onClick={() => setFilter('all')} className="text-xs text-fg-subtle hover:text-fg ml-1 flex items-center gap-1">
             <X size={12} /> {t.common.clear}
           </button>
         )}
@@ -241,11 +241,11 @@ export function Notifications() {
       {/* Notification list */}
       {filtered.length === 0 ? (
         <div className="glass rounded-2xl p-12 text-center">
-          <BellOff size={40} className="mx-auto text-slate-600 mb-3" />
-          <p className="text-slate-400 font-medium">
+          <BellOff size={40} className="mx-auto text-fg-subtle mb-3" />
+          <p className="text-fg-muted font-medium">
             {t.common.noResults}
           </p>
-          <p className="text-xs text-slate-600 mt-1">
+          <p className="text-xs text-fg-subtle mt-1">
             {t.common.filters}
           </p>
         </div>
@@ -254,8 +254,8 @@ export function Notifications() {
           {/* Today */}
           {todayNotifs.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-1">{t.calendar.today}</p>
-              <div className="glass rounded-2xl overflow-hidden divide-y divide-white/4">
+              <p className="text-xs font-semibold text-fg-subtle uppercase tracking-wider mb-2 px-1">{t.calendar.today}</p>
+              <div className="glass rounded-2xl overflow-hidden divide-y divide-border-subtle">
                 {todayNotifs.map((n) => (
                   <NotificationRow key={n.id} notification={n} config={NOTIFICATION_CONFIG} onClick={() => handleClick(n)} onDelete={deleteNotification} onMarkRead={markAsRead} markReadTitle={t.common.confirm} deleteTitle={t.common.delete} />
                 ))}
@@ -266,8 +266,8 @@ export function Notifications() {
           {/* Older */}
           {olderNotifs.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-1">{t.reports.lastMonth}</p>
-              <div className="glass rounded-2xl overflow-hidden divide-y divide-white/4">
+              <p className="text-xs font-semibold text-fg-subtle uppercase tracking-wider mb-2 px-1">{t.reports.lastMonth}</p>
+              <div className="glass rounded-2xl overflow-hidden divide-y divide-border-subtle">
                 {olderNotifs.map((n) => (
                   <NotificationRow key={n.id} notification={n} config={NOTIFICATION_CONFIG} onClick={() => handleClick(n)} onDelete={deleteNotification} onMarkRead={markAsRead} markReadTitle={t.common.confirm} deleteTitle={t.common.delete} />
                 ))}
@@ -304,7 +304,7 @@ function NotificationRow({
   return (
     <div
       className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors group ${
-        notification.isRead ? 'opacity-60 hover:opacity-80' : 'hover:bg-white/4'
+        notification.isRead ? 'opacity-60 hover:opacity-80' : 'hover:bg-fg/4'
       }`}
       onClick={onClick}
     >
@@ -316,23 +316,23 @@ function NotificationRow({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className={`text-sm font-medium truncate ${notification.isRead ? 'text-slate-400' : 'text-white'}`}>
+          <p className={`text-sm font-medium truncate ${notification.isRead ? 'text-fg-muted' : 'text-fg'}`}>
             {notification.title}
           </p>
           {!notification.isRead && (
-            <span className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-accent-500 flex-shrink-0" />
           )}
         </div>
-        <p className="text-xs text-slate-500 truncate mt-0.5">{notification.message}</p>
+        <p className="text-xs text-fg-subtle truncate mt-0.5">{notification.message}</p>
         <div className="flex items-center gap-3 mt-1">
           <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${cfg.bgColor} ${cfg.color}`}>
             {cfg.label}
           </span>
-          <span className="text-[10px] text-slate-600">
+          <span className="text-[10px] text-fg-subtle">
             {formatRelativeDate(notification.createdAt)}
           </span>
           {notification.triggeredBy && (
-            <span className="text-[10px] text-slate-600">
+            <span className="text-[10px] text-fg-subtle">
               {notification.triggeredBy}
             </span>
           )}
@@ -345,7 +345,7 @@ function NotificationRow({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onMarkRead(notification.id) }}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors"
+            className="p-1.5 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 transition-colors"
             title={markReadTitle}
           >
             <Check size={13} />
@@ -354,7 +354,7 @@ function NotificationRow({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onDelete(notification.id) }}
-          className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+          className="p-1.5 rounded-lg text-fg-subtle hover:text-danger hover:bg-danger/10 transition-colors"
           title={deleteTitle}
         >
           <Trash2 size={13} />

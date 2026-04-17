@@ -9,10 +9,10 @@ import { useDealsStore } from '../store/dealsStore'
 import { useActivitiesStore } from '../store/activitiesStore'
 import { useCompaniesStore } from '../store/companiesStore'
 import { StatCard } from '../components/ui/StatCard'
-import { Badge } from '../components/ui/Badge'
+import { Badge, type BadgeVariant } from '../components/ui/Badge'
 import { Avatar } from '../components/ui/Avatar'
 import { Button } from '../components/ui/Button'
-import AnimatedCounter from '../components/ui/AnimatedCounter'
+import { AnimatedCounter } from '../components/ui/AnimatedCounter'
 import { formatCurrency, formatRelativeDate, formatDate } from '../utils/formatters'
 import { DEAL_STAGE_COLORS } from '../utils/constants'
 import { useAuthStore } from '../store/authStore'
@@ -25,13 +25,13 @@ import { es, enUS, ptBR, fr, de, it } from 'date-fns/locale'
 import { useTranslations, useI18nStore } from '../i18n'
 import { trackUxAction } from '../lib/uxMetrics'
 
-const STAGE_BADGE_MAP: Record<DealStage, 'blue' | 'yellow' | 'purple' | 'orange' | 'emerald' | 'rose'> = {
-  lead: 'blue',
-  qualified: 'yellow',
-  proposal: 'purple',
+const STAGE_BADGE_MAP: Record<DealStage, BadgeVariant> = {
+  lead: 'info',
+  qualified: 'warning',
+  proposal: 'violet',
   negotiation: 'orange',
-  closed_won: 'emerald',
-  closed_lost: 'rose',
+  closed_won: 'success',
+  closed_lost: 'danger',
 }
 
 const MONTHLY_QUOTA = 50000
@@ -204,10 +204,10 @@ export function Dashboard() {
   return (
     <div className="crm-page space-y-6">
       {showOnboardingBanner && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-brand-500/30 bg-brand-500/10 px-4 py-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-accent-500/30 bg-accent-500/10 px-4 py-3">
           <div>
-            <p className="text-sm font-semibold text-white">{t.dashboard.onboardingBannerTitle}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{t.dashboard.onboardingBannerBody}</p>
+            <p className="text-sm font-semibold text-fg">{t.dashboard.onboardingBannerTitle}</p>
+            <p className="text-xs text-fg-muted mt-0.5">{t.dashboard.onboardingBannerBody}</p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
             <Button size="sm" onClick={() => navigate('/settings?tab=onboarding')}>
@@ -274,26 +274,26 @@ export function Dashboard() {
           title={t.dashboard.totalContacts}
           value={<AnimatedCounter value={stats.totalContacts} />}
           icon={<Users size={20} />}
-          accent="blue"
+          accent="accent"
           subtitle={`${companies.length} ${t.companies.title.toLowerCase()}`}
         />
         <StatCard
           title={t.dashboard.openDeals}
           value={<AnimatedCounter value={stats.openDeals} />}
           icon={<Briefcase size={20} />}
-          accent="violet"
+          accent="info"
         />
         <StatCard
           title={t.dashboard.pipelineValue}
           value={<AnimatedCounter value={stats.pipelineValue} prefix="€" />}
           icon={<TrendingUp size={20} />}
-          accent="blue"
+          accent="accent"
         />
         <StatCard
           title={t.dashboard.wonThisMonth}
           value={<AnimatedCounter value={stats.wonThisMonth} prefix="€" />}
           icon={<Trophy size={20} />}
-          accent="emerald"
+          accent="success"
         />
       </div>
 
@@ -301,7 +301,7 @@ export function Dashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Revenue bar chart */}
         <div className="xl:col-span-2 glass rounded-2xl p-5">
-          <h2 className="text-sm font-semibold text-slate-300 mb-4">{t.dashboard.revenueByMonth}</h2>
+          <h2 className="text-sm font-semibold text-fg-muted mb-4">{t.dashboard.revenueByMonth}</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={revenueData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1a1d35" vertical={false} />
@@ -332,19 +332,19 @@ export function Dashboard() {
           {/* Monthly Quota Progress */}
           <div className="glass rounded-2xl p-5 flex-1">
             <div className="flex items-center gap-2 mb-3">
-              <Target size={16} className="text-brand-400" />
-              <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.monthlyQuota}</h2>
+              <Target size={16} className="text-accent-400" />
+              <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.monthlyQuota}</h2>
             </div>
             <div className="flex items-end justify-between mb-3">
               <div>
-                <p className="text-2xl font-bold text-white">
+                <p className="text-2xl font-bold text-fg">
                   <AnimatedCounter value={quotaProgress.percentage} suffix="%" />
                 </p>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-fg-subtle mt-1">
                   {formatCurrency(quotaProgress.current)} / {formatCurrency(MONTHLY_QUOTA)}
                 </p>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-fg-subtle">
                 {t.dashboard.remaining} {formatCurrency(quotaProgress.remaining)}
               </p>
             </div>
@@ -362,25 +362,25 @@ export function Dashboard() {
           {/* Sales Velocity */}
           <div className="glass rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
-              <Zap size={16} className="text-amber-400" />
-              <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.salesVelocity}</h2>
+              <Zap size={16} className="text-warning" />
+              <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.salesVelocity}</h2>
             </div>
-            <p className="text-2xl font-bold text-white">
+            <p className="text-2xl font-bold text-fg">
               <AnimatedCounter value={salesVelocity} suffix={` ${t.dashboard.days}`} />
             </p>
-            <p className="text-xs text-slate-500 mt-1">{t.dashboard.avgCloseTime}</p>
+            <p className="text-xs text-fg-subtle mt-1">{t.dashboard.avgCloseTime}</p>
           </div>
 
           {/* Conversion Rate */}
           <div className="glass rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-2">
-              <BarChart3 size={16} className="text-emerald-400" />
-              <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.conversionRate}</h2>
+              <BarChart3 size={16} className="text-success" />
+              <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.conversionRate}</h2>
             </div>
-            <p className="text-2xl font-bold text-white">
+            <p className="text-2xl font-bold text-fg">
               <AnimatedCounter value={conversionRate} suffix="%" />
             </p>
-            <p className="text-xs text-slate-500 mt-1">{t.reports.conversionRate}</p>
+            <p className="text-xs text-fg-subtle mt-1">{t.reports.conversionRate}</p>
           </div>
         </div>
       </div>
@@ -391,11 +391,11 @@ export function Dashboard() {
         {/* Recent activities */}
         <div className="glass rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.recentActivities}</h2>
+            <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.recentActivities}</h2>
             <button
               type="button"
               onClick={() => navigate('/activities')}
-              className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+              className="text-xs text-accent-400 hover:text-accent-300 transition-colors"
             >
               {t.dashboard.viewAll}
             </button>
@@ -404,18 +404,18 @@ export function Dashboard() {
             {recentActivities.map((activity) => {
               const contact = activity.contactId ? getContact(activity.contactId) : undefined
               return (
-                <div key={activity.id} className="flex items-start gap-3 pb-3 border-b border-white/6 last:border-0 last:pb-0">
+                <div key={activity.id} className="flex items-start gap-3 pb-3 border-b border-fg/6 last:border-0 last:pb-0">
                   <div className="w-8 h-8 rounded-lg bg-surface-2/90 flex items-center justify-center flex-shrink-0">
-                    <Activity size={13} className="text-brand-400" />
+                    <Activity size={13} className="text-accent-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-slate-200 truncate">{activity.subject}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="text-xs font-medium text-fg truncate">{activity.subject}</p>
+                    <p className="text-xs text-fg-subtle mt-0.5">
                       {t.activities.typeLabels[activity.type]}
                       {contact ? ` · ${contact.firstName} ${contact.lastName}` : ''}
                     </p>
                   </div>
-                  <span className="text-[10px] text-slate-600 flex-shrink-0">
+                  <span className="text-[10px] text-fg-subtle flex-shrink-0">
                     {formatRelativeDate(activity.createdAt)}
                   </span>
                 </div>
@@ -427,11 +427,11 @@ export function Dashboard() {
         {/* Top deals */}
         <div className="glass rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.topDeals}</h2>
+            <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.topDeals}</h2>
             <button
               type="button"
               onClick={() => navigate('/deals')}
-              className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+              className="text-xs text-accent-400 hover:text-accent-300 transition-colors"
             >
               {t.dashboard.viewPipeline}
             </button>
@@ -443,19 +443,19 @@ export function Dashboard() {
               return (
                 <div
                   key={deal.id}
-                  className="flex items-center gap-3 pb-3 border-b border-white/6 last:border-0 last:pb-0 cursor-pointer hover:bg-white/[0.03] -mx-2 px-2 rounded-lg transition-colors"
+                  className="flex items-center gap-3 pb-3 border-b border-fg/6 last:border-0 last:pb-0 cursor-pointer hover:bg-fg/[0.03] -mx-2 px-2 rounded-lg transition-colors"
                   onClick={() => navigate(`/deals?deal=${deal.id}`)}
                 >
                   {contact && <Avatar name={`${contact.firstName} ${contact.lastName}`} size="xs" />}
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-slate-200 truncate">{deal.title}</p>
-                    <p className="text-xs text-slate-500 truncate">{company?.name ?? '—'}</p>
+                    <p className="text-xs font-medium text-fg truncate">{deal.title}</p>
+                    <p className="text-xs text-fg-subtle truncate">{company?.name ?? '—'}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs font-semibold text-emerald-400">
+                    <span className="text-xs font-semibold text-success">
                       {formatCurrency(deal.value, deal.currency)}
                     </span>
-                    <Badge variant={STAGE_BADGE_MAP[deal.stage] ?? 'gray'}>
+                    <Badge variant={STAGE_BADGE_MAP[deal.stage] ?? 'neutral'}>
                       {t.deals.stageLabels[deal.stage as keyof typeof t.deals.stageLabels] ?? deal.stage}
                     </Badge>
                   </div>
@@ -471,13 +471,13 @@ export function Dashboard() {
         <div className="glass rounded-2xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Bell size={16} className="text-brand-400" />
-              <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.latestNotifications}</h2>
+              <Bell size={16} className="text-accent-400" />
+              <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.latestNotifications}</h2>
             </div>
             <button
               type="button"
               onClick={() => navigate('/notifications')}
-              className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+              className="text-xs text-accent-400 hover:text-accent-300 transition-colors"
             >
               {t.dashboard.viewNotifications}
             </button>
@@ -487,7 +487,7 @@ export function Dashboard() {
               <div
                 key={n.id}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors cursor-pointer ${
-                  n.isRead ? 'opacity-50 hover:opacity-70' : 'bg-white/[0.02] hover:bg-white/[0.05]'
+                  n.isRead ? 'opacity-50 hover:opacity-70' : 'bg-fg/[0.02] hover:bg-fg/[0.05]'
                 }`}
                 onClick={() => {
                   useNotificationsStore.getState().markAsRead(n.id)
@@ -497,12 +497,12 @@ export function Dashboard() {
                   else navigate('/notifications')
                 }}
               >
-                {!n.isRead && <span className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0" />}
+                {!n.isRead && <span className="w-2 h-2 rounded-full bg-accent-500 flex-shrink-0" />}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-slate-200 truncate">{n.title}</p>
-                  <p className="text-[10px] text-slate-500 truncate">{n.message}</p>
+                  <p className="text-xs font-medium text-fg truncate">{n.title}</p>
+                  <p className="text-[10px] text-fg-subtle truncate">{n.message}</p>
                 </div>
-                <span className="text-[10px] text-slate-600 flex-shrink-0">
+                <span className="text-[10px] text-fg-subtle flex-shrink-0">
                   {formatRelativeDate(n.createdAt)}
                 </span>
               </div>
@@ -514,14 +514,14 @@ export function Dashboard() {
       {/* ── Row 7: Activity Heatmap ──────────────────────────────────────── */}
       <div className="glass rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Clock size={16} className="text-brand-400" />
-          <h2 className="text-sm font-semibold text-slate-300">{t.dashboard.activityHeatmap}</h2>
+          <Clock size={16} className="text-accent-400" />
+          <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.activityHeatmap}</h2>
         </div>
         <div className="space-y-2">
           {/* Day labels */}
           <div className="grid grid-cols-7 gap-2">
             {DAY_LABELS.map((day) => (
-              <div key={day} className="text-center text-[10px] text-slate-500 font-medium">
+              <div key={day} className="text-center text-[10px] text-fg-subtle font-medium">
                 {day}
               </div>
             ))}
@@ -536,7 +536,7 @@ export function Dashboard() {
                   title={`${count} ${t.activities.title.toLowerCase()}`}
                 >
                   {count > 0 && (
-                    <span className="text-[10px] font-semibold text-white/85">{count}</span>
+                    <span className="text-[10px] font-semibold text-fg/85">{count}</span>
                   )}
                 </div>
               ))}
@@ -544,13 +544,13 @@ export function Dashboard() {
           ))}
           {/* Legend */}
           <div className="flex items-center justify-end gap-2 pt-2">
-            <span className="text-[10px] text-slate-500">{t.dashboard.heatmapLess}</span>
+            <span className="text-[10px] text-fg-subtle">{t.dashboard.heatmapLess}</span>
             <div className="w-4 h-4 rounded crm-heat-0" />
             <div className="w-4 h-4 rounded crm-heat-1" />
             <div className="w-4 h-4 rounded crm-heat-2" />
             <div className="w-4 h-4 rounded crm-heat-3" />
             <div className="w-4 h-4 rounded crm-heat-4" />
-            <span className="text-[10px] text-slate-500">{t.dashboard.heatmapMore}</span>
+            <span className="text-[10px] text-fg-subtle">{t.dashboard.heatmapMore}</span>
           </div>
         </div>
       </div>

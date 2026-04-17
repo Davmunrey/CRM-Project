@@ -65,12 +65,12 @@ export function UserProfile() {
   return (
     <div className="crm-page space-y-6">
       {/* Profile header */}
-      <div className="glass rounded-2xl shadow-float border-white/10 p-8 text-center">
+      <div className="glass rounded-2xl shadow-float border-fg/10 p-8 text-center">
         <div className="relative inline-block mb-4">
           <Avatar name={currentUser.name} size="xl" />
           <button
             type="button"
-            className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-brand-600 flex items-center justify-center text-white shadow-lg hover:bg-brand-500 transition-colors"
+            className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-accent-600 flex items-center justify-center text-fg shadow-lg hover:bg-accent-500 transition-colors"
             aria-label={t.common.edit}
           >
             <Camera size={14} />
@@ -86,23 +86,23 @@ export function UserProfile() {
       </div>
 
       {/* Profile info */}
-      <div className="glass rounded-2xl border-white/8 p-6">
+      <div className="glass rounded-2xl border-fg/8 p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-sm font-semibold crm-profile-card-title">{t.auth.profile}</h3>
           {!editing ? (
             <button
               type="button"
               onClick={() => { setForm({ name: currentUser.name, jobTitle: currentUser.jobTitle, phone: currentUser.phone || '' }); setEditing(true) }}
-              className="text-xs text-brand-500 hover:text-brand-600 dark:text-brand-400 dark:hover:text-brand-300 font-medium transition-colors"
+              className="text-xs text-accent-500 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 font-medium transition-colors"
             >
               {t.common.edit}
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setEditing(false)} className="p-1.5 rounded-lg text-slate-500 hover:text-[var(--text-main)] hover:bg-white/8 transition-colors" aria-label={t.common.cancel}>
+              <button type="button" onClick={() => setEditing(false)} className="p-1.5 rounded-lg text-fg-subtle hover:text-[var(--text-main)] hover:bg-fg/8 transition-colors" aria-label={t.common.cancel}>
                 <X size={14} />
               </button>
-              <button type="button" onClick={handleSaveProfile} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg btn-gradient text-xs text-white font-medium">
+              <button type="button" onClick={handleSaveProfile} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg btn-gradient text-xs text-fg font-medium">
                 <Check size={12} /> {t.common.save}
               </button>
             </div>
@@ -170,7 +170,7 @@ export function UserProfile() {
       </div>
 
       {/* Change password */}
-      <div className="glass rounded-2xl border-white/8 p-6">
+      <div className="glass rounded-2xl border-fg/8 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold crm-profile-card-title flex items-center gap-2">
             <Lock size={14} className="crm-input-icon" />
@@ -180,7 +180,7 @@ export function UserProfile() {
             <button
               type="button"
               onClick={() => setChangingPw(true)}
-              className="text-xs text-brand-500 hover:text-brand-600 dark:text-brand-400 dark:hover:text-brand-300 font-medium transition-colors"
+              className="text-xs text-accent-500 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 font-medium transition-colors"
             >
               {t.auth.savePassword}
             </button>
@@ -248,7 +248,7 @@ export function UserProfile() {
               >
                 {t.common.cancel}
               </button>
-              <button type="button" onClick={handleChangePassword} className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold">
+              <button type="button" onClick={handleChangePassword} className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold">
                 <Check size={14} /> {t.common.save}
               </button>
             </div>
@@ -259,7 +259,7 @@ export function UserProfile() {
       </div>
 
       {/* Session info */}
-      <div className="glass rounded-xl border-white/8 p-4">
+      <div className="glass rounded-xl border-fg/8 p-4">
         <div className="flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
           <span>{t.auth.login}: {currentUser.lastLoginAt ? formatDateTime(currentUser.lastLoginAt) : t.common.notAvailable}</span>
           <span>{t.common.createdAt}: {formatDateShort(currentUser.createdAt)}</span>

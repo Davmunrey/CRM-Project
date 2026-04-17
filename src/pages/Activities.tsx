@@ -31,12 +31,12 @@ import { trackUxAction } from '../lib/uxMetrics'
 type ViewMode = 'list' | 'calendar'
 
 const activityColorMap: Record<ActivityType, string> = {
-  call: 'bg-blue-500/20 text-blue-300',
-  email: 'bg-violet-500/20 text-violet-300',
-  meeting: 'bg-emerald-500/20 text-emerald-300',
-  task: 'bg-amber-500/20 text-amber-300',
-  note: 'bg-slate-500/20 text-slate-300',
-  linkedin: 'bg-blue-400/20 text-blue-200',
+  call: 'bg-info/20 text-info',
+  email: 'bg-accent-500/20 text-accent-300',
+  meeting: 'bg-success/20 text-success',
+  task: 'bg-warning/20 text-warning',
+  note: 'bg-surface-2/20 text-fg-muted',
+  linkedin: 'bg-info/25 text-info',
 }
 
 function CalendarView({
@@ -105,11 +105,11 @@ function CalendarView({
             onClick={() => setCalendarMonth((m) => subMonths(m, 1))}
             title={`${t.common.previous} ${t.common.date}`}
             aria-label={`${t.common.previous} ${t.common.date}`}
-            className="hover:bg-white/6 rounded-lg p-1.5 text-slate-400 hover:text-white transition-colors"
+            className="hover:bg-fg/6 rounded-lg p-1.5 text-fg-muted hover:text-fg transition-colors"
           >
             <ChevronLeft size={16} />
           </button>
-          <h3 className="text-sm font-semibold text-white capitalize">
+          <h3 className="text-sm font-semibold text-fg capitalize">
             {format(calendarMonth, 'MMMM yyyy', { locale: dateLocale })}
           </h3>
           <button
@@ -117,7 +117,7 @@ function CalendarView({
             onClick={() => setCalendarMonth((m) => addMonths(m, 1))}
             title={`${t.common.next} ${t.common.date}`}
             aria-label={`${t.common.next} ${t.common.date}`}
-            className="hover:bg-white/6 rounded-lg p-1.5 text-slate-400 hover:text-white transition-colors"
+            className="hover:bg-fg/6 rounded-lg p-1.5 text-fg-muted hover:text-fg transition-colors"
           >
             <ChevronRight size={16} />
           </button>
@@ -126,7 +126,7 @@ function CalendarView({
         {/* Day headers */}
         <div className="grid grid-cols-7 gap-1 mb-1">
           {dayHeaders.map((d) => (
-            <div key={d} className="text-center text-[10px] font-medium text-slate-500 py-1">
+            <div key={d} className="text-center text-[10px] font-medium text-fg-subtle py-1">
               {d}
             </div>
           ))}
@@ -148,13 +148,13 @@ function CalendarView({
                 onClick={() => handleDayClick(day)}
                 className={`
                   min-h-[80px] border rounded-lg p-1 text-left transition-colors flex flex-col
-                  ${today ? 'border-brand-500/50 bg-brand-500/5' : 'border-white/4'}
-                  ${isSelected ? 'ring-1 ring-brand-500/70 bg-brand-500/10' : ''}
+                  ${today ? 'border-accent-500/50 bg-accent-500/5' : 'border-fg/4'}
+                  ${isSelected ? 'ring-1 ring-accent-500/70 bg-accent-500/10' : ''}
                   ${!sameMonth ? 'opacity-30' : ''}
-                  hover:bg-white/4
+                  hover:bg-fg/4
                 `}
               >
-                <span className={`text-[11px] font-medium ${today ? 'text-brand-400' : 'text-slate-400'}`}>
+                <span className={`text-[11px] font-medium ${today ? 'text-accent-400' : 'text-fg-muted'}`}>
                   {format(day, 'd')}
                 </span>
                 <div className="flex flex-col gap-0.5 mt-0.5 overflow-hidden flex-1">
@@ -167,7 +167,7 @@ function CalendarView({
                     </span>
                   ))}
                   {dayActivities.length > 3 && (
-                    <span className="text-[10px] text-slate-500 px-1">
+                    <span className="text-[10px] text-fg-subtle px-1">
                       +{dayActivities.length - 3}
                     </span>
                   )}
@@ -181,11 +181,11 @@ function CalendarView({
       {/* Selected day detail */}
       {selectedDay && (
         <div className="glass rounded-2xl p-4">
-          <h4 className="text-sm font-semibold text-white mb-3 capitalize">
+          <h4 className="text-sm font-semibold text-fg mb-3 capitalize">
             {format(selectedDay, 'PPPP', { locale: dateLocale })}
           </h4>
           {selectedDayActivities.length === 0 ? (
-            <p className="text-xs text-slate-500">{noActivitiesLabel}</p>
+            <p className="text-xs text-fg-subtle">{noActivitiesLabel}</p>
           ) : (
             <div className="space-y-1">
               {selectedDayActivities.map((activity) => (
@@ -326,25 +326,25 @@ export function Activities() {
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         <div className="glass p-4">
-          <p className="text-xs text-slate-500 mb-1">{t.activities.title}</p>
-          <p className="text-2xl font-bold text-white">{activities.length}</p>
+          <p className="text-xs text-fg-subtle mb-1">{t.activities.title}</p>
+          <p className="text-2xl font-bold text-fg">{activities.length}</p>
         </div>
         <div className="glass p-4">
-          <p className="text-xs text-slate-500 mb-1">{t.activities.statusLabels.pending}</p>
-          <p className="text-2xl font-bold text-yellow-400">{pending.length}</p>
+          <p className="text-xs text-fg-subtle mb-1">{t.activities.statusLabels.pending}</p>
+          <p className="text-2xl font-bold text-warning">{pending.length}</p>
         </div>
         <div className="glass p-4">
-          <p className="text-xs text-slate-500 mb-1">{t.activities.overdue}</p>
-          <p className="text-2xl font-bold text-red-400">{overdue.length}</p>
+          <p className="text-xs text-fg-subtle mb-1">{t.activities.overdue}</p>
+          <p className="text-2xl font-bold text-danger">{overdue.length}</p>
         </div>
       </div>
 
       {/* Overdue section */}
       {overdue.length > 0 && (
-        <div className="bg-red-500/5 border border-red-500/20 rounded-xl p-4">
+        <div className="bg-danger/5 border border-danger/20 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Clock size={14} className="text-red-400" />
-            <h3 className="text-sm font-semibold text-red-400">{t.activities.overdue} ({overdue.length})</h3>
+            <Clock size={14} className="text-danger" />
+            <h3 className="text-sm font-semibold text-danger">{t.activities.overdue} ({overdue.length})</h3>
           </div>
           <div className="space-y-2">
             {overdue.slice(0, 3).map((a) => (
@@ -380,8 +380,8 @@ export function Activities() {
             onClick={() => setViewMode('list')}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
               viewMode === 'list'
-                ? 'bg-white/10 text-white'
-                : 'text-slate-400 hover:text-white hover:bg-white/6'
+                ? 'bg-fg/10 text-fg'
+                : 'text-fg-muted hover:text-fg hover:bg-fg/6'
             }`}
           >
             <LayoutList size={14} />
@@ -392,8 +392,8 @@ export function Activities() {
             onClick={() => setViewMode('calendar')}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors ${
               viewMode === 'calendar'
-                ? 'bg-white/10 text-white'
-                : 'text-slate-400 hover:text-white hover:bg-white/6'
+                ? 'bg-fg/10 text-fg'
+                : 'text-fg-muted hover:text-fg hover:bg-fg/6'
             }`}
           >
             <Calendar size={14} />
@@ -438,7 +438,7 @@ export function Activities() {
         </div>
       )}
 
-      <p className="text-xs text-slate-500">{filtered.length} {t.activities.title.toLowerCase()}</p>
+      <p className="text-xs text-fg-subtle">{filtered.length} {t.activities.title.toLowerCase()}</p>
 
       {/* Calendar view */}
       {viewMode === 'calendar' && (

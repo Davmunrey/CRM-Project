@@ -19,7 +19,7 @@ import { DealForm } from '../components/deals/DealForm'
 import { ActivityForm } from '../components/activities/ActivityForm'
 import { ActivityItem } from '../components/activities/ActivityItem'
 import { Button } from '../components/ui/Button'
-import { Badge } from '../components/ui/Badge'
+import { Badge, type BadgeVariant } from '../components/ui/Badge'
 import { Avatar } from '../components/ui/Avatar'
 import { SearchBar } from '../components/shared/SearchBar'
 import { SmartViewBar } from '../components/shared/SmartViewBar'
@@ -41,13 +41,13 @@ import { useProductsStore } from '../store/productsStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { CustomFieldsForm } from '../components/shared/CustomFieldRenderer'
 
-const STAGE_BADGE_MAP: Record<string, 'blue' | 'yellow' | 'purple' | 'orange' | 'emerald' | 'rose' | 'gray'> = {
-  lead: 'blue',
-  qualified: 'yellow',
-  proposal: 'purple',
+const STAGE_BADGE_MAP: Record<string, BadgeVariant> = {
+  lead: 'info',
+  qualified: 'warning',
+  proposal: 'violet',
   negotiation: 'orange',
-  closed_won: 'emerald',
-  closed_lost: 'rose',
+  closed_won: 'success',
+  closed_lost: 'danger',
 }
 
 function getDealAgeDays(createdAt: string): number {
@@ -55,9 +55,9 @@ function getDealAgeDays(createdAt: string): number {
 }
 
 function getAgingColor(days: number): { bg: string; text: string } {
-  if (days < 7) return { bg: 'bg-emerald-500/15', text: 'text-emerald-400' }
-  if (days <= 30) return { bg: 'bg-amber-500/15', text: 'text-amber-400' }
-  return { bg: 'bg-red-500/15', text: 'text-red-400' }
+  if (days < 7) return { bg: 'bg-success/15', text: 'text-success' }
+  if (days <= 30) return { bg: 'bg-warning/15', text: 'text-warning' }
+  return { bg: 'bg-danger/15', text: 'text-danger' }
 }
 
 function getStageDurationDays(updatedAt: string): number {
@@ -416,7 +416,7 @@ function QuoteBuilder({
           onChange={(e) => { if (e.target.value) { addFromProduct(e.target.value); e.target.value = '' } }}
           aria-label={`${t.common.add} ${t.products.title.toLowerCase()} ${t.deals.quote.toLowerCase()}`}
           title={`${t.common.add} ${t.products.title.toLowerCase()} ${t.deals.quote.toLowerCase()}`}
-          className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+          className="flex-1 bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
         >
           <option value="" disabled>+ {t.deals.addItem}...</option>
           {products.map((p) => {
@@ -429,7 +429,7 @@ function QuoteBuilder({
         <button
           type="button"
           onClick={addBlank}
-          className="px-3 py-1.5 rounded-lg border border-white/10 text-xs text-slate-400 hover:text-white hover:bg-white/4 transition-colors whitespace-nowrap"
+          className="px-3 py-1.5 rounded-lg border border-fg/10 text-xs text-fg-muted hover:text-fg hover:bg-fg/4 transition-colors whitespace-nowrap"
         >
           + {t.deals.addItem}
         </button>
@@ -440,7 +440,7 @@ function QuoteBuilder({
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-slate-500 border-b border-white/6">
+              <tr className="text-fg-subtle border-b border-fg/6">
                 <th className="text-left pb-2 font-medium">{t.common.description}</th>
                 <th className="text-right pb-2 font-medium w-14">{t.common.total}</th>
                 <th className="text-right pb-2 font-medium w-24">{t.common.value}</th>
@@ -449,7 +449,7 @@ function QuoteBuilder({
                 <th className="w-6" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/4">
+            <tbody className="divide-y divide-border-subtle">
               {items.map((item) => (
                 <tr key={item.id}>
                   <td className="py-1.5 pr-2">
@@ -460,13 +460,13 @@ function QuoteBuilder({
                       placeholder={t.common.name}
                       aria-label={t.common.name}
                       title={t.common.name}
-                      className="w-full bg-transparent border-b border-white/10 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 py-0.5"
+                      className="w-full bg-transparent border-b border-fg/10 text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50 py-0.5"
                     />
                     <textarea
                       value={item.description ?? ''}
                       onChange={(e) => updateItem(item.id, { description: e.target.value })}
                       placeholder={t.deals.lineDescriptionPlaceholder}
-                      className="w-full mt-1 bg-transparent border border-white/10 rounded px-1.5 py-1 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 min-h-[42px]"
+                      className="w-full mt-1 bg-transparent border border-fg/10 rounded px-1.5 py-1 text-[11px] text-fg-muted placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50 min-h-[42px]"
                     />
                   </td>
                   <td className="py-1.5 px-1">
@@ -477,7 +477,7 @@ function QuoteBuilder({
                       onChange={(e) => updateItem(item.id, { quantity: Math.max(1, Number(e.target.value)) })}
                       aria-label={t.common.total}
                       title={t.common.total}
-                      className="w-12 text-right bg-transparent border-b border-white/10 text-slate-200 focus:outline-none focus:border-brand-500/50 py-0.5"
+                      className="w-12 text-right bg-transparent border-b border-fg/10 text-fg focus:outline-none focus:border-accent-500/50 py-0.5"
                     />
                   </td>
                   <td className="py-1.5 px-1">
@@ -489,7 +489,7 @@ function QuoteBuilder({
                       onChange={(e) => updateItem(item.id, { unitPrice: parseFloat(e.target.value) || 0 })}
                       aria-label={t.products.price}
                       title={t.products.price}
-                      className="w-20 text-right bg-transparent border-b border-white/10 text-slate-200 focus:outline-none focus:border-brand-500/50 py-0.5"
+                      className="w-20 text-right bg-transparent border-b border-fg/10 text-fg focus:outline-none focus:border-accent-500/50 py-0.5"
                     />
                   </td>
                   <td className="py-1.5 px-1">
@@ -501,12 +501,12 @@ function QuoteBuilder({
                       onChange={(e) => updateItem(item.id, { discount: Math.min(100, Math.max(0, Number(e.target.value))) })}
                       aria-label={t.deals.discount}
                       title={t.deals.discount}
-                      className="w-14 text-right bg-transparent border-b border-white/10 text-slate-200 focus:outline-none focus:border-brand-500/50 py-0.5"
+                      className="w-14 text-right bg-transparent border-b border-fg/10 text-fg focus:outline-none focus:border-accent-500/50 py-0.5"
                     />
                   </td>
-                  <td className="py-1.5 pl-1 text-right text-slate-200 font-medium">{fmt(item.total)}</td>
+                  <td className="py-1.5 pl-1 text-right text-fg font-medium">{fmt(item.total)}</td>
                   <td className="py-1.5 pl-1">
-                    <button type="button" onClick={() => removeItem(item.id)} className="text-slate-600 hover:text-red-400 transition-colors">×</button>
+                    <button type="button" onClick={() => removeItem(item.id)} className="text-fg-subtle hover:text-danger transition-colors">×</button>
                   </td>
                 </tr>
               ))}
@@ -517,32 +517,32 @@ function QuoteBuilder({
 
       {/* Summary */}
       {items.length > 0 && (
-        <div className="border-t border-white/6 pt-3 space-y-1 text-xs">
-          <div className="flex justify-between text-slate-500">
+        <div className="border-t border-fg/6 pt-3 space-y-1 text-xs">
+          <div className="flex justify-between text-fg-subtle">
             <span>{t.deals.subtotal}</span><span>{fmt(subtotal)}</span>
           </div>
           {lineDiscount > 0 && (
-            <div className="flex justify-between text-amber-400">
+            <div className="flex justify-between text-warning">
               <span>{t.deals.discount} ({t.common.details})</span><span>-{fmt(lineDiscount)}</span>
             </div>
           )}
           {globalDiscountAmount > 0 && (
-            <div className="flex justify-between text-amber-400">
+            <div className="flex justify-between text-warning">
               <span>{t.deals.discount} ({globalDiscountPercent}%)</span><span>-{fmt(globalDiscountAmount)}</span>
             </div>
           )}
-          <div className="flex justify-between text-white font-bold text-sm pt-1 border-t border-white/6">
+          <div className="flex justify-between text-fg font-bold text-sm pt-1 border-t border-fg/6">
             <span>{t.deals.taxableBase}</span><span>{fmt(baseTaxable)}</span>
           </div>
-          <div className="flex justify-between text-slate-400">
+          <div className="flex justify-between text-fg-muted">
             <span>{t.deals.vatPercent} ({vatPercent}%)</span><span>{fmt(vatAmount)}</span>
           </div>
           {withholdingAmount > 0 && (
-            <div className="flex justify-between text-slate-400">
+            <div className="flex justify-between text-fg-muted">
               <span>{t.deals.withholdingPercent} ({withholdingPercent}%)</span><span>-{fmt(withholdingAmount)}</span>
             </div>
           )}
-          <div className="flex justify-between text-emerald-400 font-semibold text-sm">
+          <div className="flex justify-between text-success font-semibold text-sm">
             <span>{t.common.total}</span><span>{fmt(grandTotal)}</span>
           </div>
         </div>
@@ -553,7 +553,7 @@ function QuoteBuilder({
         <select
           value={documentType}
           onChange={(e) => setDocumentType(e.target.value as QuoteDocumentType)}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
           aria-label={t.deals.documentType}
           title={t.deals.documentType}
         >
@@ -565,7 +565,7 @@ function QuoteBuilder({
           type="text"
           value={quoteNumber}
           onChange={(e) => setQuoteNumber(e.target.value)}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
           aria-label={t.deals.quoteNumber}
           title={t.deals.quoteNumber}
           placeholder={t.deals.quoteNumber}
@@ -576,7 +576,7 @@ function QuoteBuilder({
           max={100}
           value={vatPercent}
           onChange={(e) => setVatPercent(Math.min(100, Math.max(0, Number(e.target.value))))}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
           aria-label={t.deals.vatPercent}
           title={t.deals.vatPercent}
           placeholder={t.deals.vatPercent}
@@ -586,7 +586,7 @@ function QuoteBuilder({
           min={1}
           value={validityDays}
           onChange={(e) => setValidityDays(Math.max(1, Number(e.target.value)))}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
           aria-label={t.deals.validityDays}
           title={t.deals.validityDays}
           placeholder={t.deals.validityDays}
@@ -598,21 +598,21 @@ function QuoteBuilder({
           value={clientTaxId}
           onChange={(e) => setClientTaxId(e.target.value)}
           placeholder={t.deals.clientTaxIdPlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
         <input
           type="text"
           value={contactPerson}
           onChange={(e) => setContactPerson(e.target.value)}
           placeholder={t.deals.contactPersonPlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
         <input
           type="text"
           value={clientAddress}
           onChange={(e) => setClientAddress(e.target.value)}
           placeholder={t.deals.clientAddressPlaceholder}
-          className="sm:col-span-2 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="sm:col-span-2 bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -623,7 +623,7 @@ function QuoteBuilder({
           value={globalDiscountPercent}
           onChange={(e) => setGlobalDiscountPercent(Math.min(100, Math.max(0, Number(e.target.value))))}
           placeholder={t.deals.globalDiscountPlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
         <input
           type="number"
@@ -632,7 +632,7 @@ function QuoteBuilder({
           value={withholdingPercent}
           onChange={(e) => setWithholdingPercent(Math.min(100, Math.max(0, Number(e.target.value))))}
           placeholder={t.deals.withholdingPercent}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
         <input
           type="number"
@@ -640,7 +640,7 @@ function QuoteBuilder({
           value={paymentDays}
           onChange={(e) => setPaymentDays(Math.max(0, Number(e.target.value)))}
           placeholder={t.deals.paymentDaysPlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -649,35 +649,35 @@ function QuoteBuilder({
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
           placeholder={t.deals.paymentMethodPlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
         <input
           type="text"
           value={reference}
           onChange={(e) => setReference(e.target.value)}
           placeholder={t.deals.referencePlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
         <input
           type="text"
           value={bankName}
           onChange={(e) => setBankName(e.target.value)}
           placeholder={t.deals.bankNamePlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
         <input
           type="text"
           value={bankIban}
           onChange={(e) => setBankIban(e.target.value)}
           placeholder={t.deals.ibanPlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
         <input
           type="text"
           value={accountHolder}
           onChange={(e) => setAccountHolder(e.target.value)}
           placeholder={t.deals.accountHolderPlaceholder}
-          className="sm:col-span-2 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="sm:col-span-2 bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg"
         />
       </div>
       <div className="grid grid-cols-1 gap-2">
@@ -685,19 +685,19 @@ function QuoteBuilder({
           value={lateFeeClause}
           onChange={(e) => setLateFeeClause(e.target.value)}
           placeholder={t.deals.lateFeeClausePlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white min-h-[60px]"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg min-h-[60px]"
         />
         <textarea
           value={acceptanceClause}
           onChange={(e) => setAcceptanceClause(e.target.value)}
           placeholder={t.deals.acceptanceClausePlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white min-h-[60px]"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg min-h-[60px]"
         />
         <textarea
           value={additionalNotes}
           onChange={(e) => setAdditionalNotes(e.target.value)}
           placeholder={t.deals.additionalNotesPlaceholder}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white min-h-[60px]"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg min-h-[60px]"
         />
       </div>
 
@@ -706,21 +706,21 @@ function QuoteBuilder({
         <button
           type="button"
           onClick={exportPdf}
-          className="px-4 py-1.5 rounded-lg border border-white/10 hover:bg-white/4 text-xs text-slate-300 font-medium transition-colors"
+          className="px-4 py-1.5 rounded-lg border border-fg/10 hover:bg-fg/4 text-xs text-fg-muted font-medium transition-colors"
         >
           {t.common.export} PDF
         </button>
         <button
           type="button"
           onClick={sendQuoteByEmail}
-          className="px-4 py-1.5 rounded-lg border border-brand-500/30 bg-brand-500/10 hover:bg-brand-500/20 text-xs text-brand-300 font-medium transition-colors"
+          className="px-4 py-1.5 rounded-lg border border-accent-500/30 bg-accent-500/10 hover:bg-accent-500/20 text-xs text-accent-300 font-medium transition-colors"
         >
           {t.inbox.compose}
         </button>
         <button
           type="button"
           onClick={handleSave}
-          className="px-4 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600 text-xs text-white font-medium transition-colors"
+          className="px-4 py-1.5 rounded-lg bg-accent-500 hover:bg-accent-600 text-xs text-fg font-medium transition-colors"
         >
           {saved ? `${t.deals.quoteBuilder} ✓` : t.deals.quoteBuilder}
         </button>
@@ -959,7 +959,7 @@ export function Deals() {
           }
         />
       </div>
-      <Toolbar className="!flex-row flex-wrap items-center gap-3 py-3 shrink-0 border-b border-white/6 px-4 sm:px-6">
+      <Toolbar className="!flex-row flex-wrap items-center gap-3 py-3 shrink-0 border-b border-fg/6 px-4 sm:px-6">
         <div className="flex w-full flex-wrap items-center gap-3">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-64" />
         <Button
@@ -975,20 +975,20 @@ export function Deals() {
           onClick={() => setMyDataOnly((v) => !v)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
             myDataOnly
-              ? 'bg-brand-500/20 border-brand-500/40 text-brand-300'
-              : 'bg-white/4 border-white/10 text-slate-400 hover:text-slate-200'
+              ? 'bg-accent-500/20 border-accent-500/40 text-accent-300'
+              : 'bg-fg/4 border-fg/10 text-fg-muted hover:text-fg'
           }`}
         >
           <KanbanSquare size={12} />
           {myDataOnly ? t.deals.title : t.common.all}
         </button>
         <div className="ml-auto flex items-center gap-2">
-          <div className="flex rounded-lg border border-white/8 overflow-hidden">
+          <div className="flex rounded-lg border border-fg/8 overflow-hidden">
             <button
               type="button"
               onClick={() => setViewMode('kanban')}
               aria-label={t.deals.kanban}
-              className={`p-1.5 ${viewMode === 'kanban' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-300'} transition-colors`}
+              className={`p-1.5 ${viewMode === 'kanban' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
             >
               <KanbanSquare size={16} />
             </button>
@@ -996,7 +996,7 @@ export function Deals() {
               type="button"
               onClick={() => setViewMode('list')}
               aria-label={t.deals.list}
-              className={`p-1.5 ${viewMode === 'list' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-300'} transition-colors`}
+              className={`p-1.5 ${viewMode === 'list' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
             >
               <LayoutList size={16} />
             </button>
@@ -1006,13 +1006,13 @@ export function Deals() {
       </Toolbar>
 
       {/* Smart Views bar */}
-      <div className="py-2 border-b border-white/6">
+      <div className="py-2 border-b border-fg/6">
         <SmartViewBar entityType="deal" onFiltersChange={setViewFilters} />
       </div>
 
       {/* Filters */}
       {showFilters && (
-        <div className="flex gap-3 flex-wrap items-center py-3 border-b border-white/6 bg-surface-2/30">
+        <div className="flex gap-3 flex-wrap items-center py-3 border-b border-fg/6 bg-surface-2/30">
           <Select
             options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
             placeholder={t.common.assignedTo}
@@ -1060,11 +1060,11 @@ export function Deals() {
         <div className="flex-1 min-h-0 overflow-y-auto py-3 space-y-3">
           {/* Bulk actions bar */}
           {selectedDealIds.size > 0 && (
-            <div className="glass border border-white/8 rounded-xl px-4 py-3 flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-medium text-slate-300">
+            <div className="glass border border-fg/8 rounded-xl px-4 py-3 flex items-center gap-3 flex-wrap">
+              <span className="text-sm font-medium text-fg-muted">
                 {selectedDealIds.size} {t.deals.title} {t.common.selected}
               </span>
-              <div className="h-4 w-px bg-white/12" />
+              <div className="h-4 w-px bg-fg/12" />
               <Select
                 options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
                 placeholder={t.common.assignedTo}
@@ -1100,10 +1100,10 @@ export function Deals() {
               action={{ label: t.deals.newDeal, onClick: () => setIsFormOpen(true) }}
             />
           ) : (
-            <div className="bg-surface-1 border border-white/8 rounded-2xl overflow-hidden">
+            <div className="bg-surface-1 border border-fg/8 rounded-2xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/6 bg-surface-2/30">
+                  <tr className="border-b border-fg/6 bg-surface-2/30">
                     <th className="px-4 py-3 text-left w-10">
                       <input
                         type="checkbox"
@@ -1111,20 +1111,20 @@ export function Deals() {
                         onChange={toggleAllDeals}
                         aria-label={t.common.selectAll}
                         title={t.common.selectAll}
-                        className="rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500"
+                        className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t.deals.title}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t.deals.company}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t.common.value}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t.deals.stage}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t.common.priority}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t.deals.expectedClose}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t.common.assignedTo}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">{t.common.actions}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.title}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.company}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.value}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.stage}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.priority}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.expectedClose}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.assignedTo}</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.actions}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/6">
+                <tbody className="divide-y divide-border-subtle">
                   {filtered.map((deal) => {
                     const locDeal = localizedDeal(deal, t)
                     const contact = getContact(deal.contactId)
@@ -1137,7 +1137,7 @@ export function Deals() {
                     return (
                       <tr
                         key={deal.id}
-                        className="hover:bg-white/4 cursor-pointer transition-colors"
+                        className="hover:bg-fg/4 cursor-pointer transition-colors"
                         onClick={() => handleDealClick(deal)}
                       >
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -1147,16 +1147,16 @@ export function Deals() {
                             onChange={() => toggleDealSelect(deal.id)}
                             aria-label={`${t.common.select} ${locDeal.title}`}
                             title={`${t.common.select} ${locDeal.title}`}
-                            className="rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500"
+                            className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                           />
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: DEAL_PRIORITY_COLORS[deal.priority] }} />
-                            <span className="font-medium text-white">{locDeal.title}</span>
+                            <span className="font-medium text-fg">{locDeal.title}</span>
                             {showHealthDot && (
                               <span
-                                className={`w-2 h-2 rounded-full flex-shrink-0 ${health.status === 'at_risk' ? 'bg-red-400 animate-pulse' : 'bg-amber-400'} ${healthStatusColor(health.status)}`}
+                                className={`w-2 h-2 rounded-full flex-shrink-0 ${health.status === 'at_risk' ? 'bg-danger animate-pulse' : 'bg-warning'} ${healthStatusColor(health.status)}`}
                                 title={health.reasons.join(' · ')}
                               />
                             )}
@@ -1165,20 +1165,20 @@ export function Deals() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-slate-400 text-xs">{company?.name ?? '—'}</td>
-                        <td className="px-4 py-3 text-emerald-400 font-semibold text-sm">
+                        <td className="px-4 py-3 text-fg-muted text-xs">{company?.name ?? '—'}</td>
+                        <td className="px-4 py-3 text-success font-semibold text-sm">
                           {formatCurrency(deal.value, deal.currency)}
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant={STAGE_BADGE_MAP[deal.stage] ?? 'gray'}>{getStageLabel(deal.stage)}</Badge>
+                          <Badge variant={STAGE_BADGE_MAP[deal.stage] ?? 'neutral'}>{getStageLabel(deal.stage)}</Badge>
                         </td>
-                        <td className="px-4 py-3 text-xs text-slate-400">{t.deals.priorityLabels[deal.priority]}</td>
-                        <td className="px-4 py-3 text-xs text-slate-500">{formatDate(deal.expectedCloseDate)}</td>
-                        <td className="px-4 py-3 text-xs text-slate-400">{deal.assignedTo}</td>
+                        <td className="px-4 py-3 text-xs text-fg-muted">{t.deals.priorityLabels[deal.priority]}</td>
+                        <td className="px-4 py-3 text-xs text-fg-subtle">{formatDate(deal.expectedCloseDate)}</td>
+                        <td className="px-4 py-3 text-xs text-fg-muted">{deal.assignedTo}</td>
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <PermissionGate permission="deals:delete">
                             <Button variant="ghost" size="xs" onClick={() => setDeleteId(deal.id)}
-                              className="text-red-400 hover:text-red-300">
+                              className="text-danger hover:text-danger">
                               <Trash2 size={13} />
                             </Button>
                           </PermissionGate>
@@ -1208,11 +1208,11 @@ export function Deals() {
                 <PermissionGate permission="deals:move">
                   <>
                     <Button size="sm" variant="secondary" leftIcon={<Trophy size={14} />} onClick={handleMarkWon}
-                      className="text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10">
+                      className="text-success border-success/30 hover:bg-success/10">
                       {t.deals.won}
                     </Button>
                     <Button size="sm" variant="secondary" leftIcon={<XCircle size={14} />} onClick={handleMarkLost}
-                      className="text-red-400 border-red-500/30 hover:bg-red-500/10">
+                      className="text-danger border-danger/30 hover:bg-danger/10">
                       {t.deals.lost}
                     </Button>
                   </>
@@ -1236,7 +1236,7 @@ export function Deals() {
               </PermissionGate>
               <PermissionGate permission="deals:delete">
                 <Button size="sm" variant="ghost" leftIcon={<Trash2 size={14} />}
-                  className="text-red-400 hover:text-red-300 ml-auto"
+                  className="text-danger hover:text-danger ml-auto"
                   onClick={() => setDeleteId(selectedDeal.id)}>
                   {t.common.delete}
                 </Button>
@@ -1244,8 +1244,8 @@ export function Deals() {
             </div>
 
             {/* Info */}
-            <div className="bg-white/4 rounded-xl p-4 space-y-1">
-              <h2 className="text-lg font-bold text-white mb-3">{displaySelectedDeal?.title ?? selectedDeal.title}</h2>
+            <div className="bg-fg/4 rounded-xl p-4 space-y-1">
+              <h2 className="text-lg font-bold text-fg mb-3">{displaySelectedDeal?.title ?? selectedDeal.title}</h2>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 {[
                   { label: t.common.value, value: formatCurrency(selectedDeal.value, selectedDeal.currency) },
@@ -1259,36 +1259,36 @@ export function Deals() {
                   { label: t.deals.daysInStage, value: `${getStageDurationDays(selectedDeal.updatedAt)} ${t.deals.aging} ${getStageLabel(selectedDeal.stage)}` },
                 ].map(({ label, value }) => (
                   <div key={label}>
-                    <p className="text-xs text-slate-500">{label}</p>
-                    <p className="text-sm text-slate-200 font-medium">{value}</p>
+                    <p className="text-xs text-fg-subtle">{label}</p>
+                    <p className="text-sm text-fg font-medium">{value}</p>
                   </div>
                 ))}
               </div>
               {(displaySelectedDeal?.notes ?? selectedDeal.notes) && (
-                <div className="pt-3 border-t border-white/6 mt-3">
-                  <p className="text-xs text-slate-500 mb-1">{t.common.notes}</p>
-                  <p className="text-sm text-slate-300">{displaySelectedDeal?.notes ?? selectedDeal.notes}</p>
+                <div className="pt-3 border-t border-fg/6 mt-3">
+                  <p className="text-xs text-fg-subtle mb-1">{t.common.notes}</p>
+                  <p className="text-sm text-fg-muted">{displaySelectedDeal?.notes ?? selectedDeal.notes}</p>
                 </div>
               )}
             </div>
 
             {/* Custom Fields */}
-            <div className="bg-white/4 rounded-xl p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-slate-300">{t.common.details}</h3>
+            <div className="bg-fg/4 rounded-xl p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-fg-muted">{t.common.details}</h3>
               <CustomFieldsForm entityId={selectedDeal.id} entityType="deal" />
             </div>
 
             {/* Activities */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-slate-300">{t.nav.activities}</h3>
+                <h3 className="text-sm font-semibold text-fg-muted">{t.nav.activities}</h3>
                 <Button size="sm" variant="secondary" leftIcon={<Plus size={14} />}
                   onClick={() => setIsActivityOpen(true)}>
                   {t.common.add}
                 </Button>
               </div>
               {dealActivities.length === 0 ? (
-                <p className="text-xs text-slate-600 py-4 text-center">{t.activities.emptyTitle}</p>
+                <p className="text-xs text-fg-subtle py-4 text-center">{t.activities.emptyTitle}</p>
               ) : (
                 <div className="space-y-1">
                   {dealActivities.map((a) => (
@@ -1299,8 +1299,8 @@ export function Deals() {
             </div>
 
             {/* Quote Builder */}
-            <div className="bg-white/4 rounded-xl p-4 space-y-3">
-              <h3 className="text-sm font-semibold text-slate-300">{t.deals.quoteBuilder}</h3>
+            <div className="bg-fg/4 rounded-xl p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-fg-muted">{t.deals.quoteBuilder}</h3>
               <QuoteBuilder
                 dealId={selectedDeal.id}
                 dealTitle={displaySelectedDeal?.title ?? selectedDeal.title}

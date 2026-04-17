@@ -169,11 +169,11 @@ export function TeamManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Users size={22} className="text-brand-400" />
+          <h2 className="text-xl font-bold text-fg flex items-center gap-2">
+            <Users size={22} className="text-accent-400" />
             {t.team.title}
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-fg-subtle mt-1">
             {activeMembersLabel}
           </p>
         </div>
@@ -183,7 +183,7 @@ export function TeamManagement() {
               <button
                 type="button"
                 onClick={() => setShowInvite(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-2 border border-white/10 text-slate-300 hover:text-white hover:bg-white/8 text-sm font-medium transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-2 border border-fg/10 text-fg-muted hover:text-fg hover:bg-fg/8 text-sm font-medium transition-all"
               >
                 <Mail size={15} />
                 {t.team.invite}
@@ -193,7 +193,7 @@ export function TeamManagement() {
               <button
                 type="button"
                 onClick={() => setShowAddUser(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold"
               >
                 <Plus size={15} />
                 {t.team.newUser}
@@ -209,13 +209,13 @@ export function TeamManagement() {
           const colors = ROLE_COLORS[role]
           const count = activeUsers.filter((u) => u.role === role).length
           return (
-            <div key={role} className="glass rounded-xl border-white/8 p-3">
+            <div key={role} className="glass rounded-xl border-fg/8 p-3">
               <div className="flex items-center gap-2 mb-1">
                 <span className={colors.text}>{ROLE_ICONS[role]}</span>
-                <span className="text-xs font-semibold text-slate-300">{t.team.roleLabels[role]}</span>
-                <span className="ml-auto text-xs text-slate-600">{count}</span>
+                <span className="text-xs font-semibold text-fg-muted">{t.team.roleLabels[role]}</span>
+                <span className="ml-auto text-xs text-fg-subtle">{count}</span>
               </div>
-              <p className="text-[10px] text-slate-500 leading-relaxed">{t.team.roleDescriptions[role]}</p>
+              <p className="text-[10px] text-fg-subtle leading-relaxed">{t.team.roleDescriptions[role]}</p>
             </div>
           )
         })}
@@ -223,32 +223,32 @@ export function TeamManagement() {
 
       {/* Add user form */}
       {showAddUser && canCreateUsers && (
-        <div className="glass rounded-2xl border-white/10 p-6 animate-scale-in">
+        <div className="glass rounded-2xl border-fg/10 p-6 animate-scale-in">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-semibold text-white flex items-center gap-2">
-              <UserPlus size={16} className="text-brand-400" />
+            <p className="text-sm font-semibold text-fg flex items-center gap-2">
+              <UserPlus size={16} className="text-accent-400" />
               {t.team.newUser}
             </p>
-            <button type="button" onClick={() => setShowAddUser(false)} title={t.common.close} aria-label={t.common.close} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
+            <button type="button" onClick={() => setShowAddUser(false)} title={t.common.close} aria-label={t.common.close} className="p-1 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 transition-colors">
               <X size={16} />
             </button>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-xs text-slate-500 mb-1">{t.team.labelName} *</label>
-              <input value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} placeholder={t.team.placeholderFullName} className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600" />
+              <label className="block text-xs text-fg-subtle mb-1">{t.team.labelName} *</label>
+              <input value={newUser.name} onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} placeholder={t.team.placeholderFullName} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
             </div>
             <div>
-              <label className="block text-xs text-slate-500 mb-1">{t.team.labelEmail} *</label>
-              <input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder={t.team.placeholderEmail} className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600" />
+              <label className="block text-xs text-fg-subtle mb-1">{t.team.labelEmail} *</label>
+              <input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder={t.team.placeholderEmail} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
             </div>
             <div>
-              <label className="block text-xs text-slate-500 mb-1">{t.team.labelPassword} *</label>
-              <input type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder={t.team.placeholderMinPassword} className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600" />
+              <label className="block text-xs text-fg-subtle mb-1">{t.team.labelPassword} *</label>
+              <input type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder={t.team.placeholderMinPassword} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
             </div>
             <div>
-              <label className="block text-xs text-slate-500 mb-1">{t.team.role}</label>
-              <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value as UserRole })} aria-label={t.team.role} title={t.team.role} className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40">
+              <label className="block text-xs text-fg-subtle mb-1">{t.team.role}</label>
+              <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value as UserRole })} aria-label={t.team.role} title={t.team.role} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40">
                 <option value="admin">{t.team.roleLabels.admin}</option>
                 <option value="manager">{t.team.roleLabels.manager}</option>
                 <option value="sales_rep">{t.team.roleLabels.sales_rep}</option>
@@ -256,17 +256,17 @@ export function TeamManagement() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-slate-500 mb-1">{t.team.labelJobTitle}</label>
-              <input value={newUser.jobTitle} onChange={(e) => setNewUser({ ...newUser, jobTitle: e.target.value })} placeholder={t.team.placeholderJobTitle} className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600" />
+              <label className="block text-xs text-fg-subtle mb-1">{t.team.labelJobTitle}</label>
+              <input value={newUser.jobTitle} onChange={(e) => setNewUser({ ...newUser, jobTitle: e.target.value })} placeholder={t.team.placeholderJobTitle} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
             </div>
             <div>
-              <label className="block text-xs text-slate-500 mb-1">{t.common.phone}</label>
-              <input value={newUser.phone || ''} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} placeholder={t.team.placeholderPhoneExample} className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600" />
+              <label className="block text-xs text-fg-subtle mb-1">{t.common.phone}</label>
+              <input value={newUser.phone || ''} onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })} placeholder={t.team.placeholderPhoneExample} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setShowAddUser(false)} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">{t.common.cancel}</button>
-            <button type="button" onClick={handleAddUser} className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold">
+            <button type="button" onClick={() => setShowAddUser(false)} className="px-4 py-2 rounded-xl text-sm text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors">{t.common.cancel}</button>
+            <button type="button" onClick={handleAddUser} className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold">
               <Check size={14} /> {t.team.createUser}
             </button>
           </div>
@@ -275,47 +275,47 @@ export function TeamManagement() {
 
       {/* Invite form */}
       {showInvite && canInviteUsers && (
-        <div className="glass rounded-2xl border-white/10 p-6 animate-scale-in">
+        <div className="glass rounded-2xl border-fg/10 p-6 animate-scale-in">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-semibold text-white flex items-center gap-2">
-              <Mail size={16} className="text-amber-400" />
+            <p className="text-sm font-semibold text-fg flex items-center gap-2">
+              <Mail size={16} className="text-warning" />
               {t.team.inviteByEmail}
             </p>
-            <button type="button" onClick={() => setShowInvite(false)} title={t.common.close} aria-label={t.common.close} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
+            <button type="button" onClick={() => setShowInvite(false)} title={t.common.close} aria-label={t.common.close} className="p-1 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 transition-colors">
               <X size={16} />
             </button>
           </div>
           <div className="flex gap-3 mb-4">
-            <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder={t.team.placeholderEmail} className="flex-1 bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600" />
-            <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as UserRole)} aria-label={t.team.role} title={t.team.role} className="bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40">
+            <input value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder={t.team.placeholderEmail} className="flex-1 bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
+            <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as UserRole)} aria-label={t.team.role} title={t.team.role} className="bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40">
               <option value="manager">{t.team.roleLabels.manager}</option>
               <option value="sales_rep">{t.team.roleLabels.sales_rep}</option>
               <option value="viewer">{t.team.roleLabels.viewer}</option>
             </select>
-            <button type="button" onClick={handleInvite} disabled={isInviting} className="px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">{isInviting ? t.common.loading : t.team.invite}</button>
+            <button type="button" onClick={handleInvite} disabled={isInviting} className="px-4 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed">{isInviting ? t.common.loading : t.team.invite}</button>
           </div>
-          <p className="text-[10px] text-slate-600">{t.team.invitationValidity}</p>
+          <p className="text-[10px] text-fg-subtle">{t.team.invitationValidity}</p>
         </div>
       )}
 
       {/* Pending invitations */}
       {pendingInvitations.length > 0 && (
-        <div className="glass rounded-2xl border-white/8 p-5">
-          <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-3">{t.team.pendingInvitations} ({pendingInvitations.length})</p>
+        <div className="glass rounded-2xl border-fg/8 p-5">
+          <p className="text-xs font-semibold text-warning uppercase tracking-wider mb-3">{t.team.pendingInvitations} ({pendingInvitations.length})</p>
           <div className="space-y-2">
             {pendingInvitations.map((inv) => (
-              <div key={inv.id} className="flex items-center justify-between px-4 py-3 rounded-xl bg-white/3">
+              <div key={inv.id} className="flex items-center justify-between px-4 py-3 rounded-xl bg-fg/3">
                 <div className="flex items-center gap-3">
-                  <Mail size={14} className="text-amber-400" />
+                  <Mail size={14} className="text-warning" />
                   <div>
-                    <p className="text-sm text-slate-200">{inv.email}</p>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-sm text-fg">{inv.email}</p>
+                    <p className="text-[10px] text-fg-subtle">
                       {t.team.roleLabels[inv.role]} · {t.team.expires} {formatDateShort(inv.expiresAt)}
                     </p>
                   </div>
                 </div>
                 {canManageUsers && (
-                  <button type="button" onClick={() => { cancelInvitation(inv.id); toast.success(t.team.toastInviteCancelled) }} className="text-xs text-slate-500 hover:text-red-400 transition-colors">
+                  <button type="button" onClick={() => { cancelInvitation(inv.id); toast.success(t.team.toastInviteCancelled) }} className="text-xs text-fg-subtle hover:text-danger transition-colors">
                     {t.common.cancel}
                   </button>
                 )}
@@ -326,23 +326,23 @@ export function TeamManagement() {
       )}
 
       {/* Active users list */}
-      <div className="glass rounded-2xl border-white/8">
-        <div className="px-5 py-3 border-b border-white/6">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{t.team.activeSection}</p>
+      <div className="glass rounded-2xl border-fg/8">
+        <div className="px-5 py-3 border-b border-fg/6">
+          <p className="text-xs font-semibold text-fg-muted uppercase tracking-wider">{t.team.activeSection}</p>
         </div>
-        <div className="divide-y divide-white/4">
+        <div className="divide-y divide-border-subtle">
           {activeUsers.map((user) => {
             const colors = ROLE_COLORS[user.role]
             const isCurrentUser = user.id === currentUser.id
             return (
-              <div key={user.id} className="flex items-center gap-4 px-5 py-4 hover:bg-white/2 transition-colors relative">
+              <div key={user.id} className="flex items-center gap-4 px-5 py-4 hover:bg-fg/2 transition-colors relative">
                 <Avatar name={user.name} size="md" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-white">{user.name}</p>
-                    {isCurrentUser && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-brand-500/15 text-brand-400 font-semibold">{t.team.you}</span>}
+                    <p className="text-sm font-medium text-fg">{user.name}</p>
+                    {isCurrentUser && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent-500/15 text-accent-400 font-semibold">{t.team.you}</span>}
                   </div>
-                  <p className="text-xs text-slate-500">{user.email} · {user.jobTitle || t.team.noJobTitle}</p>
+                  <p className="text-xs text-fg-subtle">{user.email} · {user.jobTitle || t.team.noJobTitle}</p>
                 </div>
 
                 {/* Role badge */}
@@ -355,7 +355,7 @@ export function TeamManagement() {
                         setEditingRole(null)
                         toast.success(t.team.toastRoleUpdated.replace('{name}', user.name))
                       }}
-                      className="bg-surface-2 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-100 outline-none appearance-none"
+                      className="bg-surface-2 border border-fg/10 rounded-lg px-2 py-1 text-xs text-fg outline-none appearance-none"
                       aria-label={t.team.changeRole}
                       title={t.team.changeRole}
                       autoFocus
@@ -365,7 +365,7 @@ export function TeamManagement() {
                       <option value="sales_rep">{t.team.roleLabels.sales_rep}</option>
                       <option value="viewer">{t.team.roleLabels.viewer}</option>
                     </select>
-                    <button type="button" onClick={() => setEditingRole(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-slate-500 hover:text-white">
+                    <button type="button" onClick={() => setEditingRole(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-fg-subtle hover:text-fg">
                       <X size={12} />
                     </button>
                   </div>
@@ -378,8 +378,8 @@ export function TeamManagement() {
 
                 {/* Last login */}
                 <div className="hidden md:block text-right w-28">
-                  <p className="text-[10px] text-slate-600">{t.team.lastLogin}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-[10px] text-fg-subtle">{t.team.lastLogin}</p>
+                  <p className="text-xs text-fg-muted">
                     {user.lastLoginAt ? formatDateShort(user.lastLoginAt) : t.team.never}
                   </p>
                 </div>
@@ -392,33 +392,33 @@ export function TeamManagement() {
                       onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)}
                       title={t.common.actions}
                       aria-label={t.common.actions}
-                      className="p-1.5 rounded-lg text-slate-600 hover:text-white hover:bg-white/8 transition-colors"
+                      className="p-1.5 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 transition-colors"
                     >
                       <MoreVertical size={14} />
                     </button>
                     {activeMenu === user.id && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setActiveMenu(null)} />
-                        <div className="absolute right-0 top-full mt-1 w-48 glass rounded-xl border-white/10 shadow-float z-50 py-1 animate-scale-in">
+                        <div className="absolute right-0 top-full mt-1 w-48 glass rounded-xl border-fg/10 shadow-float z-50 py-1 animate-scale-in">
                           <button
                             type="button"
                             onClick={() => { setEditingRole(user.id); setActiveMenu(null) }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
                           >
                             <ShieldAlert size={13} /> {t.team.changeRole}
                           </button>
                           <button
                             type="button"
                             onClick={() => { setResetPwUser(user.id); setNewPw(''); setActiveMenu(null) }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
                           >
                             <Key size={13} /> {t.team.resetPassword}
                           </button>
-                          <div className="border-t border-white/6 my-1" />
+                          <div className="border-t border-fg/6 my-1" />
                           <button
                             type="button"
                             onClick={() => { deactivateUser(user.id); setActiveMenu(null); toast.success(t.team.toastUserDeactivated.replace('{name}', user.name)) }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="w-full flex items-center gap-2 px-3 py-2 text-xs text-danger hover:bg-danger/10 transition-colors"
                           >
                             <UserMinus size={13} /> {t.team.deactivateUser}
                           </button>
@@ -430,18 +430,18 @@ export function TeamManagement() {
 
                 {/* Reset password inline */}
                 {resetPwUser === user.id && (
-                  <div className="absolute inset-x-0 top-full bg-surface-2 border border-white/8 rounded-b-xl px-5 py-3 flex items-center gap-3 z-30">
-                    <Key size={14} className="text-amber-400 flex-shrink-0" />
+                  <div className="absolute inset-x-0 top-full bg-surface-2 border border-fg/8 rounded-b-xl px-5 py-3 flex items-center gap-3 z-30">
+                    <Key size={14} className="text-warning flex-shrink-0" />
                     <input
                       type="text"
                       value={newPw}
                       onChange={(e) => setNewPw(e.target.value)}
                       placeholder={t.team.placeholderNewPassword}
-                      className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none"
+                      className="flex-1 bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg outline-none"
                       autoFocus
                     />
-                    <button type="button" onClick={() => handleResetPassword(user.id)} disabled={newPw.length < 6} className="px-3 py-1.5 rounded-lg btn-gradient text-xs text-white font-medium disabled:opacity-40">{t.common.save}</button>
-                    <button type="button" onClick={() => setResetPwUser(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-slate-500 hover:text-white"><X size={14} /></button>
+                    <button type="button" onClick={() => handleResetPassword(user.id)} disabled={newPw.length < 6} className="px-3 py-1.5 rounded-lg btn-gradient text-xs text-fg font-medium disabled:opacity-40">{t.common.save}</button>
+                    <button type="button" onClick={() => setResetPwUser(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-fg-subtle hover:text-fg"><X size={14} /></button>
                   </div>
                 )}
               </div>
@@ -452,23 +452,23 @@ export function TeamManagement() {
 
       {/* Inactive users */}
       {inactiveUsers.length > 0 && (
-        <div className="glass rounded-2xl border-white/8 overflow-hidden opacity-60">
-          <div className="px-5 py-3 border-b border-white/6">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t.team.inactiveSection} ({inactiveUsers.length})</p>
+        <div className="glass rounded-2xl border-fg/8 overflow-hidden opacity-60">
+          <div className="px-5 py-3 border-b border-fg/6">
+            <p className="text-xs font-semibold text-fg-subtle uppercase tracking-wider">{t.team.inactiveSection} ({inactiveUsers.length})</p>
           </div>
-          <div className="divide-y divide-white/4">
+          <div className="divide-y divide-border-subtle">
             {inactiveUsers.map((user) => (
               <div key={user.id} className="flex items-center gap-4 px-5 py-3">
                 <Avatar name={user.name} size="sm" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-slate-400">{user.name}</p>
-                  <p className="text-xs text-slate-600">{user.email}</p>
+                  <p className="text-sm text-fg-muted">{user.name}</p>
+                  <p className="text-xs text-fg-subtle">{user.email}</p>
                 </div>
                 {canManageUsers && (
                   <button
                     type="button"
                     onClick={() => { reactivateUser(user.id); toast.success(t.team.toastUserReactivated.replace('{name}', user.name)) }}
-                    className="text-xs text-brand-400 hover:text-brand-300 font-medium transition-colors"
+                    className="text-xs text-accent-400 hover:text-accent-300 font-medium transition-colors"
                   >
                     {t.team.reactivate}
                   </button>
@@ -481,12 +481,12 @@ export function TeamManagement() {
 
       {/* Org info */}
       {displayOrganization && (
-        <div className="glass rounded-2xl border-white/8 p-5">
+        <div className="glass rounded-2xl border-fg/8 p-5">
           <div className="flex items-center gap-3 mb-3">
-            <Building2 size={18} className="text-brand-400" />
+            <Building2 size={18} className="text-accent-400" />
             <div>
-              <p className="text-sm font-semibold text-white">{displayOrganization.name}</p>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-sm font-semibold text-fg">{displayOrganization.name}</p>
+              <p className="text-[10px] text-fg-subtle">
                 {t.team.planInfo
                   .replace('{plan}', displayOrganization.plan.toUpperCase())
                   .replace('{max}', String(displayOrganization.maxUsers))}
@@ -494,12 +494,12 @@ export function TeamManagement() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex-1 h-1.5 rounded-full bg-white/6 overflow-hidden">
+            <div className="flex-1 h-1.5 rounded-full bg-fg/6 overflow-hidden">
               <div
-                className={`h-full rounded-full bg-brand-500 transition-all ${usageWidthClass}`}
+                className={`h-full rounded-full bg-accent-500 transition-all ${usageWidthClass}`}
               />
             </div>
-            <span className="text-[10px] text-slate-500">{activeUsers.length}/{displayOrganization.maxUsers}</span>
+            <span className="text-[10px] text-fg-subtle">{activeUsers.length}/{displayOrganization.maxUsers}</span>
           </div>
         </div>
       )}

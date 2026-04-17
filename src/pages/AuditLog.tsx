@@ -32,11 +32,11 @@ function getActionCategory(action: AuditAction): ActionCategory {
 }
 
 const ACTION_COLORS: Record<ActionCategory, { bg: string; text: string; dot: string }> = {
-  created: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-400' },
-  updated: { bg: 'bg-blue-500/15', text: 'text-blue-400', dot: 'bg-blue-400' },
-  deleted: { bg: 'bg-red-500/15', text: 'text-red-400', dot: 'bg-red-400' },
-  stage_changed: { bg: 'bg-violet-500/15', text: 'text-violet-400', dot: 'bg-violet-400' },
-  completed: { bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-400' },
+  created: { bg: 'bg-success/15', text: 'text-success', dot: 'bg-success' },
+  updated: { bg: 'bg-info/15', text: 'text-info', dot: 'bg-info' },
+  deleted: { bg: 'bg-danger/15', text: 'text-danger', dot: 'bg-danger' },
+  stage_changed: { bg: 'bg-accent-500/15', text: 'text-accent-400', dot: 'bg-accent-500' },
+  completed: { bg: 'bg-success/15', text: 'text-success', dot: 'bg-success' },
 }
 
 export function AuditLog() {
@@ -141,48 +141,48 @@ export function AuditLog() {
     <div className="crm-page space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-bold text-white">{t.audit.title}</h2>
-        <p className="text-slate-400 mt-1">{t.audit.subtitle}</p>
+        <h2 className="text-2xl font-bold text-fg">{t.audit.title}</h2>
+        <p className="text-fg-muted mt-1">{t.audit.subtitle}</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="glass rounded-2xl p-5 border border-white/6">
+        <div className="glass rounded-2xl p-5 border border-fg/6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-indigo-500/15">
-              <Activity className="w-5 h-5 text-indigo-400" />
+            <div className="p-2 rounded-lg bg-accent-500/15">
+              <Activity className="w-5 h-5 text-accent-400" />
             </div>
-            <span className="text-slate-400 text-sm">{t.common.total}</span>
+            <span className="text-fg-muted text-sm">{t.common.total}</span>
           </div>
-          <p className="text-3xl font-bold text-white">{stats.total}</p>
+          <p className="text-3xl font-bold text-fg">{stats.total}</p>
         </div>
 
-        <div className="glass rounded-2xl p-5 border border-white/6">
+        <div className="glass rounded-2xl p-5 border border-fg/6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-emerald-500/15">
-              <Calendar className="w-5 h-5 text-emerald-400" />
+            <div className="p-2 rounded-lg bg-success/15">
+              <Calendar className="w-5 h-5 text-success" />
             </div>
-            <span className="text-slate-400 text-sm">{t.calendar.today}</span>
+            <span className="text-fg-muted text-sm">{t.calendar.today}</span>
           </div>
-          <p className="text-3xl font-bold text-emerald-400">{stats.today}</p>
+          <p className="text-3xl font-bold text-success">{stats.today}</p>
         </div>
 
-        <div className="glass rounded-2xl p-5 border border-white/6">
+        <div className="glass rounded-2xl p-5 border border-fg/6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 rounded-lg bg-violet-500/15">
-              <Filter className="w-5 h-5 text-violet-400" />
+            <div className="p-2 rounded-lg bg-accent-500/15">
+              <Filter className="w-5 h-5 text-accent-400" />
             </div>
-            <span className="text-slate-400 text-sm">{t.audit.entity}</span>
+            <span className="text-fg-muted text-sm">{t.audit.entity}</span>
           </div>
-          <p className="text-xl font-bold text-white">{stats.mostActive}</p>
+          <p className="text-xl font-bold text-fg">{stats.mostActive}</p>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="glass rounded-2xl p-4 border border-white/6">
+      <div className="glass rounded-2xl p-4 border border-fg/6">
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-slate-400 text-sm">{t.audit.entity}:</span>
+            <span className="text-fg-muted text-sm">{t.audit.entity}:</span>
             {entityFilterOptions.map((opt) => (
               <button
                 type="button"
@@ -190,8 +190,8 @@ export function AuditLog() {
                 onClick={() => setEntityFilter(opt.value)}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   entityFilter === opt.value
-                    ? 'btn-gradient text-white'
-                    : 'bg-surface-2 border border-white/10 text-slate-300 hover:bg-white/4'
+                    ? 'btn-gradient text-fg'
+                    : 'bg-surface-2 border border-fg/10 text-fg-muted hover:bg-fg/4'
                 }`}
               >
                 {opt.label}
@@ -200,23 +200,23 @@ export function AuditLog() {
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
-            <span className="text-slate-400 text-sm">{t.common.from}:</span>
+            <span className="text-fg-muted text-sm">{t.common.from}:</span>
             <input
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
               aria-label={`${t.common.from} ${t.common.date}`}
               title={`${t.common.from} ${t.common.date}`}
-              className="bg-surface-2 border border-white/10 rounded-full px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-white/20"
+              className="bg-surface-2 border border-fg/10 rounded-full px-3 py-1.5 text-sm text-fg-muted focus:outline-none focus:border-fg/20"
             />
-            <span className="text-slate-400 text-sm">{t.common.to}:</span>
+            <span className="text-fg-muted text-sm">{t.common.to}:</span>
             <input
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
               aria-label={`${t.common.to} ${t.common.date}`}
               title={`${t.common.to} ${t.common.date}`}
-              className="bg-surface-2 border border-white/10 rounded-full px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-white/20"
+              className="bg-surface-2 border border-fg/10 rounded-full px-3 py-1.5 text-sm text-fg-muted focus:outline-none focus:border-fg/20"
             />
           </div>
         </div>
@@ -225,10 +225,10 @@ export function AuditLog() {
       {/* Timeline */}
       <div className="space-y-1">
         {filtered.length === 0 ? (
-          <div className="glass rounded-2xl p-12 border border-white/6 text-center">
-            <Activity className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">{t.common.noResults}</h3>
-            <p className="text-slate-400">
+          <div className="glass rounded-2xl p-12 border border-fg/6 text-center">
+            <Activity className="w-12 h-12 text-fg-subtle mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-fg mb-2">{t.common.noResults}</h3>
+            <p className="text-fg-muted">
               {entries.length === 0
                 ? t.audit.empty
                 : t.audit.emptyFiltered}
@@ -246,12 +246,12 @@ export function AuditLog() {
                 <div className="flex flex-col items-center flex-shrink-0 w-8">
                   <div className={`w-3 h-3 rounded-full mt-5 ${colors.dot}`} />
                   {index < filtered.length - 1 && (
-                    <div className="w-px flex-1 bg-white/8 mt-1" />
+                    <div className="w-px flex-1 bg-fg/8 mt-1" />
                   )}
                 </div>
 
                 {/* Entry Card */}
-                <div className="glass rounded-2xl p-4 border border-white/6 hover:bg-white/4 transition-colors flex-1 mb-2">
+                <div className="glass rounded-2xl p-4 border border-fg/6 hover:bg-fg/4 transition-colors flex-1 mb-2">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div className={`p-2 rounded-lg ${colors.bg} flex-shrink-0`}>
@@ -262,18 +262,18 @@ export function AuditLog() {
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
                             {ACTION_LABELS[entry.action]}
                           </span>
-                          <span className="text-slate-500 text-xs">
+                          <span className="text-fg-subtle text-xs">
                             {ENTITY_LABELS[entry.entityType]}
                           </span>
                         </div>
-                        <p className="text-slate-200 text-sm">{`${ACTION_LABELS[entry.action]}: ${entry.entityName}`}</p>
-                        <p className="text-white font-medium text-sm mt-1">{entry.entityName}</p>
+                        <p className="text-fg text-sm">{`${ACTION_LABELS[entry.action]}: ${entry.entityName}`}</p>
+                        <p className="text-fg font-medium text-sm mt-1">{entry.entityName}</p>
                       </div>
                     </div>
 
                     <div className="text-right flex-shrink-0">
-                      <p className="text-slate-500 text-xs">{formatAuditTimestamp(entry.timestamp)}</p>
-                      <p className="text-slate-400 text-xs mt-1">{entry.userId === 'system' || entry.userId === 'Sistema' ? t.audit.systemUser : entry.userId}</p>
+                      <p className="text-fg-subtle text-xs">{formatAuditTimestamp(entry.timestamp)}</p>
+                      <p className="text-fg-muted text-xs mt-1">{entry.userId === 'system' || entry.userId === 'Sistema' ? t.audit.systemUser : entry.userId}</p>
                     </div>
                   </div>
                 </div>

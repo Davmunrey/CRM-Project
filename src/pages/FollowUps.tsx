@@ -16,17 +16,17 @@ import type { FollowUpReminder, ActivityType } from '../types'
 type UrgencyFilter = 'all' | 'critical' | 'high' | 'medium' | 'low'
 
 const URGENCY_COLORS: Record<FollowUpReminder['urgency'], string> = {
-  critical: 'text-red-400',
-  high: 'text-amber-400',
-  medium: 'text-yellow-400',
-  low: 'text-slate-400',
+  critical: 'text-danger',
+  high: 'text-warning',
+  medium: 'text-warning',
+  low: 'text-fg-muted',
 }
 
 const URGENCY_BG: Record<FollowUpReminder['urgency'], string> = {
-  critical: 'bg-red-500/15 text-red-400 border border-red-500/20',
-  high: 'bg-amber-500/15 text-amber-400 border border-amber-500/20',
-  medium: 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20',
-  low: 'bg-white/6 text-slate-400 border border-white/8',
+  critical: 'bg-danger/15 text-danger border border-danger/20',
+  high: 'bg-warning/15 text-warning border border-warning/20',
+  medium: 'bg-warning/15 text-warning border border-yellow-500/20',
+  low: 'bg-fg/6 text-fg-muted border border-fg/8',
 }
 
 export function FollowUps() {
@@ -112,13 +112,13 @@ export function FollowUps() {
     <div className="crm-page space-y-4">
       {/* Toolbar row */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-fg-subtle">
           {stats.total} {t.contacts.title} — {t.followUps.title}
         </p>
         <button
           type="button"
           onClick={() => setRefreshKey((k) => k + 1)}
-          className="p-2 rounded-xl text-slate-500 hover:text-slate-200 hover:bg-white/5 border border-white/8 transition-colors"
+          className="p-2 rounded-xl text-fg-subtle hover:text-fg hover:bg-fg/5 border border-fg/8 transition-colors"
           title={t.common.reset}
         >
           <RefreshCw size={15} />
@@ -127,50 +127,50 @@ export function FollowUps() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="glass rounded-xl p-4 border border-white/6">
+        <div className="glass rounded-xl p-4 border border-fg/6">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-indigo-500/15">
-              <User size={14} className="text-indigo-400" />
+            <div className="p-1.5 rounded-lg bg-accent-500/15">
+              <User size={14} className="text-accent-400" />
             </div>
-            <span className="text-xs text-slate-500">{t.followUps.title}</span>
+            <span className="text-xs text-fg-subtle">{t.followUps.title}</span>
           </div>
-          <p className="text-2xl font-bold text-white">{stats.total}</p>
+          <p className="text-2xl font-bold text-fg">{stats.total}</p>
         </div>
 
-        <div className="glass rounded-xl p-4 border border-white/6">
+        <div className="glass rounded-xl p-4 border border-fg/6">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-red-500/15">
-              <AlertTriangle size={14} className="text-red-400" />
+            <div className="p-1.5 rounded-lg bg-danger/15">
+              <AlertTriangle size={14} className="text-danger" />
             </div>
-            <span className="text-xs text-slate-500">{t.followUps.critical}</span>
+            <span className="text-xs text-fg-subtle">{t.followUps.critical}</span>
           </div>
-          <p className="text-2xl font-bold text-red-400">{stats.critical}</p>
+          <p className="text-2xl font-bold text-danger">{stats.critical}</p>
         </div>
 
-        <div className="glass rounded-xl p-4 border border-white/6">
+        <div className="glass rounded-xl p-4 border border-fg/6">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-amber-500/15">
-              <Clock size={14} className="text-amber-400" />
+            <div className="p-1.5 rounded-lg bg-warning/15">
+              <Clock size={14} className="text-warning" />
             </div>
-            <span className="text-xs text-slate-500">{t.followUps.high}</span>
+            <span className="text-xs text-fg-subtle">{t.followUps.high}</span>
           </div>
-          <p className="text-2xl font-bold text-amber-400">{stats.high}</p>
+          <p className="text-2xl font-bold text-warning">{stats.high}</p>
         </div>
 
-        <div className="glass rounded-xl p-4 border border-white/6">
+        <div className="glass rounded-xl p-4 border border-fg/6">
           <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-yellow-500/15">
-              <Clock size={14} className="text-yellow-400" />
+            <div className="p-1.5 rounded-lg bg-warning/15">
+              <Clock size={14} className="text-warning" />
             </div>
-            <span className="text-xs text-slate-500">{t.followUps.medium}</span>
+            <span className="text-xs text-fg-subtle">{t.followUps.medium}</span>
           </div>
-          <p className="text-2xl font-bold text-yellow-400">{stats.medium}</p>
+          <p className="text-2xl font-bold text-warning">{stats.medium}</p>
         </div>
       </div>
 
       {/* Filter row — inline, no glass wrapper */}
       <div className="flex items-center gap-2 flex-wrap">
-        <Filter size={13} className="text-slate-600" />
+        <Filter size={13} className="text-fg-subtle" />
         {filterButtons.map((btn) => (
           <button
             type="button"
@@ -178,14 +178,14 @@ export function FollowUps() {
             onClick={() => setUrgencyFilter(btn.value)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border ${
               urgencyFilter === btn.value
-                ? 'bg-brand-500/20 border-brand-500/40 text-brand-300'
-                : 'bg-white/4 border-white/8 text-slate-400 hover:text-slate-200 hover:bg-white/6'
+                ? 'bg-accent-500/20 border-accent-500/40 text-accent-300'
+                : 'bg-fg/4 border-fg/8 text-fg-muted hover:text-fg hover:bg-fg/6'
             }`}
           >
             {btn.label}
             {btn.count > 0 && (
               <span className={`text-[10px] font-bold min-w-[16px] text-center ${
-                urgencyFilter === btn.value ? 'text-brand-400' : 'text-slate-600'
+                urgencyFilter === btn.value ? 'text-accent-400' : 'text-fg-subtle'
               }`}>
                 {btn.count}
               </span>
@@ -197,35 +197,35 @@ export function FollowUps() {
       {/* List */}
       <div className="space-y-2">
         {filtered.length === 0 ? (
-          <div className="glass rounded-xl p-10 border border-white/6 text-center">
-            <User size={28} className="text-slate-600 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-400">{t.followUps.title}</p>
-            <p className="text-xs text-slate-600 mt-1">{t.common.noResults}</p>
+          <div className="glass rounded-xl p-10 border border-fg/6 text-center">
+            <User size={28} className="text-fg-subtle mx-auto mb-3" />
+            <p className="text-sm font-medium text-fg-muted">{t.followUps.title}</p>
+            <p className="text-xs text-fg-subtle mt-1">{t.common.noResults}</p>
           </div>
         ) : (
           filtered.map((reminder) => (
             <div
               key={reminder.contactId}
               onClick={() => navigate(`/contacts/${reminder.contactId}`)}
-              className="glass rounded-xl px-4 py-3 border border-white/6 hover:bg-white/[0.04] transition-colors cursor-pointer"
+              className="glass rounded-xl px-4 py-3 border border-fg/6 hover:bg-fg/[0.04] transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <Avatar name={reminder.contactName} size="md" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-sm font-semibold text-white truncate">{reminder.contactName}</span>
+                      <span className="text-sm font-semibold text-fg truncate">{reminder.contactName}</span>
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${URGENCY_BG[reminder.urgency]}`}>
                         {URGENCY_LABELS[reminder.urgency]}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 truncate">{reminder.companyName}</p>
+                    <p className="text-xs text-fg-subtle truncate">{reminder.companyName}</p>
                     <div className="flex items-center gap-3 mt-1">
                       <span className={`text-xs font-medium ${URGENCY_COLORS[reminder.urgency]}`}>
                         {t.followUps.daysSinceBadge.replace(/\{days\}/g, String(reminder.daysSinceContact))}
                       </span>
                       {reminder.lastActivityType && (
-                        <span className="text-[11px] text-slate-600">
+                        <span className="text-[11px] text-fg-subtle">
                           {t.activities.typeLabels[reminder.lastActivityType as ActivityType] ?? reminder.lastActivityType} · {formatDate(reminder.lastActivityDate)}
                         </span>
                       )}
@@ -238,7 +238,7 @@ export function FollowUps() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); handleCall(reminder) }}
-                    className="p-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/8 border border-white/6 transition-colors"
+                    className="p-2 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 border border-fg/6 transition-colors"
                     title={`${t.common.add} ${t.activities.typeLabels.call}`}
                   >
                     <Phone size={13} />
@@ -246,7 +246,7 @@ export function FollowUps() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); handleEmail(reminder) }}
-                    className="p-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/8 border border-white/6 transition-colors"
+                    className="p-2 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 border border-fg/6 transition-colors"
                     title={`${t.common.add} ${t.activities.typeLabels.email}`}
                   >
                     <Mail size={13} />
@@ -254,7 +254,7 @@ export function FollowUps() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); handleTask(reminder) }}
-                    className="p-2 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-white/8 border border-white/6 transition-colors"
+                    className="p-2 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 border border-fg/6 transition-colors"
                     title={`${t.common.add} ${t.activities.typeLabels.task}`}
                   >
                     <ClipboardList size={13} />
@@ -263,7 +263,7 @@ export function FollowUps() {
               </div>
 
               {reminder.suggestedAction && (
-                <p className="text-xs text-slate-500 italic mt-2 pl-10 truncate">{reminder.suggestedAction}</p>
+                <p className="text-xs text-fg-subtle italic mt-2 pl-10 truncate">{reminder.suggestedAction}</p>
               )}
             </div>
           ))

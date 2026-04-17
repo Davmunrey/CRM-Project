@@ -1,5 +1,6 @@
 import { Bell, Search, LogOut, User, ChevronDown, Check, Sun, Moon, Monitor } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
+import { DropdownMenu, DropdownMenuItem } from '../ui/DropdownMenu'
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useActivitiesStore } from '../../store/activitiesStore'
@@ -104,63 +105,58 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
   }, [])
 
   return (
-    <header className="topbar-surface h-16 flex items-center gap-4 px-6 border-b border-white/6 bg-surface-1 flex-shrink-0 relative z-30">
-      <h1 className="text-base font-semibold text-white mr-auto tracking-tight">
-        <span className="text-slate-500 mr-1">{branding.appName} ·</span> {title}
+    <header className="topbar-surface h-16 flex items-center gap-4 px-6 border-b border-fg/6 bg-surface-1 flex-shrink-0 relative z-30">
+      <h1 className="text-base font-semibold text-fg mr-auto tracking-tight">
+        <span className="text-fg-subtle mr-1">{branding.appName} ·</span> {title}
       </h1>
 
       {/* Theme (persists via settings store; App applies document theme) */}
-      <div className="relative">
-        <button
-          type="button"
-          aria-haspopup="menu"
-          aria-expanded={showThemeMenu}
-          aria-label={t.settings.theme}
-          title={t.settings.theme}
-          onClick={() => setShowThemeMenu((v) => !v)}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/6 transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
-        >
-          {themePreference === 'light' ? <Sun size={18} /> : themePreference === 'dark' ? <Moon size={18} /> : <Monitor size={18} />}
-        </button>
-        {showThemeMenu && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setShowThemeMenu(false)} />
-            <div
-              className="popover-surface absolute right-0 top-full mt-2 w-48 border border-white/10 rounded-xl shadow-float z-50 py-1 animate-scale-in bg-surface-1"
-              role="menu"
-            >
-              {(['light', 'dark', 'system'] as const).map((pref) => (
-                <button
-                  key={pref}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    useSettingsStore.getState().updateThemePreference(pref)
-                    setShowThemeMenu(false)
-                  }}
-                  className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
-                >
-                  <span className="flex items-center gap-2">
-                    {pref === 'light' ? <Sun size={14} /> : pref === 'dark' ? <Moon size={14} /> : <Monitor size={14} />}
-                    {pref === 'light' ? t.settings.themeLight : pref === 'dark' ? t.settings.themeDark : t.settings.themeSystem}
-                  </span>
-                  {themePreference === pref ? <Check size={14} className="text-brand-400 shrink-0" /> : null}
-                </button>
-              ))}
-            </div>
-          </>
+      <DropdownMenu
+        open={showThemeMenu}
+        onOpenChange={setShowThemeMenu}
+        align="end"
+        trigger={(
+          <button
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={showThemeMenu}
+            aria-label={t.settings.theme}
+            title={t.settings.theme}
+            onClick={() => setShowThemeMenu((v) => !v)}
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          >
+            {themePreference === 'light' ? <Sun size={18} /> : themePreference === 'dark' ? <Moon size={18} /> : <Monitor size={18} />}
+          </button>
         )}
-      </div>
+      >
+        {(['light', 'dark', 'system'] as const).map((pref) => (
+          <DropdownMenuItem
+            key={pref}
+            onClick={() => {
+              useSettingsStore.getState().updateThemePreference(pref)
+              setShowThemeMenu(false)
+            }}
+          >
+            <span className="flex w-full items-center justify-between gap-2">
+              <span className="flex items-center gap-2">
+                {pref === 'light' ? <Sun size={14} /> : pref === 'dark' ? <Moon size={14} /> : <Monitor size={14} />}
+                {pref === 'light' ? t.settings.themeLight : pref === 'dark' ? t.settings.themeDark : t.settings.themeSystem}
+              </span>
+              {themePreference === pref ? <Check size={14} className="text-accent-400 shrink-0" /> : null}
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenu>
 
       {/* Command palette trigger */}
       <button
         type="button"
         onClick={onOpenCommandPalette}
-        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-2/90 border border-white/8 hover:bg-white/6 hover:border-white/12 transition-all duration-150 text-slate-500 hover:text-slate-300 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-2/90 border border-fg/8 hover:bg-fg/6 hover:border-fg/12 transition-all duration-150 text-fg-subtle hover:text-fg-muted text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
       >
         <Search size={13} />
         <span>{t.common.search}...</span>
-        <kbd className="ml-2 px-1.5 py-0.5 rounded-md bg-white/8 text-[10px] font-medium text-slate-500">⌘K</kbd>
+        <kbd className="ml-2 px-1.5 py-0.5 rounded-md bg-fg/8 text-[10px] font-medium text-fg-subtle">⌘K</kbd>
       </button>
 
       {/* Notification bell */}
@@ -170,12 +166,12 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
           aria-label={t.nav.notifications}
           aria-expanded={showNotifs}
           onClick={() => setShowNotifs((v) => !v)}
-          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/6 transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
         >
           <Bell size={17} />
           {(overdueActivities.length > 0 || urgentFollowUps.length > 0 || unreadNotifCount > 0) && (
-            <span className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full bg-brand-500 shadow-brand-sm flex items-center justify-center">
-              <span className="text-[9px] font-bold text-white px-1">
+            <span className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full bg-accent-500 shadow-brand-sm flex items-center justify-center">
+              <span className="text-[9px] font-bold text-fg px-1">
                 {Math.min(unreadNotifCount + overdueActivities.length, 99)}
               </span>
             </span>
@@ -183,17 +179,17 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
         </button>
 
         {showNotifs && (
-          <div className="popover-surface absolute right-0 top-full mt-2 w-96 border border-white/10 rounded-2xl shadow-float overflow-hidden animate-scale-in z-50 bg-surface-1">
-            <div className="px-4 py-3 border-b border-white/6 flex items-center justify-between">
+          <div className="popover-surface absolute right-0 top-full mt-2 w-96 border border-fg/10 rounded-2xl shadow-float overflow-hidden animate-scale-in z-50 bg-surface-1">
+            <div className="px-4 py-3 border-b border-fg/6 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold text-white">{t.nav.notifications}</p>
+                <p className="text-sm font-semibold text-fg">{t.nav.notifications}</p>
                 {unreadNotifCount > 0 && (
-                  <p className="text-xs text-brand-400 mt-0.5">{unreadNotifCount}</p>
+                  <p className="text-xs text-accent-400 mt-0.5">{unreadNotifCount}</p>
                 )}
               </div>
               <button type="button"
                 onClick={() => { setShowNotifs(false); navigate('/notifications') }}
-                className="text-xs text-brand-400 hover:text-brand-300 font-medium"
+                className="text-xs text-accent-400 hover:text-accent-300 font-medium"
               >
                 {t.common.view}
               </button>
@@ -203,7 +199,7 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
               {recentNotifs.length > 0 && recentNotifs.map((n) => (
                 <div
                   key={n.id}
-                  className={`px-4 py-3 border-b border-white/4 hover:bg-white/4 transition-colors cursor-pointer ${n.isRead ? 'opacity-50' : ''}`}
+                  className={`px-4 py-3 border-b border-fg/4 hover:bg-fg/4 transition-colors cursor-pointer ${n.isRead ? 'opacity-50' : ''}`}
                   onClick={() => {
                     useNotificationsStore.getState().markAsRead(n.id)
                     setShowNotifs(false)
@@ -215,28 +211,28 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
                   }}
                 >
                   <div className="flex items-center gap-2">
-                    <p className="text-sm text-slate-200 truncate flex-1">{n.title}</p>
-                    {!n.isRead && <span className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0" />}
+                    <p className="text-sm text-fg truncate flex-1">{n.title}</p>
+                    {!n.isRead && <span className="w-2 h-2 rounded-full bg-accent-500 flex-shrink-0" />}
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5 truncate">{n.message}</p>
-                  <p className="text-[10px] text-slate-600 mt-0.5">{formatRelativeDate(n.createdAt)}</p>
+                  <p className="text-xs text-fg-subtle mt-0.5 truncate">{n.message}</p>
+                  <p className="text-[10px] text-fg-subtle mt-0.5">{formatRelativeDate(n.createdAt)}</p>
                 </div>
               ))}
 
               {/* Overdue activities */}
               {overdueActivities.length > 0 && (
                 <>
-                  <div className="px-4 py-2 border-b border-white/6 bg-red-500/5">
-                    <p className="text-xs font-semibold text-red-400">
+                  <div className="px-4 py-2 border-b border-fg/6 bg-danger/5">
+                    <p className="text-xs font-semibold text-danger">
                       {overdueActivities.length} {t.activities.overdue}
                     </p>
                   </div>
                   {overdueActivities.slice(0, 3).map((act) => (
-                    <div key={act.id} className="px-4 py-3 border-b border-white/4 hover:bg-white/4 transition-colors cursor-pointer"
+                    <div key={act.id} className="px-4 py-3 border-b border-fg/4 hover:bg-fg/4 transition-colors cursor-pointer"
                       onClick={() => { setShowNotifs(false); navigate('/activities') }}
                     >
-                      <p className="text-sm text-slate-200 truncate">{act.subject}</p>
-                      <p className="text-xs text-red-400 mt-0.5">{formatRelativeDate(act.dueDate ?? '')}</p>
+                      <p className="text-sm text-fg truncate">{act.subject}</p>
+                      <p className="text-xs text-danger mt-0.5">{formatRelativeDate(act.dueDate ?? '')}</p>
                     </div>
                   ))}
                 </>
@@ -245,36 +241,36 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
               {/* Follow-ups */}
               {urgentFollowUps.length > 0 && (
                 <>
-                  <div className="px-4 py-2 border-b border-white/6 bg-amber-500/5">
-                    <p className="text-xs font-semibold text-amber-400">{t.nav.followUps}</p>
+                  <div className="px-4 py-2 border-b border-fg/6 bg-warning/5">
+                    <p className="text-xs font-semibold text-warning">{t.nav.followUps}</p>
                   </div>
                   {urgentFollowUps.slice(0, 3).map((fu) => (
                     <div
                       key={fu.contactId}
-                      className="px-4 py-3 border-b border-white/4 hover:bg-white/4 transition-colors cursor-pointer"
+                      className="px-4 py-3 border-b border-fg/4 hover:bg-fg/4 transition-colors cursor-pointer"
                       onClick={() => { setShowNotifs(false); navigate(`/contacts/${fu.contactId}`) }}
                     >
-                      <p className="text-sm text-slate-200 truncate">{fu.contactName}</p>
-                      <p className="text-xs text-amber-400 mt-0.5">{fu.daysSinceContact}d</p>
+                      <p className="text-sm text-fg truncate">{fu.contactName}</p>
+                      <p className="text-xs text-warning mt-0.5">{fu.daysSinceContact}d</p>
                     </div>
                   ))}
                 </>
               )}
 
               {recentNotifs.length === 0 && overdueActivities.length === 0 && urgentFollowUps.length === 0 && (
-                <div className="px-4 py-8 text-center text-sm text-slate-500">{t.common.noResults}</div>
+                <div className="px-4 py-8 text-center text-sm text-fg-subtle">{t.common.noResults}</div>
               )}
             </div>
 
             {/* Footer */}
             {unreadNotifCount > 0 && (
-              <div className="px-4 py-2 border-t border-white/6 text-center">
+              <div className="px-4 py-2 border-t border-fg/6 text-center">
               <button
                 type="button"
                 aria-label={t.notifications.markAllRead}
                 title={t.notifications.markAllRead}
                 onClick={() => { useNotificationsStore.getState().markAllAsRead() }}
-                className="inline-flex items-center justify-center min-h-9 min-w-9 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                className="inline-flex items-center justify-center min-h-9 min-w-9 rounded-lg text-fg-muted hover:text-fg hover:bg-fg/8 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
               >
                 <Check size={16} strokeWidth={2.5} aria-hidden />
               </button>
@@ -295,34 +291,34 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
           aria-haspopup="menu"
           aria-expanded={showUserMenu}
           onClick={() => setShowUserMenu((v) => !v)}
-          className="flex items-center gap-2.5 pl-4 border-l border-white/8 hover:bg-white/4 -ml-2 px-3 py-1.5 rounded-xl transition-colors min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+          className="flex items-center gap-2.5 pl-4 border-l border-fg/8 hover:bg-fg/4 -ml-2 px-3 py-1.5 rounded-xl transition-colors min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
         >
           <Avatar name={currentUser?.name || ''} size="sm" />
           <div className="hidden sm:block text-left">
-            <p className="text-xs font-semibold text-slate-200">{currentUser?.name || ''}</p>
-            <p className="text-[10px] text-slate-500">{currentUser ? t.team.roleLabels[currentUser.role] : ''}</p>
+            <p className="text-xs font-semibold text-fg">{currentUser?.name || ''}</p>
+            <p className="text-[10px] text-fg-subtle">{currentUser ? t.team.roleLabels[currentUser.role] : ''}</p>
           </div>
-          <ChevronDown size={12} className="text-slate-500 hidden sm:block" />
+          <ChevronDown size={12} className="text-fg-subtle hidden sm:block" />
         </button>
 
         {showUserMenu && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-            <div className="popover-surface absolute right-0 top-full mt-2 w-56 border border-white/10 rounded-xl shadow-float z-50 py-1 animate-scale-in bg-surface-1">
-              <div className="px-3 py-2 border-b border-white/6">
-                <p className="text-xs font-semibold text-white">{currentUser?.name}</p>
-                <p className="text-[10px] text-slate-500">{currentUser?.email}</p>
+            <div className="popover-surface absolute right-0 top-full mt-2 w-56 border border-fg/10 rounded-xl shadow-float z-50 py-1 animate-scale-in bg-surface-1">
+              <div className="px-3 py-2 border-b border-fg/6">
+                <p className="text-xs font-semibold text-fg">{currentUser?.name}</p>
+                <p className="text-[10px] text-fg-subtle">{currentUser?.email}</p>
               </div>
               <button type="button"
                 onClick={() => { setShowUserMenu(false); navigate('/profile') }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
               >
                 <User size={13} /> {t.auth.profile}
               </button>
-              <div className="border-t border-white/6 my-1" />
+              <div className="border-t border-fg/6 my-1" />
               <button type="button"
                 onClick={() => { void useAuthStore.getState().logout().then(() => navigate('/login')) }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-danger hover:bg-danger/10 transition-colors"
               >
                 <LogOut size={13} /> {t.auth.logout}
               </button>

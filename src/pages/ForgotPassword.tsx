@@ -65,7 +65,7 @@ export function ForgotPassword() {
         <Card className="p-8">
           {success ? (
             <div className="text-center py-4">
-              <ShieldCheck size={40} className="text-emerald-400 mx-auto mb-3" />
+              <ShieldCheck size={40} className="text-success mx-auto mb-3" />
               <p className="text-fg font-semibold mb-1">{t.auth.checkEmailTitle}</p>
               <p className="text-sm text-fg-muted">
                 {t.auth.checkEmailSent}{' '}
@@ -82,7 +82,7 @@ export function ForgotPassword() {
               </p>
 
               {error && (
-                <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+                <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">
                   {error}
                 </div>
               )}

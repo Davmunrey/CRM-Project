@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { Spinner } from '../components/ui/Spinner'
 import { useGmailToken } from '../contexts/GmailTokenContext'
 import { useEmailStore } from '../store/emailStore'
 import { supabase } from '../lib/supabase'
@@ -77,8 +77,8 @@ export function GmailCallback() {
   return (
     <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-6">
       <div className="flex flex-col items-center gap-4">
-        <Loader2 className="w-10 h-10 text-brand-400 animate-spin" />
-        <p className="text-slate-300 text-sm font-medium">{t.common.loading}</p>
+        <Spinner size={40} className="text-accent-400" label={t.common.loading} />
+        <p className="text-fg-muted text-sm font-medium">{t.common.loading}</p>
       </div>
     </div>
   )

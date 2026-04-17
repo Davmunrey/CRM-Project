@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('CRM smoke', () => {
   test('loads login page with primary action', async ({ page }) => {
     await page.goto('/login')
-    await expect(page.getByRole('button', { name: /login|iniciar sesion/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /log in|login|ingresar|entrar|anmelden|accedi|se connecter/i })).toBeVisible()
   })
 
   test('rejects private route when unauthenticated', async ({ page }) => {
@@ -38,7 +38,7 @@ test.describe('CRM smoke', () => {
     test.skip(!hasDemoMode, 'Mock-mode smoke only (demo credentials not visible)')
 
     await demoUserBtn.click()
-    await page.getByRole('button', { name: /login|iniciar sesion/i }).click()
+    await page.getByRole('button', { name: /log in|login|ingresar|entrar|anmelden|accedi|se connecter/i }).click()
     await expect(page).toHaveURL(/\/$/)
 
     await page.goto('/inbox')
@@ -52,6 +52,6 @@ test.describe('optional hosted staging', () => {
     test.skip(!staging?.startsWith('http'), 'Set E2E_STAGING_URL (https://...) to run hosted smoke')
 
     await page.goto(`${staging}/login`)
-    await expect(page.getByRole('button', { name: /login|iniciar sesion/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /log in|login|ingresar|entrar|anmelden|accedi|se connecter/i })).toBeVisible()
   })
 })

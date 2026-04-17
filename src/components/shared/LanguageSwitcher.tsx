@@ -62,10 +62,10 @@ export function LanguageSwitcher({ variant = 'inline', className = '' }: Languag
         aria-expanded={open}
         title={t.settings.language}
         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                   border border-white/12 bg-[#111220]/80 backdrop-blur-md
-                   text-slate-300 hover:text-white hover:border-white/20 hover:bg-[#111220]
+                   border border-fg/12 bg-surface-1/80 backdrop-blur-md
+                   text-fg-muted hover:text-fg hover:border-fg/20 hover:bg-surface-1
                    text-xs font-medium transition-colors
-                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
       >
         <Globe size={14} aria-hidden />
         <span className="uppercase tracking-wide">{language}</span>
@@ -75,8 +75,8 @@ export function LanguageSwitcher({ variant = 'inline', className = '' }: Languag
         <ul
           role="listbox"
           aria-label={t.settings.language}
-          className="absolute right-0 mt-2 min-w-[180px] rounded-xl border border-white/10
-                     bg-[#111220]/95 backdrop-blur-md shadow-float py-1 z-50"
+          className="absolute right-0 mt-2 min-w-[180px] rounded-xl border border-fg/10
+                     bg-surface-1/95 backdrop-blur-md shadow-float py-1 z-modal"
         >
           {SUPPORTED_LANGUAGES.map((lang: Language) => {
             const selected = lang === language
@@ -91,13 +91,13 @@ export function LanguageSwitcher({ variant = 'inline', className = '' }: Languag
                     setOpen(false)
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left
-                              transition-colors hover:bg-white/6
-                              focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-500
-                              ${selected ? 'text-white font-medium' : 'text-slate-300'}`}
+                              transition-colors hover:bg-fg/6
+                              focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-500
+                              ${selected ? 'text-fg font-medium' : 'text-fg-muted'}`}
                 >
                   <span aria-hidden className="text-base leading-none">{LANGUAGE_FLAGS[lang]}</span>
                   <span className="flex-1">{LANGUAGE_LABELS[lang]}</span>
-                  {selected && <Check size={14} className="text-brand-400" aria-hidden />}
+                  {selected && <Check size={14} className="text-accent-400" aria-hidden />}
                 </button>
               </li>
             )

@@ -298,20 +298,20 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-navy-950/70 backdrop-blur-md" onClick={onClose} />
-      <div className="relative w-full max-w-2xl mx-4 glass rounded-2xl shadow-float border-white/10 overflow-hidden animate-scale-in max-h-[85vh] flex flex-col">
+      <div className="absolute inset-0 bg-surface-0/70 backdrop-blur-md" onClick={onClose} />
+      <div className="relative w-full max-w-2xl mx-4 glass rounded-2xl shadow-float border-fg/10 overflow-hidden animate-scale-in max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-fg/8 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <FileSpreadsheet size={18} className="text-brand-400" />
-            <span className="text-sm font-semibold text-white">{t.csvImport.title}</span>
+            <FileSpreadsheet size={18} className="text-accent-400" />
+            <span className="text-sm font-semibold text-fg">{t.csvImport.title}</span>
             {step !== 'upload' && (
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted">
                 {csvRows.length} {t.csvImport.rows}
               </span>
             )}
           </div>
-          <button type="button" onClick={onClose} className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
+          <button type="button" onClick={onClose} className="p-1.5 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -327,8 +327,8 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                     onClick={() => setEntityType(type)}
                     className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                       entityType === type
-                        ? 'bg-brand-600/20 text-brand-400 border border-brand-500/30'
-                        : 'bg-white/4 text-slate-500 hover:text-white hover:bg-white/8 border border-transparent'
+                        ? 'bg-accent-600/20 text-accent-400 border border-accent-500/30'
+                        : 'bg-fg/4 text-fg-subtle hover:text-fg hover:bg-fg/8 border border-transparent'
                     }`}
                   >
                     {type === 'contacts' ? t.csvImport.contacts : t.csvImport.companies}
@@ -337,7 +337,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                 <button
                   type="button"
                   onClick={() => downloadCSVTemplate(entityType)}
-                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-white/4 text-slate-300 hover:text-white hover:bg-white/8 border border-white/10 transition-colors"
+                  className="ml-auto inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-fg/4 text-fg-muted hover:text-fg hover:bg-fg/8 border border-fg/10 transition-colors"
                 >
                   <Download size={12} />
                   {t.csvImport.downloadTemplate}
@@ -348,12 +348,12 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
                 onClick={() => fileRef.current?.click()}
-                className="border-2 border-dashed border-white/10 rounded-2xl p-12 text-center cursor-pointer hover:border-brand-500/30 hover:bg-white/2 transition-all"
+                className="border-2 border-dashed border-fg/10 rounded-2xl p-12 text-center cursor-pointer hover:border-accent-500/30 hover:bg-fg/2 transition-all"
               >
-                <Upload size={36} className="mx-auto text-slate-600 mb-3" />
-                <p className="text-sm text-slate-300 font-medium">{t.csvImport.dropTitle}</p>
-                <p className="text-xs text-slate-500 mt-1">{t.csvImport.dropSubtitle}</p>
-                <p className="text-[10px] text-slate-600 mt-3">{t.csvImport.dropHint}</p>
+                <Upload size={36} className="mx-auto text-fg-subtle mb-3" />
+                <p className="text-sm text-fg-muted font-medium">{t.csvImport.dropTitle}</p>
+                <p className="text-xs text-fg-subtle mt-1">{t.csvImport.dropSubtitle}</p>
+                <p className="text-[10px] text-fg-subtle mt-3">{t.csvImport.dropHint}</p>
               </div>
               <input
                 ref={fileRef}
@@ -367,11 +367,11 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
               />
 
               {/* Expected fields */}
-              <div className="glass rounded-xl border-white/8 p-4">
-                <p className="text-xs font-semibold text-slate-400 mb-2">{t.csvImport.expectedFieldsFor} {entityType === 'contacts' ? t.csvImport.contacts.toLowerCase() : t.csvImport.companies.toLowerCase()}</p>
+              <div className="glass rounded-xl border-fg/8 p-4">
+                <p className="text-xs font-semibold text-fg-muted mb-2">{t.csvImport.expectedFieldsFor} {entityType === 'contacts' ? t.csvImport.contacts.toLowerCase() : t.csvImport.companies.toLowerCase()}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {fields.map((f) => (
-                    <span key={f.key} className={`text-[10px] px-2 py-0.5 rounded-full ${f.required ? 'bg-brand-500/15 text-brand-400' : 'bg-white/6 text-slate-500'}`}>
+                    <span key={f.key} className={`text-[10px] px-2 py-0.5 rounded-full ${f.required ? 'bg-accent-500/15 text-accent-400' : 'bg-fg/6 text-fg-subtle'}`}>
                       {f.label}{f.required ? ' *' : ''}
                     </span>
                   ))}
@@ -383,20 +383,20 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
           {/* Step 2: Mapping */}
           {step === 'mapping' && (
             <div className="space-y-4">
-              <p className="text-sm text-slate-300 mb-2">{t.csvImport.mapColumns}</p>
+              <p className="text-sm text-fg-muted mb-2">{t.csvImport.mapColumns}</p>
               <div className="space-y-2">
                 {fields.map((field) => (
                   <div key={field.key} className="flex items-center gap-3">
                     <div className="w-40 flex-shrink-0">
-                      <span className={`text-xs ${field.required ? 'text-brand-400 font-medium' : 'text-slate-400'}`}>
+                      <span className={`text-xs ${field.required ? 'text-accent-400 font-medium' : 'text-fg-muted'}`}>
                         {field.label}{field.required ? ' *' : ''}
                       </span>
                     </div>
-                    <ArrowRight size={12} className="text-slate-600 flex-shrink-0" />
+                    <ArrowRight size={12} className="text-fg-subtle flex-shrink-0" />
                     <select
                       value={mapping[field.key] || ''}
                       onChange={(e) => setMapping({ ...mapping, [field.key]: e.target.value })}
-                      className="flex-1 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-brand-500/40"
+                      className="flex-1 bg-surface-0 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg outline-none focus:border-accent-500/40"
                     >
                       <option value="">— {t.csvImport.doNotMap} —</option>
                       {csvHeaders.map((h) => (
@@ -408,20 +408,20 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
               </div>
 
               {!requiredFieldsMapped && (
-                <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 rounded-xl px-3 py-2">
+                <div className="flex items-center gap-2 text-xs text-warning bg-warning/10 rounded-xl px-3 py-2">
                   <AlertTriangle size={13} />
                   {t.csvImport.requiredFieldsWarning}
                 </div>
               )}
 
               <div className="flex justify-between pt-2">
-                <button type="button" onClick={reset} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
+                <button type="button" onClick={reset} className="px-4 py-2 rounded-xl text-sm text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors">
                   {t.csvImport.back}
                 </button>
                 <button type="button"
                   onClick={() => setStep('preview')}
                   disabled={!requiredFieldsMapped}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-white text-sm font-semibold disabled:opacity-40"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold disabled:opacity-40"
                 >
                   {t.csvImport.preview} <ArrowRight size={14} />
                 </button>
@@ -432,23 +432,23 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
           {/* Step 3: Preview */}
           {step === 'preview' && (
             <div className="space-y-4">
-              <p className="text-sm text-slate-300">{t.csvImport.previewRows.replace('{count}', String(Math.min(5, csvRows.length)))}</p>
+              <p className="text-sm text-fg-muted">{t.csvImport.previewRows.replace('{count}', String(Math.min(5, csvRows.length)))}</p>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-white/8">
+                    <tr className="border-b border-fg/8">
                       {fields.filter((f) => mapping[f.key]).map((f) => (
-                        <th key={f.key} className="text-left py-2 px-2 text-slate-500 font-medium">{f.label}</th>
+                        <th key={f.key} className="text-left py-2 px-2 text-fg-subtle font-medium">{f.label}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {csvRows.slice(0, 5).map((row, i) => (
-                      <tr key={i} className="border-b border-white/4">
+                      <tr key={i} className="border-b border-fg/4">
                         {fields.filter((f) => mapping[f.key]).map((f) => {
                           const colIdx = csvHeaders.indexOf(mapping[f.key])
                           return (
-                            <td key={f.key} className="py-2 px-2 text-slate-300 truncate max-w-[150px]">
+                            <td key={f.key} className="py-2 px-2 text-fg-muted truncate max-w-[150px]">
                               {colIdx >= 0 ? row[colIdx] || '—' : '—'}
                             </td>
                           )
@@ -459,8 +459,8 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                 </table>
               </div>
 
-              <div className="glass rounded-xl border-white/8 p-3 flex items-center justify-between">
-                <p className="text-xs text-slate-400">
+              <div className="glass rounded-xl border-fg/8 p-3 flex items-center justify-between">
+                <p className="text-xs text-fg-muted">
                   {t.csvImport.toImport
                     .replace('{count}', String(csvRows.length))
                     .replace('{entity}', entityType === 'contacts' ? t.csvImport.contacts.toLowerCase() : t.csvImport.companies.toLowerCase())}
@@ -468,12 +468,12 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
               </div>
 
               <div className="flex justify-between pt-2">
-                <button type="button" onClick={() => setStep('mapping')} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
+                <button type="button" onClick={() => setStep('mapping')} className="px-4 py-2 rounded-xl text-sm text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors">
                   {t.csvImport.back}
                 </button>
                 <button type="button"
                   onClick={handleImport}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl btn-gradient text-white text-sm font-semibold"
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold"
                 >
                   <Upload size={14} />
                   {t.csvImport.importRecords.replace('{count}', String(csvRows.length))}
@@ -485,30 +485,30 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
           {/* Step 4: Importing */}
           {step === 'importing' && (
             <div className="py-12 text-center">
-              <Loader2 size={36} className="mx-auto text-brand-400 animate-spin mb-4" />
-              <p className="text-sm text-slate-300">{t.csvImport.importing}</p>
+              <Loader2 size={36} className="mx-auto text-accent-400 animate-spin mb-4" />
+              <p className="text-sm text-fg-muted">{t.csvImport.importing}</p>
             </div>
           )}
 
           {/* Step 5: Done */}
           {step === 'done' && (
             <div className="py-8 text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto">
-                <Check size={28} className="text-emerald-400" />
+              <div className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center mx-auto">
+                <Check size={28} className="text-success" />
               </div>
               <div>
-                <p className="text-lg font-bold text-white">{t.csvImport.completed}</p>
-                <p className="text-sm text-slate-400 mt-1">
+                <p className="text-lg font-bold text-fg">{t.csvImport.completed}</p>
+                <p className="text-sm text-fg-muted mt-1">
                   {t.csvImport.importedSummary
                     .replace('{imported}', String(importedCount))
                     .replace('{errors}', String(errorCount))}
                 </p>
               </div>
               <div className="flex justify-center gap-3 pt-2">
-                <button type="button" onClick={() => { reset(); }} className="px-4 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
+                <button type="button" onClick={() => { reset(); }} className="px-4 py-2 rounded-xl text-sm text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors">
                   {t.csvImport.importMore}
                 </button>
-                <button type="button" onClick={onClose} className="px-5 py-2 rounded-xl btn-gradient text-white text-sm font-semibold">
+                <button type="button" onClick={onClose} className="px-5 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold">
                   {t.csvImport.close}
                 </button>
               </div>

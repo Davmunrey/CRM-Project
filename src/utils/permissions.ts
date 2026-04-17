@@ -49,10 +49,10 @@ export const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
 }
 
 export const ROLE_COLORS: Record<UserRole, { text: string; bg: string }> = {
-  admin: { text: 'text-red-400', bg: 'bg-red-500/15' },
-  manager: { text: 'text-brand-400', bg: 'bg-brand-500/15' },
-  sales_rep: { text: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-  viewer: { text: 'text-slate-400', bg: 'bg-white/8' },
+  admin: { text: 'text-danger', bg: 'bg-danger/15' },
+  manager: { text: 'text-accent-400', bg: 'bg-accent-500/15' },
+  sales_rep: { text: 'text-success', bg: 'bg-success/15' },
+  viewer: { text: 'text-fg-muted', bg: 'bg-fg/8' },
 }
 
 // ─── Navigation Permissions ─────────────────────────────────────────────────

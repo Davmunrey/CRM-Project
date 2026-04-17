@@ -15,12 +15,12 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 }
 
 const COLOR_MAP: Record<string, string> = {
-  orange: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  brand: 'bg-brand-500/20 text-brand-400 border-brand-500/30',
-  purple: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  sky: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
-  blue: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  orange: 'bg-warning/20 text-warning border-warning/30',
+  emerald: 'bg-success/20 text-success border-success/30',
+  brand: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
+  purple: 'bg-accent-500/20 text-accent-400 border-accent-500/30',
+  sky: 'bg-info/20 text-info border-info/30',
+  blue: 'bg-info/20 text-info border-info/30',
 }
 
 interface SmartViewBarProps {
@@ -75,8 +75,8 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
         onClick={() => handleSelectView(null)}
         className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
           !currentActiveId
-            ? 'bg-white/10 border-white/20 text-white'
-            : 'bg-white/4 border-white/8 text-slate-500 hover:text-slate-300'
+            ? 'bg-fg/10 border-fg/20 text-fg'
+            : 'bg-fg/4 border-fg/8 text-fg-subtle hover:text-fg-muted'
         }`}
       >
         {t.common.all}
@@ -92,8 +92,8 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
             onClick={() => handleSelectView(isActive ? null : view.id)}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
               isActive
-                ? colorClass || 'bg-brand-500/20 text-brand-400 border-brand-500/30'
-                : 'bg-white/4 border-white/8 text-slate-500 hover:text-slate-300'
+                ? colorClass || 'bg-accent-500/20 text-accent-400 border-accent-500/30'
+                : 'bg-fg/4 border-fg/8 text-fg-subtle hover:text-fg-muted'
             }`}
           >
             {view.icon && ICON_MAP[view.icon]}
@@ -108,7 +108,7 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
         <div className="relative">
           <button type="button"
             onClick={() => setShowDropdown((v) => !v)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-surface-2 border border-white/8 text-slate-500 hover:text-slate-300 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-surface-2 border border-fg/8 text-fg-subtle hover:text-fg-muted transition-colors"
           >
             <Plus size={12} />
             {t.common.view}
@@ -121,7 +121,7 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
                 onClick={() => setShowDropdown(false)}
               />
               <div
-                className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-white/10 shadow-2xl z-50 py-1 bg-surface-2"
+                className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-fg/10 shadow-2xl z-50 py-1 bg-surface-2"
               >
                 {unpinnedViews.map((view) => (
                   <div
@@ -130,14 +130,14 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
                   >
                     <button type="button"
                       onClick={() => handleSelectView(view.id)}
-                      className="flex-1 flex items-center gap-2 px-1 py-1 text-sm text-slate-400 hover:text-white hover:bg-white/5 rounded-md transition-colors"
+                      className="flex-1 flex items-center gap-2 px-1 py-1 text-sm text-fg-muted hover:text-fg hover:bg-fg/5 rounded-md transition-colors"
                     >
                       {view.icon && ICON_MAP[view.icon]}
                       <span className="flex-1 text-left">{getViewLabel(view)}</span>
                     </button>
                     <button type="button"
                       onClick={() => useViewsStore.getState().togglePin(view.id)}
-                      className="p-1 text-slate-600 hover:text-brand-400 transition-colors"
+                      className="p-1 text-fg-subtle hover:text-accent-400 transition-colors"
                       title={t.common.add}
                       aria-label={t.common.add}
                     >

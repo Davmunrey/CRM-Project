@@ -14,15 +14,16 @@ const sizeClasses = {
   xl: 'w-16 h-16 text-lg',
 }
 
+/** Token-only backgrounds for deterministic avatar colors */
 const COLOR_CLASSES = [
-  'bg-indigo-600',
-  'bg-violet-600',
-  'bg-blue-600',
-  'bg-emerald-600',
-  'bg-amber-600',
-  'bg-rose-600',
-  'bg-cyan-600',
-  'bg-pink-600',
+  'bg-accent-600',
+  'bg-accent-700',
+  'bg-accent-500',
+  'bg-info',
+  'bg-success',
+  'bg-warning',
+  'bg-danger',
+  'bg-accent-800',
 ]
 
 function getColorClass(name: string): string {
@@ -39,7 +40,7 @@ export function Avatar({ name, size = 'md', imageUrl }: AvatarProps) {
       <img
         src={imageUrl}
         alt={name}
-        className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-white/10`}
+        className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-fg/10`}
       />
     )
   }
@@ -49,7 +50,7 @@ export function Avatar({ name, size = 'md', imageUrl }: AvatarProps) {
       className={`
         ${sizeClasses[size]} ${getColorClass(name)}
         rounded-full flex items-center justify-center
-        font-semibold text-white flex-shrink-0
+        font-semibold text-fg flex-shrink-0
       `}
       aria-label={name}
     >

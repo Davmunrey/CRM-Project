@@ -1,9 +1,27 @@
 import type { ReactNode } from 'react'
 
-type BadgeVariant =
-  | 'blue' | 'yellow' | 'green' | 'red'
-  | 'emerald' | 'rose' | 'purple' | 'orange'
-  | 'gray' | 'indigo'
+/** Semantic + small set of decorative variants (all token-based, no raw palette). */
+export type BadgeVariant =
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info'
+  | 'neutral'
+  | 'accent'
+  /** Decorative — still uses accent scale */
+  | 'violet'
+  | 'orange'
+
+const variantClasses: Record<BadgeVariant, string> = {
+  success: 'bg-success/15 text-success ring-success/25',
+  warning: 'bg-warning/15 text-warning ring-warning/25',
+  danger: 'bg-danger/15 text-danger ring-danger/25',
+  info: 'bg-info/15 text-info ring-info/25',
+  neutral: 'bg-surface-2 text-fg-muted ring-fg/12',
+  accent: 'bg-accent-500/15 text-accent-400 ring-accent-500/25',
+  violet: 'bg-accent-600/18 text-accent-300 ring-accent-600/30',
+  orange: 'bg-warning/18 text-warning ring-warning/30',
+}
 
 interface BadgeProps {
   children: ReactNode
@@ -11,20 +29,7 @@ interface BadgeProps {
   size?: 'sm' | 'md'
 }
 
-const variantClasses: Record<BadgeVariant, string> = {
-  blue: 'bg-blue-500/15 text-blue-400 ring-blue-500/20',
-  yellow: 'bg-yellow-500/15 text-yellow-400 ring-yellow-500/20',
-  green: 'bg-green-500/15 text-green-400 ring-green-500/20',
-  red: 'bg-red-500/15 text-red-400 ring-red-500/20',
-  emerald: 'bg-emerald-500/15 text-emerald-400 ring-emerald-500/20',
-  rose: 'bg-rose-500/15 text-rose-400 ring-rose-500/20',
-  purple: 'bg-purple-500/15 text-purple-400 ring-purple-500/20',
-  orange: 'bg-orange-500/15 text-orange-400 ring-orange-500/20',
-  gray: 'bg-slate-700/50 text-slate-400 ring-slate-600/20',
-  indigo: 'bg-indigo-500/15 text-indigo-400 ring-indigo-500/20',
-}
-
-export function Badge({ children, variant = 'gray', size = 'sm' }: BadgeProps) {
+export function Badge({ children, variant = 'neutral', size = 'sm' }: BadgeProps) {
   return (
     <span
       className={`inline-flex items-center rounded-full font-medium ring-1 ring-inset

@@ -1,6 +1,6 @@
 import { useEffect, lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { initSupabaseAuth } from './store/authStore'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { initSupabaseAuth, useAuthStore } from './store/authStore'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/layout/ErrorBoundary'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
@@ -56,10 +56,16 @@ function ProtectedPage({ title, children, requiredPermission }: { title: string;
   )
 }
 
+/** Unknown paths: send guests to login, signed-in users to dashboard. */
+function CatchAllRedirect() {
+  const user = useAuthStore((s) => s.currentUser)
+  return <Navigate to={user ? '/' : '/login'} replace />
+}
+
 function AppRoutes() {
   const t = useTranslations()
   useDataInit()
-  const lazyFallback = <div className="crm-page text-sm text-slate-400">{t.common.loading}</div>
+  const lazyFallback = <div className="crm-page text-sm text-fg-muted">{t.common.loading}</div>
   return (
     <Routes>
       {/* Public routes */}
@@ -134,6 +140,8 @@ function AppRoutes() {
       <Route path="/products" element={<ProtectedPage title={t.nav.products} requiredPermission="products:read"><Products /></ProtectedPage>} />
       <Route path="/calendar" element={<ProtectedPage title={t.nav.calendar} requiredPermission="activities:read"><Calendar /></ProtectedPage>} />
       <Route path="/profile" element={<ProtectedPage title={t.auth.profile}><UserProfile /></ProtectedPage>} />
+
+      <Route path="*" element={<CatchAllRedirect />} />
     </Routes>
   )
 }
@@ -171,17 +179,17 @@ export default function App() {
 
   if (isBootstrapFatalError) {
     return (
-      <div className="min-h-screen bg-surface-0 text-slate-200 flex items-center justify-center p-8">
-        <div className="max-w-lg rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
-          <h1 className="text-xl font-semibold text-white mb-2">Configuration error</h1>
-          <p className="text-sm text-slate-300 mb-4">
-            This build uses <code className="text-brand-300">VITE_APP_CHANNEL=production</code> or{' '}
-            <code className="text-brand-300">staging</code> and requires valid{' '}
-            <code className="text-brand-300">VITE_SUPABASE_URL</code> and{' '}
-            <code className="text-brand-300">VITE_SUPABASE_ANON_KEY</code>. For a static demo without Supabase, set{' '}
-            <code className="text-brand-300">VITE_APP_CHANNEL=demo</code> and rebuild.
+      <div className="min-h-screen bg-surface-0 text-fg flex items-center justify-center p-8">
+        <div className="max-w-lg rounded-2xl border border-danger/30 bg-danger/10 p-8 text-center">
+          <h1 className="text-xl font-semibold text-fg mb-2">Configuration error</h1>
+          <p className="text-sm text-fg-muted mb-4">
+            This build uses <code className="text-accent-300">VITE_APP_CHANNEL=production</code> or{' '}
+            <code className="text-accent-300">staging</code> and requires valid{' '}
+            <code className="text-accent-300">VITE_SUPABASE_URL</code> and{' '}
+            <code className="text-accent-300">VITE_SUPABASE_ANON_KEY</code>. For a static demo without Supabase, set{' '}
+            <code className="text-accent-300">VITE_APP_CHANNEL=demo</code> and rebuild.
           </p>
-          <p className="text-xs text-slate-500">Set environment variables and redeploy.</p>
+          <p className="text-xs text-fg-subtle">Set environment variables and redeploy.</p>
         </div>
       </div>
     )

@@ -17,7 +17,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label htmlFor={taId} className="text-sm font-medium text-fg-muted">
             {label}
-            {props.required && <span className="text-red-400 ml-1">*</span>}
+            {props.required && <span className="text-danger ml-1">*</span>}
           </label>
         )}
         <textarea
@@ -26,25 +26,25 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errId : undefined}
           className={`
-            w-full rounded-xl border bg-surface-2 text-fg text-sm
+            focus-ring w-full rounded-xl border bg-surface-2 text-fg text-sm
             placeholder:text-fg-muted/80
-            focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/40 focus-visible:border-accent-500/50
+            focus-visible:border-accent-500/50
             disabled:opacity-50 disabled:cursor-not-allowed
             transition-all duration-base p-3 resize-none
-            ${error ? 'border-red-500/50' : 'border-white/10 hover:border-white/15'}
+            ${error ? 'border-danger/50' : 'border-border-subtle hover:border-border-strong'}
             ${className}
           `}
           rows={4}
           {...props}
         />
         {error && (
-          <p id={errId} role="alert" className="text-xs text-red-400">
+          <p id={errId} role="alert" className="text-xs text-danger">
             {error}
           </p>
         )}
       </div>
     )
-  }
+  },
 )
 
 Textarea.displayName = 'Textarea'

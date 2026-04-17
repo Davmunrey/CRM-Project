@@ -5,9 +5,12 @@ globs: src/**/*.tsx,src/**/*.ts,src/**/*.css
 
 # UI consistency
 
-- **Surfaces and text:** Prefer `bg-surface-*`, `text-fg`, `text-fg-muted`, `accent-*`. Do not introduce `bg-navy-*`, `text-navy-*`, `border-navy-*`, or arbitrary `bg-[#...]` in `src/` (see `npm run ui:lint`).
-- **Tokens:** Semantic colors and motion live in `src/styles/tokens.css`. Legacy `--bg-main` / `--text-main` are aliases only; new code should use semantic Tailwind classes.
-- **Theme:** `applyTheme` sets `light` / `dark` on `<html>`. `applyUiDensity` sets `data-density` (`comfortable` | `compact`). Persist via `useSettingsStore` — do not toggle classes ad hoc in feature code.
-- **Primitives:** Reuse `src/components/ui/*` (Button, Input, Select, Modal, PageHeader, Toolbar, …) before adding one-off styled elements.
+- **Surfaces and text:** Prefer `bg-surface-*`, `text-fg`, `text-fg-muted`, `text-fg-subtle`, `accent-*`, `success`, `warning`, `danger`, `info`. Do not introduce `bg-navy-*`, `text-navy-*`, `border-navy-*`, or arbitrary `bg-[#...]` in `src/` (see `npm run ui:lint`).
+- **Legacy Tailwind palettes:** Outside `src/components/ui/`, avoid raw Tailwind palette utilities (`slate-*`, `emerald-*`, `red-*`, `amber-*`, `blue-*`, `violet-*`, `orange-*`, `rose-*`, `sky-*`, `bg-white`, `text-white`, `bg-brand-*`, `text-brand-*`, `border-brand-*`). Primitives may still use low-level classes during refactors; feature code should use semantic tokens only.
+- **UI lint:** `scripts/ui-lint.mjs` runs in CI (`npm run ui:lint`). It enforces navy/hex bans globally and **strict** bans on slate/white/brand/raw status colors in all TS/TSX **except** `src/components/ui/**` (allowlisted for primitive implementation details).
+- **Tokens:** Semantic colors, typography, spacing, elevation, z-index, and motion live in `src/styles/tokens.css` and are wired through `tailwind.config.js`. Legacy `--bg-main` / `--text-main` are aliases only; new code should use semantic Tailwind classes.
+- **Theme:** `applyTheme` sets `light` / `dark` on `<html>` (Tailwind `darkMode: 'class'` targets `html.dark`). `applyUiDensity` sets `data-density` (`comfortable` | `compact`). Persist via `useSettingsStore` — do not toggle classes ad hoc in feature code.
+- **Primitives:** Reuse `src/components/ui/*` (Button, Input, Select, Modal, Table, Tabs, Tooltip, DropdownMenu, EmptyState, …) before adding one-off styled elements.
 - **Focus:** Use the `focus-ring` utility on custom interactive elements where appropriate; keep keyboard focus visible.
+- **ESLint:** `lint:ci` may still allow warnings while the TypeScript/React backlog is cleared; **do not** increase the warning budget when touching files — fix or narrow scope. `ui:lint` is the zero-tolerance gate for color/layout regressions in `src/`.
 - **Docs:** `docs/design-system-reference.md` is the engineering reference; `docs/master-design-ui.md` remains the product/layout master.

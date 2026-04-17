@@ -129,29 +129,29 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" aria-modal="true">
       <div className="absolute inset-0 bg-surface-0/80 backdrop-blur-md" onClick={onClose} />
-      <div className="relative w-full max-w-lg mx-4 glass rounded-2xl shadow-float border-white/12 overflow-hidden animate-scale-in">
+      <div className="relative w-full max-w-lg mx-4 glass rounded-2xl shadow-float border-fg/12 overflow-hidden animate-scale-in">
         {/* Search input */}
-        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/8">
-          <Search size={16} className="text-slate-500 flex-shrink-0" />
+        <div className="flex items-center gap-3 px-4 py-3.5 border-b border-fg/8">
+          <Search size={16} className="text-fg-subtle flex-shrink-0" />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.common.searchPlaceholder}
-            className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 outline-none"
+            className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
           />
-          <kbd className="px-1.5 py-0.5 rounded-md bg-white/8 text-[10px] font-medium text-slate-500 flex-shrink-0">{t.common.close.toUpperCase()}</kbd>
+          <kbd className="px-1.5 py-0.5 rounded-md bg-fg/8 text-[10px] font-medium text-fg-subtle flex-shrink-0">{t.common.close.toUpperCase()}</kbd>
         </div>
 
         {/* Results */}
         <div className="max-h-80 overflow-y-auto py-2">
           {allItems.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-slate-500">{t.common.noResults} "{query}"</p>
+            <p className="px-4 py-6 text-center text-sm text-fg-subtle">{t.common.noResults} "{query}"</p>
           )}
 
           {Object.entries(groups).map(([category, items]) => (
             <div key={category}>
-              <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-600">{category}</p>
+              <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">{category}</p>
               {items.map((item) => {
                 const idx = itemIndex++
                 return (
@@ -160,19 +160,19 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                     onClick={item.action}
                     onMouseEnter={() => setSelected(idx)}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                      selected === idx ? 'bg-brand-600/15 text-white' : 'text-slate-400 hover:text-white hover:bg-white/4'
+                      selected === idx ? 'bg-accent-600/15 text-fg' : 'text-fg-muted hover:text-fg hover:bg-fg/4'
                     }`}
                   >
-                    <span className={`flex-shrink-0 ${selected === idx ? 'text-brand-400' : 'text-slate-500'}`}>
+                    <span className={`flex-shrink-0 ${selected === idx ? 'text-accent-400' : 'text-fg-subtle'}`}>
                       {item.icon}
                     </span>
                     <span className="flex-1 min-w-0">
                       <span className="text-sm font-medium block truncate">{item.label}</span>
                       {item.sublabel && (
-                        <span className="text-xs text-slate-500 block truncate">{item.sublabel}</span>
+                        <span className="text-xs text-fg-subtle block truncate">{item.sublabel}</span>
                       )}
                     </span>
-                    {selected === idx && <ArrowRight size={14} className="flex-shrink-0 text-brand-400" />}
+                    {selected === idx && <ArrowRight size={14} className="flex-shrink-0 text-accent-400" />}
                   </button>
                 )
               })}
@@ -181,7 +181,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t border-white/6 flex items-center gap-4 text-[10px] text-slate-600">
+        <div className="px-4 py-2 border-t border-fg/6 flex items-center gap-4 text-[10px] text-fg-subtle">
           <span><kbd className="font-semibold">↑↓</kbd> {t.commandPalette.navigateHint}</span>
           <span><kbd className="font-semibold">↵</kbd> {t.commandPalette.openHint}</span>
           <span><kbd className="font-semibold">ESC</kbd> {t.commandPalette.closeHint}</span>

@@ -126,8 +126,8 @@ function SidebarNavItem({ item, collapsed, nested = false }: SidebarNavItemProps
           flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium
           transition-all duration-150 group relative
           ${isActive
-            ? 'nav-active sidebar-active text-white'
-            : 'sidebar-inactive text-slate-500 hover:text-slate-100 hover:bg-white/5 border-l-2 border-transparent'
+            ? 'nav-active sidebar-active text-fg'
+            : 'sidebar-inactive text-fg-subtle hover:text-fg hover:bg-fg/5 border-l-2 border-transparent'
           }
           ${collapsed ? 'justify-center' : ''}
           ${nested && !collapsed ? 'ml-3' : ''}
@@ -136,18 +136,18 @@ function SidebarNavItem({ item, collapsed, nested = false }: SidebarNavItemProps
         <span className="flex-shrink-0">{item.icon}</span>
         {!collapsed && <span className="truncate flex-1">{item.label}</span>}
         {!collapsed && item.badge != null && item.badge > 0 && (
-          <span className="ml-auto text-[10px] font-bold bg-red-500/20 text-red-400 rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+          <span className="ml-auto text-[10px] font-bold bg-danger/20 text-danger rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
             {item.badge > 99 ? '99+' : item.badge}
           </span>
         )}
         {!collapsed && item.dot && (
-          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
+          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-success shadow-[0_0_6px_rgb(var(--color-success)/0.55)]" />
         )}
         {collapsed && item.badge != null && item.badge > 0 && (
-          <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-red-500" />
+          <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-danger" />
         )}
         {collapsed && item.dot && (
-          <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-emerald-400" />
+          <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-success" />
         )}
       </NavLink>
       {!collapsed && item.children?.map((child) => (
@@ -168,8 +168,8 @@ function SidebarSection({ label, items, collapsed, icon }: SidebarSectionProps) 
   return (
     <div className="space-y-0.5">
       {!collapsed && (
-        <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600 flex items-center gap-1.5">
-          {icon && <span className="text-slate-500">{icon}</span>}
+        <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-fg-subtle flex items-center gap-1.5">
+          {icon && <span className="text-fg-subtle">{icon}</span>}
           <p>{label}</p>
         </div>
       )}
@@ -350,24 +350,24 @@ export function Sidebar() {
   return (
     <aside
       className={`
-        app-sidebar flex flex-col h-screen bg-surface-1 border-r border-white/6
+        app-sidebar flex flex-col h-screen bg-surface-1 border-r border-fg/6
         transition-all duration-200 ease-out flex-shrink-0
         ${collapsed ? 'w-[60px]' : 'w-[220px]'}
       `}
     >
       {/* Logo */}
-      <div className={`flex items-center h-16 border-b border-white/6 flex-shrink-0 ${collapsed ? 'justify-center px-3' : 'px-4 gap-3'}`}>
+      <div className={`flex items-center h-16 border-b border-fg/6 flex-shrink-0 ${collapsed ? 'justify-center px-3' : 'px-4 gap-3'}`}>
         <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 shadow-brand-sm overflow-hidden" style={{ backgroundColor: branding.primaryColor }}>
           {branding.logoUrl ? (
             <img src={branding.logoUrl} alt={branding.appName} className="w-full h-full object-cover" />
           ) : (
-            <Zap size={15} className="text-white" />
+            <Zap size={15} className="text-fg" />
           )}
         </div>
         {!collapsed && (
           <div>
-            <span className="text-sm font-bold text-white tracking-tight">{branding.appName}</span>
-            <p className="text-[10px] text-slate-500 font-medium">{branding.customDomain || t.navSections.sales}</p>
+            <span className="text-sm font-bold text-fg tracking-tight">{branding.appName}</span>
+            <p className="text-[10px] text-fg-subtle font-medium">{branding.customDomain || t.navSections.sales}</p>
           </div>
         )}
       </div>
@@ -383,13 +383,13 @@ export function Sidebar() {
       </nav>
 
       {/* Collapse toggle */}
-      <div className="border-t border-white/6 p-2 flex-shrink-0">
+      <div className="border-t border-fg/6 p-2 flex-shrink-0">
         <button type="button"
           onClick={() => setCollapsed((c) => !c)}
           aria-label={collapsed ? t.nav.expandSidebar : t.nav.collapseSidebar}
           className={`
-            w-full flex items-center gap-2 px-2 py-2 rounded-xl text-slate-600
-            hover:text-slate-300 hover:bg-white/5 transition-all duration-150 text-xs font-medium
+            w-full flex items-center gap-2 px-2 py-2 rounded-xl text-fg-subtle
+            hover:text-fg-muted hover:bg-fg/5 transition-all duration-150 text-xs font-medium
             ${collapsed ? 'justify-center' : ''}
           `}
         >

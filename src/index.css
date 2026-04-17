@@ -25,23 +25,7 @@
 }
 
 @layer base {
-  :root {
-    --bg-main: #06070f;
-    --bg-panel: #111220;
-    --bg-elevated: #0d0e1a;
-    --text-main: #f1f5f9;
-    --text-muted: #94a3b8;
-    --border-soft: rgba(255, 255, 255, 0.08);
-  }
-
-  :root.light {
-    --bg-main: #f8fafc;
-    --bg-panel: #ffffff;
-    --bg-elevated: #f1f5f9;
-    --text-main: #0f172a;
-    --text-muted: #475569;
-    --border-soft: rgba(15, 23, 42, 0.14);
-  }
+  /* Legacy surface vars live in src/styles/tokens.css (single source of truth). */
 
   * {
     box-sizing: border-box;
@@ -357,81 +341,7 @@
     background: rgba(15, 23, 42, 0.28) !important;
   }
 
-  .light .bg-white\/4,
-  .light .bg-white\/5,
-  .light .bg-white\/6,
-  .light .bg-white\/8,
-  .light .bg-white\/10 {
-    background-color: rgba(15, 23, 42, 0.04) !important;
-  }
-
-  .light .text-white {
-    color: var(--text-main) !important;
-  }
-
-  .light .text-slate-300,
-  .light .text-zinc-300 {
-    color: #1e293b !important;
-  }
-
-  .light .text-slate-500,
-  .light .text-slate-600 {
-    color: #334155 !important;
-  }
-
-  .light .text-slate-400 {
-    color: #475569 !important;
-  }
-
-  .light .text-slate-300 {
-    color: #334155 !important;
-  }
-
-  .light .text-slate-200 {
-    color: #1e293b !important;
-  }
-
-  .light .text-slate-100 {
-    color: #0f172a !important;
-  }
-
-  .light .text-brand-300 {
-    color: #4338ca !important;
-  }
-
-  .light .text-brand-400 {
-    color: #4f46e5 !important;
-  }
-
-  .light .text-emerald-300 {
-    color: #065f46 !important;
-  }
-
-  .light .text-emerald-400 {
-    color: #047857 !important;
-  }
-
-  .light .border-white\/4,
-  .light .border-white\/5,
-  .light .border-white\/6,
-  .light .border-white\/8,
-  .light .border-white\/10 {
-    border-color: rgba(15, 23, 42, 0.2) !important;
-  }
-
-  .light .border-brand-500\/30,
-  .light .border-brand-500\/40 {
-    border-color: rgba(79, 70, 229, 0.45) !important;
-  }
-
-  .light .border-emerald-500\/20 {
-    border-color: rgba(5, 150, 105, 0.35) !important;
-  }
-
-  .light .bg-brand-500\/15,
-  .light .bg-brand-500\/20 {
-    background-color: rgba(79, 70, 229, 0.2) !important;
-  }
+  /* Legacy Tailwind palette overrides removed — components use semantic tokens (text-fg*, accent-*, border-fg/*). */
 
   .light .sidebar-active {
     color: #ffffff !important;
@@ -449,30 +359,14 @@
     background-color: rgba(15, 23, 42, 0.06) !important;
   }
 
-  .light .bg-emerald-500\/10,
-  .light .bg-emerald-500\/15 {
-    background-color: rgba(16, 185, 129, 0.2) !important;
-  }
-
-  .light .hover\:bg-white\/4:hover,
-  .light .hover\:bg-white\/5:hover,
-  .light .hover\:bg-white\/6:hover,
-  .light .hover\:bg-white\/10:hover {
+  .light .hover\:bg-fg\/4:hover,
+  .light .hover\:bg-fg\/5:hover,
+  .light .hover\:bg-fg\/6:hover,
+  .light .hover\:bg-fg\/10:hover {
     background-color: rgba(15, 23, 42, 0.06) !important;
   }
 
-  .light .hover\:text-slate-300:hover {
-    color: #0f172a !important;
-  }
-
-  .light .placeholder\:text-slate-600::placeholder {
-    color: #64748b !important;
-    opacity: 1 !important;
-  }
-
-  .light .placeholder\:text-slate-500::placeholder,
-  .light .placeholder-slate-500::placeholder,
-  .light .placeholder-slate-600::placeholder {
+  .light .placeholder\:text-fg-subtle::placeholder {
     color: #64748b !important;
     opacity: 1 !important;
   }

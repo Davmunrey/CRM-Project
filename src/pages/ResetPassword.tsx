@@ -74,7 +74,7 @@ export function ResetPassword() {
             <p className="text-sm text-fg-muted">{t.auth.checkEmailInstructions}</p>
 
             {error && (
-              <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+              <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">
                 {error}
               </div>
             )}

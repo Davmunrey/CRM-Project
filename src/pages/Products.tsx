@@ -26,12 +26,12 @@ function getCategoryLabels(t: ReturnType<typeof useTranslations>): Record<Produc
 }
 
 const CATEGORY_COLORS: Record<ProductCategory, string> = {
-  software: 'bg-brand-500/15 text-brand-400 border-brand-500/20',
-  hardware: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-  service: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-  consulting: 'bg-purple-500/15 text-purple-400 border-purple-500/20',
-  support: 'bg-sky-500/15 text-sky-400 border-sky-500/20',
-  other: 'bg-white/8 text-slate-400 border-white/10',
+  software: 'bg-accent-500/15 text-accent-400 border-accent-500/20',
+  hardware: 'bg-warning/15 text-warning border-warning/20',
+  service: 'bg-success/15 text-success border-success/20',
+  consulting: 'bg-accent-500/15 text-accent-400 border-purple-500/20',
+  support: 'bg-info/15 text-info border-info/20',
+  other: 'bg-fg/8 text-fg-muted border-fg/10',
 }
 
 const CURRENCY_OPTIONS: DealCurrency[] = ['EUR', 'USD', 'GBP']
@@ -120,9 +120,9 @@ function ProductModal({
             type="checkbox"
             checked={form.isActive}
             onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
-            className="w-4 h-4 rounded border-white/20 bg-white/4 text-brand-500 focus:ring-brand-500/30"
+            className="w-4 h-4 rounded border-fg/20 bg-fg/4 text-accent-500 focus:ring-accent-500/30"
           />
-          <span className="text-sm text-slate-300">{t.common.active} {t.products.title.toLowerCase()}</span>
+          <span className="text-sm text-fg-muted">{t.common.active} {t.products.title.toLowerCase()}</span>
         </label>
         <div className="flex gap-2 justify-end pt-2">
           <Button variant="ghost" onClick={onClose}>{t.common.cancel}</Button>
@@ -159,12 +159,12 @@ function ProductCard({ product }: { product: Product }) {
         />
       )}
 
-      <div className={`glass rounded-xl p-4 border transition-colors ${product.isActive ? 'border-white/6' : 'border-white/3 opacity-60'}`}>
+      <div className={`glass rounded-xl p-4 border transition-colors ${product.isActive ? 'border-fg/6' : 'border-fg/3 opacity-60'}`}>
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-white truncate">{displayProduct.name}</span>
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${product.isActive ? 'border-white/10 text-slate-500' : 'border-white/6 text-slate-600'}`}>
+              <span className="text-sm font-semibold text-fg truncate">{displayProduct.name}</span>
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${product.isActive ? 'border-fg/10 text-fg-subtle' : 'border-fg/6 text-fg-subtle'}`}>
                 {product.sku}
               </span>
             </div>
@@ -173,7 +173,7 @@ function ProductCard({ product }: { product: Product }) {
                 {categoryLabels[product.category]}
               </span>
               {!product.isActive && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-surface-2 border border-white/8 text-slate-500">{t.common.inactive}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-surface-2 border border-fg/8 text-fg-subtle">{t.common.inactive}</span>
               )}
             </div>
           </div>
@@ -185,8 +185,8 @@ function ProductCard({ product }: { product: Product }) {
                 title={product.isActive ? t.common.disabled : t.common.enabled}
               >
                 {product.isActive
-                  ? <ToggleRight size={18} className="text-brand-400" />
-                  : <ToggleLeft size={18} className="text-slate-500" />
+                  ? <ToggleRight size={18} className="text-accent-400" />
+                  : <ToggleLeft size={18} className="text-fg-subtle" />
                 }
               </button>
             </PermissionGate>
@@ -196,7 +196,7 @@ function ProductCard({ product }: { product: Product }) {
                 onClick={() => setEditing(true)}
                 title={t.common.edit}
                 aria-label={t.common.edit}
-                className="p-1.5 text-slate-500 hover:text-slate-200 transition-colors"
+                className="p-1.5 text-fg-subtle hover:text-fg transition-colors"
               >
                 <Edit2 size={13} />
               </button>
@@ -207,7 +207,7 @@ function ProductCard({ product }: { product: Product }) {
                 onClick={() => { deleteProduct(product.id); toast.success(t.common.delete) }}
                 title={t.common.delete}
                 aria-label={t.common.delete}
-                className="p-1.5 text-slate-500 hover:text-red-400 transition-colors"
+                className="p-1.5 text-fg-subtle hover:text-danger transition-colors"
               >
                 <Trash2 size={13} />
               </button>
@@ -216,10 +216,10 @@ function ProductCard({ product }: { product: Product }) {
         </div>
 
         {displayProduct.description && (
-          <p className="text-xs text-slate-500 mb-2 line-clamp-2">{displayProduct.description}</p>
+          <p className="text-xs text-fg-subtle mb-2 line-clamp-2">{displayProduct.description}</p>
         )}
 
-        <p className="text-lg font-bold text-white">
+        <p className="text-lg font-bold text-fg">
           {formatPrice(product.price, product.currency)}
         </p>
       </div>
@@ -294,17 +294,17 @@ export function Products() {
 
       {/* KPI strip */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="glass rounded-xl p-4 border border-white/6">
-          <p className="text-xs text-slate-500 mb-1">{t.common.total} {t.products.title.toLowerCase()}</p>
-          <p className="text-2xl font-bold text-white">{products.length}</p>
+        <div className="glass rounded-xl p-4 border border-fg/6">
+          <p className="text-xs text-fg-subtle mb-1">{t.common.total} {t.products.title.toLowerCase()}</p>
+          <p className="text-2xl font-bold text-fg">{products.length}</p>
         </div>
-        <div className="glass rounded-xl p-4 border border-white/6">
-          <p className="text-xs text-slate-500 mb-1">{t.common.active}</p>
-          <p className="text-2xl font-bold text-emerald-400">{active}</p>
+        <div className="glass rounded-xl p-4 border border-fg/6">
+          <p className="text-xs text-fg-subtle mb-1">{t.common.active}</p>
+          <p className="text-2xl font-bold text-success">{active}</p>
         </div>
-        <div className="glass rounded-xl p-4 border border-white/6">
-          <p className="text-xs text-slate-500 mb-1">{t.products.price}</p>
-          <p className="text-lg font-bold text-brand-400">
+        <div className="glass rounded-xl p-4 border border-fg/6">
+          <p className="text-xs text-fg-subtle mb-1">{t.products.price}</p>
+          <p className="text-lg font-bold text-accent-400">
             {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(totalValue)}
           </p>
         </div>
@@ -312,12 +312,12 @@ export function Products() {
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="glass rounded-xl p-12 border border-white/6 text-center">
-          <Package size={32} className="text-slate-600 mx-auto mb-3" />
-          <p className="text-sm font-medium text-slate-400">
+        <div className="glass rounded-xl p-12 border border-fg/6 text-center">
+          <Package size={32} className="text-fg-subtle mx-auto mb-3" />
+          <p className="text-sm font-medium text-fg-muted">
             {products.length === 0 ? t.products.title : t.common.noResults}
           </p>
-          <p className="text-xs text-slate-600 mt-1">
+          <p className="text-xs text-fg-subtle mt-1">
             {products.length === 0 ? t.products.newProduct : t.common.reset}
           </p>
         </div>

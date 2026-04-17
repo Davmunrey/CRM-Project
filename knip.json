@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "index.html",
+    "src/main.tsx",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "scripts/*.mjs"
+  ],
+  "project": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx", "e2e/**/*.ts"],
+  "ignore": [
+    "supabase/functions/**",
+    "src/hooks/useFilters.ts",
+    "src/hooks/useLocalStorage.ts",
+    "src/hooks/useSearch.ts",
+    "src/store/attachmentsStore.ts",
+    "src/components/shared/AttachmentsList.tsx"
+  ],
+  "ignoreDependencies": ["@types/uuid"]
+}

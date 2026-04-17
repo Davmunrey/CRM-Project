@@ -18,12 +18,12 @@ const TYPE_ICONS: Record<ActivityType, React.ReactNode> = {
 }
 
 const TYPE_COLORS: Record<ActivityType, string> = {
-  call: 'bg-blue-500/15 text-blue-400',
-  email: 'bg-purple-500/15 text-purple-400',
-  meeting: 'bg-emerald-500/15 text-emerald-400',
-  note: 'bg-yellow-500/15 text-yellow-400',
-  task: 'bg-indigo-500/15 text-indigo-400',
-  linkedin: 'bg-blue-600/15 text-blue-500',
+  call: 'bg-info/15 text-info',
+  email: 'bg-accent-500/15 text-accent-300',
+  meeting: 'bg-success/15 text-success',
+  note: 'bg-warning/15 text-warning',
+  task: 'bg-accent-600/15 text-accent-400',
+  linkedin: 'bg-info/18 text-info',
 }
 
 interface ActivityItemProps {
@@ -40,7 +40,7 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
     activity.dueDate < new Date().toISOString().split('T')[0]
 
   return (
-    <div className={`flex gap-3 p-3 rounded-xl ${isOverdue ? 'bg-red-500/5 border border-red-500/20' : 'hover:bg-white/[0.04]'} transition-colors`}>
+    <div className={`flex gap-3 p-3 rounded-xl ${isOverdue ? 'bg-danger/5 border border-danger/20' : 'hover:bg-fg/[0.04]'} transition-colors`}>
       <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${TYPE_COLORS[activity.type]}`}>
         {TYPE_ICONS[activity.type]}
       </div>
@@ -48,16 +48,16 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-200 truncate">{activity.subject}</p>
-            <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{activity.description}</p>
+            <p className="text-sm font-medium text-fg truncate">{activity.subject}</p>
+            <p className="text-xs text-fg-subtle mt-0.5 line-clamp-2">{activity.description}</p>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {activity.status === 'completed' ? (
-              <Badge variant="emerald"><Check size={10} className="mr-0.5" />{t.activities.statusLabels.completed}</Badge>
+              <Badge variant="success"><Check size={10} className="mr-0.5" />{t.activities.statusLabels.completed}</Badge>
             ) : activity.status === 'cancelled' ? (
-              <Badge variant="gray">{t.activities.statusLabels.cancelled}</Badge>
+              <Badge variant="neutral">{t.activities.statusLabels.cancelled}</Badge>
             ) : (
-              <Badge variant={isOverdue ? 'rose' : 'yellow'}>
+              <Badge variant={isOverdue ? 'danger' : 'warning'}>
                 <Clock size={10} className="mr-0.5" />
                 {isOverdue ? t.activities.overdue : t.activities.statusLabels.pending}
               </Badge>
@@ -66,18 +66,18 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
         </div>
 
         {activity.outcome && (
-          <p className="text-xs text-slate-400 mt-1 italic">"{activity.outcome}"</p>
+          <p className="text-xs text-fg-muted mt-1 italic">"{activity.outcome}"</p>
         )}
 
         <div className="flex items-center gap-3 mt-2">
-          <span className="text-[10px] text-slate-600">{t.activities.typeLabels[activity.type]}</span>
+          <span className="text-[10px] text-fg-subtle">{t.activities.typeLabels[activity.type]}</span>
           {activity.dueDate && (
-            <span className={`text-[10px] ${isOverdue ? 'text-red-400' : 'text-slate-600'}`}>
+            <span className={`text-[10px] ${isOverdue ? 'text-danger' : 'text-fg-subtle'}`}>
               {formatDate(activity.dueDate)}
             </span>
           )}
-          <span className="text-[10px] text-slate-600">{activity.createdBy}</span>
-          <span className="text-[10px] text-slate-600 ml-auto">{formatRelativeDate(activity.createdAt)}</span>
+          <span className="text-[10px] text-fg-subtle">{activity.createdBy}</span>
+          <span className="text-[10px] text-fg-subtle ml-auto">{formatRelativeDate(activity.createdAt)}</span>
         </div>
       </div>
 
@@ -89,7 +89,7 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
               size="xs"
               onClick={() => onComplete(activity.id)}
               aria-label={t.activities.completed}
-              className="p-1 text-emerald-400 hover:text-emerald-300"
+              className="p-1 text-success hover:text-success/80"
             >
               <Check size={14} />
             </Button>
@@ -100,7 +100,7 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
               size="xs"
               onClick={() => onEdit(activity.id)}
               aria-label={t.common.edit}
-              className="p-1 text-slate-400 hover:text-slate-200"
+              className="p-1 text-fg-muted hover:text-fg"
             >
               <Edit2 size={14} />
             </Button>
@@ -111,7 +111,7 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
               size="xs"
               onClick={() => onDelete(activity.id)}
               aria-label={t.common.delete}
-              className="p-1 text-red-400 hover:text-red-300"
+              className="p-1 text-danger hover:text-danger/80"
             >
               <X size={14} />
             </Button>

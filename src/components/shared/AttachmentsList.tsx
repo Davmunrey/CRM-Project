@@ -19,9 +19,9 @@ function formatFileSize(bytes: number, t: ReturnType<typeof useTranslations>): s
 }
 
 function getFileIcon(mimeType: string) {
-  if (mimeType.startsWith('image/')) return <Image size={16} className="text-purple-400" />
-  if (mimeType.includes('pdf')) return <FileText size={16} className="text-red-400" />
-  return <File size={16} className="text-slate-400" />
+  if (mimeType.startsWith('image/')) return <Image size={16} className="text-accent-400" />
+  if (mimeType.includes('pdf')) return <FileText size={16} className="text-danger" />
+  return <File size={16} className="text-fg-muted" />
 }
 
 export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) {
@@ -85,14 +85,14 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Paperclip size={14} className="text-slate-500" />
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
+          <Paperclip size={14} className="text-fg-subtle" />
+          <p className="text-xs font-semibold text-fg-muted uppercase tracking-wide">
             {t.inbox.attachments} {attachments.length > 0 && `(${attachments.length})`}
           </p>
         </div>
         <button type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-2 border border-white/8 text-slate-400 hover:text-white hover:border-white/15 transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-2 border border-fg/8 text-fg-muted hover:text-fg hover:border-fg/15 transition-colors"
         >
           <Upload size={12} />
           {t.email.addFile}
@@ -115,17 +115,17 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
         onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files) }}
         className={`border-2 border-dashed rounded-xl p-4 text-center transition-colors ${
           dragOver
-            ? 'border-brand-500/50 bg-brand-500/5'
+            ? 'border-accent-500/50 bg-accent-500/5'
             : attachments.length === 0
-              ? 'border-white/8 hover:border-white/15'
+              ? 'border-fg/8 hover:border-fg/15'
               : 'border-transparent p-0'
         }`}
       >
         {attachments.length === 0 && !dragOver && (
-          <p className="text-xs text-slate-600">{t.email.attachHint}</p>
+          <p className="text-xs text-fg-subtle">{t.email.attachHint}</p>
         )}
         {dragOver && (
-          <p className="text-xs text-brand-400">{t.email.addFile}</p>
+          <p className="text-xs text-accent-400">{t.email.addFile}</p>
         )}
 
         {/* File list */}
@@ -136,26 +136,26 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
               .map(att => (
                 <div
                   key={att.id}
-                  className="flex items-center gap-3 p-2.5 rounded-lg bg-white/3 border border-white/6 hover:border-white/10 group transition-colors"
+                  className="flex items-center gap-3 p-2.5 rounded-lg bg-fg/3 border border-fg/6 hover:border-fg/10 group transition-colors"
                 >
                   {getFileIcon(att.mimeType)}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-slate-200 truncate">{att.fileName}</p>
-                    <p className="text-[10px] text-slate-600">
+                    <p className="text-sm text-fg truncate">{att.fileName}</p>
+                    <p className="text-[10px] text-fg-subtle">
                       {formatFileSize(att.fileSize, t)} · {formatDateShort(att.uploadedAt)} · {att.uploadedBy}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button type="button"
                       onClick={() => handleDownload(att)}
-                      className="p-1 rounded text-slate-500 hover:text-brand-400 transition-colors"
+                      className="p-1 rounded text-fg-subtle hover:text-accent-400 transition-colors"
                       title={t.common.export}
                     >
                       <Download size={13} />
                     </button>
                     <button type="button"
                       onClick={() => handleDelete(att.id, att.fileName)}
-                      className="p-1 rounded text-slate-500 hover:text-red-400 transition-colors"
+                      className="p-1 rounded text-fg-subtle hover:text-danger transition-colors"
                       title={t.common.delete}
                     >
                       <Trash2 size={13} />

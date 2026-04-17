@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Mail, Send, Inbox as InboxIcon, Loader2, RefreshCw, Wifi, WifiOff, User, Clock, Reply, Plus, Eye, MousePointerClick, Paperclip, Download, Search, ChevronDown } from 'lucide-react'
+import { Spinner } from '../components/ui/Spinner'
 import { Link } from 'react-router-dom'
 import { useEmailStore } from '../store/emailStore'
 import { useContactsStore } from '../store/contactsStore'
@@ -74,8 +75,8 @@ function ThreadItem({
   return (
     <div
       onClick={onClick}
-      className={`group px-4 py-3 border-b border-white/4 cursor-pointer transition-colors ${
-        selected ? 'bg-brand-600/10 border-l-2 border-l-brand-500' : 'hover:bg-white/4'
+      className={`group px-4 py-3 border-b border-fg/4 cursor-pointer transition-colors ${
+        selected ? 'bg-accent-600/10 border-l-2 border-l-accent-500' : 'hover:bg-fg/4'
       }`}
     >
       <div className="flex items-start gap-3">
@@ -87,38 +88,38 @@ function ThreadItem({
             onToggleBulk()
           }}
           onClick={(e) => e.stopPropagation()}
-          className={`mt-1 rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500 transition-opacity ${
+          className={`mt-1 rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500 transition-opacity ${
             bulkSelected ? 'opacity-100' : 'opacity-35 group-hover:opacity-100'
           }`}
           aria-label={t.inbox.selectThread}
           title={t.inbox.selectThread}
         />
-        <div className="w-8 h-8 rounded-full bg-brand-600/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-brand-400">
+        <div className="w-8 h-8 rounded-full bg-accent-600/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-accent-400">
           {(lastMsg?.from?.charAt(0) ?? '?').toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-0.5">
-            <p className={`text-sm truncate ${isUnread ? 'font-semibold text-white' : 'text-slate-300'}`}>
+            <p className={`text-sm truncate ${isUnread ? 'font-semibold text-fg' : 'text-fg-muted'}`}>
               {lastMsg?.from?.replace(/<.*>/, '').trim() || t.inbox.unknownSender}
             </p>
-            <span className="text-[10px] text-slate-500 flex-shrink-0">
+            <span className="text-[10px] text-fg-subtle flex-shrink-0">
               {lastMsg?.date ? formatRelativeDate(lastMsg.date) : ''}
             </span>
           </div>
-          <p className={`text-xs truncate ${isUnread ? 'text-white' : 'text-slate-400'}`}>{lastMsg?.subject ?? ''}</p>
-          <p className="text-[10px] text-slate-600 truncate mt-0.5">{thread.snippet}</p>
+          <p className={`text-xs truncate ${isUnread ? 'text-fg' : 'text-fg-muted'}`}>{lastMsg?.subject ?? ''}</p>
+          <p className="text-[10px] text-fg-subtle truncate mt-0.5">{thread.snippet}</p>
           {matchedContact && (
             <Link
               to={`/contacts/${matchedContact.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-brand-600/20 text-brand-300 border border-brand-500/30 hover:bg-brand-600/30 transition-colors mt-1"
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-600/20 text-accent-300 border border-accent-500/30 hover:bg-accent-600/30 transition-colors mt-1"
             >
               <User size={9} />
               {matchedContact.name}
             </Link>
           )}
         </div>
-        {isUnread && <div className="w-2 h-2 rounded-full bg-brand-500 flex-shrink-0 mt-1" />}
+        {isUnread && <div className="w-2 h-2 rounded-full bg-accent-500 flex-shrink-0 mt-1" />}
       </div>
     </div>
   )
@@ -132,18 +133,18 @@ function TrackingBadges({ email }: { email: CRMEmail }) {
   return (
     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
       {(email.openCount ?? 0) > 0 ? (
-        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/20">
           <Eye size={9} />
           {t.common.view} {email.openCount}x &middot; {formatRelativeDate(email.lastOpenedAt!)}
         </span>
       ) : email.trackingEnabled ? (
-        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-500 border border-white/10">
+        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-subtle border border-fg/10">
           <Eye size={9} />
           {t.common.noResults}
         </span>
       ) : null}
       {(email.clickCount ?? 0) > 0 && (
-        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
+        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-info/15 text-info border border-info/20">
           <MousePointerClick size={9} />
           {t.inbox.clicks} {email.clickCount}x
         </span>
@@ -182,8 +183,8 @@ function LocalEmailItem({
   return (
     <div
       onClick={onClick}
-      className={`group px-4 py-3 border-b border-white/4 cursor-pointer transition-colors ${
-        selected ? 'bg-brand-600/10 border-l-2 border-l-brand-500' : 'hover:bg-white/4'
+      className={`group px-4 py-3 border-b border-fg/4 cursor-pointer transition-colors ${
+        selected ? 'bg-accent-600/10 border-l-2 border-l-accent-500' : 'hover:bg-fg/4'
       }`}
     >
       <div className="flex items-start gap-3">
@@ -195,28 +196,28 @@ function LocalEmailItem({
             onToggleBulk()
           }}
           onClick={(e) => e.stopPropagation()}
-          className={`mt-1 rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500 transition-opacity ${
+          className={`mt-1 rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500 transition-opacity ${
             bulkSelected ? 'opacity-100' : 'opacity-35 group-hover:opacity-100'
           }`}
           aria-label={t.inbox.selectMessage}
           title={t.inbox.selectMessage}
         />
-        <div className="w-8 h-8 rounded-full bg-white/8 flex items-center justify-center flex-shrink-0">
-          <User size={14} className="text-slate-400" />
+        <div className="w-8 h-8 rounded-full bg-fg/8 flex items-center justify-center flex-shrink-0">
+          <User size={14} className="text-fg-muted" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2 mb-0.5">
-            <p className={`text-sm truncate ${unread ? 'text-white font-semibold' : 'text-slate-300'}`}>
+            <p className={`text-sm truncate ${unread ? 'text-fg font-semibold' : 'text-fg-muted'}`}>
               {contact ? `${contact.firstName} ${contact.lastName}` : email.to.join(', ')}
             </p>
-            <span className="text-[10px] text-slate-500 flex-shrink-0">
+            <span className="text-[10px] text-fg-subtle flex-shrink-0">
               {formatRelativeDate(email.sentAt ?? email.createdAt)}
             </span>
           </div>
-          <p className={`text-xs truncate ${unread ? 'text-white font-semibold' : 'text-white'}`}>{email.subject || ''}</p>
-          <p className="text-[10px] text-slate-600 truncate mt-0.5">{email.body.slice(0, 80)}</p>
+          <p className={`text-xs truncate ${unread ? 'text-fg font-semibold' : 'text-fg'}`}>{email.subject || ''}</p>
+          <p className="text-[10px] text-fg-subtle truncate mt-0.5">{email.body.slice(0, 80)}</p>
           {email.status === 'scheduled' && (
-            <span className="inline-flex items-center gap-1 mt-1 text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/20">
+            <span className="inline-flex items-center gap-1 mt-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-500/15 text-indigo-300 border border-indigo-500/20">
               <Clock size={9} />
               {email.scheduledFor ? formatDateTime(email.scheduledFor) : t.inbox.scheduled}
             </span>
@@ -226,13 +227,13 @@ function LocalEmailItem({
             <div className="flex items-center gap-1.5 mt-1.5" onClick={(e) => e.stopPropagation()}>
               <button type="button"
                 onClick={() => onTrackOpen(email.id)}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-emerald-500/15 text-slate-500 hover:text-emerald-400 border border-white/8 transition-colors"
+                className="text-[10px] px-2 py-0.5 rounded-full bg-fg/5 hover:bg-success/15 text-fg-subtle hover:text-success border border-fg/8 transition-colors"
               >
                 {t.common.view}
               </button>
               <button type="button"
                 onClick={() => onTrackClick(email.id)}
-                className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-blue-500/15 text-slate-500 hover:text-blue-400 border border-white/8 transition-colors"
+                className="text-[10px] px-2 py-0.5 rounded-full bg-fg/5 hover:bg-info/15 text-fg-subtle hover:text-info border border-fg/8 transition-colors"
               >
                 {t.inbox.clicks}
               </button>
@@ -247,7 +248,7 @@ function LocalEmailItem({
                 onAction(action, email)
                 e.currentTarget.value = ''
               }}
-              className="text-[10px] px-2 py-1 rounded-lg bg-white/6 border border-white/10 text-slate-300"
+              className="text-[10px] px-2 py-1 rounded-lg bg-fg/6 border border-fg/10 text-fg-muted"
               aria-label={t.common.actions}
               title={t.common.actions}
             >
@@ -314,21 +315,21 @@ function ThreadView({
   }, [match?.contact?.id, match?.dealId])
 
   if (!thread) return (
-    <div className="flex items-center justify-center h-full text-slate-600 text-sm">
+    <div className="flex items-center justify-center h-full text-fg-subtle text-sm">
       {t.inbox.noMessages}
     </div>
   )
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-4 py-3 border-b border-white/6 flex-shrink-0">
-        <h2 className="text-base font-semibold text-white">{thread.messages[0]?.subject ?? ''}</h2>
-        <p className="text-xs text-slate-500 mt-0.5">{thread.messages.length} {t.common.notes.toLowerCase()}</p>
+      <div className="px-4 py-3 border-b border-fg/6 flex-shrink-0">
+        <h2 className="text-base font-semibold text-fg">{thread.messages[0]?.subject ?? ''}</h2>
+        <p className="text-xs text-fg-subtle mt-0.5">{thread.messages.length} {t.common.notes.toLowerCase()}</p>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
           {match?.contact && (
             <Link
               to={`/contacts/${match.contact.id}`}
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-brand-600/20 text-brand-300 border border-brand-500/30 hover:bg-brand-600/30 transition-colors"
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-600/20 text-accent-300 border border-accent-500/30 hover:bg-accent-600/30 transition-colors"
             >
               <User size={9} />
               {match.contact.firstName} {match.contact.lastName}
@@ -343,15 +344,15 @@ function ThreadView({
             </Link>
           )}
           {match?.companyName && (
-            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10">
+            <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10">
               {match.companyName}
             </span>
           )}
           {linkSource && (
             <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border ${
               linkSource === 'manual'
-                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
-                : 'bg-white/8 text-slate-500 border-white/10'
+                ? 'bg-success/15 text-success border-success/20'
+                : 'bg-fg/8 text-fg-subtle border-fg/10'
             }`}>
               {linkSource === 'manual' ? t.inbox.pinnedLink : t.inbox.autoLink}
             </span>
@@ -359,7 +360,7 @@ function ThreadView({
           {!hasPersistedLink && match && canEditLinks && (
             <button type="button"
               onClick={() => onPinLink(thread, match)}
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25 transition-colors"
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/20 hover:bg-success/25 transition-colors"
               title={t.inbox.pinLink}
               aria-label={t.inbox.pinLink}
             >
@@ -369,7 +370,7 @@ function ThreadView({
           {hasPersistedLink && canEditLinks && (
             <button type="button"
               onClick={() => onUnpinLink(thread)}
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/20 transition-colors"
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-danger/15 hover:text-danger hover:border-danger/20 transition-colors"
               title={t.inbox.unpin}
               aria-label={t.inbox.unpin}
             >
@@ -379,7 +380,7 @@ function ThreadView({
           {canCreateFollowUp && (
             <button type="button"
               onClick={() => onCreateFollowUp(thread, match)}
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/20 hover:bg-amber-500/25 transition-colors"
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-warning/15 text-warning border border-warning/20 hover:bg-warning/25 transition-colors"
               title={t.inbox.followUpCreated}
               aria-label={t.inbox.followUpCreated}
             >
@@ -389,25 +390,25 @@ function ThreadView({
           )}
           <button type="button"
             onClick={() => onThreadAction(thread, 'mark_read')}
-            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-emerald-500/15 hover:text-emerald-300 transition-colors"
+            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-success/15 hover:text-success transition-colors"
           >
             {t.inbox.markRead}
           </button>
           <button type="button"
             onClick={() => onThreadAction(thread, 'mark_unread')}
-            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-indigo-500/15 hover:text-indigo-300 transition-colors"
+            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-accent-500/15 hover:text-indigo-300 transition-colors"
           >
             {t.inbox.markUnread}
           </button>
           <button type="button"
             onClick={() => onThreadAction(thread, 'archive')}
-            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-amber-500/15 hover:text-amber-300 transition-colors"
+            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-warning/15 hover:text-warning transition-colors"
           >
             {t.inbox.archive}
           </button>
           <button type="button"
             onClick={() => onThreadAction(thread, 'trash')}
-            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-400 border border-white/10 hover:bg-red-500/15 hover:text-red-300 transition-colors"
+            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-danger/15 hover:text-danger transition-colors"
           >
             {t.inbox.trash}
           </button>
@@ -415,7 +416,7 @@ function ThreadView({
             <select
               value={manualContactId}
               onChange={(e) => setManualContactId(e.target.value)}
-              className="bg-surface-2 border border-white/10 rounded-full px-2 py-0.5 text-[10px] text-slate-300"
+              className="bg-surface-2 border border-fg/10 rounded-full px-2 py-0.5 text-[10px] text-fg-muted"
               title={t.inbox.contactPlaceholder}
               aria-label={t.inbox.contactPlaceholder}
             >
@@ -427,7 +428,7 @@ function ThreadView({
             <select
               value={manualDealId}
               onChange={(e) => setManualDealId(e.target.value)}
-              className="bg-surface-2 border border-white/10 rounded-full px-2 py-0.5 text-[10px] text-slate-300"
+              className="bg-surface-2 border border-fg/10 rounded-full px-2 py-0.5 text-[10px] text-fg-muted"
               title={t.inbox.dealPlaceholder}
               aria-label={t.inbox.dealPlaceholder}
             >
@@ -438,7 +439,7 @@ function ThreadView({
             </select>
             <button type="button"
               onClick={() => onManualLinkSave(thread, manualContactId || undefined, manualDealId || undefined)}
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-brand-600/20 text-brand-300 border border-brand-500/30 hover:bg-brand-600/30 transition-colors"
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-600/20 text-accent-300 border border-accent-500/30 hover:bg-accent-600/30 transition-colors"
               title={t.inbox.saveLink}
               aria-label={t.inbox.saveLink}
             >
@@ -450,29 +451,29 @@ function ThreadView({
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         {thread.messages.map((msg, i) => (
           <div key={msg.id ?? i} className="glass rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/6">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-fg/6">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-brand-600/20 flex items-center justify-center text-xs font-bold text-brand-400">
+                <div className="w-8 h-8 rounded-full bg-accent-600/20 flex items-center justify-center text-xs font-bold text-accent-400">
                   {(msg.from?.charAt(0) ?? '?').toUpperCase()}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-white">{msg.from?.replace(/<.*>/, '').trim()}</p>
-                  <p className="text-[10px] text-slate-500">{t.common.to}: {msg.to}</p>
+                  <p className="text-sm font-medium text-fg">{msg.from?.replace(/<.*>/, '').trim()}</p>
+                  <p className="text-[10px] text-fg-subtle">{t.common.to}: {msg.to}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3 text-slate-500">
+              <div className="flex items-center gap-3 text-fg-subtle">
                 <Clock size={12} />
                 <span className="text-xs">{msg.date ? formatDateTime(msg.date) : ''}</span>
                 <button type="button"
                   onClick={() => onReply(msg.from, `Re: ${msg.subject}`)}
-                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-white/6 hover:bg-brand-600/20 hover:text-brand-400 transition-colors"
+                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-fg/6 hover:bg-accent-600/20 hover:text-accent-400 transition-colors"
                 >
                   <Reply size={11} />
                   {t.common.back}
                 </button>
                 <button type="button"
                   onClick={() => onReplyAll(thread, i)}
-                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-white/6 hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors"
+                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-fg/6 hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors"
                 >
                   <Reply size={11} />
                   {t.inbox.replyAll}
@@ -480,20 +481,20 @@ function ThreadView({
               </div>
             </div>
             <div className="px-4 py-4">
-              <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{msg.body || msg.snippet}</p>
+              <p className="text-sm text-fg-muted whitespace-pre-wrap leading-relaxed">{msg.body || msg.snippet}</p>
               {(msg.attachments?.length ?? 0) > 0 && (
                 <div className="mt-3 space-y-1.5">
                   {msg.attachments!.map((att) => (
                     <button type="button"
                       key={att.attachmentId}
                       onClick={() => onDownloadAttachment(msg.id, att.attachmentId, att.filename)}
-                      className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg bg-white/5 hover:bg-white/8 border border-white/10 text-xs text-slate-300 transition-colors"
+                      className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg bg-fg/5 hover:bg-fg/8 border border-fg/10 text-xs text-fg-muted transition-colors"
                     >
                       <span className="inline-flex items-center gap-1 truncate">
                         <Paperclip size={11} />
                         {att.filename}
                       </span>
-                      <span className="inline-flex items-center gap-1 text-slate-500">
+                      <span className="inline-flex items-center gap-1 text-fg-subtle">
                         <Download size={11} />
                         {Math.ceil((att.size || 0) / 1024)} KB
                       </span>
@@ -506,10 +507,10 @@ function ThreadView({
         ))}
         {linkedEmails.length > 0 && (
           <div className="glass rounded-2xl p-4">
-            <p className="text-xs text-slate-500 mb-2">{t.inbox.crmSentInThread}</p>
+            <p className="text-xs text-fg-subtle mb-2">{t.inbox.crmSentInThread}</p>
             <div className="space-y-1.5">
               {linkedEmails.map((email) => (
-                <p key={email.id} className="text-xs text-slate-300 truncate">
+                <p key={email.id} className="text-xs text-fg-muted truncate">
                   {formatRelativeDate(email.sentAt ?? email.createdAt)} - {email.subject}
                 </p>
               ))}
@@ -541,7 +542,7 @@ function LocalEmailView({
 }) {
   const t = useTranslations()
   if (!email) return (
-    <div className="flex items-center justify-center h-full text-slate-600 text-sm">
+    <div className="flex items-center justify-center h-full text-fg-subtle text-sm">
       {t.inbox.noMessages}
     </div>
   )
@@ -550,10 +551,10 @@ function LocalEmailView({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-white/6 flex-shrink-0 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-fg/6 flex-shrink-0 flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-white">{email.subject || ''}</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-base font-semibold text-fg">{email.subject || ''}</h2>
+          <p className="text-xs text-fg-subtle mt-0.5">
             {t.common.to}: {contact ? `${contact.firstName} ${contact.lastName}` : email.to.join(', ')}
           </p>
         </div>
@@ -561,7 +562,7 @@ function LocalEmailView({
           <button
             type="button"
             onClick={() => onReply(email.to[0] ?? '', `Re: ${email.subject}`)}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-white/6 hover:bg-brand-600/15 hover:text-brand-400 text-slate-400 transition-colors"
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-fg/6 hover:bg-accent-600/15 hover:text-accent-400 text-fg-muted transition-colors"
           >
             <Reply size={12} />
             {t.common.back}
@@ -576,7 +577,7 @@ function LocalEmailView({
                 onEmailAction(action, email)
                 e.currentTarget.value = ''
               }}
-              className="appearance-none cursor-pointer text-xs pl-3 pr-9 py-1.5 rounded-full bg-white/6 border border-white/10 text-slate-200 hover:bg-white/10 hover:border-white/15 outline-none focus:ring-2 focus:ring-brand-500/30 min-w-[7.5rem]"
+              className="appearance-none cursor-pointer text-xs pl-3 pr-9 py-1.5 rounded-full bg-fg/6 border border-fg/10 text-fg hover:bg-fg/10 hover:border-fg/15 outline-none focus:ring-2 focus:ring-accent-500/30 min-w-[7.5rem]"
               aria-label={t.common.actions}
               title={t.common.actions}
             >
@@ -588,23 +589,23 @@ function LocalEmailView({
               <option value="snooze_1w">{t.inbox.snoozeOneWeek}</option>
               {canDeleteEmails ? <option value="delete">{t.common.delete}</option> : null}
             </select>
-            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" aria-hidden />
+            <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none" aria-hidden />
           </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="glass rounded-2xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-white/6 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full btn-gradient flex items-center justify-center text-xs font-bold text-white">
+          <div className="px-4 py-3 border-b border-fg/6 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full btn-gradient flex items-center justify-center text-xs font-bold text-fg">
               {email.from.charAt(0).toUpperCase()}
             </div>
             <div>
-              <p className="text-sm font-medium text-white">{email.from}</p>
-              <p className="text-[10px] text-slate-500">
+              <p className="text-sm font-medium text-fg">{email.from}</p>
+              <p className="text-[10px] text-fg-subtle">
                 {email.sentAt ? formatDateTime(email.sentAt) : ''}
                 {email.gmailMessageId && (
-                  <span className="ml-2 text-emerald-400">{t.settings.connected} Gmail</span>
+                  <span className="ml-2 text-success">{t.settings.connected} Gmail</span>
                 )}
               </p>
               <TrackingBadges email={email} />
@@ -612,13 +613,13 @@ function LocalEmailView({
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <button type="button"
                     onClick={() => onTrackOpen(email.id)}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-emerald-500/15 text-slate-500 hover:text-emerald-400 border border-white/8 transition-colors"
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-fg/5 hover:bg-success/15 text-fg-subtle hover:text-success border border-fg/8 transition-colors"
                   >
                     {t.common.view}
                   </button>
                   <button type="button"
                     onClick={() => onTrackClick(email.id)}
-                    className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-blue-500/15 text-slate-500 hover:text-blue-400 border border-white/8 transition-colors"
+                    className="text-[10px] px-2 py-0.5 rounded-full bg-fg/5 hover:bg-info/15 text-fg-subtle hover:text-info border border-fg/8 transition-colors"
                   >
                     {t.inbox.clicks}
                   </button>
@@ -627,7 +628,7 @@ function LocalEmailView({
             </div>
           </div>
           <div className="px-4 py-4">
-            <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{email.body}</p>
+            <p className="text-sm text-fg-muted whitespace-pre-wrap leading-relaxed">{email.body}</p>
           </div>
         </div>
       </div>
@@ -1286,8 +1287,8 @@ export function Inbox() {
   return (
     <div className="crm-page-full flex h-full min-h-0 overflow-hidden gap-3 py-3 sm:py-4">
       {/* ── Left: Folders ────────────────────────────────────────────────── */}
-      <div className="w-52 flex-shrink-0 border border-white/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/50">
-        <div className="p-3 border-b border-white/6">
+      <div className="w-52 flex-shrink-0 border border-fg/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/50">
+        <div className="p-3 border-b border-fg/6">
           <PermissionGate permission="email:send">
             <button type="button"
               onClick={() => {
@@ -1296,7 +1297,7 @@ export function Inbox() {
                 setComposerOpen(true)
                 setReplyTo(null)
               }}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl btn-gradient text-white text-xs font-semibold"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl btn-gradient text-fg text-xs font-semibold"
             >
               <Plus size={13} />
               {t.inbox.compose}
@@ -1305,17 +1306,17 @@ export function Inbox() {
         </div>
 
         {/* Connection status */}
-        <div className="px-3 py-2 border-b border-white/6">
+        <div className="px-3 py-2 border-b border-fg/6">
           {connected ? (
-            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <Wifi size={11} className="text-emerald-400" />
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-success/10 border border-success/20">
+              <Wifi size={11} className="text-success" />
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-medium text-emerald-400 truncate">{gmailAddress ?? 'Gmail'}</p>
+                <p className="text-[10px] font-medium text-success truncate">{gmailAddress ?? 'Gmail'}</p>
               </div>
               <button type="button"
                 onClick={handleDisconnectGmail}
                 disabled={disconnecting}
-                className="text-slate-600 hover:text-red-400 transition-colors"
+                className="text-fg-subtle hover:text-danger transition-colors"
                 title={t.settings.disconnect}
                 aria-label={t.settings.disconnect}
               >
@@ -1326,7 +1327,7 @@ export function Inbox() {
             <button type="button"
               onClick={handleConnectGmail}
               disabled={connecting}
-              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/4 hover:bg-brand-600/15 border border-white/8 hover:border-brand-500/30 text-slate-500 hover:text-brand-400 transition-colors text-[10px] font-medium"
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg bg-fg/4 hover:bg-accent-600/15 border border-fg/8 hover:border-accent-500/30 text-fg-subtle hover:text-accent-400 transition-colors text-[10px] font-medium"
             >
               {connecting ? <Loader2 size={11} className="animate-spin" /> : <Mail size={11} />}
               {t.settings.connect} Gmail
@@ -1347,14 +1348,14 @@ export function Inbox() {
               }}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
                 folder === f.id
-                  ? 'nav-active text-white'
-                  : 'text-slate-500 hover:text-white hover:bg-white/4'
+                  ? 'nav-active text-fg'
+                  : 'text-fg-subtle hover:text-fg hover:bg-fg/4'
               }`}
             >
               {f.icon}
               <span className="flex-1 text-left">{f.label}</span>
               {(f.count ?? 0) > 0 && (
-                <span className="inline-flex min-w-5 h-5 px-1 items-center justify-center rounded-full bg-brand-500/20 border border-brand-500/30 text-[10px] text-brand-300">
+                <span className="inline-flex min-w-5 h-5 px-1 items-center justify-center rounded-full bg-accent-500/20 border border-accent-500/30 text-[10px] text-accent-300">
                   {f.count}
                 </span>
               )}
@@ -1364,12 +1365,12 @@ export function Inbox() {
       </div>
 
       {/* ── Center: Email list ───────────────────────────────────────────── */}
-      <div className="w-80 flex-shrink-0 border border-white/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/35">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 flex-shrink-0">
+      <div className="w-80 flex-shrink-0 border border-fg/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/35">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-fg/6 flex-shrink-0">
           <div>
-            <span className="text-sm font-semibold text-white capitalize">{FOLDERS.find((f) => f.id === folder)?.label}</span>
+            <span className="text-sm font-semibold text-fg capitalize">{FOLDERS.find((f) => f.id === folder)?.label}</span>
             {folder === 'inbox' && threadsLastSyncedAt && (
-              <p className="text-[10px] text-slate-600 mt-0.5">
+              <p className="text-[10px] text-fg-subtle mt-0.5">
                 {t.common.updatedAt}: {formatDateTime(threadsLastSyncedAt)}
                 {threadsHistoryId ? ` · h:${threadsHistoryId}` : ''}
               </p>
@@ -1379,7 +1380,7 @@ export function Inbox() {
             <button type="button"
               onClick={() => handleLoadThreads()}
               disabled={threadsLoading}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/6 transition-colors"
+              className="p-1.5 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/6 transition-colors"
               title={t.inbox.refreshInbox}
               aria-label={t.inbox.refreshInbox}
             >
@@ -1388,69 +1389,69 @@ export function Inbox() {
           )}
         </div>
         {folder === 'inbox' && connected && selectedThreadIds.size > 0 && (
-          <div className="px-3 py-2 border-b border-white/6 flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] text-slate-500 mr-1">{t.inbox.selectedCount.replace('{n}', String(selectedThreadIds.size))}</span>
+          <div className="px-3 py-2 border-b border-fg/6 flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] text-fg-subtle mr-1">{t.inbox.selectedCount.replace('{n}', String(selectedThreadIds.size))}</span>
             <button type="button"
               onClick={() => applyBulkThreadAction('mark_read')}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-success/20 hover:text-success transition-colors"
             >
               {t.inbox.markRead}
             </button>
             <button type="button"
               onClick={() => applyBulkThreadAction('mark_unread')}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-indigo-300 transition-colors"
             >
               {t.inbox.markUnread}
             </button>
             <button type="button"
               onClick={() => applyBulkThreadAction('archive')}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-amber-500/20 hover:text-amber-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-warning/20 hover:text-warning transition-colors"
             >
               {t.inbox.archive}
             </button>
             <button type="button"
               onClick={() => applyBulkThreadAction('trash')}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-danger/20 hover:text-danger transition-colors"
             >
               {t.inbox.trash}
             </button>
           </div>
         )}
         {(folder === 'sent' || folder === 'scheduled' || folder === 'drafts' || folder === 'snoozed') && selectedLocalEmailIds.size > 0 && (
-          <div className="px-3 py-2 border-b border-white/6 flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] text-slate-500 mr-1">{t.inbox.selectedCount.replace('{n}', String(selectedLocalEmailIds.size))}</span>
+          <div className="px-3 py-2 border-b border-fg/6 flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] text-fg-subtle mr-1">{t.inbox.selectedCount.replace('{n}', String(selectedLocalEmailIds.size))}</span>
             <button
               type="button"
               onClick={() => applyBulkLocalEmailAction('mark_read')}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-success/20 hover:text-success transition-colors"
             >
               {t.inbox.markRead}
             </button>
             <button
               type="button"
               onClick={() => applyBulkLocalEmailAction('mark_unread')}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-indigo-500/20 hover:text-indigo-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-indigo-300 transition-colors"
             >
               {t.inbox.markUnread}
             </button>
             <button
               type="button"
               onClick={() => applyBulkLocalEmailAction('snooze_1h')}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-violet-500/20 hover:text-violet-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
             >
               {t.inbox.snoozeOneHour}
             </button>
             <button
               type="button"
               onClick={() => applyBulkLocalEmailAction('snooze_1d')}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-violet-500/20 hover:text-violet-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
             >
               {t.inbox.snoozeOneDay}
             </button>
             <button
               type="button"
               onClick={() => applyBulkLocalEmailAction('snooze_1w')}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-violet-500/20 hover:text-violet-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
             >
               {t.inbox.snoozeOneWeek}
             </button>
@@ -1458,7 +1459,7 @@ export function Inbox() {
               <button
                 type="button"
                 onClick={() => applyBulkLocalEmailAction('delete')}
-                className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-red-500/20 hover:text-red-300 transition-colors"
+                className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-danger/20 hover:text-danger transition-colors"
               >
                 {t.common.bulkDelete}
               </button>
@@ -1467,33 +1468,33 @@ export function Inbox() {
               type="button"
               onClick={selectAllVisibleLocalEmails}
               disabled={localFolderVisibleEmails.length === 0}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-white/10 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-fg/10 transition-colors disabled:opacity-40 disabled:pointer-events-none"
             >
               {t.common.selectAll}
             </button>
             <button
               type="button"
               onClick={clearLocalBulkSelection}
-              className="text-[10px] px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-white/10 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-fg/10 transition-colors"
             >
               {t.common.clear}
             </button>
           </div>
         )}
-        <div className="px-3 py-2 border-b border-white/6">
+        <div className="px-3 py-2 border-b border-fg/6">
           <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-600" />
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-subtle" />
             <input
               value={listQuery}
               onChange={(e) => setListQuery(e.target.value)}
               placeholder={t.inbox.searchPlaceholder}
-              className="w-full bg-surface-2 border border-white/8 rounded-lg pl-7 pr-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-brand-500/40"
+              className="w-full bg-surface-2 border border-fg/8 rounded-lg pl-7 pr-2.5 py-1.5 text-xs text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/40"
             />
           </div>
-          <p className="mt-1 text-[10px] text-slate-600">{t.inbox.searchOperatorsHint}</p>
+          <p className="mt-1 text-[10px] text-fg-subtle">{t.inbox.searchOperatorsHint}</p>
         </div>
         {folder === 'inbox' && (
-          <div className="px-3 py-2 border-b border-white/6 flex flex-wrap gap-1.5">
+          <div className="px-3 py-2 border-b border-fg/6 flex flex-wrap gap-1.5">
             {([
               ['all', t.common.all],
               ['unread', t.notifications.unread],
@@ -1505,8 +1506,8 @@ export function Inbox() {
                 onClick={() => setInboxQuickFilter(id)}
                 className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
                   inboxQuickFilter === id
-                    ? 'bg-brand-500/15 text-brand-300 border-brand-500/30'
-                    : 'bg-white/5 text-slate-500 border-white/10 hover:text-slate-300'
+                    ? 'bg-accent-500/15 text-accent-300 border-accent-500/30'
+                    : 'bg-fg/5 text-fg-subtle border-fg/10 hover:text-fg-muted'
                 }`}
               >
                 {label}
@@ -1516,8 +1517,8 @@ export function Inbox() {
               onClick={() => setAdvancedFilters((prev) => ({ ...prev, hasAttachments: !prev.hasAttachments }))}
               className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
                 advancedFilters.hasAttachments
-                  ? 'bg-brand-500/15 text-brand-300 border-brand-500/30'
-                  : 'bg-white/5 text-slate-500 border-white/10 hover:text-slate-300'
+                  ? 'bg-accent-500/15 text-accent-300 border-accent-500/30'
+                  : 'bg-fg/5 text-fg-subtle border-fg/10 hover:text-fg-muted'
               }`}
             >
               {t.inbox.hasAttachments}
@@ -1526,8 +1527,8 @@ export function Inbox() {
               onClick={() => setAdvancedFilters((prev) => ({ ...prev, mineOnly: !prev.mineOnly }))}
               className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
                 advancedFilters.mineOnly
-                  ? 'bg-brand-500/15 text-brand-300 border-brand-500/30'
-                  : 'bg-white/5 text-slate-500 border-white/10 hover:text-slate-300'
+                  ? 'bg-accent-500/15 text-accent-300 border-accent-500/30'
+                  : 'bg-fg/5 text-fg-subtle border-fg/10 hover:text-fg-muted'
               }`}
             >
               {t.inbox.onlyMine}
@@ -1535,12 +1536,12 @@ export function Inbox() {
           </div>
         )}
         {folder === 'inbox' && (
-          <div className="px-3 py-2 border-b border-white/6 space-y-2">
+          <div className="px-3 py-2 border-b border-fg/6 space-y-2">
             <div className="flex items-center gap-2">
               <select
                 value={selectedInboxViewId}
                 onChange={(e) => applyInboxSavedView(e.target.value)}
-                className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
+                className="flex-1 bg-surface-2 border border-fg/10 rounded-lg px-2 py-1 text-xs text-fg"
               >
                 <option value="">{t.inbox.savedViews}</option>
                 {inboxViews.map((view) => (
@@ -1553,7 +1554,7 @@ export function Inbox() {
                     deleteInboxView(selectedInboxViewId)
                     setSelectedInboxViewId('')
                   }}
-                  className="text-[10px] px-2 py-1 rounded-lg bg-red-500/15 text-red-300 border border-red-500/30"
+                  className="text-[10px] px-2 py-1 rounded-lg bg-danger/15 text-danger border border-danger/30"
                 >
                   {t.common.delete}
                 </button>
@@ -1564,11 +1565,11 @@ export function Inbox() {
                 value={newInboxViewName}
                 onChange={(e) => setNewInboxViewName(e.target.value)}
                 placeholder={t.inbox.savedViewNamePlaceholder}
-                className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
+                className="flex-1 bg-surface-2 border border-fg/10 rounded-lg px-2 py-1 text-xs text-fg"
               />
               <button type="button"
                 onClick={saveCurrentInboxView}
-                className="text-[10px] px-2 py-1 rounded-lg bg-brand-500/15 text-brand-300 border border-brand-500/30"
+                className="text-[10px] px-2 py-1 rounded-lg bg-accent-500/15 text-accent-300 border border-accent-500/30"
               >
                 {t.common.save}
               </button>
@@ -1576,7 +1577,7 @@ export function Inbox() {
           </div>
         )}
         {(folder === 'sent' || folder === 'scheduled') && (
-          <div className="px-3 py-2 border-b border-white/6 flex flex-wrap gap-1.5">
+          <div className="px-3 py-2 border-b border-fg/6 flex flex-wrap gap-1.5">
             {([
               ['all', t.common.all],
               ['tracked', t.followUps.title],
@@ -1588,8 +1589,8 @@ export function Inbox() {
                 onClick={() => setEmailQuickFilter(id)}
                 className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${
                   emailQuickFilter === id
-                    ? 'bg-brand-500/15 text-brand-300 border-brand-500/30'
-                    : 'bg-white/5 text-slate-500 border-white/10 hover:text-slate-300'
+                    ? 'bg-accent-500/15 text-accent-300 border-accent-500/30'
+                    : 'bg-fg/5 text-fg-subtle border-fg/10 hover:text-fg-muted'
                 }`}
               >
                 {label}
@@ -1612,22 +1613,22 @@ export function Inbox() {
               )}
               {connected && threadsLoading && (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 size={20} className="text-brand-400 animate-spin" />
+                  <Spinner size={20} className="text-accent-400" label={t.common.loading} />
                 </div>
               )}
               {connected && !threadsLoading && inboxThreadsVisible.length === 0 && (
                 <PanelEmpty primary={t.inbox.noMessages} density="compact" />
               )}
               {connected && (
-                <div className="mx-3 mt-3 p-2 rounded-lg border border-white/8 bg-white/4 text-[11px] text-slate-300">
+                <div className="mx-3 mt-3 p-2 rounded-lg border border-fg/8 bg-fg/4 text-[11px] text-fg-muted">
                   <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full mr-2 ${
                     syncVisualState === 'healthy'
-                      ? 'bg-emerald-500/15 text-emerald-300'
+                      ? 'bg-success/15 text-success'
                       : syncVisualState === 'syncing'
-                        ? 'bg-brand-500/15 text-brand-300'
+                        ? 'bg-accent-500/15 text-accent-300'
                         : syncVisualState === 'stale'
-                          ? 'bg-amber-500/15 text-amber-300'
-                          : 'bg-red-500/15 text-red-300'
+                          ? 'bg-warning/15 text-warning'
+                          : 'bg-danger/15 text-danger'
                   }`}>
                     {syncText}
                   </span>
@@ -1636,7 +1637,7 @@ export function Inbox() {
                 </div>
               )}
               {connected && threadsError && !threadsLoading && (
-                <div className="mx-3 my-3 p-2 rounded-lg border border-red-500/20 bg-red-500/10 text-[11px] text-red-300">
+                <div className="mx-3 my-3 p-2 rounded-lg border border-danger/20 bg-danger/10 text-[11px] text-danger">
                   {threadsError}
                 </div>
               )}
@@ -1652,10 +1653,10 @@ export function Inbox() {
                 />
               ))}
               {connected && !threadsLoading && !!threadsNextPageToken && (
-                <div className="p-3 border-t border-white/6">
+                <div className="p-3 border-t border-fg/6">
                   <button type="button"
                     onClick={handleLoadMoreThreads}
-                    className="w-full px-3 py-2 rounded-lg text-xs bg-white/6 hover:bg-white/10 text-slate-300 transition-colors"
+                    className="w-full px-3 py-2 rounded-lg text-xs bg-fg/6 hover:bg-fg/10 text-fg-muted transition-colors"
                   >
                     {t.inbox.loadMore}
                   </button>
@@ -1769,14 +1770,14 @@ export function Inbox() {
       </div>
 
       {/* ── Right: Email/Thread view ─────────────────────────────────────── */}
-      <div className="flex-1 min-w-0 overflow-hidden border border-white/8 rounded-2xl bg-surface-1/25">
+      <div className="flex-1 min-w-0 overflow-hidden border border-fg/8 rounded-2xl bg-surface-1/25">
         {folder === 'inbox' && selectedThread && (
-          <div className="px-3 py-2 border-b border-white/6 flex items-center gap-2 flex-wrap">
+          <div className="px-3 py-2 border-b border-fg/6 flex items-center gap-2 flex-wrap">
             <select
               aria-label={t.common.assignedTo}
               value={selectedWorkspace?.ownerUserId ?? ''}
               onChange={(e) => setThreadOwner(selectedThread.id, e.target.value || undefined)}
-              className="bg-surface-2 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-300"
+              className="bg-surface-2 border border-fg/10 rounded-lg px-2.5 py-1.5 text-xs text-fg-muted"
             >
               <option value="">{t.common.assignedTo}</option>
               {orgUsers.map((u) => (
@@ -1787,7 +1788,7 @@ export function Inbox() {
               value={selectedWorkspace?.internalNote ?? ''}
               onChange={(e) => setThreadNote(selectedThread.id, e.target.value)}
               placeholder={t.common.notes}
-              className="flex-1 min-w-[220px] bg-surface-2 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 placeholder-slate-600"
+              className="flex-1 min-w-[220px] bg-surface-2 border border-fg/10 rounded-lg px-2.5 py-1.5 text-xs text-fg-muted placeholder:text-fg-subtle"
             />
           </div>
         )}
@@ -1823,7 +1824,7 @@ export function Inbox() {
               canDeleteEmails={canDeleteEmails}
             />
             {selectedEmail && folder !== 'snoozed' && (
-              <div className="px-3 py-2 border-t border-white/6">
+              <div className="px-3 py-2 border-t border-fg/6">
                 {folder === 'scheduled' && selectedEmail.undoableUntil && new Date(selectedEmail.undoableUntil).getTime() > Date.now() && (
                   <button type="button"
                     onClick={() => {
@@ -1831,7 +1832,7 @@ export function Inbox() {
                       setSelectedEmailId(null)
                       toast.success(t.email.undoSendSuccess)
                     }}
-                    className="mr-2 text-xs px-3 py-1.5 rounded-lg border border-amber-400/40 bg-amber-500/12 text-amber-200 hover:bg-amber-500/20 transition-colors"
+                    className="mr-2 text-xs px-3 py-1.5 rounded-lg border border-warning/40 bg-warning/12 text-warning hover:bg-warning/20 transition-colors"
                   >
                     {t.email.undoSend}
                   </button>
@@ -1842,7 +1843,7 @@ export function Inbox() {
                     toast.success(t.inbox.snoozed)
                     setFolder('snoozed')
                   }}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-white/6 text-slate-300 hover:bg-white/10 transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-fg/6 text-fg-muted hover:bg-fg/10 transition-colors"
                 >
                   {t.inbox.snoozeOneDay}
                 </button>

@@ -13,6 +13,8 @@ import {
   type DealAgingBucket,
 } from '../utils/managerDashboardMetrics'
 import type { PipelineStage } from '../types'
+import { Table, TableHead, TableBody, TableRow, TableCell } from '../components/ui/Table'
+import { ListRow } from '../components/ui/ListRow'
 
 const HEAT_CLASSES = ['crm-heat-0', 'crm-heat-1', 'crm-heat-2', 'crm-heat-3', 'crm-heat-4'] as const
 
@@ -90,90 +92,92 @@ export function ManagerDashboard() {
   return (
     <div className="crm-page space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-white tracking-tight">{t.managerDashboard.title}</h1>
-        <p className="text-sm text-slate-400 mt-1 max-w-3xl">{t.managerDashboard.subtitle}</p>
-        <p className="text-xs text-slate-600 mt-2 max-w-3xl">{t.managerDashboard.methodologyHint}</p>
+        <h1 className="text-2xl font-bold text-fg tracking-tight">{t.managerDashboard.title}</h1>
+        <p className="text-sm text-fg-muted mt-1 max-w-3xl">{t.managerDashboard.subtitle}</p>
+        <p className="text-xs text-fg-subtle mt-2 max-w-3xl">{t.managerDashboard.methodologyHint}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <div className="glass rounded-2xl border border-white/8 p-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{t.managerDashboard.mqlCount}</p>
-          <p className="text-3xl font-bold text-white mt-1">{mqlSql.mqlCount}</p>
+        <div className="glass rounded-2xl border border-fg/8 p-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{t.managerDashboard.mqlCount}</p>
+          <p className="text-3xl font-bold text-fg mt-1">{mqlSql.mqlCount}</p>
         </div>
-        <div className="glass rounded-2xl border border-white/8 p-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{t.managerDashboard.sqlCount}</p>
-          <p className="text-3xl font-bold text-white mt-1">{mqlSql.sqlCount}</p>
+        <div className="glass rounded-2xl border border-fg/8 p-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{t.managerDashboard.sqlCount}</p>
+          <p className="text-3xl font-bold text-fg mt-1">{mqlSql.sqlCount}</p>
         </div>
-        <div className="glass rounded-2xl border border-white/8 p-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">{t.managerDashboard.sqlShare}</p>
-          <p className="text-3xl font-bold text-emerald-400 mt-1">
+        <div className="glass rounded-2xl border border-fg/8 p-5">
+          <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{t.managerDashboard.sqlShare}</p>
+          <p className="text-3xl font-bold text-success mt-1">
             {mqlSql.sqlSharePct != null ? `${mqlSql.sqlSharePct}%` : t.common.notAvailable}
           </p>
-          <p className="text-[11px] text-slate-600 mt-2">{t.managerDashboard.sqlShareHint}</p>
+          <p className="text-[11px] text-fg-subtle mt-2">{t.managerDashboard.sqlShareHint}</p>
         </div>
       </div>
 
-      <section className="glass rounded-2xl border border-white/8 p-6 overflow-x-auto">
-        <h2 className="text-lg font-semibold text-white mb-1">{t.managerDashboard.heatmapTitle}</h2>
-        <p className="text-xs text-slate-500 mb-4">{t.managerDashboard.heatmapHint}</p>
-        <table className="w-full text-sm text-left min-w-[520px]">
-          <thead>
-            <tr className="text-slate-500 border-b border-white/8">
-              <th className="py-2 pr-4 font-medium">{t.managerDashboard.stage}</th>
+      <section className="glass rounded-2xl border border-fg/8 p-6 overflow-x-auto">
+        <h2 className="text-lg font-semibold text-fg mb-1">{t.managerDashboard.heatmapTitle}</h2>
+        <p className="text-xs text-fg-subtle mb-4">{t.managerDashboard.heatmapHint}</p>
+        <Table className="min-w-[520px] text-left">
+          <TableHead>
+            <TableRow>
+              <TableCell header className="py-2 pr-4">
+                {t.managerDashboard.stage}
+              </TableCell>
               {BUCKET_KEYS.map((k) => (
-                <th key={k} className="py-2 px-2 font-medium text-center">
+                <TableCell key={k} header className="py-2 px-2 text-center">
                   {bucketLabel(k)}
-                </th>
+                </TableCell>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {heatmap.map((row) => (
-              <tr key={row.stageId} className="border-b border-white/5">
-                <td className="py-2 pr-4 text-slate-200 font-medium">{row.stageName}</td>
+              <TableRow key={row.stageId}>
+                <TableCell className="py-2 pr-4 font-medium text-fg">{row.stageName}</TableCell>
                 {BUCKET_KEYS.map((k) => (
-                  <td key={k} className="py-2 px-2 text-center">
+                  <TableCell key={k} className="py-2 px-2 text-center">
                     <span
-                      className={`inline-flex min-w-[2rem] justify-center rounded-lg px-2 py-1 text-xs font-semibold text-white ${heatClass(row.buckets[k], heatMax)}`}
+                      className={`inline-flex min-w-[2rem] justify-center rounded-lg px-2 py-1 text-xs font-semibold text-fg ${heatClass(row.buckets[k], heatMax)}`}
                     >
                       {row.buckets[k]}
                     </span>
-                  </td>
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </section>
 
-      <section className="glass rounded-2xl border border-white/8 p-6">
-        <h2 className="text-lg font-semibold text-white mb-1">{t.managerDashboard.responseTitle}</h2>
-        <p className="text-xs text-slate-500 mb-4">{t.managerDashboard.responseHint}</p>
+      <section className="glass rounded-2xl border border-fg/8 p-6">
+        <h2 className="text-lg font-semibold text-fg mb-1">{t.managerDashboard.responseTitle}</h2>
+        <p className="text-xs text-fg-subtle mb-4">{t.managerDashboard.responseHint}</p>
         {ownerRows.length === 0 ? (
-          <p className="text-sm text-slate-500">{t.managerDashboard.responseNoData}</p>
+          <p className="text-sm text-fg-subtle">{t.managerDashboard.responseNoData}</p>
         ) : (
-          <ul className="divide-y divide-white/6">
+          <div className="divide-y divide-border-subtle rounded-xl border border-border-subtle overflow-hidden">
             {ownerRows.map((r) => (
-              <li key={r.ownerKey} className="flex items-center justify-between py-3 text-sm">
-                <span className="text-slate-200 font-medium">
+              <ListRow key={r.ownerKey} bordered={false} clickable={false} className="min-h-0 py-3 justify-between">
+                <span className="text-fg font-medium text-sm">
                   {r.ownerKey === MANAGER_DASHBOARD_UNASSIGNED_OWNER_KEY ? t.common.unassigned : r.ownerKey}
                 </span>
-                <span className="text-slate-400">
+                <span className="text-fg-muted text-sm">
                   {t.managerDashboard.medianHours}:{' '}
-                  <span className="text-brand-300 font-semibold">
+                  <span className="text-accent-400 font-semibold">
                     {r.medianHours}
                     {t.managerDashboard.hoursAbbrev}
                   </span>
-                  <span className="text-slate-600 ml-2">({r.sampleSize})</span>
+                  <span className="text-fg-subtle ml-2">({r.sampleSize})</span>
                 </span>
-              </li>
+              </ListRow>
             ))}
-          </ul>
+          </div>
         )}
       </section>
 
-      <p className="text-xs text-slate-600">
-        <Link className="text-brand-400 hover:underline" to="/reports">
+      <p className="text-xs text-fg-subtle">
+        <Link className="text-accent-400 hover:underline" to="/reports">
           {t.managerDashboard.linkReports}
         </Link>
       </p>

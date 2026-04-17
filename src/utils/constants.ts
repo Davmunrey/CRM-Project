@@ -1,3 +1,4 @@
+import type { BadgeVariant } from '../components/ui/Badge'
 import type { ContactStatus, ContactSource, CompanyStatus, DealStage, DealPriority, ActivityType, ActivityStatus } from '../types'
 
 // ─── Contact ─────────────────────────────────────────────────────────────────
@@ -8,10 +9,10 @@ export const CONTACT_STATUS_LABELS: Record<ContactStatus, string> = {
   churned: 'Perdido',
 }
 
-export const CONTACT_STATUS_COLORS: Record<ContactStatus, string> = {
-  prospect: 'yellow',
-  customer: 'green',
-  churned: 'red',
+export const CONTACT_STATUS_COLORS: Record<ContactStatus, BadgeVariant> = {
+  prospect: 'warning',
+  customer: 'success',
+  churned: 'danger',
 }
 
 export const CONTACT_SOURCE_LABELS: Record<ContactSource, string> = {

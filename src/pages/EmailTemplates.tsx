@@ -13,12 +13,12 @@ import { PanelEmpty } from '../components/shared/PanelEmpty'
 type CategoryKey = EmailTemplate['category'] | 'all'
 
 const CATEGORY_COLORS: Record<EmailTemplate['category'], string> = {
-  intro: 'bg-emerald-500/20 text-emerald-400',
-  follow_up: 'bg-blue-500/20 text-blue-400',
-  proposal: 'bg-amber-500/20 text-amber-400',
-  closing: 'bg-purple-500/20 text-purple-400',
+  intro: 'bg-success/20 text-success',
+  follow_up: 'bg-info/20 text-info',
+  proposal: 'bg-warning/20 text-warning',
+  closing: 'bg-accent-500/20 text-accent-400',
   nurture: 'bg-pink-500/20 text-pink-400',
-  custom: 'bg-slate-500/20 text-slate-400',
+  custom: 'bg-surface-2/20 text-fg-muted',
 }
 
 function getCategoryLabels(t: ReturnType<typeof useTranslations>): Record<EmailTemplate['category'], string> {
@@ -214,31 +214,31 @@ export function EmailTemplates() {
   return (
     <div className="crm-page-full flex flex-col min-h-0">
       {/* Header */}
-      <div className="flex items-center justify-between shrink-0 py-4 border-b border-white/6">
+      <div className="flex items-center justify-between shrink-0 py-4 border-b border-fg/6">
         <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">{t.emailTemplates.title}</h2>
-          <p className="text-sm text-slate-400 mt-1">{templates.length} {t.emailTemplates.usageCount.toLowerCase()}</p>
+          <h2 className="text-2xl font-bold text-fg tracking-tight">{t.emailTemplates.title}</h2>
+          <p className="text-sm text-fg-muted mt-1">{templates.length} {t.emailTemplates.usageCount.toLowerCase()}</p>
         </div>
       </div>
 
       <div className="pb-4 pt-2 shrink-0">
-        <div className="glass rounded-2xl p-4 border border-white/8">
+        <div className="glass rounded-2xl p-4 border border-fg/8">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-white">{t.emailTemplates.quickReplies}</h3>
-            <span className="text-xs text-slate-500">{quickReplies.length}</span>
+            <h3 className="text-sm font-semibold text-fg">{t.emailTemplates.quickReplies}</h3>
+            <span className="text-xs text-fg-subtle">{quickReplies.length}</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
             <input
               value={quickReplyTitle}
               onChange={(e) => setQuickReplyTitle(e.target.value)}
               placeholder={t.emailTemplates.quickReplyTitlePlaceholder}
-              className="bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600"
+              className="bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle"
             />
             <input
               value={quickReplyBody}
               onChange={(e) => setQuickReplyBody(e.target.value)}
               placeholder={t.emailTemplates.quickReplyBodyPlaceholder}
-              className="bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600"
+              className="bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle"
             />
           </div>
           <button type="button"
@@ -249,24 +249,24 @@ export function EmailTemplates() {
               setQuickReplyBody('')
               toast.success(t.common.save)
             }}
-            className="btn-gradient text-white text-xs font-medium px-3 py-1.5 rounded-full"
+            className="btn-gradient text-fg text-xs font-medium px-3 py-1.5 rounded-full"
           >
             {t.common.add}
           </button>
           <div className="mt-3 space-y-2">
             {quickReplies.map((reply) => (
-              <div key={reply.id} className="flex items-center gap-2 bg-white/4 border border-white/8 rounded-lg px-3 py-2">
+              <div key={reply.id} className="flex items-center gap-2 bg-fg/4 border border-fg/8 rounded-lg px-3 py-2">
                 <input
                   value={reply.title}
                   onChange={(e) => updateQuickReply(reply.id, { title: e.target.value })}
-                  className="w-48 bg-transparent text-xs text-slate-200"
+                  className="w-48 bg-transparent text-xs text-fg"
                 />
                 <input
                   value={reply.body}
                   onChange={(e) => updateQuickReply(reply.id, { body: e.target.value })}
-                  className="flex-1 bg-transparent text-xs text-slate-400"
+                  className="flex-1 bg-transparent text-xs text-fg-muted"
                 />
-                <button type="button" onClick={() => deleteQuickReply(reply.id)} className="text-red-400">
+                <button type="button" onClick={() => deleteQuickReply(reply.id)} className="text-danger">
                   <Trash2 size={12} />
                 </button>
               </div>
@@ -280,13 +280,13 @@ export function EmailTemplates() {
         {/* ─── Left Sidebar (1/3) ──────────────────────────────────────── */}
         <div className="w-1/3 flex flex-col glass rounded-2xl overflow-hidden">
           {/* Sidebar header */}
-          <div className="p-4 border-b border-white/6">
+          <div className="p-4 border-b border-fg/6">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-lg font-semibold text-white">{t.emailTemplates.title}</p>
+              <p className="text-lg font-semibold text-fg">{t.emailTemplates.title}</p>
               <PermissionGate permission="templates:create">
                 <button type="button"
                   onClick={handleNew}
-                  className="btn-gradient text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5"
+                  className="btn-gradient text-fg text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5"
                 >
                   <Plus size={14} />
                   {t.emailTemplates.newTemplate}
@@ -296,27 +296,27 @@ export function EmailTemplates() {
 
             {/* Search */}
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-subtle" />
               <input
                 type="text"
                 placeholder={t.common.searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-surface-2 border border-white/10 rounded-full pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500/50"
+                className="w-full bg-surface-2 border border-fg/10 rounded-full pl-9 pr-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50"
               />
             </div>
           </div>
 
           {/* Category tabs */}
-          <div className="px-2 py-2 border-b border-white/6 flex flex-col gap-0.5">
+          <div className="px-2 py-2 border-b border-fg/6 flex flex-col gap-0.5">
             {tabs.map((tab) => (
               <button type="button"
                 key={tab.key}
                 onClick={() => setCategoryFilter(tab.key)}
                 className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${
                   categoryFilter === tab.key
-                    ? 'text-brand-400 bg-brand-500/10 border-l-2 border-brand-500'
-                    : 'text-slate-400 hover:bg-white/4 hover:text-slate-200'
+                    ? 'text-accent-400 bg-accent-500/10 border-l-2 border-accent-500'
+                    : 'text-fg-muted hover:bg-fg/4 hover:text-fg'
                 }`}
               >
                 {tab.label}
@@ -333,15 +333,15 @@ export function EmailTemplates() {
                 <div
                   key={tpl.id}
                   onClick={() => selectTemplate(tpl)}
-                  className={`px-4 py-3 border-b border-white/4 cursor-pointer transition-colors ${
+                  className={`px-4 py-3 border-b border-fg/4 cursor-pointer transition-colors ${
                     selectedId === tpl.id
-                      ? 'bg-brand-600/10 border-l-2 border-l-brand-500'
-                      : 'hover:bg-white/4'
+                      ? 'bg-accent-600/10 border-l-2 border-l-accent-500'
+                      : 'hover:bg-fg/4'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-medium text-white truncate">{tpl.name}</p>
-                    <span className="text-[10px] text-slate-500 flex-shrink-0 whitespace-nowrap">
+                    <p className="text-sm font-medium text-fg truncate">{tpl.name}</p>
+                    <span className="text-[10px] text-fg-subtle flex-shrink-0 whitespace-nowrap">
                       {tpl.usageCount} {t.emailTemplates.usageCount.toLowerCase()}
                     </span>
                   </div>
@@ -351,7 +351,7 @@ export function EmailTemplates() {
                     >
                       {categoryLabels[tpl.category]}
                     </span>
-                    <p className="text-[11px] text-slate-500 truncate">{tpl.subject}</p>
+                    <p className="text-[11px] text-fg-subtle truncate">{tpl.subject}</p>
                   </div>
                 </div>
               ))
@@ -364,14 +364,14 @@ export function EmailTemplates() {
           {selected ? (
             <>
               {/* Toolbar */}
-              <div className="flex items-center justify-between p-4 border-b border-white/6">
+              <div className="flex items-center justify-between p-4 border-b border-fg/6">
                 <div className="flex items-center gap-3">
-                  <Mail size={18} className="text-brand-400" />
-                  <span className="text-sm text-slate-400">
-                    {t.emailTemplates.usageCount}: <span className="text-white font-medium">{selected.usageCount}</span>
+                  <Mail size={18} className="text-accent-400" />
+                  <span className="text-sm text-fg-muted">
+                    {t.emailTemplates.usageCount}: <span className="text-fg font-medium">{selected.usageCount}</span>
                   </span>
                   {isDirty && (
-                    <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] bg-warning/20 text-warning px-2 py-0.5 rounded-full">
                       {t.common.edit}
                     </span>
                   )}
@@ -379,21 +379,21 @@ export function EmailTemplates() {
                 <div className="flex items-center gap-2">
                   <button type="button"
                     onClick={() => setPreview(!preview)}
-                    className="bg-surface-2 border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
+                    className="bg-surface-2 border border-fg/10 text-fg-muted text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-fg/10 transition-colors"
                   >
                     {preview ? <EyeOff size={13} /> : <Eye size={13} />}
                     {preview ? t.common.edit : t.common.view}
                   </button>
                   <button type="button"
                     onClick={handleCopyBody}
-                    className="bg-surface-2 border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
+                    className="bg-surface-2 border border-fg/10 text-fg-muted text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-fg/10 transition-colors"
                   >
                     <Copy size={13} />
                     {t.common.export}
                   </button>
                   <button type="button"
                     onClick={handleDuplicate}
-                    className="bg-surface-2 border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
+                    className="bg-surface-2 border border-fg/10 text-fg-muted text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-fg/10 transition-colors"
                   >
                     <Copy size={13} />
                     {t.common.create}
@@ -401,7 +401,7 @@ export function EmailTemplates() {
                   <PermissionGate permission="templates:delete">
                     <button type="button"
                       onClick={handleDelete}
-                      className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-red-500/20 transition-colors"
+                      className="bg-danger/10 border border-danger/20 text-danger text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-danger/20 transition-colors"
                     >
                       <Trash2 size={13} />
                       {t.common.delete}
@@ -410,7 +410,7 @@ export function EmailTemplates() {
                   <PermissionGate permission="templates:update">
                     <button type="button"
                       onClick={handleSave}
-                      className="btn-gradient text-white text-xs font-medium px-4 py-2 rounded-full"
+                      className="btn-gradient text-fg text-xs font-medium px-4 py-2 rounded-full"
                     >
                       {t.common.save}
                     </button>
@@ -422,22 +422,22 @@ export function EmailTemplates() {
               <div className="flex-1 overflow-y-auto p-5 space-y-5">
                 {/* Name */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.common.name}</label>
+                  <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.common.name}</label>
                   {preview ? (
-                    <p className="text-white font-semibold text-lg">{draftName}</p>
+                    <p className="text-fg font-semibold text-lg">{draftName}</p>
                   ) : (
                     <input
                       type="text"
                       value={draftName}
                       onChange={(e) => { setDraftName(e.target.value); markDirty() }}
-                      className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500/50"
+                      className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-2.5 text-fg text-sm focus:outline-none focus:border-accent-500/50"
                     />
                   )}
                 </div>
 
                 {/* Category */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.emailTemplates.category}</label>
+                  <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.emailTemplates.category}</label>
                   {preview ? (
                     <span className={`text-xs font-medium px-3 py-1 rounded-full ${CATEGORY_COLORS[draftCategory]}`}>
                       {categoryLabels[draftCategory]}
@@ -446,7 +446,7 @@ export function EmailTemplates() {
                     <select
                       value={draftCategory}
                       onChange={(e) => { setDraftCategory(e.target.value as EmailTemplate['category']); markDirty() }}
-                      className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
+                      className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-2.5 text-fg text-sm focus:outline-none focus:border-accent-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
                     >
                       {Object.entries(categoryLabels).map(([val, label]) => (
                         <option key={val} value={val}>{label}</option>
@@ -457,9 +457,9 @@ export function EmailTemplates() {
 
                 {/* Subject */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.activities.subject}</label>
+                  <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.activities.subject}</label>
                   {preview ? (
-                    <p className="text-white text-sm bg-white/5 rounded-xl px-4 py-2.5 border border-white/6">
+                    <p className="text-fg text-sm bg-fg/5 rounded-xl px-4 py-2.5 border border-fg/6">
                       {replaceVariables(draftSubject, t)}
                     </p>
                   ) : (
@@ -468,16 +468,16 @@ export function EmailTemplates() {
                       value={draftSubject}
                       onChange={(e) => { setDraftSubject(e.target.value); markDirty() }}
                       placeholder={`${t.activities.subject}...`}
-                      className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+                      className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-2.5 text-fg text-sm placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50"
                     />
                   )}
                 </div>
 
                 {/* Body */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.common.description}</label>
+                  <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.common.description}</label>
                   {preview ? (
-                    <div className="bg-white/5 border border-white/6 rounded-xl px-5 py-4 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed min-h-[200px]">
+                    <div className="bg-fg/5 border border-fg/6 rounded-xl px-5 py-4 text-sm text-fg whitespace-pre-wrap leading-relaxed min-h-[200px]">
                       {replaceVariables(draftBody, t)}
                     </div>
                   ) : (
@@ -486,14 +486,14 @@ export function EmailTemplates() {
                       onChange={(e) => { setDraftBody(e.target.value); markDirty() }}
                       placeholder={`${t.common.description}... {{variable}}`}
                       rows={12}
-                      className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-mono placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none leading-relaxed"
+                      className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-3 text-sm text-fg font-mono placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50 resize-none leading-relaxed"
                     />
                   )}
                 </div>
 
                 {/* Variables */}
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-2">
+                  <label className="block text-xs font-medium text-fg-muted mb-2">
                     {t.emailTemplates.variables} ({detectedVariables.length})
                   </label>
                   {detectedVariables.length > 0 ? (
@@ -501,17 +501,17 @@ export function EmailTemplates() {
                       {detectedVariables.map((v) => (
                         <span
                           key={v}
-                          className="inline-flex items-center gap-1.5 text-xs font-mono bg-brand-500/15 text-brand-400 border border-brand-500/25 px-3 py-1.5 rounded-full"
+                          className="inline-flex items-center gap-1.5 text-xs font-mono bg-accent-500/15 text-accent-400 border border-accent-500/25 px-3 py-1.5 rounded-full"
                         >
                           {v}
                           {previewVars[v] && preview && (
-                            <span className="text-brand-300 font-sans">= {previewVars[v]}</span>
+                            <span className="text-accent-300 font-sans">= {previewVars[v]}</span>
                           )}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-fg-subtle">
                       {t.common.noResults}. {'{{variable}}'}
                     </p>
                   )}
@@ -522,15 +522,15 @@ export function EmailTemplates() {
             /* Empty state */
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-2xl bg-surface-2 border border-white/8 flex items-center justify-center mx-auto mb-4">
-                  <Mail size={28} className="text-slate-600" />
+                <div className="w-16 h-16 rounded-2xl bg-surface-2 border border-fg/8 flex items-center justify-center mx-auto mb-4">
+                  <Mail size={28} className="text-fg-subtle" />
                 </div>
-                <h3 className="text-white font-medium mb-1">{t.common.view} {t.emailTemplates.title.toLowerCase()}</h3>
-                <p className="text-sm text-slate-500">{t.common.or} {t.emailTemplates.newTemplate.toLowerCase()}</p>
+                <h3 className="text-fg font-medium mb-1">{t.common.view} {t.emailTemplates.title.toLowerCase()}</h3>
+                <p className="text-sm text-fg-subtle">{t.common.or} {t.emailTemplates.newTemplate.toLowerCase()}</p>
                 <PermissionGate permission="templates:create">
                   <button type="button"
                     onClick={handleNew}
-                    className="btn-gradient text-white text-xs font-medium px-5 py-2.5 rounded-full mt-4 inline-flex items-center gap-1.5"
+                    className="btn-gradient text-fg text-xs font-medium px-5 py-2.5 rounded-full mt-4 inline-flex items-center gap-1.5"
                   >
                     <Plus size={14} />
                     {t.emailTemplates.newTemplate}

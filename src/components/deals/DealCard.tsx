@@ -23,9 +23,9 @@ function getDealAgeDays(createdAt: string): number {
 }
 
 function getAgingColor(days: number): { bg: string; text: string } {
-  if (days < 7) return { bg: 'bg-emerald-500/15', text: 'text-emerald-400' }
-  if (days <= 30) return { bg: 'bg-amber-500/15', text: 'text-amber-400' }
-  return { bg: 'bg-red-500/15', text: 'text-red-400' }
+  if (days < 7) return { bg: 'bg-success/15', text: 'text-success' }
+  if (days <= 30) return { bg: 'bg-warning/15', text: 'text-warning' }
+  return { bg: 'bg-danger/15', text: 'text-danger' }
 }
 
 export function DealCard({ deal, index, onClick }: DealCardProps) {
@@ -63,14 +63,14 @@ export function DealCard({ deal, index, onClick }: DealCardProps) {
             transition-all duration-150 select-none
             ${snapshot.isDragging
               ? 'border-indigo-500 shadow-xl shadow-indigo-500/10 rotate-1'
-              : 'border-white/8 hover:border-white/16'
+              : 'border-fg/8 hover:border-fg/16'
             }
           `}
         >
           {/* Title + priority dot + aging badge */}
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex items-center gap-1.5 min-w-0">
-              <p className="text-sm font-medium text-white leading-snug line-clamp-2">{displayDeal.title}</p>
+              <p className="text-sm font-medium text-fg leading-snug line-clamp-2">{displayDeal.title}</p>
               <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${aging.bg} ${aging.text}`}>
                 {ageDays}d
               </span>
@@ -88,26 +88,26 @@ export function DealCard({ deal, index, onClick }: DealCardProps) {
               className={`inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border mb-2 ${healthStatusBg(health.status)} ${healthStatusColor(health.status)}`}
               title={health.reasons.join(' · ')}
             >
-              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${health.status === 'at_risk' ? 'bg-red-400 animate-pulse' : 'bg-amber-400'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${health.status === 'at_risk' ? 'bg-danger animate-pulse' : 'bg-warning'}`} />
               {health.status === 'at_risk' ? 'At risk' : 'Watch'}
             </span>
           )}
 
           {/* Company */}
           {company && (
-            <p className="text-xs text-slate-500 mb-2 truncate">{company.name}</p>
+            <p className="text-xs text-fg-subtle mb-2 truncate">{company.name}</p>
           )}
 
           {/* Value */}
-          <p className="text-sm font-bold text-emerald-400 mb-2">
+          <p className="text-sm font-bold text-success mb-2">
             {formatCurrency(displayDeal.value, displayDeal.currency)}
           </p>
 
           {/* Footer */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <CalendarDays size={11} className={isOverdue ? 'text-red-400' : 'text-slate-600'} />
-              <span className={`text-[10px] ${isOverdue ? 'text-red-400' : 'text-slate-600'}`}>
+              <CalendarDays size={11} className={isOverdue ? 'text-danger' : 'text-fg-subtle'} />
+              <span className={`text-[10px] ${isOverdue ? 'text-danger' : 'text-fg-subtle'}`}>
                 {formatDate(deal.expectedCloseDate)}
               </span>
             </div>

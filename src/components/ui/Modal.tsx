@@ -15,7 +15,7 @@ export function DialogPanelHeader({
   closeLabel: string
 }) {
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-b border-white/6 flex-shrink-0">
+    <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle flex-shrink-0">
       <h2 className="text-base font-semibold text-fg">{title}</h2>
       <IconButton
         type="button"
@@ -84,13 +84,13 @@ export function SlideOver({ isOpen, onClose, title, children, width = 'lg' }: Sl
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden" aria-modal="true" role="dialog">
+    <div className="fixed inset-0 z-modal overflow-hidden" aria-modal="true" role="dialog">
       <div
         className="absolute inset-0 bg-surface-0/80 backdrop-blur-md animate-fade-in modal-backdrop"
         onClick={onClose}
       />
       <div ref={panelRef} className={`absolute inset-y-0 right-0 flex w-full ${widthClasses[width]} animate-slide-in`}>
-        <div className="slide-panel flex flex-col w-full bg-surface-2/95 border-l border-white/8 shadow-float backdrop-blur-sm">
+        <div className="slide-panel flex flex-col w-full bg-surface-2/95 border-l border-border-subtle shadow-float backdrop-blur-sm">
           <DialogPanelHeader title={title} onClose={onClose} closeLabel={t.common.close} />
           <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
         </div>
@@ -157,14 +157,14 @@ export function Modal({ isOpen, onClose, title, children, size = 'lg' }: ModalPr
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-modal="true" role="dialog">
+    <div className="fixed inset-0 z-modal flex items-center justify-center p-4" aria-modal="true" role="dialog">
       <div
         className="absolute inset-0 bg-surface-0/80 backdrop-blur-md animate-fade-in modal-backdrop"
         onClick={onClose}
       />
       <div
         ref={panelRef}
-        className={`relative w-full ${modalSizeClasses[size]} glass border border-white/10 rounded-2xl shadow-float animate-scale-in flex flex-col max-h-[90vh]`}
+        className={`relative w-full ${modalSizeClasses[size]} glass border border-border-subtle rounded-2xl shadow-float animate-scale-in flex flex-col max-h-[90vh]`}
       >
         <DialogPanelHeader title={title} onClose={onClose} closeLabel={t.common.close} />
         <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
@@ -205,9 +205,9 @@ export function ConfirmDialog({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true" role="dialog">
+    <div className="fixed inset-0 z-modal flex items-center justify-center" aria-modal="true" role="dialog">
       <div className="absolute inset-0 bg-surface-0/80 backdrop-blur-md" onClick={onClose} />
-      <div className="relative glass rounded-2xl shadow-float p-6 w-full max-w-sm mx-4 animate-scale-in border-white/10">
+      <div className="relative glass rounded-2xl shadow-float p-6 w-full max-w-sm mx-4 animate-scale-in border border-border-subtle">
         <h3 className="text-base font-semibold text-fg mb-2">{title}</h3>
         <p className="text-sm text-fg-muted mb-6">{message}</p>
         <div className="flex gap-3 justify-end">

@@ -8,6 +8,7 @@ export const MOCK_USERS = ['David Muñoz', 'Sara López', 'Carlos Vega']
 export const seedSettings: AppSettings = {
   currency: 'EUR',
   themePreference: 'system',
+  uiDensity: 'comfortable',
   leadSlaHours: 8,
   permissionProfiles: DEFAULT_ROLE_PERMISSIONS,
   branding: {

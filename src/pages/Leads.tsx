@@ -64,7 +64,7 @@ function HintPopover({ text }: { text: string }) {
         onBlur={() => {
           setTimeout(() => setOpen(false), 120)
         }}
-        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-white/14 text-slate-400 hover:text-slate-200 hover:border-white/30 transition-colors"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-fg/14 text-fg-muted hover:text-fg hover:border-fg/30 transition-colors"
         aria-label={text}
         title={text}
       >
@@ -72,7 +72,7 @@ function HintPopover({ text }: { text: string }) {
       </button>
       {open && position && createPortal(
         <div
-          className="fixed z-[80] w-64 rounded-lg border border-white/10 bg-surface-1 p-2 text-[11px] leading-4 text-slate-300 shadow-xl"
+          className="fixed z-[80] w-64 rounded-lg border border-fg/10 bg-surface-1 p-2 text-[11px] leading-4 text-fg-muted shadow-xl"
           style={{ top: position.top, left: position.left }}
         >
           {text}
@@ -145,12 +145,12 @@ export function Leads() {
       />
 
       {showQuickAdd && (
-        <div className="glass rounded-2xl border-white/10 p-4">
+        <div className="glass rounded-2xl border-fg/10 p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-            <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t.leads.firstName} className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
-            <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t.leads.lastName} className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.common.email} className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
-            <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder={t.leads.company} className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+            <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t.leads.firstName} className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none" />
+            <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t.leads.lastName} className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none" />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.common.email} className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none" />
+            <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder={t.leads.company} className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none" />
           </div>
           <div className="mt-3">
             <button
@@ -173,7 +173,7 @@ export function Leads() {
                 setCompanyName('')
                 setShowQuickAdd(false)
               }}
-              className="text-xs px-3 py-2 rounded-lg bg-brand-500/20 text-brand-300 border border-brand-500/30 hover:bg-brand-500/25"
+              className="text-xs px-3 py-2 rounded-lg bg-accent-500/20 text-accent-300 border border-accent-500/30 hover:bg-accent-500/25"
             >
               {t.leads.createLead}
             </button>
@@ -187,12 +187,12 @@ export function Leads() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t.leads.searchPlaceholder}
-          className="md:col-span-2 bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
+          className="md:col-span-2 bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none"
         />
         <select
           value={stageFilter}
           onChange={(e) => setStageFilter((e.target.value as LeadLifecycleStage) || '')}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none"
         >
           <option value="">{t.leads.allStages}</option>
           {STAGES.map((stage) => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}
@@ -200,7 +200,7 @@ export function Leads() {
         <select
           value={scoreFilter}
           onChange={(e) => setScoreFilter((e.target.value as 'hot' | 'warm' | 'cold') || '')}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
+          className="bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none"
         >
           <option value="">{t.leads.allScores}</option>
           <option value="hot">{t.leads.hot} (70+)</option>
@@ -210,28 +210,28 @@ export function Leads() {
       </div>
       </Toolbar>
 
-      <div className="glass rounded-2xl border-white/8 overflow-hidden">
-        <div className="px-4 py-3 border-b border-white/6 text-xs text-slate-400 uppercase tracking-wider">{t.leads.leadInbox}</div>
-        {isLoading && <div className="px-4 py-5 text-sm text-slate-500">{t.leads.loadingLeads}</div>}
-        {error && <div className="px-4 py-5 text-sm text-red-400">{error}</div>}
+      <div className="glass rounded-2xl border-fg/8 overflow-hidden">
+        <div className="px-4 py-3 border-b border-fg/6 text-xs text-fg-muted uppercase tracking-wider">{t.leads.leadInbox}</div>
+        {isLoading && <div className="px-4 py-5 text-sm text-fg-subtle">{t.leads.loadingLeads}</div>}
+        {error && <div className="px-4 py-5 text-sm text-danger">{error}</div>}
         {!isLoading && !error && filtered.length === 0 && (
-          <div className="px-4 py-6 text-sm text-slate-500">{t.leads.noLeads}</div>
+          <div className="px-4 py-6 text-sm text-fg-subtle">{t.leads.noLeads}</div>
         )}
-        <div className="divide-y divide-white/4">
+        <div className="divide-y divide-border-subtle">
           {filtered.map((lead) => (
             <div key={lead.id}>
               <div className="px-4 py-3 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-white/8 flex items-center justify-center text-xs font-bold text-slate-300">
+              <div className="w-9 h-9 rounded-full bg-fg/8 flex items-center justify-center text-xs font-bold text-fg-muted">
                 {`${lead.firstName.charAt(0)}${lead.lastName.charAt(0)}`.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-white truncate">{lead.firstName} {lead.lastName}</p>
-                <p className="text-xs text-slate-500 truncate">{lead.email}{lead.companyName ? ` • ${lead.companyName}` : ''}</p>
+                <p className="text-sm text-fg truncate">{lead.firstName} {lead.lastName}</p>
+                <p className="text-xs text-fg-subtle truncate">{lead.email}{lead.companyName ? ` • ${lead.companyName}` : ''}</p>
               </div>
               <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                lead.score >= 70 ? 'bg-red-500/15 border-red-500/30 text-red-300' :
-                  lead.score >= 40 ? 'bg-amber-500/15 border-amber-500/30 text-amber-300' :
-                    'bg-white/8 border-white/10 text-slate-400'
+                lead.score >= 70 ? 'bg-danger/15 border-danger/30 text-danger' :
+                  lead.score >= 40 ? 'bg-warning/15 border-warning/30 text-warning' :
+                    'bg-fg/8 border-fg/10 text-fg-muted'
               }`}>
                 <span className="inline-flex items-center gap-1">
                   {lead.score >= 70 && <Flame size={10} />}
@@ -243,16 +243,16 @@ export function Leads() {
                   title={`baseline=${scoreInsightsByLeadId[lead.id].baselineSignals} · eventScore=${scoreInsightsByLeadId[lead.id].eventScore} · recentSignals=${scoreInsightsByLeadId[lead.id].recentSignals}`}
                   className={`text-[10px] px-2 py-0.5 rounded-full border ${
                     scoreInsightsByLeadId[lead.id].confidence === 'high'
-                      ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10'
+                      ? 'text-success border-success/30 bg-success/10'
                       : scoreInsightsByLeadId[lead.id].confidence === 'medium'
-                        ? 'text-amber-300 border-amber-500/30 bg-amber-500/10'
-                        : 'text-slate-300 border-white/10 bg-white/5'
+                        ? 'text-warning border-warning/30 bg-warning/10'
+                        : 'text-fg-muted border-fg/10 bg-fg/5'
                   }`}
                 >
                   {t.leads.confidence}: {t.leads.confidenceLevels[scoreInsightsByLeadId[lead.id].confidence]}
                 </span>
               )}
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-500/15 text-brand-300 border border-brand-500/25">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-500/15 text-accent-300 border border-accent-500/25">
                 {stageLabels[lead.lifecycleStage]}
               </span>
               <button
@@ -262,7 +262,7 @@ export function Leads() {
                   setExpandedLeadId(willExpand ? lead.id : null)
                   if (willExpand) await fetchLeadEvents(lead.id)
                 }}
-                className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-white/6 hover:bg-white/10 text-slate-300"
+                className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-fg/6 hover:bg-fg/10 text-fg-muted"
               >
                 <Clock3 size={10} />
                 {t.leads.timelineAction}
@@ -279,7 +279,7 @@ export function Leads() {
                     ])
                   }
                 }}
-                className="text-[10px] px-2 py-1 rounded bg-white/6 hover:bg-white/10 text-slate-300"
+                className="text-[10px] px-2 py-1 rounded bg-fg/6 hover:bg-fg/10 text-fg-muted"
               >
                 {t.leads.scoreBreakdownAction}
               </button>
@@ -297,7 +297,7 @@ export function Leads() {
                     }}
                     title={t.leads.convertActionHint}
                     aria-label={t.leads.convertActionHint}
-                    className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20"
+                    className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-success/15 border border-success/30 text-success hover:bg-success/20"
                   >
                     <UserPlus size={10} />
                     {t.leads.convertAction}
@@ -311,7 +311,7 @@ export function Leads() {
                   deleteLead(lead.id)
                   toast.success(t.common.delete)
                 }}
-                className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-red-500/12 border border-red-500/30 text-red-300 hover:bg-red-500/18"
+                className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-danger/12 border border-danger/30 text-danger hover:bg-danger/18"
                 title={t.common.delete}
                 aria-label={t.common.delete}
               >
@@ -321,15 +321,15 @@ export function Leads() {
               </div>
               {expandedLeadId === lead.id && (
                 <div className="px-4 pb-4">
-                  <div className="ml-12 rounded-lg border border-white/8 bg-white/[0.02] p-3">
-                    <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{t.leads.timelineTitle}</p>
+                  <div className="ml-12 rounded-lg border border-fg/8 bg-fg/[0.02] p-3">
+                    <p className="text-[11px] uppercase tracking-wider text-fg-subtle mb-2">{t.leads.timelineTitle}</p>
                     {(leadEventsByLeadId[lead.id] ?? []).length === 0 ? (
-                      <p className="text-xs text-slate-500">{t.leads.noEvents}</p>
+                      <p className="text-xs text-fg-subtle">{t.leads.noEvents}</p>
                     ) : (
                       <div className="space-y-2">
                         {(leadEventsByLeadId[lead.id] ?? []).map((event) => (
-                          <div key={event.id} className="text-xs text-slate-300">
-                            <span className="text-slate-500">{formatDateTime(event.createdAt)} • </span>
+                          <div key={event.id} className="text-xs text-fg-muted">
+                            <span className="text-fg-subtle">{formatDateTime(event.createdAt)} • </span>
                             <span className="font-medium">{event.eventType}</span>
                           </div>
                         ))}
@@ -340,40 +340,40 @@ export function Leads() {
               )}
               {expandedScoreLeadId === lead.id && (
                 <div className="px-4 pb-4">
-                  <div className="ml-12 rounded-lg border border-white/8 bg-white/[0.02] p-3">
-                    <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{t.leads.scoreBreakdownTitle}</p>
+                  <div className="ml-12 rounded-lg border border-fg/8 bg-fg/[0.02] p-3">
+                    <p className="text-[11px] uppercase tracking-wider text-fg-subtle mb-2">{t.leads.scoreBreakdownTitle}</p>
                     {!scoreInsightsByLeadId[lead.id] ? (
-                      <p className="text-xs text-slate-500">{t.leads.noScoreInsight}</p>
+                      <p className="text-xs text-fg-subtle">{t.leads.noScoreInsight}</p>
                     ) : (
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
-                        <div className="rounded border border-white/8 px-2 py-1.5">
-                          <p className="text-slate-500">{t.leads.confidence}</p>
-                          <p className="text-slate-200 font-medium">{t.leads.confidenceLevels[scoreInsightsByLeadId[lead.id].confidence]}</p>
+                        <div className="rounded border border-fg/8 px-2 py-1.5">
+                          <p className="text-fg-subtle">{t.leads.confidence}</p>
+                          <p className="text-fg font-medium">{t.leads.confidenceLevels[scoreInsightsByLeadId[lead.id].confidence]}</p>
                         </div>
-                        <div className="rounded border border-white/8 px-2 py-1.5">
-                          <p className="text-slate-500">{t.leads.baselineSignals}</p>
-                          <p className="text-slate-200 font-medium">{scoreInsightsByLeadId[lead.id].baselineSignals}</p>
+                        <div className="rounded border border-fg/8 px-2 py-1.5">
+                          <p className="text-fg-subtle">{t.leads.baselineSignals}</p>
+                          <p className="text-fg font-medium">{scoreInsightsByLeadId[lead.id].baselineSignals}</p>
                         </div>
-                        <div className="rounded border border-white/8 px-2 py-1.5">
-                          <p className="text-slate-500">{t.leads.eventScore}</p>
-                          <p className="text-slate-200 font-medium">{scoreInsightsByLeadId[lead.id].eventScore}</p>
+                        <div className="rounded border border-fg/8 px-2 py-1.5">
+                          <p className="text-fg-subtle">{t.leads.eventScore}</p>
+                          <p className="text-fg font-medium">{scoreInsightsByLeadId[lead.id].eventScore}</p>
                         </div>
-                        <div className="rounded border border-white/8 px-2 py-1.5">
-                          <p className="text-slate-500">{t.leads.recentSignals}</p>
-                          <p className="text-slate-200 font-medium">{scoreInsightsByLeadId[lead.id].recentSignals}</p>
+                        <div className="rounded border border-fg/8 px-2 py-1.5">
+                          <p className="text-fg-subtle">{t.leads.recentSignals}</p>
+                          <p className="text-fg font-medium">{scoreInsightsByLeadId[lead.id].recentSignals}</p>
                         </div>
-                        <div className="rounded border border-white/8 px-2 py-1.5">
-                          <p className="text-slate-500">{t.leads.scoreAction}</p>
-                          <p className="text-slate-200 font-medium">
+                        <div className="rounded border border-fg/8 px-2 py-1.5">
+                          <p className="text-fg-subtle">{t.leads.scoreAction}</p>
+                          <p className="text-fg font-medium">
                             {(scoreInsightsByLeadId[lead.id].computedScore ?? lead.score)} / {scoreInsightsByLeadId[lead.id].persistedScore ?? lead.score}
                           </p>
                         </div>
                       </div>
                         <div>
-                          <p className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">{t.leads.scoreHistory}</p>
+                          <p className="text-[11px] uppercase tracking-wider text-fg-subtle mb-2">{t.leads.scoreHistory}</p>
                           {!(scoreHistoryByLeadId[lead.id]?.length) ? (
-                            <p className="text-xs text-slate-500">{t.leads.noScoreInsight}</p>
+                            <p className="text-xs text-fg-subtle">{t.leads.noScoreInsight}</p>
                           ) : (
                             <svg viewBox="0 0 100 28" className="w-full h-10">
                               <polyline

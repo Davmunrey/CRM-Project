@@ -128,11 +128,11 @@ export function PipelineTimeline() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Calendar size={20} className="text-brand-400" />
+          <h2 className="text-xl font-bold text-fg flex items-center gap-2">
+            <Calendar size={20} className="text-accent-400" />
             {t.nav.timeline}
           </h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-fg-subtle mt-1">
             {filteredDeals.length} {t.nav.deals} · {formatCurrency(totalPipeline)} {t.deals.pipeline}
           </p>
         </div>
@@ -142,17 +142,17 @@ export function PipelineTimeline() {
           <button
             type="button"
             onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
-            className="p-2 rounded-xl glass border-white/8 text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
+            className="p-2 rounded-xl glass border-fg/8 text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
           >
             <ChevronLeft size={16} />
           </button>
-          <span className="text-sm font-medium text-white px-2 capitalize">
+          <span className="text-sm font-medium text-fg px-2 capitalize">
             {format(currentMonth, 'MMM yyyy', { locale: dateLocale })} — {format(addMonths(currentMonth, MONTHS_VISIBLE - 1), 'MMM yyyy', { locale: dateLocale })}
           </span>
           <button
             type="button"
             onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
-            className="p-2 rounded-xl glass border-white/8 text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
+            className="p-2 rounded-xl glass border-fg/8 text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
           >
             <ChevronRight size={16} />
           </button>
@@ -162,20 +162,20 @@ export function PipelineTimeline() {
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="glass p-4 rounded-xl">
-          <p className="text-xs text-slate-500 mb-1">{t.deals.title}</p>
-          <p className="text-2xl font-bold text-white">{filteredDeals.length}</p>
+          <p className="text-xs text-fg-subtle mb-1">{t.deals.title}</p>
+          <p className="text-2xl font-bold text-fg">{filteredDeals.length}</p>
         </div>
         <div className="glass p-4 rounded-xl">
-          <p className="text-xs text-slate-500 mb-1">{t.dashboard.pipelineValue}</p>
-          <p className="text-2xl font-bold text-brand-400">{formatCurrency(totalPipeline)}</p>
+          <p className="text-xs text-fg-subtle mb-1">{t.dashboard.pipelineValue}</p>
+          <p className="text-2xl font-bold text-accent-400">{formatCurrency(totalPipeline)}</p>
         </div>
         <div className="glass p-4 rounded-xl">
-          <p className="text-xs text-slate-500 mb-1">{t.forecast.weighted}</p>
-          <p className="text-2xl font-bold text-emerald-400">{formatCurrency(expectedThisQuarter)}</p>
+          <p className="text-xs text-fg-subtle mb-1">{t.forecast.weighted}</p>
+          <p className="text-2xl font-bold text-success">{formatCurrency(expectedThisQuarter)}</p>
         </div>
         <div className="glass p-4 rounded-xl">
-          <p className="text-xs text-slate-500 mb-1">{t.reports.conversionRate}</p>
-          <p className="text-2xl font-bold text-amber-400">
+          <p className="text-xs text-fg-subtle mb-1">{t.reports.conversionRate}</p>
+          <p className="text-2xl font-bold text-warning">
             {filteredDeals.length > 0
               ? `${Math.round(filteredDeals.reduce((s, d) => s + d.probability, 0) / filteredDeals.length)}%`
               : '—'}
@@ -185,11 +185,11 @@ export function PipelineTimeline() {
 
       {/* Filters */}
       <div className="flex items-center gap-2 flex-wrap glass rounded-xl p-3">
-        <Filter size={14} className="text-slate-500" />
+        <Filter size={14} className="text-fg-subtle" />
         <select
           value={stageFilter}
           onChange={(e) => setStageFilter(e.target.value as DealStage | '')}
-          className="bg-surface-2 border border-white/8 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500/40"
+          className="bg-surface-2 border border-fg/8 rounded-lg px-3 py-1.5 text-sm text-fg focus:outline-none focus:border-accent-500/40"
         >
           <option value="">{t.deals.stage}</option>
           {(['lead', 'qualified', 'proposal', 'negotiation', 'closed_won'] as DealStage[]).map((s) => (
@@ -199,7 +199,7 @@ export function PipelineTimeline() {
         <select
           value={assigneeFilter}
           onChange={(e) => setAssigneeFilter(e.target.value)}
-          className="bg-surface-2 border border-white/8 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500/40"
+          className="bg-surface-2 border border-fg/8 rounded-lg px-3 py-1.5 text-sm text-fg focus:outline-none focus:border-accent-500/40"
         >
           <option value="">{t.common.assignedTo}</option>
           {orgUsers.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
@@ -208,7 +208,7 @@ export function PipelineTimeline() {
           <button
             type="button"
             onClick={() => { setStageFilter(''); setAssigneeFilter('') }}
-            className="flex items-center gap-1 text-xs text-slate-400 hover:text-white px-2 py-1.5 rounded-lg hover:bg-white/6 transition-colors"
+            className="flex items-center gap-1 text-xs text-fg-muted hover:text-fg px-2 py-1.5 rounded-lg hover:bg-fg/6 transition-colors"
           >
             <X size={12} /> {t.common.clear}
           </button>
@@ -218,18 +218,18 @@ export function PipelineTimeline() {
       {/* Timeline */}
       <div className="glass rounded-2xl overflow-hidden">
         {/* Month header */}
-        <div className="flex border-b border-white/8 bg-surface-1/40">
-          <div className="w-48 flex-shrink-0 px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider border-r border-white/6">
+        <div className="flex border-b border-fg/8 bg-surface-1/40">
+          <div className="w-48 flex-shrink-0 px-4 py-3 text-xs font-semibold text-fg-subtle uppercase tracking-wider border-r border-fg/6">
             {t.deals.title}
           </div>
           <div className="flex-1 relative h-10">
             {monthPositions.map(({ month, left, width }) => (
               <div
                 key={month.toISOString()}
-                className="absolute top-0 bottom-0 flex items-center justify-center border-r border-white/6"
+                className="absolute top-0 bottom-0 flex items-center justify-center border-r border-fg/6"
                 style={{ left: `${left}%`, width: `${width}%` }}
               >
-                <span className="text-xs font-semibold text-slate-400 capitalize">
+                <span className="text-xs font-semibold text-fg-muted capitalize">
                   {format(month, 'MMM yyyy', { locale: dateLocale })}
                 </span>
               </div>
@@ -238,12 +238,12 @@ export function PipelineTimeline() {
         </div>
 
         {/* Deal rows */}
-        <div className="divide-y divide-white/4">
+        <div className="divide-y divide-border-subtle">
           {filteredDeals.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <Calendar size={32} className="mx-auto text-slate-600 mb-3" />
-              <p className="text-slate-400">{t.deals.emptyTitle}</p>
-              <p className="text-xs text-slate-600 mt-1">{t.common.filters}</p>
+              <Calendar size={32} className="mx-auto text-fg-subtle mb-3" />
+              <p className="text-fg-muted">{t.deals.emptyTitle}</p>
+              <p className="text-xs text-fg-subtle mt-1">{t.common.filters}</p>
             </div>
           ) : (
             filteredDeals.map((deal) => {
@@ -256,17 +256,17 @@ export function PipelineTimeline() {
               return (
                 <div
                   key={deal.id}
-                  className={`flex items-center transition-colors ${isHovered ? 'bg-white/4' : 'hover:bg-white/[0.02]'}`}
+                  className={`flex items-center transition-colors ${isHovered ? 'bg-fg/4' : 'hover:bg-fg/[0.02]'}`}
                   onMouseEnter={() => setHoveredDeal(deal.id)}
                   onMouseLeave={() => setHoveredDeal(null)}
                 >
                   {/* Deal info */}
                   <div
-                    className="w-48 flex-shrink-0 px-3 py-3 border-r border-white/6 cursor-pointer"
+                    className="w-48 flex-shrink-0 px-3 py-3 border-r border-fg/6 cursor-pointer"
                     onClick={() => navigate('/deals')}
                   >
-                    <p className="text-xs font-medium text-white truncate">{deal.title}</p>
-                    <p className="text-[10px] text-slate-500 truncate">
+                    <p className="text-xs font-medium text-fg truncate">{deal.title}</p>
+                    <p className="text-[10px] text-fg-subtle truncate">
                       {company?.name || contact ? `${contact?.firstName} ${contact?.lastName}` : '—'}
                     </p>
                     <div className="flex items-center gap-1 mt-1">
@@ -282,7 +282,7 @@ export function PipelineTimeline() {
                     {monthPositions.slice(1).map(({ left }, i) => (
                       <div
                         key={i}
-                        className="absolute top-0 bottom-0 w-px bg-white/4"
+                        className="absolute top-0 bottom-0 w-px bg-fg/4"
                         style={{ left: `${left}%` }}
                       />
                     ))}
@@ -304,7 +304,7 @@ export function PipelineTimeline() {
                       >
                         <DollarSign size={9} style={{ color: stageColor, flexShrink: 0 }} />
                         {bar.width > 8 && (
-                          <span className="text-[9px] font-semibold text-white truncate">
+                          <span className="text-[9px] font-semibold text-fg truncate">
                             {formatCurrency(deal.value)}
                           </span>
                         )}
@@ -327,10 +327,10 @@ export function PipelineTimeline() {
                   </div>
 
                   {/* Right: value + probability */}
-                  <div className="w-32 flex-shrink-0 text-right px-3 border-l border-white/6">
-                    <p className="text-xs font-semibold text-emerald-400">{formatCurrency(deal.value)}</p>
-                    <p className="text-[10px] text-slate-500">{deal.probability}% {t.deals.probability}</p>
-                    <p className="text-[10px] text-slate-600 truncate">{deal.assignedTo.split(' ')[0]}</p>
+                  <div className="w-32 flex-shrink-0 text-right px-3 border-l border-fg/6">
+                    <p className="text-xs font-semibold text-success">{formatCurrency(deal.value)}</p>
+                    <p className="text-[10px] text-fg-subtle">{deal.probability}% {t.deals.probability}</p>
+                    <p className="text-[10px] text-fg-subtle truncate">{deal.assignedTo.split(' ')[0]}</p>
                   </div>
                 </div>
               )
@@ -344,7 +344,7 @@ export function PipelineTimeline() {
         {(['lead', 'qualified', 'proposal', 'negotiation', 'closed_won'] as DealStage[]).map((s) => (
           <div key={s} className="flex items-center gap-1.5">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: STAGE_HEX[s] }} />
-            <span className="text-[11px] text-slate-500">{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</span>
+            <span className="text-[11px] text-fg-subtle">{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</span>
           </div>
         ))}
       </div>

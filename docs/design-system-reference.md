@@ -11,7 +11,7 @@ For product-facing layout narrative and navigation runbooks, keep using [`master
 
 | Area | Path |
 |------|------|
-| Semantic tokens (RGB, motion, density, legacy aliases) | `src/styles/tokens.css` |
+| Semantic tokens (RGB, typography, spacing, elevation, z-index, motion, density, legacy aliases) | `src/styles/tokens.css` |
 | Global base, components, utilities, light-mode overrides | `src/index.css` |
 | Tailwind theme extensions | `tailwind.config.js` |
 | Brand accent → CSS variables | `src/lib/brandingAccent.ts` |
@@ -32,6 +32,59 @@ For product-facing layout narrative and navigation runbooks, keep using [`master
 - **Dark default, light via `html.light`:** variables in `tokens.css` switch; avoid raw **`navy`** / arbitrary **`bg-[#...]`** / **`text-[#...]`** / **`border-[#...]`** / **`from|to|via-[#...]`** in TSX (enforced by `npm run ui:lint`).
 
 Legacy CSS variables `--bg-main`, `--text-main`, etc., mirror semantic tokens for gradual migration.
+
+- **Borders (semantic):** `border-border-subtle`, `border-border-strong` — map to `tokens.css` border RGB + opacity (theme-aware via `html.light`).
+
+---
+
+## Typography scale (tokens → Tailwind)
+
+| Token (CSS var) | Tailwind | Notes |
+|-----------------|----------|--------|
+| `--font-size-xs` … `--font-size-3xl` | `text-xs` … `text-3xl` | `tailwind.config.js` maps each to the var + default line-height |
+| `--line-height-tight` … `--line-height-relaxed` | `leading-tight`, `leading-snug`, `leading-normal`, `leading-relaxed` | |
+| `--font-weight-regular` … `--font-weight-bold` | `font-normal`, `font-medium`, `font-semibold`, `font-bold` | |
+| `--letter-spacing-tight` … `--letter-spacing-wide` | `tracking-tight`, `tracking-normal`, `tracking-wide` | |
+
+Prefer **`text-fg` / `text-fg-muted` / `text-fg-subtle`** for copy color; use the scale above for size/weight only.
+
+---
+
+## Spacing & vertical rhythm
+
+| Token | Tailwind (extended) |
+|-------|---------------------|
+| `--space-0` … `--space-10` | `p-*`, `m-*`, `gap-*` keys `0`–`10` use token rem values (4px grid) |
+| `--stack-sm` / `--stack-md` / `--stack-lg` | `gap-stack-sm`, `p-stack-md`, etc. | Tightens under `data-density='compact'` |
+
+---
+
+## Elevation (shadows)
+
+| Token | Tailwind |
+|-------|----------|
+| `--shadow-xs` … `--shadow-xl`, `--shadow-float`, `--shadow-brand-sm` | `shadow-xs` … `shadow-xl`, `shadow-float`, `shadow-brand-sm` |
+
+---
+
+## Z-index
+
+| Token | Tailwind |
+|-------|----------|
+| `--z-base` … `--z-skip` | `z-base`, `z-dropdown`, `z-sticky`, `z-overlay`, `z-modal`, `z-toast`, `z-tooltip`, `z-skip` |
+
+---
+
+## Containers & breakpoints
+
+- **Max widths:** `max-w-container` (`--container-max`, 1800px), `max-w-container-narrow` (960px).
+- **Breakpoints:** documented in `tokens.css` as `--breakpoint-sm` … `--breakpoint-2xl` (same as Tailwind defaults: 640, 768, 1024, 1280, 1536).
+
+---
+
+## Tailwind `darkMode`
+
+`tailwind.config.js` sets `darkMode: 'class'`. `applyTheme` in `src/lib/theme.ts` adds `light` or `dark` on `<html>`, so **`dark:` utilities follow the in-app theme**, not only OS preference.
 
 ---
 
@@ -95,21 +148,34 @@ Under `src/components/ui/`: `Button`, `Input`, `Select`, `Textarea`, `Modal`, `I
 npm run ui:lint
 ```
 
-Script: `scripts/ui-lint.mjs`. Fails if `src/**` contains disallowed patterns:
+Script: `scripts/ui-lint.mjs`.
+
+**Global rules** (all TS/TSX except allowlist below):
 
 - Navy utilities: `bg-navy-*`, `text-navy-*`, `border-navy-*`, `from|to-navy-*`
 - Arbitrary hex in Tailwind utilities: `bg-[#…]`, `text-[#…]`, `border-[#…]`, `from|to|via-[#…]`
 
+**Strict rules** (everything under `src/` **except** `src/components/ui/**`, where primitives may still use low-level utilities):
+
+- Slate / legacy neutrals: `text-slate-*`, `bg-slate-*`, `border-slate-*`, `placeholder-slate-*`
+- Raw white/black: `text-white`, `bg-white`
+- Legacy brand scale: `bg-brand-*`, `text-brand-*`, `border-brand-*`, `from|to|outline|ring|accent-brand-*`
+- Raw status / palette: common `text|bg|border-(red|emerald|amber|blue|rose|sky|…)` Tailwind scales (see script for exact patterns)
+
 Allowlist: `src/lib/brandingAccent.ts` and `src/lib/theme.ts` (which write CSS variables from raw hex).
 
 CI: `.github/workflows/ci.yml` runs `npm run ui:lint` after `npm ci`.
+
+E2E (`npm run test:e2e`): `playwright.config.ts` runs **`npm run build` before `vite preview`** so static routes (including the `*` catch-all) always match the current `App.tsx`.
+
+**Unused code audit:** `npm run audit:unused` runs Knip scoped to **files and dependencies** (export-level noise is excluded until the backlog is triaged). `knip.json` ignores Edge `supabase/functions/*` and a few placeholder modules.
 
 ---
 
 ## Accessibility smoke (axe)
 
 - Dependency: `vitest-axe` (extends `expect` in `tests/setup.ts`).
-- Covered pages: `Login`, `Register`, `ForgotPassword` (see `tests/auth/*.test.tsx`).
+- Covered pages: `Login`, `Register`, `ForgotPassword` (see `tests/auth/*.test.tsx`); UI primitives smoke in `tests/ui/primitives.test.tsx`.
 - **Note:** jsdom + static HTML may report false positives for color contrast; tune `axe()` options per case if needed.
 
 ---

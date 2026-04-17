@@ -26,12 +26,12 @@ import { SlideOver } from '../components/ui/Modal'
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const TYPE_COLORS: Record<ActivityType, { bg: string; text: string; dot: string }> = {
-  call:     { bg: 'bg-blue-500/15',    text: 'text-blue-400',    dot: 'bg-blue-500' },
-  email:    { bg: 'bg-emerald-500/15', text: 'text-emerald-400', dot: 'bg-emerald-500' },
-  meeting:  { bg: 'bg-purple-500/15',  text: 'text-purple-400',  dot: 'bg-purple-500' },
-  note:     { bg: 'bg-amber-500/15',   text: 'text-amber-400',   dot: 'bg-amber-500' },
-  task:     { bg: 'bg-rose-500/15',    text: 'text-rose-400',    dot: 'bg-rose-500' },
-  linkedin: { bg: 'bg-sky-500/15',     text: 'text-sky-400',     dot: 'bg-sky-500' },
+  call:     { bg: 'bg-info/15',    text: 'text-info',    dot: 'bg-info' },
+  email:    { bg: 'bg-success/15', text: 'text-success', dot: 'bg-success' },
+  meeting:  { bg: 'bg-accent-500/15',  text: 'text-accent-400',  dot: 'bg-accent-500' },
+  note:     { bg: 'bg-warning/15',   text: 'text-warning',   dot: 'bg-warning' },
+  task:     { bg: 'bg-danger/15',    text: 'text-danger',    dot: 'bg-danger' },
+  linkedin: { bg: 'bg-info/15',     text: 'text-info',     dot: 'bg-info' },
 }
 
 // TYPE_LABELS and DAY_HEADERS are now derived from translations inside each component
@@ -149,9 +149,9 @@ function TypeIcon({ type, className = '' }: { type: ActivityType; className?: st
 
 function StatusBadge({ status, statusLabels }: { status: Activity['status']; statusLabels: Record<string, string> }) {
   const map = {
-    pending:   'bg-amber-500/15 text-amber-400',
-    completed: 'bg-emerald-500/15 text-emerald-400',
-    cancelled: 'bg-slate-500/15 text-slate-400',
+    pending:   'bg-warning/15 text-warning',
+    completed: 'bg-success/15 text-success',
+    cancelled: 'bg-surface-2/15 text-fg-muted',
   }
   return (
     <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${map[status]}`}>
@@ -202,16 +202,16 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
   return (
     <div className="flex flex-col h-full">
       {/* Panel header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/6">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-fg/6">
         <div>
-          <h3 className="text-sm font-semibold text-white capitalize">{dayLabel}</h3>
-          <p className="text-xs text-slate-500 mt-0.5">{activities.length} {t.nav.activities.toLowerCase()}</p>
+          <h3 className="text-sm font-semibold text-fg capitalize">{dayLabel}</h3>
+          <p className="text-xs text-fg-subtle mt-0.5">{activities.length} {t.nav.activities.toLowerCase()}</p>
         </div>
         <button type="button"
           onClick={onClose}
           aria-label={t.common.close}
           title={t.common.close}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
+          className="p-1.5 rounded-lg text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -221,12 +221,12 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
         {/* Deal close dates */}
         {dayDeals.length > 0 && (
           <div className="space-y-2">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{t.nav.deals}</p>
+            <p className="text-[10px] font-semibold text-fg-subtle uppercase tracking-wider">{t.nav.deals}</p>
             {dayDeals.map((deal) => (
-              <div key={deal.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-violet-500/10 border border-violet-500/20">
-                <Diamond className="w-3 h-3 text-violet-400 shrink-0" />
-                <span className="text-xs text-violet-300 font-medium truncate">{deal.title}</span>
-                <span className="ml-auto text-[10px] text-violet-400 shrink-0">
+              <div key={deal.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent-500/10 border border-accent-500/20">
+                <Diamond className="w-3 h-3 text-accent-400 shrink-0" />
+                <span className="text-xs text-accent-300 font-medium truncate">{deal.title}</span>
+                <span className="ml-auto text-[10px] text-accent-400 shrink-0">
                   {formatCurrency(deal.value, deal.currency, locale)}
                 </span>
               </div>
@@ -237,12 +237,12 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
         {/* Activities */}
         {activities.length === 0 && dayDeals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <CalendarIcon className="w-8 h-8 text-slate-600 mb-3" />
-            <p className="text-sm text-slate-500">{t.calendar.noEvents}</p>
+            <CalendarIcon className="w-8 h-8 text-fg-subtle mb-3" />
+            <p className="text-sm text-fg-subtle">{t.calendar.noEvents}</p>
           </div>
         ) : activities.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{t.nav.activities}</p>
+            <p className="text-[10px] font-semibold text-fg-subtle uppercase tracking-wider">{t.nav.activities}</p>
             {activities.map((activity) => {
               const colors = TYPE_COLORS[activity.type]
               const timeStr = activity.dueDate ? formatTime(activity.dueDate, locale) : ''
@@ -251,7 +251,7 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
               return (
                 <div
                   key={activity.id}
-                  className="group glass rounded-xl p-3 space-y-2 hover:border-white/10 transition-all"
+                  className="group glass rounded-xl p-3 space-y-2 hover:border-fg/10 transition-all"
                 >
                   <div className="flex items-start gap-2">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium shrink-0 ${colors.bg} ${colors.text}`}>
@@ -260,17 +260,17 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
                     </span>
                     <StatusBadge status={activity.status} statusLabels={statusLabels} />
                     {timeStr && (
-                      <span className="ml-auto flex items-center gap-1 text-[10px] text-slate-500 shrink-0">
+                      <span className="ml-auto flex items-center gap-1 text-[10px] text-fg-subtle shrink-0">
                         <Clock className="w-3 h-3" />
                         {timeStr}
                       </span>
                     )}
                   </div>
 
-                  <p className="text-sm font-medium text-slate-200 leading-snug">{activity.subject}</p>
+                  <p className="text-sm font-medium text-fg leading-snug">{activity.subject}</p>
 
                   {contactName && (
-                    <p className="text-xs text-slate-500">{contactName}</p>
+                    <p className="text-xs text-fg-subtle">{contactName}</p>
                   )}
 
                   {/* Quick actions */}
@@ -278,7 +278,7 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
                     {activity.status === 'pending' && (
                       <button type="button"
                         onClick={() => handleComplete(activity.id)}
-                        className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-success/15 text-success hover:bg-success/25 transition-colors"
                       >
                         <CheckCircle2 className="w-3 h-3" />
                         {t.activities.completed}
@@ -286,7 +286,7 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
                     )}
                     <button type="button"
                       onClick={() => handleDelete(activity.id)}
-                      className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-rose-500/15 text-rose-400 hover:bg-rose-500/25 transition-colors ml-auto"
+                      className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium bg-danger/15 text-danger hover:bg-danger/25 transition-colors ml-auto"
                     >
                       <Trash2 className="w-3 h-3" />
                       {t.common.delete}
@@ -300,10 +300,10 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-white/6">
+      <div className="px-5 py-4 border-t border-fg/6">
         <button type="button"
           onClick={onNewActivity}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-500/15 text-brand-400 border border-brand-500/20 hover:bg-brand-500/25 transition-colors text-sm font-medium"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-accent-500/15 text-accent-400 border border-accent-500/20 hover:bg-accent-500/25 transition-colors text-sm font-medium"
         >
           <Plus className="w-4 h-4" />
           {t.activities.newActivity}
@@ -368,7 +368,7 @@ function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, o
       {/* Day headers */}
       <div className="grid grid-cols-7 mb-2">
         {dayHeaders.map((h) => (
-          <div key={h} className="text-center text-xs text-slate-500 uppercase tracking-wider py-2">
+          <div key={h} className="text-center text-xs text-fg-subtle uppercase tracking-wider py-2">
             {h}
           </div>
         ))}
@@ -397,12 +397,12 @@ function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, o
               onClick={() => onDayClick(day)}
               className={[
                 'relative flex flex-col p-1.5 rounded-xl border text-left transition-all min-h-[80px]',
-                'hover:border-white/15 hover:bg-white/4',
+                'hover:border-fg/15 hover:bg-fg/4',
                 isSelected
-                  ? 'border-brand-500/50 bg-brand-500/8'
+                  ? 'border-accent-500/50 bg-accent-500/8'
                   : isToday
-                  ? 'border-brand-500/30 bg-brand-500/5'
-                  : 'border-white/6 glass',
+                  ? 'border-accent-500/30 bg-accent-500/5'
+                  : 'border-fg/6 glass',
                 !isCurrentMonth ? 'opacity-35' : '',
                 isWeekend && isCurrentMonth ? 'opacity-70' : '',
               ].join(' ')}
@@ -412,8 +412,8 @@ function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, o
                 className={[
                   'text-sm font-medium w-6 h-6 flex items-center justify-center rounded-full shrink-0',
                   isToday
-                    ? 'bg-brand-500 text-white text-xs font-bold'
-                    : 'text-slate-300',
+                    ? 'bg-accent-500 text-fg text-xs font-bold'
+                    : 'text-fg-muted',
                 ].join(' ')}
               >
                 {day.getDate()}
@@ -432,7 +432,7 @@ function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, o
                     </span>
                   ))}
                   {dayActivities.length > 4 && (
-                    <span className="text-[9px] text-slate-500 px-0.5">+{dayActivities.length - 4}</span>
+                    <span className="text-[9px] text-fg-subtle px-0.5">+{dayActivities.length - 4}</span>
                   )}
                 </div>
               )}
@@ -443,14 +443,14 @@ function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, o
                   {dayDeals.slice(0, 2).map((deal) => (
                     <span
                       key={deal.id}
-                      className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-medium bg-violet-500/15 text-violet-400 leading-none max-w-full"
+                      className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-medium bg-accent-500/15 text-accent-400 leading-none max-w-full"
                     >
                       <Diamond className="w-2 h-2 shrink-0" />
                       <span className="truncate max-w-[40px]">{deal.title}</span>
                     </span>
                   ))}
                   {dayDeals.length > 2 && (
-                    <span className="text-[9px] text-violet-500">+{dayDeals.length - 2}</span>
+                    <span className="text-[9px] text-accent-500">+{dayDeals.length - 2}</span>
                   )}
                 </div>
               )}
@@ -518,8 +518,8 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       {/* Header row */}
-        <div className="grid grid-cols-8 border-b border-white/6 pb-2 mb-1 shrink-0">
-          <div className="text-xs text-slate-600 text-right pr-3 pt-1">{hourLabel}</div>
+        <div className="grid grid-cols-8 border-b border-fg/6 pb-2 mb-1 shrink-0">
+          <div className="text-xs text-fg-subtle text-right pr-3 pt-1">{hourLabel}</div>
         {weekDays.map((day) => {
           const isToday = isSameDay(day, today)
           const isWeekend = day.getDay() === 0 || day.getDay() === 6
@@ -529,11 +529,11 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
               key={dayKey(day)}
               className={`text-center px-1 ${isWeekend ? 'opacity-60' : ''}`}
             >
-              <div className="text-[10px] text-slate-500 uppercase">{dayName}</div>
+              <div className="text-[10px] text-fg-subtle uppercase">{dayName}</div>
               <div
                 className={[
                   'w-7 h-7 flex items-center justify-center rounded-full mx-auto text-sm font-medium',
-                  isToday ? 'bg-brand-500 text-white font-bold' : 'text-slate-300',
+                  isToday ? 'bg-accent-500 text-fg font-bold' : 'text-fg-muted',
                 ].join(' ')}
               >
                 {day.getDate()}
@@ -546,8 +546,8 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
       {/* Scrollable grid */}
       <div className="flex-1 overflow-y-auto">
         {/* All-day / no-time row */}
-        <div className="grid grid-cols-8 border-b border-white/4 min-h-[40px]">
-          <div className="text-[10px] text-slate-600 text-right pr-3 pt-1">{allDayLabel}</div>
+        <div className="grid grid-cols-8 border-b border-fg/4 min-h-[40px]">
+          <div className="text-[10px] text-fg-subtle text-right pr-3 pt-1">{allDayLabel}</div>
           {weekDays.map((day) => {
             const key = dayKey(day)
             const topActivities = grid.get(key)?.get('top') ?? []
@@ -555,7 +555,7 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
             return (
               <div
                 key={key}
-                className="border-l border-white/4 px-1 py-1 space-y-0.5 cursor-pointer hover:bg-white/2"
+                className="border-l border-fg/4 px-1 py-1 space-y-0.5 cursor-pointer hover:bg-fg/2"
                 onClick={() => onDayClick(day)}
               >
                 {topActivities.slice(0, 2).map((a) => (
@@ -568,7 +568,7 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
                   </div>
                 ))}
                 {dayDeals.slice(0, 1).map((deal) => (
-                  <div key={deal.id} className="flex items-center gap-1 px-1 py-0.5 rounded text-[9px] bg-violet-500/15 text-violet-400 truncate">
+                  <div key={deal.id} className="flex items-center gap-1 px-1 py-0.5 rounded text-[9px] bg-accent-500/15 text-accent-400 truncate">
                     <Diamond className="w-2.5 h-2.5 shrink-0" />
                     <span className="truncate">{deal.title}</span>
                   </div>
@@ -580,8 +580,8 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
 
         {/* Hour rows */}
         {WEEK_HOURS.map((hour) => (
-          <div key={hour} className="grid grid-cols-8 border-b border-white/4 min-h-[52px]">
-            <div className="text-[10px] text-slate-600 text-right pr-3 pt-1 shrink-0">
+          <div key={hour} className="grid grid-cols-8 border-b border-fg/4 min-h-[52px]">
+            <div className="text-[10px] text-fg-subtle text-right pr-3 pt-1 shrink-0">
               {String(hour).padStart(2, '0')}:00
             </div>
             {weekDays.map((day) => {
@@ -592,8 +592,8 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
                 <div
                   key={key}
                   className={[
-                    'border-l border-white/4 px-1 py-1 space-y-0.5 cursor-pointer hover:bg-white/2 transition-colors',
-                    isToday ? 'bg-brand-500/3' : '',
+                    'border-l border-fg/4 px-1 py-1 space-y-0.5 cursor-pointer hover:bg-fg/2 transition-colors',
+                    isToday ? 'bg-accent-500/3' : '',
                   ].join(' ')}
                   onClick={() => onDayClick(day)}
                 >
@@ -742,20 +742,20 @@ export function Calendar() {
     <div className="crm-page-full flex flex-col gap-4 py-4 sm:py-5">
       {/* ── Page Header ── */}
       <div className="flex items-center justify-between shrink-0">
-        <h2 className="text-xl font-semibold text-white">{t.calendar.title}</h2>
+        <h2 className="text-xl font-semibold text-fg">{t.calendar.title}</h2>
       </div>
 
       {/* ── Toolbar ── */}
       <div className="glass rounded-2xl px-4 py-3 flex flex-wrap items-center gap-3 shrink-0">
         {/* View toggle */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5 border border-white/6">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-fg/5 border border-fg/6">
           <button type="button"
             onClick={() => setViewMode('month')}
             className={[
               'px-3 py-1 rounded-md text-xs font-medium transition-all',
               viewMode === 'month'
-                ? 'bg-brand-500/25 text-brand-400 border border-brand-500/30'
-                : 'text-slate-400 hover:text-slate-200',
+                ? 'bg-accent-500/25 text-accent-400 border border-accent-500/30'
+                : 'text-fg-muted hover:text-fg',
             ].join(' ')}
           >
             {t.calendar.month}
@@ -765,8 +765,8 @@ export function Calendar() {
             className={[
               'px-3 py-1 rounded-md text-xs font-medium transition-all',
               viewMode === 'week'
-                ? 'bg-brand-500/25 text-brand-400 border border-brand-500/30'
-                : 'text-slate-400 hover:text-slate-200',
+                ? 'bg-accent-500/25 text-accent-400 border border-accent-500/30'
+                : 'text-fg-muted hover:text-fg',
             ].join(' ')}
           >
             {t.calendar.week}
@@ -779,7 +779,7 @@ export function Calendar() {
             onClick={goBack}
             aria-label={`${t.common.previous} ${t.common.date}`}
             title={`${t.common.previous} ${t.common.date}`}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
+            className="p-1.5 rounded-lg text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -788,8 +788,8 @@ export function Calendar() {
             className={[
               'px-3 py-1 rounded-lg text-xs font-medium transition-colors border',
               isSameDay(currentDate, today) && viewMode === 'month'
-                ? 'border-brand-500/30 text-brand-400 bg-brand-500/10'
-                : 'border-white/8 text-slate-400 hover:text-white hover:bg-white/6',
+                ? 'border-accent-500/30 text-accent-400 bg-accent-500/10'
+                : 'border-fg/8 text-fg-muted hover:text-fg hover:bg-fg/6',
             ].join(' ')}
           >
             {t.calendar.today}
@@ -798,14 +798,14 @@ export function Calendar() {
             onClick={goForward}
             aria-label={`${t.common.next} ${t.common.date}`}
             title={`${t.common.next} ${t.common.date}`}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/6 transition-colors"
+            className="p-1.5 rounded-lg text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
         {/* Period label */}
-        <span className="text-sm font-semibold text-white capitalize">{periodLabel}</span>
+        <span className="text-sm font-semibold text-fg capitalize">{periodLabel}</span>
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -823,10 +823,10 @@ export function Calendar() {
                   'flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium border transition-all',
                   active
                     ? `${colors.bg} ${colors.text} border-current/20`
-                    : 'bg-transparent text-slate-600 border-white/6 hover:text-slate-400',
+                    : 'bg-transparent text-fg-subtle border-fg/6 hover:text-fg-muted',
                 ].join(' ')}
               >
-                <span className={`w-2 h-2 rounded-full ${active ? colors.dot : 'bg-slate-700'}`} />
+                <span className={`w-2 h-2 rounded-full ${active ? colors.dot : 'bg-surface-2'}`} />
                 {typeLabels[type]}
               </button>
             )

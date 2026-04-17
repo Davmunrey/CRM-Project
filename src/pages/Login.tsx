@@ -164,7 +164,7 @@ export function Login() {
     <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
       {/* Background decoration */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="auth-bg-blob absolute top-1/4 left-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
+        <div className="auth-bg-blob absolute top-1/4 left-1/4 w-96 h-96 bg-accent-600/10 rounded-full blur-3xl" />
         <div className="auth-bg-blob absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/8 rounded-full blur-3xl" />
       </div>
 
@@ -192,13 +192,13 @@ export function Login() {
           </div>
           <h1 className="text-2xl font-bold text-fg">{branding.appName}</h1>
           {branding.customDomain && (
-            <p className="text-xs text-slate-500 mt-1">{branding.customDomain}</p>
+            <p className="text-xs text-fg-subtle mt-1">{branding.customDomain}</p>
           )}
-          <p className="text-sm text-slate-500 mt-1">{t.auth.login}</p>
+          <p className="text-sm text-fg-subtle mt-1">{t.auth.login}</p>
           {isSupabaseConfigured && (
-            <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <ShieldCheck size={11} className="text-emerald-400" />
-              <span className="text-[10px] font-medium text-emerald-400">{t.auth.realAuthEnabled}</span>
+            <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-success/10 border border-success/20">
+              <ShieldCheck size={11} className="text-success" />
+              <span className="text-[10px] font-medium text-success">{t.auth.realAuthEnabled}</span>
             </div>
           )}
         </div>
@@ -207,7 +207,7 @@ export function Login() {
         <Card className="p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+              <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">
                 {error}
               </div>
             )}
@@ -264,9 +264,9 @@ export function Login() {
           {isSupabaseConfigured && (
             <>
               <div className="my-5 flex items-center gap-3">
-                <div className="h-px flex-1 bg-white/10" />
-                <span className="text-[11px] uppercase tracking-wider text-slate-500">{t.auth.sso}</span>
-                <div className="h-px flex-1 bg-white/10" />
+                <div className="h-px flex-1 bg-fg/10" />
+                <span className="text-[11px] uppercase tracking-wider text-fg-subtle">{t.auth.sso}</span>
+                <div className="h-px flex-1 bg-fg/10" />
               </div>
 
               <div className="space-y-2">
@@ -336,7 +336,7 @@ export function Login() {
             </>
           )}
 
-          <div className="mt-6 pt-5 border-t border-white/6 text-center">
+          <div className="mt-6 pt-5 border-t border-fg/6 text-center">
             <p className="text-sm text-fg-muted">
               {t.auth.noAccount}{' '}
               <Link to="/register" className="text-accent-400 hover:text-accent-300 font-medium transition-colors">
@@ -347,15 +347,15 @@ export function Login() {
         </Card>
 
         {(branding.privacyUrl || branding.termsUrl) && (
-          <div className="mt-3 text-center text-[11px] text-slate-600">
+          <div className="mt-3 text-center text-[11px] text-fg-subtle">
             {branding.privacyUrl && (
-              <a href={branding.privacyUrl} target="_blank" rel="noreferrer" className="hover:text-slate-400 transition-colors">
+              <a href={branding.privacyUrl} target="_blank" rel="noreferrer" className="hover:text-fg-muted transition-colors">
                 {t.settings.privacyUrl}
               </a>
             )}
             {branding.privacyUrl && branding.termsUrl && <span className="mx-2">·</span>}
             {branding.termsUrl && (
-              <a href={branding.termsUrl} target="_blank" rel="noreferrer" className="hover:text-slate-400 transition-colors">
+              <a href={branding.termsUrl} target="_blank" rel="noreferrer" className="hover:text-fg-muted transition-colors">
                 {t.settings.termsUrl}
               </a>
             )}
@@ -363,24 +363,24 @@ export function Login() {
         )}
 
         {/* Demo credentials — only when explicit offline demo flag is set (non-prod) */}
-        {isOfflineDemoMode && <div className="mt-6 glass rounded-xl border-white/8 p-4">
-          <p className="text-xs font-semibold text-slate-400 mb-2">{t.auth.demoLogin}</p>
+        {isOfflineDemoMode && <div className="mt-6 glass rounded-xl border-fg/8 p-4">
+          <p className="text-xs font-semibold text-fg-muted mb-2">{t.auth.demoLogin}</p>
           <div className="space-y-1.5">
               {[
-              { email: 'david@crmpro.es', role: t.acceptInvite.roleAdmin, color: 'text-red-400' },
-              { email: 'sara@crmpro.es', role: t.acceptInvite.roleManager, color: 'text-brand-400' },
-              { email: 'carlos@crmpro.es', role: t.acceptInvite.roleSalesRep, color: 'text-emerald-400' },
+              { email: 'david@crmpro.es', role: t.acceptInvite.roleAdmin, color: 'text-danger' },
+              { email: 'sara@crmpro.es', role: t.acceptInvite.roleManager, color: 'text-accent-400' },
+              { email: 'carlos@crmpro.es', role: t.acceptInvite.roleSalesRep, color: 'text-success' },
             ].map((demo) => (
               <button type="button"
                 key={demo.email}
                 onClick={() => { setEmail(demo.email); setPassword('demo123') }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 transition-colors text-left"
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-fg/5 transition-colors text-left"
               >
-                <span className="text-xs text-slate-300">{demo.email}</span>
+                <span className="text-xs text-fg-muted">{demo.email}</span>
                 <span className={`text-[10px] font-semibold ${demo.color}`}>{demo.role}</span>
               </button>
             ))}
-            <p className="text-[10px] text-slate-600 pt-1">{t.auth.password}: demo123</p>
+            <p className="text-[10px] text-fg-subtle pt-1">{t.auth.password}: demo123</p>
           </div>
         </div>}
       </div>

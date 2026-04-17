@@ -210,8 +210,8 @@ export function Contacts() {
           onClick={() => setMyDataOnly((v) => !v)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
             myDataOnly
-              ? 'bg-brand-500/20 border-brand-500/40 text-brand-300'
-              : 'bg-white/4 border-white/10 text-slate-400 hover:text-slate-200'
+              ? 'bg-accent-500/20 border-accent-500/40 text-accent-300'
+              : 'bg-fg/4 border-fg/10 text-fg-muted hover:text-fg'
           }`}
         >
           <Users size={12} />
@@ -221,7 +221,7 @@ export function Contacts() {
         <div className="ml-auto flex items-center gap-2">
           {selectedIds.size > 0 && (
             <>
-              <span className="text-xs text-slate-400">{selectedIds.size} {t.common.selected}</span>
+              <span className="text-xs text-fg-muted">{selectedIds.size} {t.common.selected}</span>
 
               {/* Mass Status Update */}
               <select
@@ -233,7 +233,7 @@ export function Contacts() {
                   setSelectedIds(new Set())
                   e.target.value = ''
                 }}
-                className="bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none"
+                className="bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-xs text-fg-muted outline-none"
                 defaultValue=""
                 aria-label={t.common.changeStatus}
                 title={t.common.changeStatus}
@@ -253,7 +253,7 @@ export function Contacts() {
                   setSelectedIds(new Set())
                   e.target.value = ''
                 }}
-                className="bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none"
+                className="bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-xs text-fg-muted outline-none"
                 defaultValue=""
                 aria-label={t.common.assignedTo}
                 title={t.common.assignedTo}
@@ -268,7 +268,7 @@ export function Contacts() {
                   id="bulkTagInput"
                   type="text"
                   placeholder={`${t.common.tags}...`}
-                  className="bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none w-24"
+                  className="bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-xs text-fg-muted outline-none w-24"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const tag = (e.target as HTMLInputElement).value.trim()
@@ -313,12 +313,12 @@ export function Contacts() {
           >
             {t.contacts.duplicates}
           </Button>
-          <div className="flex rounded-lg border border-white/12 overflow-hidden">
+          <div className="flex rounded-lg border border-fg/12 overflow-hidden">
             <button
               type="button"
               onClick={() => setViewMode('table')}
               aria-label={`${t.common.view} ${t.nav.contacts}`}
-              className={`p-1.5 ${viewMode === 'table' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-300'} transition-colors`}
+              className={`p-1.5 ${viewMode === 'table' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
             >
               <LayoutList size={16} />
             </button>
@@ -326,7 +326,7 @@ export function Contacts() {
               type="button"
               onClick={() => setViewMode('grid')}
               aria-label={`${t.common.view} grid`}
-              className={`p-1.5 ${viewMode === 'grid' ? 'bg-brand-600 text-white' : 'text-slate-500 hover:text-slate-300'} transition-colors`}
+              className={`p-1.5 ${viewMode === 'grid' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
             >
               <LayoutGrid size={16} />
             </button>
@@ -390,9 +390,9 @@ export function Contacts() {
 
       {/* Sort + Count bar */}
       <div className="flex items-center gap-3">
-        <p className="text-xs text-slate-500">{filtered.length} {t.nav.contacts.toLowerCase()}</p>
+        <p className="text-xs text-fg-subtle">{filtered.length} {t.nav.contacts.toLowerCase()}</p>
         <div className="flex items-center gap-1.5 ml-auto">
-          <span className="text-xs text-slate-600">{t.common.filters}:</span>
+          <span className="text-xs text-fg-subtle">{t.common.filters}:</span>
           {(['score', 'name', 'lastContacted'] as const).map((opt) => (
             <button
               type="button"
@@ -400,8 +400,8 @@ export function Contacts() {
               onClick={() => setSortBy(opt)}
               className={`text-xs px-2 py-0.5 rounded transition-colors ${
                 sortBy === opt
-                  ? 'bg-brand-600/30 text-brand-300 font-medium'
-                  : 'text-slate-500 hover:text-slate-300'
+                  ? 'bg-accent-600/30 text-accent-300 font-medium'
+                  : 'text-fg-subtle hover:text-fg-muted'
               }`}
             >
               {opt === 'score' ? t.contacts.score : opt === 'name' ? t.common.name : t.contacts.lastContacted}
@@ -425,7 +425,7 @@ export function Contacts() {
         <div className="glass overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="contacts-table-head border-b border-white/8">
+              <tr className="contacts-table-head border-b border-fg/8">
                 <th className="px-4 py-3 text-left w-10">
                   <input
                     type="checkbox"
@@ -433,23 +433,23 @@ export function Contacts() {
                     onChange={toggleAll}
                     aria-label={t.common.selectAll}
                     title={t.common.selectAll}
-                    className="rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500"
+                    className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.nav.contacts}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.contacts.company}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.common.status}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.contacts.score}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.contacts.source}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.contacts.lastContacted}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.common.actions}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.nav.contacts}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.company}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.status}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.score}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.source}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.lastContacted}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.actions}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/6">
+            <tbody className="divide-y divide-border-subtle">
               {filtered.map(({ contact }) => (
                 <tr
                   key={contact.id}
-                  className="hover:bg-white/4 cursor-pointer transition-colors"
+                  className="hover:bg-fg/4 cursor-pointer transition-colors"
                   onClick={() => navigate(`/contacts/${contact.id}`)}
                 >
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -459,27 +459,27 @@ export function Contacts() {
                       onChange={() => toggleSelect(contact.id)}
                       aria-label={t.common.selectAll}
                       title={t.common.selectAll}
-                      className="rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500"
+                      className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                     />
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <Avatar name={`${contact.firstName} ${contact.lastName}`} size="sm" />
                       <div>
-                        <p className="font-medium text-slate-200">{contact.firstName} {contact.lastName}</p>
-                        <p className="text-xs text-slate-500">{contact.email}</p>
+                        <p className="font-medium text-fg">{contact.firstName} {contact.lastName}</p>
+                        <p className="text-xs text-fg-subtle">{contact.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">{getCompanyName(contact.companyId)}</td>
+                  <td className="px-4 py-3 text-fg-muted text-xs">{getCompanyName(contact.companyId)}</td>
                   <td className="px-4 py-3"><ContactStatusBadge status={contact.status} /></td>
-                  <td className="px-4 py-3 text-slate-300 text-xs font-medium">
+                  <td className="px-4 py-3 text-fg-muted text-xs font-medium">
                     {getContactScore(contact.id)}
                   </td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">
+                  <td className="px-4 py-3 text-fg-muted text-xs">
                     {CONTACT_SOURCE_LABELS_IMPORT[contact.source]}
                   </td>
-                  <td className="px-4 py-3 text-slate-500 text-xs">{formatRelativeDate(contact.lastContactedAt)}</td>
+                  <td className="px-4 py-3 text-fg-subtle text-xs">{formatRelativeDate(contact.lastContactedAt)}</td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1">
                       <PermissionGate permission="contacts:update">
@@ -517,22 +517,22 @@ export function Contacts() {
           {filtered.map(({ contact }) => (
             <div
               key={contact.id}
-              className="glass p-4 hover:border-white/12 cursor-pointer transition-all relative"
+              className="glass p-4 hover:border-fg/12 cursor-pointer transition-all relative"
               onClick={() => navigate(`/contacts/${contact.id}`)}
             >
               <div className="flex items-start gap-3 mb-3">
                 <Avatar name={`${contact.firstName} ${contact.lastName}`} size="md" />
                 <div className="flex-1 min-w-0 pr-10">
-                  <p className="font-semibold text-slate-200 text-sm truncate">
+                  <p className="font-semibold text-fg text-sm truncate">
                     {contact.firstName} {contact.lastName}
                   </p>
-                  <p className="text-xs text-slate-500 truncate">{contact.jobTitle || contact.email}</p>
+                  <p className="text-xs text-fg-subtle truncate">{contact.jobTitle || contact.email}</p>
                 </div>
               </div>
               <div className="space-y-1">
                 <ContactStatusBadge status={contact.status} />
-                <p className="text-xs text-slate-500">{getCompanyName(contact.companyId)}</p>
-                <p className="text-xs text-slate-600">{formatRelativeDate(contact.lastContactedAt)}</p>
+                <p className="text-xs text-fg-subtle">{getCompanyName(contact.companyId)}</p>
+                <p className="text-xs text-fg-subtle">{formatRelativeDate(contact.lastContactedAt)}</p>
               </div>
             </div>
           ))}
@@ -579,12 +579,12 @@ export function Contacts() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowDuplicates(false)} />
 
           {/* Modal */}
-          <div className="relative w-full max-w-3xl max-h-[80vh] overflow-y-auto glass border border-white/8 rounded-2xl shadow-2xl">
+          <div className="relative w-full max-w-3xl max-h-[80vh] overflow-y-auto glass border border-fg/8 rounded-2xl shadow-2xl">
             {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-white/8 bg-surface-2 rounded-t-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-fg/8 bg-surface-2 rounded-t-2xl">
               <div>
-                <h2 className="text-lg font-bold text-slate-200">{t.contacts.duplicatesFound}</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <h2 className="text-lg font-bold text-fg">{t.contacts.duplicatesFound}</h2>
+                <p className="text-xs text-fg-subtle mt-0.5">
                   {duplicates.length} {t.contacts.duplicates.toLowerCase()}
                 </p>
               </div>
@@ -593,7 +593,7 @@ export function Contacts() {
                 onClick={() => setShowDuplicates(false)}
                 title={t.common.close}
                 aria-label={t.common.close}
-                className="p-2 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/6 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+                className="p-2 rounded-lg text-fg-subtle hover:text-fg-muted hover:bg-fg/6 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
               >
                 <X size={18} />
               </button>
@@ -605,20 +605,20 @@ export function Contacts() {
                 const matchLabel = group.matchType === 'email' ? t.common.email : group.matchType === 'name' ? t.common.name : t.common.phone
                 const matchColor =
                   group.matchType === 'email'
-                    ? 'bg-blue-500/15 text-blue-400 border-blue-500/20'
+                    ? 'bg-info/15 text-info border-info/20'
                     : group.matchType === 'name'
-                      ? 'bg-amber-500/15 text-amber-400 border-amber-500/20'
-                      : 'bg-purple-500/15 text-purple-400 border-purple-500/20'
+                      ? 'bg-warning/15 text-warning border-warning/20'
+                      : 'bg-accent-500/15 text-accent-400 border-purple-500/20'
 
                 return (
-                  <div key={groupIndex} className="glass border border-white/8 rounded-xl p-4 space-y-3">
+                  <div key={groupIndex} className="glass border border-fg/8 rounded-xl p-4 space-y-3">
                     {/* Match badge */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${matchColor}`}>
                           {matchLabel}
                         </span>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-fg-subtle">
                           {group.confidence}% match
                         </span>
                       </div>
@@ -636,20 +636,20 @@ export function Contacts() {
                       {group.contacts.map((contact) => (
                         <div
                           key={contact.id}
-                          className="bg-white/4 border border-white/6 rounded-lg p-3 space-y-1.5"
+                          className="bg-fg/4 border border-fg/6 rounded-lg p-3 space-y-1.5"
                         >
                           <div className="flex items-center gap-2">
                             <Avatar name={`${contact.firstName} ${contact.lastName}`} size="sm" />
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-slate-200 truncate">
+                              <p className="text-sm font-medium text-fg truncate">
                                 {contact.firstName} {contact.lastName}
                               </p>
-                              <p className="text-xs text-slate-500 truncate">{contact.jobTitle}</p>
+                              <p className="text-xs text-fg-subtle truncate">{contact.jobTitle}</p>
                             </div>
                           </div>
                           <div className="space-y-0.5 pl-8">
-                            <p className="text-xs text-slate-400 truncate">{contact.email}</p>
-                            <p className="text-xs text-slate-500 truncate">{contact.phone}</p>
+                            <p className="text-xs text-fg-muted truncate">{contact.email}</p>
+                            <p className="text-xs text-fg-subtle truncate">{contact.phone}</p>
                             <ContactStatusBadge status={contact.status} />
                           </div>
                         </div>

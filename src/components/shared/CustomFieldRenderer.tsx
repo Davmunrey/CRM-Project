@@ -36,8 +36,8 @@ export function CustomFieldsDisplay({ entityId, entityType }: { entityId: string
     <div className="grid grid-cols-2 gap-x-6 gap-y-3">
       {filledFields.map(({ def, value }) => (
         <div key={def.id}>
-          <p className="text-xs text-slate-500">{def.label}</p>
-          <p className="text-sm text-slate-200 font-medium">
+          <p className="text-xs text-fg-subtle">{def.label}</p>
+          <p className="text-sm text-fg font-medium">
             <FieldValueDisplay def={def} value={value} yesLabel={t.common.yes} noLabel={t.common.no} />
           </p>
         </div>
@@ -57,7 +57,7 @@ function FieldValueDisplay({
   yesLabel: string
   noLabel: string
 }) {
-  if (value === null || value === '') return <span className="text-slate-600">—</span>
+  if (value === null || value === '') return <span className="text-fg-subtle">—</span>
 
   switch (def.fieldType) {
     case 'checkbox':
@@ -65,12 +65,12 @@ function FieldValueDisplay({
     case 'url':
       return (
         <a href={String(value)} target="_blank" rel="noopener noreferrer"
-          className="text-brand-400 hover:text-brand-300 truncate block" onClick={(e) => e.stopPropagation()}>
+          className="text-accent-400 hover:text-accent-300 truncate block" onClick={(e) => e.stopPropagation()}>
           {String(value).replace(/^https?:\/\//, '')}
         </a>
       )
     case 'email':
-      return <span className="text-brand-400">{String(value)}</span>
+      return <span className="text-accent-400">{String(value)}</span>
     case 'currency':
       return <span>{formatCurrency(Number(value))}</span>
     case 'date':
@@ -79,7 +79,7 @@ function FieldValueDisplay({
       return (
         <span className="flex flex-wrap gap-1">
           {(Array.isArray(value) ? value : []).map((v) => (
-            <span key={v} className="px-1.5 py-0.5 rounded text-[10px] bg-white/6 border border-white/10 text-slate-300">{v}</span>
+            <span key={v} className="px-1.5 py-0.5 rounded text-[10px] bg-fg/6 border border-fg/10 text-fg-muted">{v}</span>
           ))}
         </span>
       )
@@ -120,7 +120,7 @@ export function CustomFieldsForm({ entityId, entityType }: { entityId: string; e
 
   return (
     <div className="space-y-3">
-      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{t.settings.customFields}</p>
+      <p className="text-xs font-semibold text-fg-muted uppercase tracking-wide">{t.settings.customFields}</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {definitions.map((def) => (
           <FieldInput
@@ -147,7 +147,7 @@ function FieldInput({
   onChange: (v: CustomFieldValue['value']) => void
 }) {
   const t = useTranslations()
-  const base = 'w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-brand-500/50'
+  const base = 'w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50'
   const selectBase = `${base} appearance-none`
 
   switch (def.fieldType) {
@@ -156,7 +156,7 @@ function FieldInput({
     case 'url':
       return (
         <div>
-          <label className="text-xs text-slate-500 mb-1 block">{def.label}{def.required && <span className="text-red-400">*</span>}</label>
+          <label className="text-xs text-fg-subtle mb-1 block">{def.label}{def.required && <span className="text-danger">*</span>}</label>
           <input
             type={def.fieldType === 'email' ? 'email' : def.fieldType === 'url' ? 'url' : 'text'}
             value={String(value ?? '')}
@@ -170,7 +170,7 @@ function FieldInput({
     case 'textarea':
       return (
         <div className="col-span-2">
-          <label className="text-xs text-slate-500 mb-1 block">{def.label}{def.required && <span className="text-red-400">*</span>}</label>
+          <label className="text-xs text-fg-subtle mb-1 block">{def.label}{def.required && <span className="text-danger">*</span>}</label>
           <textarea
             value={String(value ?? '')}
             placeholder={def.placeholder}
@@ -185,7 +185,7 @@ function FieldInput({
     case 'currency':
       return (
         <div>
-          <label className="text-xs text-slate-500 mb-1 block">{def.label}{def.required && <span className="text-red-400">*</span>}</label>
+          <label className="text-xs text-fg-subtle mb-1 block">{def.label}{def.required && <span className="text-danger">*</span>}</label>
           <input
             type="number"
             step={def.fieldType === 'currency' ? '0.01' : '1'}
@@ -200,7 +200,7 @@ function FieldInput({
     case 'date':
       return (
         <div>
-          <label className="text-xs text-slate-500 mb-1 block">{def.label}{def.required && <span className="text-red-400">*</span>}</label>
+          <label className="text-xs text-fg-subtle mb-1 block">{def.label}{def.required && <span className="text-danger">*</span>}</label>
           <input
             type="date"
             value={String(value ?? '')}
@@ -213,7 +213,7 @@ function FieldInput({
     case 'select':
       return (
         <div>
-          <label className="text-xs text-slate-500 mb-1 block">{def.label}{def.required && <span className="text-red-400">*</span>}</label>
+          <label className="text-xs text-fg-subtle mb-1 block">{def.label}{def.required && <span className="text-danger">*</span>}</label>
           <select
             value={String(value ?? '')}
             onChange={(e) => onChange(e.target.value || null)}
@@ -232,7 +232,7 @@ function FieldInput({
       }
       return (
         <div className="col-span-2">
-          <label className="text-xs text-slate-500 mb-1 block">{def.label}{def.required && <span className="text-red-400">*</span>}</label>
+          <label className="text-xs text-fg-subtle mb-1 block">{def.label}{def.required && <span className="text-danger">*</span>}</label>
           <div className="flex flex-wrap gap-1.5">
             {(def.options || []).map((opt) => (
               <button
@@ -241,8 +241,8 @@ function FieldInput({
                 onClick={() => toggle(opt)}
                 className={`px-2.5 py-1 rounded-lg text-xs border transition-colors ${
                   selected.includes(opt)
-                    ? 'bg-brand-500/20 border-brand-500/40 text-brand-300'
-                    : 'bg-white/4 border-white/8 text-slate-400 hover:text-slate-200 hover:bg-white/6'
+                    ? 'bg-accent-500/20 border-accent-500/40 text-accent-300'
+                    : 'bg-fg/4 border-fg/8 text-fg-muted hover:text-fg hover:bg-fg/6'
                 }`}
               >
                 {opt}
@@ -260,12 +260,12 @@ function FieldInput({
             type="button"
             onClick={() => onChange(!value)}
             className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
-              value ? 'bg-brand-500 border-brand-500' : 'bg-white/4 border-white/10'
+              value ? 'bg-accent-500 border-accent-500' : 'bg-fg/4 border-fg/10'
             }`}
           >
-            {value && <span className="text-white text-xs font-bold">✓</span>}
+            {value && <span className="text-fg text-xs font-bold">✓</span>}
           </button>
-          <label className="text-sm text-slate-300">{def.label}</label>
+          <label className="text-sm text-fg-muted">{def.label}</label>
         </div>
       )
 

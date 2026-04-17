@@ -7,7 +7,7 @@ export function EnvironmentBanner() {
     return (
       <div
         role="status"
-        className="shrink-0 border-b border-amber-500/40 bg-amber-500/15 px-4 py-2 text-center text-xs font-medium text-amber-100"
+        className="shrink-0 border-b border-warning/40 bg-warning/15 px-4 py-2 text-center text-xs font-medium text-warning"
       >
         {t.common.envBannerStaging}
       </div>
@@ -17,7 +17,7 @@ export function EnvironmentBanner() {
     return (
       <div
         role="status"
-        className="shrink-0 border-b border-violet-500/40 bg-violet-500/15 px-4 py-2 text-center text-xs font-medium text-violet-100"
+        className="shrink-0 border-b border-accent-500/40 bg-accent-500/15 px-4 py-2 text-center text-xs font-medium text-accent-100"
       >
         {t.common.envBannerDemo}
       </div>

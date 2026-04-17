@@ -73,15 +73,15 @@ export function computeDealHealth(deal: Deal, activities: Activity[]): DealHealt
 }
 
 export function healthStatusColor(status: DealHealthStatus) {
-  return status === 'strong'          ? 'text-emerald-400'
-       : status === 'on_track'        ? 'text-sky-400'
-       : status === 'needs_attention' ? 'text-amber-400'
-       : 'text-red-400'
+  return status === 'strong'          ? 'text-success'
+       : status === 'on_track'        ? 'text-info'
+       : status === 'needs_attention' ? 'text-warning'
+       : 'text-danger'
 }
 
 export function healthStatusBg(status: DealHealthStatus) {
-  return status === 'strong'          ? 'bg-emerald-500/15 border-emerald-500/25'
-       : status === 'on_track'        ? 'bg-sky-500/15 border-sky-500/25'
-       : status === 'needs_attention' ? 'bg-amber-500/15 border-amber-500/25'
-       : 'bg-red-500/15 border-red-500/25'
+  return status === 'strong'          ? 'bg-success/15 border-success/25'
+       : status === 'on_track'        ? 'bg-info/15 border-info/25'
+       : status === 'needs_attention' ? 'bg-warning/15 border-warning/25'
+       : 'bg-danger/15 border-danger/25'
 }

@@ -26,12 +26,12 @@ export function KanbanColumn({ stage, deals, onDealClick, color }: KanbanColumnP
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-          <span className="text-sm font-semibold text-slate-300">{stageLabel}</span>
-          <span className="text-xs text-slate-500 bg-white/4 px-1.5 py-0.5 rounded-full">
+          <span className="text-sm font-semibold text-fg-muted">{stageLabel}</span>
+          <span className="text-xs text-fg-subtle bg-fg/4 px-1.5 py-0.5 rounded-full">
             {deals.length}
           </span>
         </div>
-        <span className="text-xs text-slate-500 font-medium">
+        <span className="text-xs text-fg-subtle font-medium">
           {formatCurrency(totalValue)}
         </span>
       </div>
@@ -45,8 +45,8 @@ export function KanbanColumn({ stage, deals, onDealClick, color }: KanbanColumnP
             className={`
               kanban-dropzone flex-1 rounded-xl min-h-[200px] p-2 space-y-2 transition-colors
               ${snapshot.isDraggingOver
-                ? 'bg-indigo-500/10 border border-indigo-500/30'
-                : 'bg-surface-2/30 border border-white/6'
+                ? 'bg-accent-500/10 border border-indigo-500/30'
+                : 'bg-surface-2/30 border border-fg/6'
               }
             `}
           >
@@ -60,7 +60,7 @@ export function KanbanColumn({ stage, deals, onDealClick, color }: KanbanColumnP
             ))}
             {provided.placeholder}
             {deals.length === 0 && !snapshot.isDraggingOver && (
-              <div className="flex items-center justify-center h-20 text-slate-700 text-xs">
+              <div className="flex items-center justify-center h-20 text-fg text-xs">
                 {t.deals.dragDealsHere}
               </div>
             )}

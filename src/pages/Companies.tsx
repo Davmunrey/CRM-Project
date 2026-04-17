@@ -5,7 +5,7 @@ import { useCompaniesStore } from '../store/companiesStore'
 import { useContactsStore } from '../store/contactsStore'
 import { useDealsStore } from '../store/dealsStore'
 import { Button } from '../components/ui/Button'
-import { Badge } from '../components/ui/Badge'
+import { Badge, type BadgeVariant } from '../components/ui/Badge'
 import { Avatar } from '../components/ui/Avatar'
 import { SearchBar } from '../components/shared/SearchBar'
 import { SmartViewBar } from '../components/shared/SmartViewBar'
@@ -20,9 +20,11 @@ import type { Company, CompanyStatus, SmartViewFilter } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { useLocalizedCompanies, useTranslations } from '../i18n'
 
-type StatusBadge = 'yellow' | 'green' | 'indigo' | 'red'
-const STATUS_COLORS: Record<string, StatusBadge> = {
-  prospect: 'yellow', customer: 'green', partner: 'indigo', churned: 'red',
+const STATUS_COLORS: Record<string, BadgeVariant> = {
+  prospect: 'warning',
+  customer: 'success',
+  partner: 'accent',
+  churned: 'danger',
 }
 
 export function Companies() {
@@ -120,7 +122,7 @@ export function Companies() {
         <div className="ml-auto flex items-center gap-2">
           {selectedIds.size > 0 && (
             <>
-              <span className="text-xs text-slate-500">{selectedIds.size} {t.common.selected}</span>
+              <span className="text-xs text-fg-subtle">{selectedIds.size} {t.common.selected}</span>
 
               {/* Mass Status Update */}
               <select
@@ -132,7 +134,7 @@ export function Companies() {
                   setSelectedIds(new Set())
                   e.target.value = ''
                 }}
-                className="bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-xs text-slate-700 outline-none focus:ring-2 focus:ring-brand-500/30"
+                className="bg-surface-1 border border-border-subtle rounded-lg px-2 py-1.5 text-xs text-fg outline-none focus:ring-2 focus:ring-accent-500/30"
                 defaultValue=""
               >
                 <option value="" disabled>{t.common.changeStatus}...</option>
@@ -198,7 +200,7 @@ export function Companies() {
         </div>
       )}
 
-      <p className="text-xs text-slate-500">{filtered.length} {t.nav.companies.toLowerCase()}</p>
+      <p className="text-xs text-fg-subtle">{filtered.length} {t.nav.companies.toLowerCase()}</p>
 
       {filtered.length === 0 ? (
         <EmptyState
@@ -211,33 +213,33 @@ export function Companies() {
         <div className="glass overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="contacts-table-head border-b border-white/8">
+              <tr className="contacts-table-head border-b border-fg/8">
                 <th className="px-4 py-3 text-left w-10">
                   <input
                     type="checkbox"
                     checked={selectedIds.size === filtered.length && filtered.length > 0}
                     onChange={toggleAll}
-                    className="rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500"
+                    className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.companies.title}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.companies.industry}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.companies.size}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.companies.country}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.nav.contacts}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.nav.deals}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.common.status}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">{t.common.actions}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.title}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.industry}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.size}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.country}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.nav.contacts}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.nav.deals}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.status}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.actions}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/6">
+            <tbody className="divide-y divide-border-subtle">
               {filtered.map((company) => {
                 const contactCount = contacts.filter((c) => c.companyId === company.id).length
                 const dealCount = deals.filter((d) => d.companyId === company.id).length
                 return (
                   <tr
                     key={company.id}
-                    className="hover:bg-white/4 cursor-pointer transition-colors"
+                    className="hover:bg-fg/4 cursor-pointer transition-colors"
                     onClick={() => navigate(`/companies/${company.id}`)}
                   >
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
@@ -245,25 +247,25 @@ export function Companies() {
                         type="checkbox"
                         checked={selectedIds.has(company.id)}
                         onChange={() => toggleSelect(company.id)}
-                        className="rounded border-white/12 bg-white/6 text-brand-500 focus:ring-brand-500"
+                        className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                       />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar name={company.name} size="sm" />
                         <div>
-                          <p className="font-medium text-slate-200">{company.name}</p>
-                          <p className="text-xs text-slate-500">{company.domain || company.website}</p>
+                          <p className="font-medium text-fg">{company.name}</p>
+                          <p className="text-xs text-fg-subtle">{company.domain || company.website}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">
+                    <td className="px-4 py-3 text-fg-muted text-xs">
                       {COMPANY_INDUSTRY_LABELS[company.industry] ?? company.industry}
                     </td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{company.size || '—'}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{company.country || '—'}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{contactCount}</td>
-                    <td className="px-4 py-3 text-slate-400 text-xs">{dealCount}</td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">{company.size || '—'}</td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">{company.country || '—'}</td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">{contactCount}</td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">{dealCount}</td>
                     <td className="px-4 py-3">
                       <Badge variant={STATUS_COLORS[company.status]}>
                         {statusLabel(company.status)}

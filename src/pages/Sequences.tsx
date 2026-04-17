@@ -42,21 +42,21 @@ function getEnrollmentStatusLabels(t: ReturnType<typeof useTranslations>): Recor
 }
 
 const ENROLLMENT_STATUS_COLORS: Record<EnrollmentStatus, string> = {
-  active: 'bg-emerald-500/20 text-emerald-400',
-  completed: 'bg-blue-500/20 text-blue-400',
-  paused: 'bg-amber-500/20 text-amber-400',
-  replied: 'bg-purple-500/20 text-purple-400',
-  unsubscribed: 'bg-slate-500/20 text-slate-400',
+  active: 'bg-success/20 text-success',
+  completed: 'bg-info/20 text-info',
+  paused: 'bg-warning/20 text-warning',
+  replied: 'bg-accent-500/20 text-accent-400',
+  unsubscribed: 'bg-surface-2/20 text-fg-muted',
 }
 
 // ─── Step icon ───────────────────────────────────────────────────────────────
 
 function StepIcon({ type, size = 16 }: { type: SequenceStepType; size?: number }) {
   switch (type) {
-    case 'email': return <Mail size={size} className="text-brand-400" />
-    case 'call_task': return <Phone size={size} className="text-emerald-400" />
-    case 'linkedin_task': return <Linkedin size={size} className="text-sky-400" />
-    case 'wait': return <Clock size={size} className="text-amber-400" />
+    case 'email': return <Mail size={size} className="text-accent-400" />
+    case 'call_task': return <Phone size={size} className="text-success" />
+    case 'linkedin_task': return <Linkedin size={size} className="text-info" />
+    case 'wait': return <Clock size={size} className="text-warning" />
   }
 }
 
@@ -95,14 +95,14 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
       <div className="relative z-10 glass rounded-2xl p-6 w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-lg font-semibold text-white">{t.sequences.enrolled}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">{locSequence.name}</p>
+            <h2 className="text-lg font-semibold text-fg">{t.sequences.enrolled}</h2>
+            <p className="text-xs text-fg-muted mt-0.5">{locSequence.name}</p>
           </div>
           <button type="button"
             onClick={onClose}
             title={t.common.close}
             aria-label={t.common.close}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-fg-subtle hover:text-fg-muted hover:bg-fg/5 transition-colors"
           >
             <X size={16} />
           </button>
@@ -110,13 +110,13 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">{t.contacts.title}</label>
+            <label className="block text-xs font-medium text-fg-muted mb-2">{t.contacts.title}</label>
             <select
               value={selectedContactId}
               onChange={(e) => setSelectedContactId(e.target.value)}
               aria-label={t.contacts.title}
               title={t.contacts.title}
-              className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
+              className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-2.5 text-fg text-sm focus:outline-none focus:border-accent-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
             >
               <option value="">— {t.common.selectAll} —</option>
               {contacts.map((c) => (
@@ -130,14 +130,14 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
           <div className="flex items-center gap-3 pt-2">
             <button type="button"
               onClick={onClose}
-              className="flex-1 bg-surface-2 border border-white/10 text-slate-300 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-white/10 transition-colors"
+              className="flex-1 bg-surface-2 border border-fg/10 text-fg-muted text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-fg/10 transition-colors"
             >
               {t.common.cancel}
             </button>
             <button type="button"
               onClick={handleEnroll}
               disabled={!selectedContactId}
-              className="flex-1 btn-gradient text-white text-sm font-medium px-4 py-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 btn-gradient text-fg text-sm font-medium px-4 py-2.5 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {t.sequences.enrolled}
             </button>
@@ -162,22 +162,22 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
   const stepTypeLabels = getStepTypeLabels(t)
 
   return (
-    <div className="flex gap-3 items-start p-4 bg-white/3 border border-white/8 rounded-xl">
-      <div className="flex items-center gap-1 text-slate-600 pt-1 cursor-grab flex-shrink-0">
+    <div className="flex gap-3 items-start p-4 bg-fg/3 border border-fg/8 rounded-xl">
+      <div className="flex items-center gap-1 text-fg-subtle pt-1 cursor-grab flex-shrink-0">
         <GripVertical size={14} />
-        <span className="text-xs font-mono text-slate-600">{index + 1}</span>
+        <span className="text-xs font-mono text-fg-subtle">{index + 1}</span>
       </div>
 
       <div className="flex-1 grid grid-cols-2 gap-3">
         {/* Type */}
         <div>
-          <label className="block text-[10px] font-medium text-slate-500 mb-1">{t.common.type}</label>
+          <label className="block text-[10px] font-medium text-fg-subtle mb-1">{t.common.type}</label>
           <select
             value={step.type}
             onChange={(e) => onChange({ ...step, type: e.target.value as SequenceStepType })}
             aria-label={t.common.type}
             title={t.common.type}
-            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-brand-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
+            className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-fg text-xs focus:outline-none focus:border-accent-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
           >
             {(Object.keys(stepTypeLabels) as SequenceStepType[]).map((k) => (
               <option key={k} value={k}>{stepTypeLabels[k]}</option>
@@ -187,7 +187,7 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
 
         {/* Delay */}
         <div>
-          <label className="block text-[10px] font-medium text-slate-500 mb-1">{t.activities.dueDate}</label>
+          <label className="block text-[10px] font-medium text-fg-subtle mb-1">{t.activities.dueDate}</label>
           <input
             type="number"
             min={0}
@@ -195,7 +195,7 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
             onChange={(e) => onChange({ ...step, delayDays: parseInt(e.target.value) || 0 })}
             aria-label={t.activities.dueDate}
             title={t.activities.dueDate}
-            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-brand-500/50"
+            className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-fg text-xs focus:outline-none focus:border-accent-500/50"
           />
         </div>
 
@@ -203,25 +203,25 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
         {step.type === 'email' && (
           <>
             <div className="col-span-2">
-              <label className="block text-[10px] font-medium text-slate-500 mb-1">{t.activities.subject}</label>
+              <label className="block text-[10px] font-medium text-fg-subtle mb-1">{t.activities.subject}</label>
               <input
                 type="text"
                 value={step.subject ?? ''}
                 onChange={(e) => onChange({ ...step, subject: e.target.value })}
                 placeholder={`${t.activities.subject}...`}
-                className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+                className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-fg text-xs placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50"
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-[10px] font-medium text-slate-500 mb-1">
-                {t.common.description} <span className="text-slate-600 font-normal">({'{{firstName}}'}, {'{{companyName}}'})</span>
+              <label className="block text-[10px] font-medium text-fg-subtle mb-1">
+                {t.common.description} <span className="text-fg-subtle font-normal">({'{{firstName}}'}, {'{{companyName}}'})</span>
               </label>
               <textarea
                 value={step.bodyTemplate ?? ''}
                 onChange={(e) => onChange({ ...step, bodyTemplate: e.target.value })}
                 placeholder={`${t.common.description}...`}
                 rows={3}
-                className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none font-mono"
+                className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-fg text-xs placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50 resize-none font-mono"
               />
             </div>
           </>
@@ -230,13 +230,13 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
         {/* Task-specific fields */}
         {(step.type === 'call_task' || step.type === 'linkedin_task') && (
           <div className="col-span-2">
-            <label className="block text-[10px] font-medium text-slate-500 mb-1">{t.common.description}</label>
+            <label className="block text-[10px] font-medium text-fg-subtle mb-1">{t.common.description}</label>
             <input
               type="text"
               value={step.taskDescription ?? ''}
               onChange={(e) => onChange({ ...step, taskDescription: e.target.value })}
               placeholder={`${t.common.description}...`}
-              className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+              className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-fg text-xs placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50"
             />
           </div>
         )}
@@ -246,7 +246,7 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
         onClick={onRemove}
         title={t.common.delete}
         aria-label={t.common.delete}
-        className="p-1.5 text-slate-600 hover:text-red-400 transition-colors flex-shrink-0 mt-0.5"
+        className="p-1.5 text-fg-subtle hover:text-danger transition-colors flex-shrink-0 mt-0.5"
       >
         <X size={14} />
       </button>
@@ -317,18 +317,18 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative z-10 ml-auto w-full max-w-xl h-full bg-surface-1 border-l border-white/8 flex flex-col shadow-2xl">
+      <div className="relative z-10 ml-auto w-full max-w-xl h-full bg-surface-1 border-l border-fg/8 flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-white/8">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-fg/8">
           <div>
-            <h2 className="text-lg font-semibold text-white">{t.sequences.newSequence}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">{t.common.description}</p>
+            <h2 className="text-lg font-semibold text-fg">{t.sequences.newSequence}</h2>
+            <p className="text-xs text-fg-muted mt-0.5">{t.common.description}</p>
           </div>
           <button type="button"
             onClick={handleClose}
             title={t.common.close}
             aria-label={t.common.close}
-            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-fg-subtle hover:text-fg-muted hover:bg-fg/5 transition-colors"
           >
             <X size={16} />
           </button>
@@ -338,37 +338,37 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
           {/* Name */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.common.name} *</label>
+            <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.common.name} *</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={`${t.sequences.title}...`}
-              className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+              className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-2.5 text-fg text-sm placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">{t.common.description}</label>
+            <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.common.description}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={`${t.common.description}...`}
               rows={2}
-              className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none"
+              className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-2.5 text-fg text-sm placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50 resize-none"
             />
           </div>
 
           {/* Steps */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-xs font-medium text-slate-400">
+              <label className="text-xs font-medium text-fg-muted">
                 {t.sequences.steps} ({steps.length})
               </label>
               <button type="button"
                 onClick={addStep}
-                className="text-xs text-brand-400 hover:text-brand-300 flex items-center gap-1 transition-colors"
+                className="text-xs text-accent-400 hover:text-accent-300 flex items-center gap-1 transition-colors"
               >
                 <Plus size={13} />
                 {t.common.add}
@@ -376,12 +376,12 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
             </div>
 
             {steps.length === 0 ? (
-              <div className="text-center py-8 border border-dashed border-white/10 rounded-xl">
-                <ListOrdered size={24} className="mx-auto text-slate-600 mb-2" />
-                <p className="text-sm text-slate-500">{t.common.noResults}</p>
+              <div className="text-center py-8 border border-dashed border-fg/10 rounded-xl">
+                <ListOrdered size={24} className="mx-auto text-fg-subtle mb-2" />
+                <p className="text-sm text-fg-subtle">{t.common.noResults}</p>
                 <button type="button"
                   onClick={addStep}
-                  className="text-xs text-brand-400 hover:text-brand-300 mt-2 transition-colors"
+                  className="text-xs text-accent-400 hover:text-accent-300 mt-2 transition-colors"
                 >
                   + {t.common.add}
                 </button>
@@ -403,16 +403,16 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/8 flex items-center gap-3">
+        <div className="px-6 py-4 border-t border-fg/8 flex items-center gap-3">
           <button type="button"
             onClick={handleClose}
-            className="flex-1 bg-surface-2 border border-white/10 text-slate-300 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-white/10 transition-colors"
+            className="flex-1 bg-surface-2 border border-fg/10 text-fg-muted text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-fg/10 transition-colors"
           >
             {t.common.cancel}
           </button>
           <button type="button"
             onClick={handleSave}
-            className="flex-1 btn-gradient text-white text-sm font-medium px-4 py-2.5 rounded-xl"
+            className="flex-1 btn-gradient text-fg text-sm font-medium px-4 py-2.5 rounded-xl"
           >
             {t.sequences.newSequence}
           </button>
@@ -447,25 +447,25 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-6 py-5 border-b border-white/6">
+      <div className="px-6 py-5 border-b border-fg/6">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-xl font-bold text-white truncate">{viewSequence.name}</h2>
+              <h2 className="text-xl font-bold text-fg truncate">{viewSequence.name}</h2>
               {viewSequence.isActive ? (
-                <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full flex-shrink-0">
+                <span className="text-[10px] font-semibold bg-success/20 text-success px-2 py-0.5 rounded-full flex-shrink-0">
                   {t.sequences.active}
                 </span>
               ) : (
-                <span className="text-[10px] font-semibold bg-slate-500/20 text-slate-400 px-2 py-0.5 rounded-full flex-shrink-0">
+                <span className="text-[10px] font-semibold bg-surface-2/20 text-fg-muted px-2 py-0.5 rounded-full flex-shrink-0">
                   {t.common.inactive}
                 </span>
               )}
             </div>
             {viewSequence.description && (
-              <p className="text-sm text-slate-400">{viewSequence.description}</p>
+              <p className="text-sm text-fg-muted">{viewSequence.description}</p>
             )}
-            <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
+            <div className="flex items-center gap-4 mt-2 text-xs text-fg-subtle">
               <span>{viewSequence.steps.length} {t.sequences.steps.toLowerCase()}</span>
               <span>{viewSequence.enrolledCount} {t.sequences.enrolled.toLowerCase()}</span>
               <span>{t.common.createdAt} {formatDate(viewSequence.createdAt)}</span>
@@ -474,7 +474,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
           <PermissionGate permission="sequences:enroll">
             <button type="button"
               onClick={onEnroll}
-              className="btn-gradient text-white text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5 flex-shrink-0"
+              className="btn-gradient text-fg text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5 flex-shrink-0"
             >
               <Plus size={13} />
               {t.sequences.enrolled}
@@ -490,8 +490,8 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
               onClick={() => setTab(tabKey)}
               className={`text-xs font-medium px-4 py-2 rounded-full transition-colors ${
                 tab === tabKey
-                  ? 'bg-brand-500/20 text-brand-400 border border-brand-500/30'
-                  : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
+                  ? 'bg-accent-500/20 text-accent-400 border border-accent-500/30'
+                  : 'text-fg-subtle hover:text-fg-muted hover:bg-fg/5'
               }`}
             >
               {tabKey === 'steps' ? t.sequences.steps : `${t.sequences.enrolled} (${enrollments.length})`}
@@ -506,8 +506,8 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
           <div className="space-y-0">
             {viewSequence.steps.length === 0 ? (
               <div className="text-center py-12">
-                <ListOrdered size={32} className="mx-auto text-slate-600 mb-2" />
-                <p className="text-sm text-slate-500">{t.common.noResults}</p>
+                <ListOrdered size={32} className="mx-auto text-fg-subtle mb-2" />
+                <p className="text-sm text-fg-subtle">{t.common.noResults}</p>
               </div>
             ) : (
               viewSequence.steps
@@ -517,42 +517,42 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                   <div key={step.id} className="flex gap-4">
                     {/* Timeline line */}
                     <div className="flex flex-col items-center flex-shrink-0">
-                      <div className="w-9 h-9 rounded-xl bg-surface-2 border border-white/10 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-surface-2 border border-fg/10 flex items-center justify-center">
                         <StepIcon type={step.type} size={15} />
                       </div>
                       {idx < viewSequence.steps.length - 1 && (
-                        <div className="w-px flex-1 bg-white/8 my-1 min-h-[32px]" />
+                        <div className="w-px flex-1 bg-fg/8 my-1 min-h-[32px]" />
                       )}
                     </div>
 
                     {/* Step content */}
                     <div className={`flex-1 pb-6 ${idx === viewSequence.steps.length - 1 ? '' : ''}`}>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-white">
+                        <span className="text-xs font-semibold text-fg">
                           {t.sequences.steps} {idx + 1} — {stepTypeLabels[step.type]}
                         </span>
                         {step.delayDays > 0 && (
-                          <span className="text-[10px] bg-white/6 text-slate-400 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] bg-fg/6 text-fg-muted px-2 py-0.5 rounded-full">
                             +{step.delayDays}
                           </span>
                         )}
                         {step.delayDays === 0 && idx === 0 && (
-                          <span className="text-[10px] bg-brand-500/15 text-brand-400 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] bg-accent-500/15 text-accent-400 px-2 py-0.5 rounded-full">
                             0
                           </span>
                         )}
                       </div>
 
                       {step.type === 'email' && (
-                        <div className="bg-white/3 border border-white/8 rounded-xl p-4 space-y-2">
+                        <div className="bg-fg/3 border border-fg/8 rounded-xl p-4 space-y-2">
                           {step.subject && (
-                            <p className="text-sm font-medium text-white">
-                              <span className="text-slate-500 text-xs font-normal mr-2">{t.activities.subject}:</span>
+                            <p className="text-sm font-medium text-fg">
+                              <span className="text-fg-subtle text-xs font-normal mr-2">{t.activities.subject}:</span>
                               {step.subject}
                             </p>
                           )}
                           {step.bodyTemplate && (
-                            <p className="text-xs text-slate-400 whitespace-pre-wrap line-clamp-3 font-mono">
+                            <p className="text-xs text-fg-muted whitespace-pre-wrap line-clamp-3 font-mono">
                               {step.bodyTemplate}
                             </p>
                           )}
@@ -560,14 +560,14 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                       )}
 
                       {(step.type === 'call_task' || step.type === 'linkedin_task') && step.taskDescription && (
-                        <div className="bg-white/3 border border-white/8 rounded-xl p-4">
-                          <p className="text-xs text-slate-300">{step.taskDescription}</p>
+                        <div className="bg-fg/3 border border-fg/8 rounded-xl p-4">
+                          <p className="text-xs text-fg-muted">{step.taskDescription}</p>
                         </div>
                       )}
 
                       {step.type === 'wait' && (
-                        <div className="bg-white/3 border border-white/8 rounded-xl p-4">
-                          <p className="text-xs text-slate-400">{t.sequences.paused} {step.delayDays}</p>
+                        <div className="bg-fg/3 border border-fg/8 rounded-xl p-4">
+                          <p className="text-xs text-fg-muted">{t.sequences.paused} {step.delayDays}</p>
                         </div>
                       )}
                     </div>
@@ -581,12 +581,12 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
           <div>
             {enrollments.length === 0 ? (
               <div className="text-center py-12">
-                <Users size={32} className="mx-auto text-slate-600 mb-2" />
-                <p className="text-sm text-slate-500">{t.common.noResults}</p>
+                <Users size={32} className="mx-auto text-fg-subtle mb-2" />
+                <p className="text-sm text-fg-subtle">{t.common.noResults}</p>
                 <PermissionGate permission="sequences:create">
                   <button type="button"
                     onClick={onEnroll}
-                    className="btn-gradient text-white text-xs font-medium px-4 py-2 rounded-full mt-4 inline-flex items-center gap-1.5"
+                    className="btn-gradient text-fg text-xs font-medium px-4 py-2 rounded-full mt-4 inline-flex items-center gap-1.5"
                   >
                     <Plus size={13} />
                     {t.sequences.enrolled}
@@ -597,20 +597,20 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/6">
-                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide pb-3 pr-4">{t.contacts.title}</th>
-                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide pb-3 pr-4">{t.common.status}</th>
-                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide pb-3 pr-4">{t.sequences.steps}</th>
-                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide pb-3 pr-4">{t.activities.dueDate}</th>
-                      <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wide pb-3">{t.common.actions}</th>
+                    <tr className="border-b border-fg/6">
+                      <th className="text-left text-[11px] font-semibold text-fg-subtle uppercase tracking-wide pb-3 pr-4">{t.contacts.title}</th>
+                      <th className="text-left text-[11px] font-semibold text-fg-subtle uppercase tracking-wide pb-3 pr-4">{t.common.status}</th>
+                      <th className="text-left text-[11px] font-semibold text-fg-subtle uppercase tracking-wide pb-3 pr-4">{t.sequences.steps}</th>
+                      <th className="text-left text-[11px] font-semibold text-fg-subtle uppercase tracking-wide pb-3 pr-4">{t.activities.dueDate}</th>
+                      <th className="text-left text-[11px] font-semibold text-fg-subtle uppercase tracking-wide pb-3">{t.common.actions}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {enrollments.map((enr) => (
-                      <tr key={enr.id} className="border-b border-white/4 hover:bg-white/2 transition-colors">
+                      <tr key={enr.id} className="border-b border-fg/4 hover:bg-fg/2 transition-colors">
                         <td className="py-3 pr-4">
-                          <p className="font-medium text-white">{enr.contactName}</p>
-                          <p className="text-[11px] text-slate-500">
+                          <p className="font-medium text-fg">{enr.contactName}</p>
+                          <p className="text-[11px] text-fg-subtle">
                             {t.sequences.enrolled} {formatDate(enr.enrolledAt)}
                           </p>
                         </td>
@@ -620,12 +620,12 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                           </span>
                         </td>
                         <td className="py-3 pr-4">
-                          <span className="text-xs text-slate-300">
+                          <span className="text-xs text-fg-muted">
                             {enr.currentStep + 1} / {viewSequence.steps.length}
                           </span>
                         </td>
                         <td className="py-3 pr-4">
-                          <span className="text-xs text-slate-400">{formatDate(enr.nextStepAt)}</span>
+                          <span className="text-xs text-fg-muted">{formatDate(enr.nextStepAt)}</span>
                         </td>
                         <td className="py-3">
                           <div className="flex items-center gap-1.5">
@@ -633,7 +633,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                               <button type="button"
                                 onClick={() => { pauseEnrollment(enr.id); toast.success(t.sequences.paused) }}
                                 title={t.sequences.paused}
-                                className="p-1 text-slate-500 hover:text-amber-400 transition-colors"
+                                className="p-1 text-fg-subtle hover:text-warning transition-colors"
                               >
                                 <PauseCircle size={15} />
                               </button>
@@ -642,7 +642,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                               <button type="button"
                                 onClick={() => { resumeEnrollment(enr.id); toast.success(t.sequences.active) }}
                                 title={t.sequences.active}
-                                className="p-1 text-slate-500 hover:text-emerald-400 transition-colors"
+                                className="p-1 text-fg-subtle hover:text-success transition-colors"
                               >
                                 <PlayCircle size={15} />
                               </button>
@@ -651,7 +651,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                               <button type="button"
                                 onClick={() => { completeEnrollment(enr.id); toast.success(t.activities.completed) }}
                                 title={t.activities.completed}
-                                className="p-1 text-slate-500 hover:text-blue-400 transition-colors"
+                                className="p-1 text-fg-subtle hover:text-info transition-colors"
                               >
                                 <CheckCircle2 size={15} />
                               </button>
@@ -659,7 +659,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                             <button type="button"
                               onClick={() => { unenrollContact(enr.id); toast.success(t.common.remove) }}
                               title={t.common.remove}
-                              className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+                              className="p-1 text-fg-subtle hover:text-danger transition-colors"
                             >
                               <XCircle size={15} />
                             </button>
@@ -721,10 +721,10 @@ export function Sequences() {
   return (
     <div className="crm-page-full flex flex-col min-h-0">
       {/* Page Header */}
-      <div className="flex items-center justify-between shrink-0 py-4 border-b border-white/6">
+      <div className="flex items-center justify-between shrink-0 py-4 border-b border-fg/6">
         <div>
-          <h2 className="text-2xl font-bold text-white tracking-tight">{t.sequences.title}</h2>
-          <p className="text-sm text-slate-400 mt-1">
+          <h2 className="text-2xl font-bold text-fg tracking-tight">{t.sequences.title}</h2>
+          <p className="text-sm text-fg-muted mt-1">
             {sequences.length} {t.sequences.title.toLowerCase()} · {enrollments.filter((e) => e.status === 'active').length} {t.sequences.active.toLowerCase()}
           </p>
         </div>
@@ -734,12 +734,12 @@ export function Sequences() {
       <div className="flex-1 flex gap-6 pb-6 pt-2 min-h-0">
         {/* ─── Left: Sequence List ─────────────────────────────────────── */}
         <div className="w-[280px] flex-shrink-0 glass rounded-2xl flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-white/6 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-white">{t.sequences.title}</h2>
+          <div className="p-4 border-b border-fg/6 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-fg">{t.sequences.title}</h2>
             <PermissionGate permission="sequences:create">
               <button type="button"
                 onClick={() => setShowNewSlideOver(true)}
-                className="btn-gradient text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1"
+                className="btn-gradient text-fg text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1"
               >
                 <Plus size={13} />
                 {t.common.create}
@@ -755,7 +755,7 @@ export function Sequences() {
                   <button
                     type="button"
                     onClick={() => setShowNewSlideOver(true)}
-                    className="text-xs text-brand-400 hover:text-brand-300 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500 rounded-md px-2 py-1.5"
+                    className="text-xs text-accent-400 hover:text-accent-300 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500 rounded-md px-2 py-1.5"
                   >
                     + {t.sequences.newSequence}
                   </button>
@@ -771,21 +771,21 @@ export function Sequences() {
                   <div
                     key={seq.id}
                     onClick={() => setSelectedId(seq.id)}
-                    className={`group px-4 py-3 border-b border-white/4 cursor-pointer transition-colors ${
+                    className={`group px-4 py-3 border-b border-fg/4 cursor-pointer transition-colors ${
                       selectedId === seq.id
-                        ? 'bg-brand-600/10 border-l-2 border-l-brand-500'
-                        : 'hover:bg-white/3'
+                        ? 'bg-accent-600/10 border-l-2 border-l-accent-500'
+                        : 'hover:bg-fg/3'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-sm font-medium text-white truncate">{loc.name}</p>
+                          <p className="text-sm font-medium text-fg truncate">{loc.name}</p>
                           {seq.isActive && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-success flex-shrink-0" />
                           )}
                         </div>
-                        <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                        <div className="flex items-center gap-3 text-[11px] text-fg-subtle">
                           <span>{seq.steps.length} {t.sequences.steps.toLowerCase()}</span>
                           <span>{activeCount} {t.sequences.active.toLowerCase()}</span>
                         </div>
@@ -796,12 +796,12 @@ export function Sequences() {
                             onClick={(e) => { e.stopPropagation(); handleDelete(seq.id) }}
                             title={t.common.delete}
                             aria-label={t.common.delete}
-                            className="p-1 text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                            className="p-1 text-fg-subtle hover:text-danger opacity-0 group-hover:opacity-100 transition-all"
                           >
                             <Trash2 size={13} />
                           </button>
                         </PermissionGate>
-                        <ChevronRight size={13} className="text-slate-600" />
+                        <ChevronRight size={13} className="text-fg-subtle" />
                       </div>
                     </div>
                   </div>
@@ -822,15 +822,15 @@ export function Sequences() {
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-2xl bg-surface-2 border border-white/8 flex items-center justify-center mx-auto mb-4">
-                  <ListOrdered size={28} className="text-slate-600" />
+                <div className="w-16 h-16 rounded-2xl bg-surface-2 border border-fg/8 flex items-center justify-center mx-auto mb-4">
+                  <ListOrdered size={28} className="text-fg-subtle" />
                 </div>
-                <h3 className="text-white font-medium mb-1">{t.common.view} {t.sequences.title.toLowerCase()}</h3>
-                <p className="text-sm text-slate-500">{t.common.or} {t.sequences.newSequence.toLowerCase()}</p>
+                <h3 className="text-fg font-medium mb-1">{t.common.view} {t.sequences.title.toLowerCase()}</h3>
+                <p className="text-sm text-fg-subtle">{t.common.or} {t.sequences.newSequence.toLowerCase()}</p>
                 <PermissionGate permission="sequences:create">
                   <button type="button"
                     onClick={() => setShowNewSlideOver(true)}
-                    className="btn-gradient text-white text-xs font-medium px-5 py-2.5 rounded-full mt-4 inline-flex items-center gap-1.5"
+                    className="btn-gradient text-fg text-xs font-medium px-5 py-2.5 rounded-full mt-4 inline-flex items-center gap-1.5"
                   >
                     <Plus size={14} />
                     {t.sequences.newSequence}

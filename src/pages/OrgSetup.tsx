@@ -130,7 +130,7 @@ export function OrgSetup() {
             <label className="block text-sm font-medium text-fg-muted mb-1">
               {t.orgSetup.slugLabel}
             </label>
-            <div className="flex items-center gap-2 px-3 py-2 bg-surface-2 border border-white/10 rounded-xl focus-within:border-accent-500/50 focus-within:ring-2 focus-within:ring-accent-500/30">
+            <div className="flex items-center gap-2 px-3 py-2 bg-surface-2 border border-fg/10 rounded-xl focus-within:border-accent-500/50 focus-within:ring-2 focus-within:ring-accent-500/30">
               <span className="text-fg-muted text-sm select-none">{t.orgSetup.slugPrefix}</span>
               <input
                 type="text"
@@ -213,7 +213,7 @@ export function OrgSetup() {
           </div>
 
           {error && (
-            <div className="px-3 py-2 bg-red-500/15 border border-red-500/30 rounded-lg text-sm text-red-400">
+            <div className="px-3 py-2 bg-danger/15 border border-danger/30 rounded-lg text-sm text-danger">
               {error}
             </div>
           )}

@@ -26,7 +26,7 @@
     "lint:fix": "eslint src tests e2e vite.config.ts playwright.config.ts --cache --cache-location node_modules/.cache/eslint/ --fix",
     "lint:ci": "eslint src --cache --cache-location node_modules/.cache/eslint/ --max-warnings 250",
     "ui:lint": "node scripts/ui-lint.mjs",
-    "audit:unused": "npx -y knip --no-progress"
+    "audit:unused": "npx -y knip --no-progress --exclude exports,nsExports,types,nsTypes,enumMembers,namespaceMembers,duplicates --no-config-hints"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

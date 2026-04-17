@@ -12,7 +12,7 @@ import { useActivitiesStore } from '../store/activitiesStore'
 import { useEmailStore } from '../store/emailStore'
 import { isSupabaseConfigured } from '../lib/supabase'
 import { Avatar } from '../components/ui/Avatar'
-import { Badge } from '../components/ui/Badge'
+import { Badge, type BadgeVariant } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { SlideOver } from '../components/ui/Modal'
 import { ContactForm } from '../components/contacts/ContactForm'
@@ -31,10 +31,13 @@ import { format } from 'date-fns'
 import type { Locale } from 'date-fns'
 import { es, enUS, ptBR, fr, de, it } from 'date-fns/locale'
 
-type BadgeColor = 'blue' | 'yellow' | 'purple' | 'orange' | 'emerald' | 'rose'
-const STAGE_BADGE: Record<DealStage, BadgeColor> = {
-  lead: 'blue', qualified: 'yellow', proposal: 'purple',
-  negotiation: 'orange', closed_won: 'emerald', closed_lost: 'rose',
+const STAGE_BADGE: Record<DealStage, BadgeVariant> = {
+  lead: 'info',
+  qualified: 'warning',
+  proposal: 'violet',
+  negotiation: 'orange',
+  closed_won: 'success',
+  closed_lost: 'danger',
 }
 
 type TabId = 'overview' | 'activities' | 'deals' | 'emails' | 'notes'
@@ -131,7 +134,7 @@ export function ContactDetail() {
         <Button variant="ghost" leftIcon={<ArrowLeft size={16} />} onClick={() => navigate('/contacts')}>
           {t.common.back}
         </Button>
-        <p className="text-slate-500 mt-4">{t.contacts.emptyTitle}</p>
+        <p className="text-fg-subtle mt-4">{t.contacts.emptyTitle}</p>
       </div>
     )
   }
@@ -184,21 +187,21 @@ export function ContactDetail() {
       </Button>
 
       {/* Header */}
-      <div className="glass border border-white/8 rounded-xl p-6 mb-4">
+      <div className="glass border border-fg/8 rounded-xl p-6 mb-4">
         <div className="flex items-start gap-5">
           <Avatar name={`${displayContact.firstName} ${displayContact.lastName}`} size="xl" />
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-100">
+                  <h2 className="text-2xl font-bold text-fg">
                     {displayContact.firstName} {displayContact.lastName}
                   </h2>
-                  <p className="text-slate-400 mt-0.5">{displayContact.jobTitle || t.contacts.jobTitle}</p>
+                  <p className="text-fg-muted mt-0.5">{displayContact.jobTitle || t.contacts.jobTitle}</p>
                   {displayCompany && (
                     <Link
                       to={`/companies/${displayCompany.id}`}
-                      className="flex items-center gap-1.5 text-sm text-brand-400 hover:text-brand-300 mt-1 transition-colors"
+                      className="flex items-center gap-1.5 text-sm text-accent-400 hover:text-accent-300 mt-1 transition-colors"
                     >
                       <Building2 size={14} />
                       {displayCompany.name}
@@ -216,9 +219,9 @@ export function ContactDetail() {
             </div>
             <div className="flex items-center gap-2 mt-3 flex-wrap">
               <ContactStatusBadge status={displayContact.status} />
-              <Badge variant="gray">{t.contacts.sourceLabels[displayContact.source]}</Badge>
+              <Badge variant="neutral">{t.contacts.sourceLabels[displayContact.source]}</Badge>
               {displayContact.tags.map((tag) => (
-                <Badge key={tag} variant="indigo">{tag}</Badge>
+                <Badge key={tag} variant="accent">{tag}</Badge>
               ))}
             </div>
           </div>
@@ -230,7 +233,7 @@ export function ContactDetail() {
         <button
           type="button"
           onClick={() => handleQuickActivity('call', `${t.activities.typeLabels.call} ${displayContact.firstName}`)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-fg/8 hover:border-fg/12 text-sm text-fg-muted hover:text-fg transition-colors"
         >
           <Phone size={14} />
           {t.activities.typeLabels.call}
@@ -238,7 +241,7 @@ export function ContactDetail() {
         <button
           type="button"
           onClick={() => setIsEmailOpen(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-fg/8 hover:border-fg/12 text-sm text-fg-muted hover:text-fg transition-colors"
         >
           <Mail size={14} />
           {t.activities.typeLabels.email}
@@ -246,7 +249,7 @@ export function ContactDetail() {
         <button
           type="button"
           onClick={() => handleQuickActivity('meeting', `${t.activities.typeLabels.meeting} ${displayContact.firstName}`)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-fg/8 hover:border-fg/12 text-sm text-fg-muted hover:text-fg transition-colors"
         >
           <Calendar size={14} />
           {t.activities.typeLabels.meeting}
@@ -254,7 +257,7 @@ export function ContactDetail() {
         <button
           type="button"
           onClick={() => handleQuickActivity('note', `${t.activities.typeLabels.note} ${displayContact.firstName}`)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-white/8 hover:border-white/12 text-sm text-slate-300 hover:text-white transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg glass border border-fg/8 hover:border-fg/12 text-sm text-fg-muted hover:text-fg transition-colors"
         >
           <FileText size={14} />
           {t.activities.typeLabels.note}
@@ -262,7 +265,7 @@ export function ContactDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-4 border-b border-white/8">
+      <div className="flex gap-1 mb-4 border-b border-fg/8">
         {tabs.map((tab) => (
           <button
             type="button"
@@ -270,8 +273,8 @@ export function ContactDetail() {
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
               activeTab === tab.id
-                ? 'text-brand-400 border-brand-500'
-                : 'text-slate-500 border-transparent hover:text-slate-300'
+                ? 'text-accent-400 border-accent-500'
+                : 'text-fg-subtle border-transparent hover:text-fg-muted'
             }`}
           >
             {tab.label}
@@ -283,7 +286,7 @@ export function ContactDetail() {
       {activeTab === 'overview' && (
         <div className="space-y-4">
           {/* Contact Info */}
-          <div className="glass border border-white/8 rounded-xl p-6">
+          <div className="glass border border-fg/8 rounded-xl p-6">
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
               {[
                 { label: t.auth.email, value: displayContact.email },
@@ -298,8 +301,8 @@ export function ContactDetail() {
                 { label: t.common.updatedAt, value: formatDate(displayContact.updatedAt) },
               ].map(({ label, value }) => (
                 <div key={label}>
-                  <p className="text-xs text-slate-500 mb-0.5">{label}</p>
-                  <p className="text-sm text-slate-200">{value}</p>
+                  <p className="text-xs text-fg-subtle mb-0.5">{label}</p>
+                  <p className="text-sm text-fg">{value}</p>
                 </div>
               ))}
             </div>
@@ -319,24 +322,24 @@ export function ContactDetail() {
             </Button>
           </div>
           {contactActivities.length === 0 ? (
-            <div className="glass border border-white/8 rounded-xl p-8 text-center">
-              <p className="text-slate-500 text-sm">{t.activities.emptyTitle}</p>
+            <div className="glass border border-fg/8 rounded-xl p-8 text-center">
+              <p className="text-fg-subtle text-sm">{t.activities.emptyTitle}</p>
             </div>
           ) : (
-            <div className="glass border border-white/8 rounded-xl p-6">
+            <div className="glass border border-fg/8 rounded-xl p-6">
               {Object.entries(activitiesByMonth).map(([month, acts]) => (
                 <div key={month} className="mb-6 last:mb-0">
-                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                  <h3 className="text-xs font-semibold text-fg-subtle uppercase tracking-wider mb-3">
                     {month}
                   </h3>
-                  <div className="relative pl-6 border-l-2 border-white/8 space-y-4">
+                  <div className="relative pl-6 border-l-2 border-fg/8 space-y-4">
                     {acts.map((a) => {
                       const IconComponent = ACTIVITY_ICONS[a.type] || FileText
                       return (
                         <div key={a.id} className="relative">
                           {/* Timeline dot */}
-                          <div className="absolute -left-[25px] top-1 w-4 h-4 rounded-full glass border border-white/12 flex items-center justify-center">
-                            <IconComponent size={9} className="text-slate-400" />
+                          <div className="absolute -left-[25px] top-1 w-4 h-4 rounded-full glass border border-fg/12 flex items-center justify-center">
+                            <IconComponent size={9} className="text-fg-muted" />
                           </div>
                           <ActivityItem
                             activity={a}
@@ -358,25 +361,25 @@ export function ContactDetail() {
       {activeTab === 'deals' && (
         <div className="space-y-3">
           {contactDeals.length === 0 ? (
-            <div className="glass border border-white/8 rounded-xl p-8 text-center">
-              <p className="text-slate-500 text-sm">{t.deals.emptyTitle}</p>
+            <div className="glass border border-fg/8 rounded-xl p-8 text-center">
+              <p className="text-fg-subtle text-sm">{t.deals.emptyTitle}</p>
             </div>
           ) : (
             contactDeals.map((deal) => (
               <div
                 key={deal.id}
-                className="glass border border-white/8 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-white/12 transition-colors"
+                className="glass border border-fg/8 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-fg/12 transition-colors"
                 onClick={() => navigate('/deals')}
               >
                 <div className="flex-1">
-                  <p className="font-medium text-slate-200">{deal.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{t.deals.expectedClose}: {formatDate(deal.expectedCloseDate)}</p>
+                  <p className="font-medium text-fg">{deal.title}</p>
+                  <p className="text-xs text-fg-subtle mt-0.5">{t.deals.expectedClose}: {formatDate(deal.expectedCloseDate)}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-semibold text-emerald-400">
+                  <span className="text-sm font-semibold text-success">
                     {formatCurrency(deal.value, deal.currency)}
                   </span>
-                  <Badge variant={STAGE_BADGE[deal.stage] ?? 'gray'}>
+                  <Badge variant={STAGE_BADGE[deal.stage] ?? 'neutral'}>
                     {t.deals.stageLabels[deal.stage as keyof typeof t.deals.stageLabels] ?? deal.stage}
                   </Badge>
                 </div>
@@ -395,42 +398,42 @@ export function ContactDetail() {
             </Button>
           </div>
           {contactEmails.length === 0 ? (
-            <div className="glass border border-white/8 rounded-xl p-8 text-center">
-              <p className="text-slate-500 text-sm">{t.inbox.noMessages}</p>
+            <div className="glass border border-fg/8 rounded-xl p-8 text-center">
+              <p className="text-fg-subtle text-sm">{t.inbox.noMessages}</p>
             </div>
           ) : (
             contactEmails.map((email) => (
               <div
                 key={email.id}
-                className="glass border border-white/8 rounded-xl p-4 hover:border-white/12 transition-colors"
+                className="glass border border-fg/8 rounded-xl p-4 hover:border-fg/12 transition-colors"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-200 truncate">{email.subject || t.common.noResults}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">
+                    <p className="font-medium text-fg truncate">{email.subject || t.common.noResults}</p>
+                    <p className="text-xs text-fg-subtle mt-0.5">
                       {email.sentAt ? formatDate(email.sentAt) : formatDate(email.createdAt)}
                       {' \u2022 '}
                       {t.common.to}: {email.to.join(', ')}
                     </p>
-                    <p className="text-sm text-slate-400 mt-2 line-clamp-2">
+                    <p className="text-sm text-fg-muted mt-2 line-clamp-2">
                       {email.body}
                     </p>
                     {/* Tracking badges */}
                     {(email.trackingEnabled || (email.openCount ?? 0) > 0 || (email.clickCount ?? 0) > 0) && (
                       <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                         {(email.openCount ?? 0) > 0 ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/20">
                             <Eye size={9} />
                             {t.common.view} {email.openCount}x &middot; {formatRelativeDate(email.lastOpenedAt!)}
                           </span>
                         ) : email.trackingEnabled ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-500 border border-white/10">
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-subtle border border-fg/10">
                             <Eye size={9} />
                             {t.common.noResults}
                           </span>
                         ) : null}
                         {(email.clickCount ?? 0) > 0 && (
-                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/20">
+                          <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-info/15 text-info border border-info/20">
                             <MousePointerClick size={9} />
                             {t.inbox.clicks} {email.clickCount}x
                           </span>
@@ -440,37 +443,37 @@ export function ContactDetail() {
                     {/* Local-only demo controls — do not mimic server opens/clicks in Supabase mode */}
                     {email.trackingEnabled && !isSupabaseConfigured && (
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                        <span className="text-[10px] text-slate-600">{t.inbox.trackingDemoSimulate}:</span>
+                        <span className="text-[10px] text-fg-subtle">{t.inbox.trackingDemoSimulate}:</span>
                         <button
                           type="button"
                           onClick={() => trackEmailOpen(email.id)}
-                          className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-emerald-500/15 text-slate-500 hover:text-emerald-400 border border-white/8 transition-colors"
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-fg/5 hover:bg-success/15 text-fg-subtle hover:text-success border border-fg/8 transition-colors"
                         >
                           {t.common.view}
                         </button>
                         <button
                           type="button"
                           onClick={() => trackEmailClick(email.id)}
-                          className="text-[10px] px-2 py-0.5 rounded-full bg-white/5 hover:bg-blue-500/15 text-slate-500 hover:text-blue-400 border border-white/8 transition-colors"
+                          className="text-[10px] px-2 py-0.5 rounded-full bg-fg/5 hover:bg-info/15 text-fg-subtle hover:text-info border border-fg/8 transition-colors"
                         >
                           {t.inbox.clicks}
                         </button>
                       </div>
                     )}
                     {email.trackingEnabled && isSupabaseConfigured && (
-                      <p className="text-[10px] text-slate-600 mt-1.5 max-w-xl">{t.inbox.trackingServerMetricsHint}</p>
+                      <p className="text-[10px] text-fg-subtle mt-1.5 max-w-xl">{t.inbox.trackingServerMetricsHint}</p>
                     )}
                   </div>
                   <span title={email.sendError}>
                     <Badge
                       variant={
                         email.status === 'sent'
-                          ? 'emerald'
+                          ? 'success'
                           : email.status === 'failed'
-                            ? 'red'
+                            ? 'danger'
                             : email.status === 'draft'
-                              ? 'yellow'
-                              : 'blue'
+                              ? 'warning'
+                              : 'info'
                       }
                     >
                       {email.status === 'sent'
@@ -491,7 +494,7 @@ export function ContactDetail() {
 
       {/* Tab: Notes */}
       {activeTab === 'notes' && (
-        <div className="glass border border-white/8 rounded-xl p-6 space-y-4">
+        <div className="glass border border-fg/8 rounded-xl p-6 space-y-4">
           <Textarea
             label={t.common.notes}
             value={notes || contactRaw.notes}

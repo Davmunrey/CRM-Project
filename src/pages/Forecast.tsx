@@ -124,10 +124,10 @@ function computeHealthScore(
 
   let tier: HealthTier
   let color: string
-  if (score >= 80) { tier = 'excellent'; color = 'text-emerald-400' }
-  else if (score >= 60) { tier = 'good'; color = 'text-brand-400' }
-  else if (score >= 40) { tier = 'fair'; color = 'text-amber-400' }
-  else { tier = 'low'; color = 'text-red-400' }
+  if (score >= 80) { tier = 'excellent'; color = 'text-success' }
+  else if (score >= 60) { tier = 'good'; color = 'text-accent-400' }
+  else if (score >= 40) { tier = 'fair'; color = 'text-warning' }
+  else { tier = 'low'; color = 'text-danger' }
 
   return {
     score,
@@ -168,10 +168,10 @@ function HealthGauge({ value, color }: GaugeProps) {
 
   // Map tailwind text class to stroke hex
   const strokeMap: Record<string, string> = {
-    'text-emerald-400': '#34d399',
-    'text-brand-400': '#60a5fa',
-    'text-amber-400': '#fbbf24',
-    'text-red-400': '#f87171',
+    'text-success': '#34d399',
+    'text-accent-400': '#60a5fa',
+    'text-warning': '#fbbf24',
+    'text-danger': '#f87171',
   }
   const stroke = strokeMap[color] ?? '#60a5fa'
 
@@ -219,18 +219,18 @@ function KPICard({ label, value, sub, icon, trend, trendLabel }: KPICardProps) {
   return (
     <div className="glass p-5 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-        <span className="w-8 h-8 rounded-xl bg-brand-500/10 flex items-center justify-center text-brand-400 flex-shrink-0">
+        <p className="text-xs font-semibold uppercase tracking-widest text-fg-subtle">{label}</p>
+        <span className="w-8 h-8 rounded-xl bg-accent-500/10 flex items-center justify-center text-accent-400 flex-shrink-0">
           {icon}
         </span>
       </div>
       <div>
-        <p className="text-2xl font-bold text-white tracking-tight">{value}</p>
-        {sub && <p className="text-xs text-slate-500 mt-0.5">{sub}</p>}
+        <p className="text-2xl font-bold text-fg tracking-tight">{value}</p>
+        {sub && <p className="text-xs text-fg-subtle mt-0.5">{sub}</p>}
       </div>
       {trend && trendLabel && (
         <div className={`flex items-center gap-1 text-xs font-medium ${
-          trend === 'up' ? 'text-emerald-400' : trend === 'down' ? 'text-red-400' : 'text-slate-400'
+          trend === 'up' ? 'text-success' : trend === 'down' ? 'text-danger' : 'text-fg-muted'
         }`}>
           {trend === 'up' && <TrendingUp size={12} />}
           {trend === 'down' && <TrendingDown size={12} />}
@@ -426,12 +426,12 @@ export function Forecast() {
   // ── Stage colour map ──────────────────────────────────────────────────────
 
   const stageColorClass: Record<Deal['stage'], string> = {
-    lead: 'text-blue-400 bg-blue-500/10',
-    qualified: 'text-amber-400 bg-amber-500/10',
-    proposal: 'text-purple-400 bg-purple-500/10',
-    negotiation: 'text-orange-400 bg-orange-500/10',
-    closed_won: 'text-emerald-400 bg-emerald-500/10',
-    closed_lost: 'text-red-400 bg-red-500/10',
+    lead: 'text-info bg-info/10',
+    qualified: 'text-warning bg-warning/10',
+    proposal: 'text-accent-400 bg-accent-500/10',
+    negotiation: 'text-accent-300 bg-accent-600/10',
+    closed_won: 'text-success bg-success/10',
+    closed_lost: 'text-danger bg-danger/10',
   }
 
   // ── Growth trend helpers ──────────────────────────────────────────────────
@@ -483,18 +483,18 @@ export function Forecast() {
       <div className="glass p-5">
         <div className="flex items-start justify-between mb-1">
           <div>
-            <h3 className="text-sm font-semibold text-slate-300">{t.forecast.title}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h3 className="text-sm font-semibold text-fg-muted">{t.forecast.title}</h3>
+            <p className="text-xs text-fg-subtle mt-0.5">
               {t.forecast.weighted}
             </p>
           </div>
-          <div className="flex items-center gap-4 text-xs text-slate-500">
+          <div className="flex items-center gap-4 text-xs text-fg-subtle">
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded bg-brand-500/70 inline-block" />
+              <span className="w-3 h-3 rounded bg-accent-500/70 inline-block" />
               {t.forecast.committed}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded bg-emerald-500/50 inline-block" />
+              <span className="w-3 h-3 rounded bg-success/50 inline-block" />
               {t.forecast.bestCase}
             </span>
           </div>
@@ -565,8 +565,8 @@ export function Forecast() {
         {/* Health score card */}
         <div className="glass p-5 flex flex-col items-center justify-center gap-3">
           <div className="w-full">
-            <h3 className="text-sm font-semibold text-slate-300">{t.reports.pipeline}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{t.forecast.healthScoreSubtitle}</p>
+            <h3 className="text-sm font-semibold text-fg-muted">{t.reports.pipeline}</h3>
+            <p className="text-xs text-fg-subtle mt-0.5">{t.forecast.healthScoreSubtitle}</p>
           </div>
 
           <HealthGauge value={health.score} color={health.color} />
@@ -582,14 +582,14 @@ export function Forecast() {
               { label: t.reports.conversionRate, value: health.winRateScore, max: 25 },
             ].map(({ label, value, max }) => (
               <div key={label} className="flex items-center gap-2">
-                <p className="text-[11px] text-slate-500 w-36 flex-shrink-0">{label}</p>
-                <div className="flex-1 h-1.5 bg-white/6 rounded-full overflow-hidden">
+                <p className="text-[11px] text-fg-subtle w-36 flex-shrink-0">{label}</p>
+                <div className="flex-1 h-1.5 bg-fg/6 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-brand-500 rounded-full transition-all duration-500"
+                    className="h-full bg-accent-500 rounded-full transition-all duration-500"
                     style={{ width: `${(value / max) * 100}%` }}
                   />
                 </div>
-                <span className="text-[11px] text-slate-400 w-6 text-right">{value}</span>
+                <span className="text-[11px] text-fg-muted w-6 text-right">{value}</span>
               </div>
             ))}
           </div>
@@ -597,19 +597,19 @@ export function Forecast() {
 
         {/* Next 3-month forecast breakdown */}
         <div className="glass p-5 xl:col-span-2">
-          <h3 className="text-sm font-semibold text-slate-300 mb-1">{t.forecast.bestCase}</h3>
-          <p className="text-xs text-slate-500 mb-4">
+          <h3 className="text-sm font-semibold text-fg-muted mb-1">{t.forecast.bestCase}</h3>
+          <p className="text-xs text-fg-subtle mb-4">
             {t.forecast.weighted}
           </p>
 
           <div className="grid grid-cols-3 gap-4 mb-5">
             {forecastMonths.map((m) => (
-              <div key={m.isoMonth} className="bg-white/[0.03] border border-white/6 rounded-xl p-4">
-                <p className="text-xs text-slate-500 capitalize mb-1">{m.month}</p>
-                <p className="text-xl font-bold text-emerald-400">
+              <div key={m.isoMonth} className="bg-fg/[0.03] border border-fg/6 rounded-xl p-4">
+                <p className="text-xs text-fg-subtle capitalize mb-1">{m.month}</p>
+                <p className="text-xl font-bold text-success">
                   {formatCurrency(m.weighted)}
                 </p>
-                <p className="text-[11px] text-slate-600 mt-1">
+                <p className="text-[11px] text-fg-subtle mt-1">
                   {m.dealCount} {t.forecast.closingDealsSuffix}
                 </p>
               </div>
@@ -658,25 +658,25 @@ export function Forecast() {
       {/* ── Best bets table ────────────────────────────────────────────────── */}
       <div className="glass p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Star size={15} className="text-amber-400" />
-          <h3 className="text-sm font-semibold text-slate-300">{t.forecast.bestCase}</h3>
-          <span className="text-xs text-slate-600 ml-1">{t.forecast.weighted}</span>
+          <Star size={15} className="text-warning" />
+          <h3 className="text-sm font-semibold text-fg-muted">{t.forecast.bestCase}</h3>
+          <span className="text-xs text-fg-subtle ml-1">{t.forecast.weighted}</span>
         </div>
 
         {bestBets.length === 0 ? (
-          <p className="text-sm text-slate-600 text-center py-8">
+          <p className="text-sm text-fg-subtle text-center py-8">
             {t.deals.emptyTitle}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/8">
+                <tr className="border-b border-fg/8">
                   {[t.deals.title, t.common.value, t.deals.stage, t.deals.expectedClose, t.deals.probability, t.forecast.weighted].map(
                     (h) => (
                       <th
                         key={h}
-                        className="text-left text-xs font-semibold text-slate-500 py-2 pr-4 last:pr-0"
+                        className="text-left text-xs font-semibold text-fg-subtle py-2 pr-4 last:pr-0"
                       >
                         {h}
                       </th>
@@ -684,14 +684,14 @@ export function Forecast() {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/4">
+              <tbody className="divide-y divide-border-subtle">
                 {bestBets.map((bet, idx) => (
-                  <tr key={bet.id} className="hover:bg-white/[0.02] transition-colors">
+                  <tr key={bet.id} className="hover:bg-fg/[0.02] transition-colors">
                     {/* Rank + title */}
                     <td className="py-3 pr-4">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-600 w-4 flex-shrink-0">{idx + 1}</span>
-                        <span className="text-sm font-medium text-slate-200 truncate max-w-[200px]">
+                        <span className="text-xs text-fg-subtle w-4 flex-shrink-0">{idx + 1}</span>
+                        <span className="text-sm font-medium text-fg truncate max-w-[200px]">
                           {bet.title}
                         </span>
                       </div>
@@ -699,7 +699,7 @@ export function Forecast() {
 
                     {/* Value */}
                     <td className="py-3 pr-4 whitespace-nowrap">
-                      <span className="text-sm font-semibold text-white">
+                      <span className="text-sm font-semibold text-fg">
                         {formatCurrency(bet.value)}
                       </span>
                     </td>
@@ -717,7 +717,7 @@ export function Forecast() {
 
                     {/* Close date */}
                     <td className="py-3 pr-4 whitespace-nowrap">
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-fg-muted">
                         {formatDate(bet.expectedCloseDate)}
                       </span>
                     </td>
@@ -725,19 +725,19 @@ export function Forecast() {
                     {/* Probability bar */}
                     <td className="py-3 pr-4">
                       <div className="flex items-center gap-2">
-                        <div className="w-20 h-1.5 bg-white/8 rounded-full overflow-hidden">
+                        <div className="w-20 h-1.5 bg-fg/8 rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-brand-500 transition-all duration-500"
+                            className="h-full rounded-full bg-accent-500 transition-all duration-500"
                             style={{ width: `${bet.probability}%` }}
                           />
                         </div>
-                        <span className="text-xs text-slate-400 w-8">{bet.probability}%</span>
+                        <span className="text-xs text-fg-muted w-8">{bet.probability}%</span>
                       </div>
                     </td>
 
                     {/* Weighted value */}
                     <td className="py-3">
-                      <span className="text-sm font-bold text-emerald-400">
+                      <span className="text-sm font-bold text-success">
                         {formatCurrency(bet.weighted)}
                       </span>
                     </td>

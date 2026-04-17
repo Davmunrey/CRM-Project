@@ -213,9 +213,9 @@ export function Reports() {
     <div className="crm-page space-y-6">
       {/* Date filter */}
       <div className="flex items-center gap-4 flex-wrap">
-        <p className="text-sm font-medium text-slate-400">{t.reports.periodLabel}:</p>
+        <p className="text-sm font-medium text-fg-muted">{t.reports.periodLabel}:</p>
         <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
-        <span className="text-slate-600">→</span>
+        <span className="text-fg-subtle">→</span>
         <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
         <div className="ml-auto">
           <PermissionGate permission="reports:export">
@@ -229,17 +229,17 @@ export function Reports() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {[
-          { label: t.reports.pipeline, value: formatCurrency(totalPipeline), color: 'text-brand-400' },
-          { label: t.deals.stageLabels.closed_won, value: formatCurrency(totalWon), color: 'text-emerald-400' },
-          { label: t.dashboard.activeDealsLabel, value: filteredDeals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length, color: 'text-blue-400' },
+          { label: t.reports.pipeline, value: formatCurrency(totalPipeline), color: 'text-accent-400' },
+          { label: t.deals.stageLabels.closed_won, value: formatCurrency(totalWon), color: 'text-success' },
+          { label: t.dashboard.activeDealsLabel, value: filteredDeals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length, color: 'text-info' },
           { label: t.reports.conversionRate, value: (() => {
             const closed = filteredDeals.filter((d) => ['closed_won', 'closed_lost'].includes(d.stage)).length
             const won = filteredDeals.filter((d) => d.stage === 'closed_won').length
             return closed > 0 ? `${Math.round((won / closed) * 100)}%` : '—'
-          })(), color: 'text-yellow-400' },
+          })(), color: 'text-warning' },
         ].map(({ label, value, color }) => (
           <div key={label} className="glass p-4">
-            <p className="text-xs text-slate-500 mb-1">{label}</p>
+            <p className="text-xs text-fg-subtle mb-1">{label}</p>
             <p className={`text-2xl font-bold ${color}`}>{value}</p>
           </div>
         ))}
@@ -249,39 +249,39 @@ export function Reports() {
       <div className="glass p-5 space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-slate-300">{t.reports.emailTrackingTitle}</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-3xl">{t.reports.emailTrackingSubtitle}</p>
+            <h3 className="text-sm font-semibold text-fg-muted">{t.reports.emailTrackingTitle}</h3>
+            <p className="text-xs text-fg-subtle mt-1 max-w-3xl">{t.reports.emailTrackingSubtitle}</p>
           </div>
           {isSupabaseConfigured && (
-            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md bg-success/10 text-success border border-success/20 shrink-0">
               {t.reports.emailTrackingServerBadge}
             </span>
           )}
         </div>
         {!isSupabaseConfigured ? (
-          <p className="text-sm text-slate-500">{t.reports.emailTrackingNotConfigured}</p>
+          <p className="text-sm text-fg-subtle">{t.reports.emailTrackingNotConfigured}</p>
         ) : emailTrackingStats.error ? (
-          <p className="text-sm text-rose-400">{t.reports.emailTrackingLoadError}</p>
+          <p className="text-sm text-danger">{t.reports.emailTrackingLoadError}</p>
         ) : emailTrackingStats.loading ? (
-          <p className="text-sm text-slate-500">{t.common.loading}</p>
+          <p className="text-sm text-fg-subtle">{t.common.loading}</p>
         ) : emailTrackingStats.opens === 0 && emailTrackingStats.clicks === 0 ? (
-          <p className="text-sm text-slate-500">{t.reports.emailTrackingEmpty}</p>
+          <p className="text-sm text-fg-subtle">{t.reports.emailTrackingEmpty}</p>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
             <div>
-              <p className="text-xs text-slate-500 mb-1">{t.reports.emailTrackingOpens}</p>
-              <p className="text-2xl font-bold text-emerald-400">{emailTrackingStats.opens}</p>
+              <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p>
+              <p className="text-2xl font-bold text-success">{emailTrackingStats.opens}</p>
             </div>
             <div>
-              <p className="text-xs text-slate-500 mb-1">{t.reports.emailTrackingClicks}</p>
-              <p className="text-2xl font-bold text-blue-400">{emailTrackingStats.clicks}</p>
+              <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p>
+              <p className="text-2xl font-bold text-info">{emailTrackingStats.clicks}</p>
             </div>
           </div>
         )}
         {isSupabaseConfigured && (
-          <div className="text-[11px] text-slate-600 border-t border-white/6 pt-3 space-y-2">
+          <div className="text-[11px] text-fg-subtle border-t border-fg/6 pt-3 space-y-2">
             <p>{t.reports.emailTrackingPrivacyNote}</p>
-            <p className="text-slate-500">{t.reports.emailTrackingReliabilityNote}</p>
+            <p className="text-fg-subtle">{t.reports.emailTrackingReliabilityNote}</p>
           </div>
         )}
       </div>
@@ -290,8 +290,8 @@ export function Reports() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* Revenue forecast */}
         <div className="glass p-5">
-          <h3 className="text-sm font-semibold text-slate-300 mb-1">{t.reports.salesOverview}</h3>
-          <p className="text-xs text-slate-500 mb-4">{t.forecast.weighted}</p>
+          <h3 className="text-sm font-semibold text-fg-muted mb-1">{t.reports.salesOverview}</h3>
+          <p className="text-xs text-fg-subtle mb-4">{t.forecast.weighted}</p>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={forecastData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1a1d35" vertical={false} />
@@ -308,8 +308,8 @@ export function Reports() {
 
         {/* Won vs Lost donut */}
         <div className="glass p-5">
-          <h3 className="text-sm font-semibold text-slate-300 mb-1">{t.deals.won} vs {t.deals.lost}</h3>
-          <p className="text-xs text-slate-500 mb-4">{t.reports.pipeline}</p>
+          <h3 className="text-sm font-semibold text-fg-muted mb-1">{t.deals.won} vs {t.deals.lost}</h3>
+          <p className="text-xs text-fg-subtle mb-4">{t.reports.pipeline}</p>
           {wonLostData.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
@@ -322,7 +322,7 @@ export function Reports() {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-60 text-slate-600 text-sm">{t.common.noResults}</div>
+            <div className="flex items-center justify-center h-60 text-fg-subtle text-sm">{t.common.noResults}</div>
           )}
         </div>
       </div>
@@ -331,7 +331,7 @@ export function Reports() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Activities by type */}
         <div className="glass p-5">
-          <h3 className="text-sm font-semibold text-slate-300 mb-4">{t.reports.activityReport}</h3>
+          <h3 className="text-sm font-semibold text-fg-muted mb-4">{t.reports.activityReport}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={activityTypeData} layout="vertical" margin={{ left: 20 }}>
               <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -348,7 +348,7 @@ export function Reports() {
 
         {/* Contacts by source */}
         <div className="glass p-5">
-          <h3 className="text-sm font-semibold text-slate-300 mb-4">{t.contacts.title} ({t.contacts.source})</h3>
+          <h3 className="text-sm font-semibold text-fg-muted mb-4">{t.contacts.title} ({t.contacts.source})</h3>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={contactsBySource} cx="50%" cy="50%" outerRadius={75} dataKey="value" label labelLine={false} fontSize={10}>
@@ -363,7 +363,7 @@ export function Reports() {
 
         {/* Pipeline funnel */}
         <div className="glass p-5">
-          <h3 className="text-sm font-semibold text-slate-300 mb-4">{t.reports.pipeline}</h3>
+          <h3 className="text-sm font-semibold text-fg-muted mb-4">{t.reports.pipeline}</h3>
           {funnelData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <FunnelChart>
@@ -374,58 +374,58 @@ export function Reports() {
               </FunnelChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-52 text-slate-600 text-sm">{t.common.noResults}</div>
+            <div className="flex items-center justify-center h-52 text-fg-subtle text-sm">{t.common.noResults}</div>
           )}
         </div>
       </div>
 
       {/* Salesperson breakdown */}
       <div className="glass p-5">
-        <h3 className="text-sm font-semibold text-slate-300 mb-4">{t.reports.performance}</h3>
+        <h3 className="text-sm font-semibold text-fg-muted mb-4">{t.reports.performance}</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/8">
+              <tr className="border-b border-fg/8">
                 {[t.common.name, t.leaderboard.dealsWon, t.leaderboard.revenue, t.reports.pipeline, t.dashboard.activeDealsLabel, t.reports.conversionRate, t.activities.title].map((h) => (
-                  <th key={h} className="text-left text-xs font-semibold text-slate-500 py-2 pr-4 last:pr-0">{h}</th>
+                  <th key={h} className="text-left text-xs font-semibold text-fg-subtle py-2 pr-4 last:pr-0">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/4">
+            <tbody className="divide-y divide-border-subtle">
               {salesRepData.map((rep, idx) => (
-                <tr key={rep.name} className="hover:bg-white/[0.02] transition-colors">
+                <tr key={rep.name} className="hover:bg-fg/[0.02] transition-colors">
                   <td className="py-3 pr-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-600 w-4">{idx + 1}</span>
+                      <span className="text-xs text-fg-subtle w-4">{idx + 1}</span>
                       <Avatar name={rep.name} size="xs" />
-                      <span className="text-sm font-medium text-slate-200">{rep.name}</span>
+                      <span className="text-sm font-medium text-fg">{rep.name}</span>
                     </div>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="text-sm font-semibold text-emerald-400">{rep.wonDeals}</span>
+                    <span className="text-sm font-semibold text-success">{rep.wonDeals}</span>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="text-sm font-semibold text-emerald-400">{formatCurrency(rep.wonValue)}</span>
+                    <span className="text-sm font-semibold text-success">{formatCurrency(rep.wonValue)}</span>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="text-sm text-brand-400">{formatCurrency(rep.pipelineValue)}</span>
+                    <span className="text-sm text-accent-400">{formatCurrency(rep.pipelineValue)}</span>
                   </td>
                   <td className="py-3 pr-4">
-                    <span className="text-sm text-white">{rep.activeDeals}</span>
+                    <span className="text-sm text-fg">{rep.activeDeals}</span>
                   </td>
                   <td className="py-3 pr-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-white/8 rounded-full overflow-hidden">
+                      <div className="w-16 h-1.5 bg-fg/8 rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full bg-brand-500"
+                          className="h-full rounded-full bg-accent-500"
                           style={{ width: `${rep.winRate}%` }}
                         />
                       </div>
-                      <span className="text-xs text-slate-300">{rep.winRate}%</span>
+                      <span className="text-xs text-fg-muted">{rep.winRate}%</span>
                     </div>
                   </td>
                   <td className="py-3">
-                    <span className="text-sm text-amber-400">{rep.activitiesCount}</span>
+                    <span className="text-sm text-warning">{rep.activitiesCount}</span>
                   </td>
                 </tr>
               ))}

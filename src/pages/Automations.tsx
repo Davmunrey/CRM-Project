@@ -44,11 +44,11 @@ const ACTIVITY_TYPE_OPTIONS: ActivityType[] = ['call', 'email', 'meeting', 'task
 // ─── Trigger badge color ──────────────────────────────────────────────────────
 
 function triggerColor(type: AutomationTriggerType) {
-  if (type === 'deal_closed_won') return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20'
-  if (type === 'deal_closed_lost') return 'bg-red-500/15 text-red-400 border-red-500/20'
-  if (type.startsWith('deal')) return 'bg-brand-500/15 text-brand-400 border-brand-500/20'
-  if (type.startsWith('activity')) return 'bg-purple-500/15 text-purple-400 border-purple-500/20'
-  return 'bg-white/8 text-slate-400 border-white/10'
+  if (type === 'deal_closed_won') return 'bg-success/15 text-success border-success/20'
+  if (type === 'deal_closed_lost') return 'bg-danger/15 text-danger border-danger/20'
+  if (type.startsWith('deal')) return 'bg-accent-500/15 text-accent-400 border-accent-500/20'
+  if (type.startsWith('activity')) return 'bg-accent-500/15 text-accent-400 border-purple-500/20'
+  return 'bg-fg/8 text-fg-muted border-fg/10'
 }
 
 // ─── Blank rule template ──────────────────────────────────────────────────────
@@ -79,20 +79,20 @@ function ActionEditor({
   onRemove: () => void
 }) {
   return (
-    <div className="glass rounded-xl p-3 border border-white/6 space-y-2">
+    <div className="glass rounded-xl p-3 border border-fg/6 space-y-2">
       <div className="flex items-center gap-2">
         <select
           value={action.type}
           onChange={(e) => onChange({ type: e.target.value as AutomationActionType })}
           aria-label={t.automations.action}
           title={t.automations.action}
-          className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+          className="flex-1 bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
         >
           {(Object.keys(actionLabels) as AutomationActionType[]).map((k) => (
             <option key={k} value={k}>{actionLabels[k]}</option>
           ))}
         </select>
-        <button type="button" onClick={onRemove} title={t.common.delete} aria-label={t.common.delete} className="p-1.5 text-slate-500 hover:text-red-400 transition-colors">
+        <button type="button" onClick={onRemove} title={t.common.delete} aria-label={t.common.delete} className="p-1.5 text-fg-subtle hover:text-danger transition-colors">
           <X size={13} />
         </button>
       </div>
@@ -104,7 +104,7 @@ function ActionEditor({
             onChange={(e) => onChange({ ...action, activityType: e.target.value as ActivityType })}
             aria-label={t.common.type}
             title={t.common.type}
-            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+            className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
           >
             {ACTIVITY_TYPE_OPTIONS.map((k) => (
               <option key={k} value={k}>{t.activities.typeLabels[k]}</option>
@@ -115,7 +115,7 @@ function ActionEditor({
             placeholder={t.activities.subject}
             value={action.activitySubject ?? ''}
             onChange={(e) => onChange({ ...action, activitySubject: e.target.value })}
-            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+            className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50"
           />
           <div className="flex items-center gap-2">
             <input
@@ -126,9 +126,9 @@ function ActionEditor({
               onChange={(e) => onChange({ ...action, activityDaysFromNow: Number(e.target.value) })}
               aria-label={t.automations.trigger}
               title={t.automations.trigger}
-              className="w-20 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+              className="w-20 bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
             />
-            <span className="text-xs text-slate-500">{t.automations.trigger.toLowerCase()}</span>
+            <span className="text-xs text-fg-subtle">{t.automations.trigger.toLowerCase()}</span>
           </div>
         </>
       )}
@@ -140,14 +140,14 @@ function ActionEditor({
             placeholder={t.settings.notifications}
             value={action.notificationTitle ?? ''}
             onChange={(e) => onChange({ ...action, notificationTitle: e.target.value })}
-            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+            className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50"
           />
           <textarea
             placeholder={t.common.notes}
             value={action.notificationMessage ?? ''}
             onChange={(e) => onChange({ ...action, notificationMessage: e.target.value })}
             rows={2}
-            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none"
+            className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50 resize-none"
           />
         </>
       )}
@@ -158,7 +158,7 @@ function ActionEditor({
           onChange={(e) => onChange({ ...action, newStage: e.target.value as DealStage })}
           aria-label={t.deals.stage}
           title={t.deals.stage}
-          className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+          className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
         >
           {STAGE_OPTIONS.map((s) => (
             <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>
@@ -203,15 +203,15 @@ function RuleModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-lg border border-white/10 rounded-2xl shadow-float overflow-hidden flex flex-col max-h-[90vh] bg-surface-2"
+        className="relative w-full max-w-lg border border-fg/10 rounded-2xl shadow-float overflow-hidden flex flex-col max-h-[90vh] bg-surface-2"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/6">
-          <h2 className="text-sm font-semibold text-white">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-fg/6">
+          <h2 className="text-sm font-semibold text-fg">
             {initial.name ? t.common.edit : t.automations.newRule}
           </h2>
-          <button type="button" onClick={onClose} title={t.common.close} aria-label={t.common.close} className="p-1.5 text-slate-500 hover:text-white transition-colors">
+          <button type="button" onClick={onClose} title={t.common.close} aria-label={t.common.close} className="p-1.5 text-fg-subtle hover:text-fg transition-colors">
             <X size={15} />
           </button>
         </div>
@@ -225,27 +225,27 @@ function RuleModal({
               placeholder={`${t.common.name} *`}
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+              className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50"
             />
             <input
               type="text"
               placeholder={t.common.description}
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+              className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-xs text-fg placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50"
             />
           </div>
 
           {/* Trigger */}
           <div>
-            <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">{t.automations.trigger}</p>
-            <div className="glass rounded-xl p-3 border border-white/6 space-y-2">
+            <p className="text-xs font-semibold text-fg-muted mb-2 uppercase tracking-wide">{t.automations.trigger}</p>
+            <div className="glass rounded-xl p-3 border border-fg/6 space-y-2">
               <select
                 value={form.trigger.type}
                 onChange={(e) => setTrigger({ type: e.target.value as AutomationTriggerType })}
                 aria-label={t.automations.trigger}
                 title={t.automations.trigger}
-                className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+                className="w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
               >
                 {(Object.keys(triggerLabels) as AutomationTriggerType[]).map((k) => (
                   <option key={k} value={k}>{triggerLabels[k]}</option>
@@ -255,26 +255,26 @@ function RuleModal({
               {form.trigger.type === 'deal_stage_changed' && (
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <p className="text-[10px] text-slate-600 mb-1">{t.common.from}</p>
+                    <p className="text-[10px] text-fg-subtle mb-1">{t.common.from}</p>
                     <select
                       value={form.trigger.fromStage ?? ''}
                       onChange={(e) => setTrigger({ ...form.trigger, fromStage: (e.target.value as DealStage) || undefined })}
                       aria-label={t.common.from}
                       title={t.common.from}
-                      className="w-full bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+                      className="w-full bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
                     >
                       <option value="">{t.common.all}</option>
                       {STAGE_OPTIONS.map((s) => <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>)}
                     </select>
                   </div>
                   <div>
-                    <p className="text-[10px] text-slate-600 mb-1">{t.common.to}</p>
+                    <p className="text-[10px] text-fg-subtle mb-1">{t.common.to}</p>
                     <select
                       value={form.trigger.toStage ?? ''}
                       onChange={(e) => setTrigger({ ...form.trigger, toStage: (e.target.value as DealStage) || undefined })}
                       aria-label={t.common.to}
                       title={t.common.to}
-                      className="w-full bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+                      className="w-full bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-xs text-fg focus:outline-none focus:border-accent-500/50"
                     >
                       <option value="">{t.common.all}</option>
                       {STAGE_OPTIONS.map((s) => <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>)}
@@ -287,7 +287,7 @@ function RuleModal({
 
           {/* Actions */}
           <div>
-            <p className="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">{t.automations.action}</p>
+            <p className="text-xs font-semibold text-fg-muted mb-2 uppercase tracking-wide">{t.automations.action}</p>
             <div className="space-y-2">
               {form.actions.map((action, i) => (
                 <ActionEditor
@@ -301,7 +301,7 @@ function RuleModal({
               ))}
               <button type="button"
                 onClick={addAction}
-                className="w-full py-2 rounded-xl border border-dashed border-white/10 text-xs text-slate-500 hover:text-slate-300 hover:border-white/20 transition-colors"
+                className="w-full py-2 rounded-xl border border-dashed border-fg/10 text-xs text-fg-subtle hover:text-fg-muted hover:border-fg/20 transition-colors"
               >
                 + {t.common.add} {t.automations.action.toLowerCase()}
               </button>
@@ -310,16 +310,16 @@ function RuleModal({
         </div>
 
         {/* Footer */}
-        <div className="flex gap-2 px-5 py-4 border-t border-white/6">
+        <div className="flex gap-2 px-5 py-4 border-t border-fg/6">
           <button type="button"
             onClick={onClose}
-            className="flex-1 py-2 rounded-xl border border-white/10 text-xs text-slate-400 hover:text-white hover:bg-white/4 transition-colors"
+            className="flex-1 py-2 rounded-xl border border-fg/10 text-xs text-fg-muted hover:text-fg hover:bg-fg/4 transition-colors"
           >
             {t.common.cancel}
           </button>
           <button type="button"
             onClick={handleSave}
-            className="flex-1 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs text-white font-medium transition-colors"
+            className="flex-1 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-xs text-fg font-medium transition-colors"
           >
             {t.common.save}
           </button>
@@ -357,39 +357,39 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
         />
       )}
 
-      <div className={`glass rounded-xl border transition-colors ${rule.isActive ? 'border-white/6' : 'border-white/3 opacity-60'}`}>
+      <div className={`glass rounded-xl border transition-colors ${rule.isActive ? 'border-fg/6' : 'border-fg/3 opacity-60'}`}>
         <div className="px-4 py-3">
           <div className="flex items-start gap-3">
             {/* Icon */}
-            <div className={`p-2 rounded-lg flex-shrink-0 ${rule.isActive ? 'bg-brand-500/15' : 'bg-white/4'}`}>
-              <Workflow size={14} className={rule.isActive ? 'text-brand-400' : 'text-slate-500'} />
+            <div className={`p-2 rounded-lg flex-shrink-0 ${rule.isActive ? 'bg-accent-500/15' : 'bg-fg/4'}`}>
+              <Workflow size={14} className={rule.isActive ? 'text-accent-400' : 'text-fg-subtle'} />
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm font-semibold text-white">{displayRule.name}</span>
+                <span className="text-sm font-semibold text-fg">{displayRule.name}</span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${triggerColor(rule.trigger.type)}`}>
                   {triggerLabels[rule.trigger.type]}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-surface-2 border border-white/8 text-slate-400">
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-surface-2 border border-fg/8 text-fg-muted">
                   {rule.actions.length} {t.automations.action.toLowerCase()}
                 </span>
               </div>
               {displayRule.description && (
-                <p className="text-xs text-slate-500 mt-0.5 truncate">{displayRule.description}</p>
+                <p className="text-xs text-fg-subtle mt-0.5 truncate">{displayRule.description}</p>
               )}
               <div className="flex items-center gap-3 mt-1.5">
                 {rule.executionCount > 0 ? (
-                  <span className="text-[10px] text-slate-600 flex items-center gap-1">
-                    <CheckCircle2 size={10} className="text-emerald-500" />
+                  <span className="text-[10px] text-fg-subtle flex items-center gap-1">
+                    <CheckCircle2 size={10} className="text-success" />
                     {t.automations.executionCount}: {rule.executionCount}
                   </span>
                 ) : (
-                  <span className="text-[10px] text-slate-600">{t.automations.executionCount}: 0</span>
+                  <span className="text-[10px] text-fg-subtle">{t.automations.executionCount}: 0</span>
                 )}
                 {rule.lastExecutedAt && (
-                  <span className="text-[10px] text-slate-600 flex items-center gap-1">
+                  <span className="text-[10px] text-fg-subtle flex items-center gap-1">
                     <Clock size={10} />
                     {formatRelativeDate(rule.lastExecutedAt)}
                   </span>
@@ -403,14 +403,14 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                 onClick={() => setExpanded((v) => !v)}
                   title={expanded ? t.common.close : t.common.view}
                   aria-label={expanded ? t.common.close : t.common.view}
-                className="p-1.5 text-slate-500 hover:text-slate-200 transition-colors"
+                className="p-1.5 text-fg-subtle hover:text-fg transition-colors"
               >
                 {expanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
               </button>
               <PermissionGate permission="automations:update">
                 <button type="button"
                   onClick={() => setEditing(true)}
-                  className="p-1.5 text-slate-500 hover:text-slate-200 transition-colors text-xs"
+                  className="p-1.5 text-fg-subtle hover:text-fg transition-colors text-xs"
                 >
                   {t.common.edit}
                 </button>
@@ -422,8 +422,8 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                   title={rule.isActive ? t.common.disabled : t.common.enabled}
                 >
                   {rule.isActive
-                    ? <ToggleRight size={20} className="text-brand-400" />
-                    : <ToggleLeft size={20} className="text-slate-500" />
+                    ? <ToggleRight size={20} className="text-accent-400" />
+                    : <ToggleLeft size={20} className="text-fg-subtle" />
                   }
                 </button>
               </PermissionGate>
@@ -432,7 +432,7 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                   onClick={() => { deleteRule(rule.id); toast.success(t.common.delete) }}
                   title={t.common.delete}
                   aria-label={t.common.delete}
-                  className="p-1.5 text-slate-500 hover:text-red-400 transition-colors"
+                  className="p-1.5 text-fg-subtle hover:text-danger transition-colors"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -443,22 +443,22 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
 
         {/* Expanded: trigger + actions detail */}
         {expanded && (
-          <div className="px-4 pb-3 border-t border-white/4 pt-3">
+          <div className="px-4 pb-3 border-t border-fg/4 pt-3">
             <div className="flex items-center gap-2 flex-wrap text-xs">
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/4 border border-white/6">
-                <Zap size={11} className="text-amber-400" />
-                <span className="text-slate-300">{triggerLabels[rule.trigger.type]}</span>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-fg/4 border border-fg/6">
+                <Zap size={11} className="text-warning" />
+                <span className="text-fg-muted">{triggerLabels[rule.trigger.type]}</span>
                 {rule.trigger.toStage && (
-                  <><ArrowRight size={10} className="text-slate-600" /><span className="text-brand-400">{t.deals.stageLabels[rule.trigger.toStage as keyof typeof t.deals.stageLabels] ?? rule.trigger.toStage}</span></>
+                  <><ArrowRight size={10} className="text-fg-subtle" /><span className="text-accent-400">{t.deals.stageLabels[rule.trigger.toStage as keyof typeof t.deals.stageLabels] ?? rule.trigger.toStage}</span></>
                 )}
               </div>
-              <ArrowRight size={12} className="text-slate-600" />
+              <ArrowRight size={12} className="text-fg-subtle" />
               {displayRule.actions.map((a: AutomationAction, i: number) => (
-                <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/4 border border-white/6">
-                  <Bell size={11} className="text-brand-400" />
-                  <span className="text-slate-300">{actionLabels[a.type]}</span>
-                  {a.activitySubject && <span className="text-slate-500">: {a.activitySubject}</span>}
-                  {a.notificationTitle && <span className="text-slate-500">: {a.notificationTitle}</span>}
+                <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-fg/4 border border-fg/6">
+                  <Bell size={11} className="text-accent-400" />
+                  <span className="text-fg-muted">{actionLabels[a.type]}</span>
+                  {a.activitySubject && <span className="text-fg-subtle">: {a.activitySubject}</span>}
+                  {a.notificationTitle && <span className="text-fg-subtle">: {a.notificationTitle}</span>}
                 </div>
               ))}
             </div>
@@ -500,13 +500,13 @@ export function Automations() {
 
       {/* Toolbar */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-fg-subtle">
           {active} {t.sequences.active.toLowerCase()} · {totalExecutions} {t.automations.executionCount.toLowerCase()}
         </p>
         <PermissionGate permission="automations:create">
           <button type="button"
             onClick={() => setShowNew(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-xs text-white font-medium transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent-500 hover:bg-accent-600 text-xs text-fg font-medium transition-colors"
           >
             <Plus size={13} />
             {t.automations.newRule}
@@ -516,26 +516,26 @@ export function Automations() {
 
       {/* KPI strip */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="glass rounded-xl p-4 border border-white/6">
-          <p className="text-xs text-slate-500 mb-1">{t.common.total} {t.automations.title.toLowerCase()}</p>
-          <p className="text-2xl font-bold text-white">{rules.length}</p>
+        <div className="glass rounded-xl p-4 border border-fg/6">
+          <p className="text-xs text-fg-subtle mb-1">{t.common.total} {t.automations.title.toLowerCase()}</p>
+          <p className="text-2xl font-bold text-fg">{rules.length}</p>
         </div>
-        <div className="glass rounded-xl p-4 border border-white/6">
-          <p className="text-xs text-slate-500 mb-1">{t.sequences.active}</p>
-          <p className="text-2xl font-bold text-brand-400">{active}</p>
+        <div className="glass rounded-xl p-4 border border-fg/6">
+          <p className="text-xs text-fg-subtle mb-1">{t.sequences.active}</p>
+          <p className="text-2xl font-bold text-accent-400">{active}</p>
         </div>
-        <div className="glass rounded-xl p-4 border border-white/6">
-          <p className="text-xs text-slate-500 mb-1">{t.automations.executionCount}</p>
-          <p className="text-2xl font-bold text-emerald-400">{totalExecutions}</p>
+        <div className="glass rounded-xl p-4 border border-fg/6">
+          <p className="text-xs text-fg-subtle mb-1">{t.automations.executionCount}</p>
+          <p className="text-2xl font-bold text-success">{totalExecutions}</p>
         </div>
       </div>
 
       {/* Rules list */}
       {rules.length === 0 ? (
-        <div className="glass rounded-xl p-12 border border-white/6 text-center">
-          <Workflow size={32} className="text-slate-600 mx-auto mb-3" />
-          <p className="text-sm font-medium text-slate-400">{t.automations.title}</p>
-          <p className="text-xs text-slate-600 mt-1">{t.common.noResults}</p>
+        <div className="glass rounded-xl p-12 border border-fg/6 text-center">
+          <Workflow size={32} className="text-fg-subtle mx-auto mb-3" />
+          <p className="text-sm font-medium text-fg-muted">{t.automations.title}</p>
+          <p className="text-xs text-fg-subtle mt-1">{t.common.noResults}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -545,24 +545,24 @@ export function Automations() {
         </div>
       )}
 
-      <div className="glass rounded-xl p-4 border border-white/6">
-        <p className="text-xs text-slate-500 mb-3 uppercase tracking-wide">{t.audit.title}</p>
+      <div className="glass rounded-xl p-4 border border-fg/6">
+        <p className="text-xs text-fg-subtle mb-3 uppercase tracking-wide">{t.audit.title}</p>
         {recentExecutions.length === 0 ? (
-          <p className="text-xs text-slate-600">{t.common.noResults}</p>
+          <p className="text-xs text-fg-subtle">{t.common.noResults}</p>
         ) : (
           <div className="space-y-2">
             {recentExecutions.slice(0, 10).map((exec) => (
-              <div key={exec.id} className="flex items-center justify-between gap-3 rounded-lg border border-white/6 bg-white/[0.02] px-3 py-2">
+              <div key={exec.id} className="flex items-center justify-between gap-3 rounded-lg border border-fg/6 bg-fg/[0.02] px-3 py-2">
                 <div className="min-w-0">
-                  <p className="text-xs text-slate-200 truncate">{exec.triggerType}</p>
-                  <p className="text-[10px] text-slate-500 truncate">
+                  <p className="text-xs text-fg truncate">{exec.triggerType}</p>
+                  <p className="text-[10px] text-fg-subtle truncate">
                     {formatRelativeDate(exec.createdAt)} · {exec.ruleId}
                   </p>
                 </div>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
                   exec.status === 'success'
-                    ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10'
-                    : 'text-red-300 border-red-500/30 bg-red-500/10'
+                    ? 'text-success border-success/30 bg-success/10'
+                    : 'text-danger border-danger/30 bg-danger/10'
                 }`}>
                   {exec.status}
                 </span>

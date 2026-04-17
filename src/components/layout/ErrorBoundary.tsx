@@ -34,11 +34,11 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center h-full py-20 text-center px-4">
-          <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-4">
-            <AlertTriangle size={28} className="text-red-400" />
+          <div className="w-16 h-16 rounded-2xl bg-danger/10 flex items-center justify-center mb-4">
+            <AlertTriangle size={28} className="text-danger" />
           </div>
-          <h2 className="text-lg font-semibold text-slate-100 mb-2">{t.errorBoundary.title}</h2>
-          <p className="text-sm text-slate-400 max-w-sm mb-6">
+          <h2 className="text-lg font-semibold text-fg mb-2">{t.errorBoundary.title}</h2>
+          <p className="text-sm text-fg-muted max-w-sm mb-6">
             {this.state.error?.message ?? t.errorBoundary.fallbackDescription}
           </p>
           <Button type="button" onClick={() => this.setState({ hasError: false })}>

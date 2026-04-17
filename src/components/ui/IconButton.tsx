@@ -10,9 +10,9 @@ interface IconButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 
 
 const variantClasses: Record<IconButtonVariant, string> = {
   ghost:
-    'text-fg-muted hover:text-fg hover:bg-white/8',
+    'text-fg-muted hover:text-fg hover:bg-fg/8',
   subtle:
-    'text-fg-muted hover:bg-white/6',
+    'text-fg-muted hover:bg-fg/6',
 }
 
 export function IconButton({

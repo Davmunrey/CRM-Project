@@ -341,27 +341,27 @@ export function EmailComposer({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-surface-0/70 backdrop-blur-md" onClick={requestClose} />
-      <div className="relative w-full max-w-2xl mx-4 mb-4 sm:mb-0 glass rounded-2xl shadow-float border-white/10 overflow-hidden animate-slide-up">
+      <div className="relative w-full max-w-2xl mx-4 mb-4 sm:mb-0 glass rounded-2xl shadow-float border-fg/10 overflow-hidden animate-slide-up">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-fg/8">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-white">{t.inbox.compose}</span>
+            <span className="text-sm font-semibold text-fg">{t.inbox.compose}</span>
             {connected
-              ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">Gmail</span>
-              : <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-500">{t.settings.disconnected}</span>
+              ? <span className="text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success">Gmail</span>
+              : <span className="text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-subtle">{t.settings.disconnected}</span>
             }
           </div>
           <div className="flex items-center gap-2">
             <button type="button"
               onClick={() => setShowTemplates((v) => !v)}
               className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full transition-colors ${
-                showTemplates ? 'bg-amber-500/20 text-amber-400' : 'bg-white/6 hover:bg-white/10 text-slate-400'
+                showTemplates ? 'bg-warning/20 text-warning' : 'bg-fg/6 hover:bg-fg/10 text-fg-muted'
               }`}
             >
               <FileText size={12} />
               {t.nav.templates}
             </button>
-            <button type="button" onClick={requestClose} title={t.email.closeComposer} aria-label={t.email.closeComposer} className="p-1 rounded-lg text-slate-500 hover:text-white hover:bg-white/8 transition-colors">
+            <button type="button" onClick={requestClose} title={t.email.closeComposer} aria-label={t.email.closeComposer} className="p-1 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 transition-colors">
               <span className="sr-only">{t.email.closeComposer}</span>
               <X size={16} />
             </button>
@@ -370,12 +370,12 @@ export function EmailComposer({
 
         {/* Template picker */}
         {showTemplates && (
-          <div className="border-b border-white/8 max-h-56 overflow-y-auto">
-            <div className="px-4 py-2 border-b border-white/6 sticky top-0 bg-surface-1">
-              <p className="text-xs font-medium text-amber-400">{t.emailTemplates.title}</p>
+          <div className="border-b border-fg/8 max-h-56 overflow-y-auto">
+            <div className="px-4 py-2 border-b border-fg/6 sticky top-0 bg-surface-1">
+              <p className="text-xs font-medium text-warning">{t.emailTemplates.title}</p>
             </div>
             {templates.length === 0 ? (
-              <div className="px-4 py-6 text-center text-xs text-slate-500">
+              <div className="px-4 py-6 text-center text-xs text-fg-subtle">
                 {t.common.noResults}
               </div>
             ) : (
@@ -384,13 +384,13 @@ export function EmailComposer({
                   <button type="button"
                     key={tpl.id}
                     onClick={() => applyTemplate(tpl)}
-                    className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-white/6 transition-colors group"
+                    className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-fg/6 transition-colors group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-white font-medium group-hover:text-brand-400 transition-colors">{tpl.name}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/6 text-slate-500">{CATEGORY_LABELS[tpl.category]}</span>
+                      <span className="text-sm text-fg font-medium group-hover:text-accent-400 transition-colors">{tpl.name}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-fg/6 text-fg-subtle">{CATEGORY_LABELS[tpl.category]}</span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5 truncate">{tpl.subject}</p>
+                    <p className="text-xs text-fg-subtle mt-0.5 truncate">{tpl.subject}</p>
                   </button>
                 ))}
               </div>
@@ -400,30 +400,30 @@ export function EmailComposer({
 
         {/* Form fields */}
         <div className="p-5 space-y-4">
-          <div className="flex items-center gap-3 border-b border-white/6 pb-3">
-            <span className="text-xs text-slate-500 w-12 flex-shrink-0">{t.common.to}</span>
+          <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
+            <span className="text-xs text-fg-subtle w-12 flex-shrink-0">{t.common.to}</span>
             <div className="flex-1 flex items-center gap-2">
               <input
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 placeholder={t.common.searchPlaceholder}
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 outline-none"
+                className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
               />
               <button type="button"
                 onClick={() => setShowCc((v) => !v)}
-                className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors"
+                className="text-xs text-fg-subtle hover:text-fg-muted flex items-center gap-1 transition-colors"
               >
                 {t.email.ccLabel} <ChevronDown size={11} className={showCc ? 'rotate-180' : ''} />
               </button>
               <button type="button"
                 onClick={() => setShowBcc((v) => !v)}
-                className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors"
+                className="text-xs text-fg-subtle hover:text-fg-muted flex items-center gap-1 transition-colors"
               >
                 {t.email.bccLabel} <ChevronDown size={11} className={showBcc ? 'rotate-180' : ''} />
               </button>
               <button type="button"
                 onClick={() => setShowReplyTo((v) => !v)}
-                className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors"
+                className="text-xs text-fg-subtle hover:text-fg-muted flex items-center gap-1 transition-colors"
               >
                 {t.email.replyToLabel} <ChevronDown size={11} className={showReplyTo ? 'rotate-180' : ''} />
               </button>
@@ -431,46 +431,46 @@ export function EmailComposer({
           </div>
 
           {showCc && (
-            <div className="flex items-center gap-3 border-b border-white/6 pb-3">
-              <span className="text-xs text-slate-500 w-12 flex-shrink-0">{t.email.ccLabel}</span>
+            <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
+              <span className="text-xs text-fg-subtle w-12 flex-shrink-0">{t.email.ccLabel}</span>
               <input
                 value={cc}
                 onChange={(e) => setCc(e.target.value)}
                 placeholder={t.common.email}
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 outline-none"
+                className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
               />
             </div>
           )}
           {showBcc && (
-            <div className="flex items-center gap-3 border-b border-white/6 pb-3">
-              <span className="text-xs text-slate-500 w-12 flex-shrink-0">{t.email.bccLabel}</span>
+            <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
+              <span className="text-xs text-fg-subtle w-12 flex-shrink-0">{t.email.bccLabel}</span>
               <input
                 value={bcc}
                 onChange={(e) => setBcc(e.target.value)}
                 placeholder={t.common.email}
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 outline-none"
+                className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
               />
             </div>
           )}
           {showReplyTo && (
-            <div className="flex items-center gap-3 border-b border-white/6 pb-3">
-              <span className="text-xs text-slate-500 w-12 flex-shrink-0">{t.email.replyToLabel}</span>
+            <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
+              <span className="text-xs text-fg-subtle w-12 flex-shrink-0">{t.email.replyToLabel}</span>
               <input
                 value={replyTo}
                 onChange={(e) => setReplyTo(e.target.value)}
                 placeholder={t.common.email}
-                className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 outline-none"
+                className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
               />
             </div>
           )}
 
-          <div className="flex items-center gap-3 border-b border-white/6 pb-3">
-            <span className="text-xs text-slate-500 w-12 flex-shrink-0">{t.activities.subject}</span>
+          <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
+            <span className="text-xs text-fg-subtle w-12 flex-shrink-0">{t.activities.subject}</span>
             <input
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder={`${t.activities.subject}...`}
-              className="flex-1 bg-transparent text-sm text-white placeholder:text-slate-600 outline-none font-medium"
+              className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none font-medium"
             />
           </div>
           {subjectPresets.length > 0 && (
@@ -479,7 +479,7 @@ export function EmailComposer({
                 <button type="button"
                   key={preset}
                   onClick={() => setSubject(preset)}
-                  className="text-[10px] px-2 py-1 rounded-full bg-white/6 border border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-colors"
+                  className="text-[10px] px-2 py-1 rounded-full bg-fg/6 border border-fg/10 text-fg-muted hover:text-fg hover:bg-fg/10 transition-colors"
                 >
                   {preset}
                 </button>
@@ -492,21 +492,21 @@ export function EmailComposer({
             onChange={(e) => setBody(e.target.value)}
             placeholder={`${t.common.description}...`}
             rows={10}
-            className="w-full bg-surface-2/45 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed"
+            className="w-full bg-surface-2/45 border border-fg/8 rounded-xl px-3 py-2.5 text-sm text-fg placeholder:text-fg-subtle outline-none resize-none leading-relaxed"
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               value={senderName}
               onChange={(e) => setSenderName(e.target.value)}
               placeholder={t.email.senderNamePlaceholder}
-              className="bg-surface-2/45 border border-white/8 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 outline-none"
+              className="bg-surface-2/45 border border-fg/8 rounded-xl px-3 py-2 text-xs text-fg placeholder:text-fg-subtle outline-none"
             />
-            <label className="inline-flex items-center gap-2 text-xs text-slate-400">
+            <label className="inline-flex items-center gap-2 text-xs text-fg-muted">
               <input
                 type="checkbox"
                 checked={useSignature}
                 onChange={(e) => setUseSignature(e.target.checked)}
-                className="rounded border-white/20 bg-white/5 text-brand-500 focus:ring-brand-500"
+                className="rounded border-fg/20 bg-fg/5 text-accent-500 focus:ring-accent-500"
               />
               {t.email.useSignature}
             </label>
@@ -520,12 +520,12 @@ export function EmailComposer({
                 const next = savedSignatures.find((s) => s.id === nextId)
                 setSignature(next?.html ?? '')
               }}
-              className="w-full bg-surface-2/45 border border-white/8 rounded-xl px-3 py-2 text-xs text-white outline-none"
+              className="w-full bg-surface-2/45 border border-fg/8 rounded-xl px-3 py-2 text-xs text-fg outline-none"
               aria-label={t.email.signatureSelectLabel}
               title={t.email.signatureSelectLabel}
             >
               {savedSignatures.map((sig) => (
-                <option key={sig.id} value={sig.id} className="bg-surface-1 text-white">
+                <option key={sig.id} value={sig.id} className="bg-surface-1 text-fg">
                   {sig.name}
                 </option>
               ))}
@@ -536,24 +536,24 @@ export function EmailComposer({
             onChange={(e) => setSignature(e.target.value)}
             placeholder={t.email.signaturePlaceholder}
             rows={3}
-            className="w-full bg-surface-2/45 border border-white/8 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 outline-none resize-y leading-relaxed"
+            className="w-full bg-surface-2/45 border border-fg/8 rounded-xl px-3 py-2 text-xs text-fg placeholder:text-fg-subtle outline-none resize-y leading-relaxed"
           />
           <div className="flex flex-wrap gap-1.5">
             {quickReplies.map((snippet) => (
               <button type="button"
                 key={snippet.id}
                 onClick={() => setBody((prev) => (prev.trim() ? `${prev}\n\n${snippet.body}` : snippet.body))}
-                className="text-[10px] px-2 py-1 rounded-full bg-white/6 border border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10 transition-colors"
+                className="text-[10px] px-2 py-1 rounded-full bg-fg/6 border border-fg/10 text-fg-muted hover:text-fg hover:bg-fg/10 transition-colors"
                 title={snippet.title}
               >
                 {snippet.title}
               </button>
             ))}
           </div>
-          <div className="border-t border-white/6 pt-3 space-y-2">
+          <div className="border-t border-fg/6 pt-3 space-y-2">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-slate-500">{t.inbox.attachments}</span>
-              <label className="text-xs px-2 py-1 rounded-full bg-white/6 text-slate-300 hover:bg-white/10 cursor-pointer">
+              <span className="text-xs text-fg-subtle">{t.inbox.attachments}</span>
+              <label className="text-xs px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-fg/10 cursor-pointer">
                 {t.email.addFile}
                 <input
                   type="file"
@@ -588,11 +588,11 @@ export function EmailComposer({
             {attachments.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {attachments.map((file, idx) => (
-                  <span key={`${file.name}-${idx}`} className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/8 text-slate-300 border border-white/10">
+                  <span key={`${file.name}-${idx}`} className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10">
                     {file.name} ({Math.ceil(file.size / 1024)} KB)
                     <button type="button"
                       onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
-                      className="text-slate-500 hover:text-red-300"
+                      className="text-fg-subtle hover:text-danger"
                       title={t.common.remove}
                       aria-label={t.common.remove}
                     >
@@ -602,14 +602,14 @@ export function EmailComposer({
                 ))}
               </div>
             )}
-            <p className="text-[10px] text-slate-600">{t.email.attachHint}</p>
+            <p className="text-[10px] text-fg-subtle">{t.email.attachHint}</p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-white/8 flex items-center justify-between gap-3 flex-wrap">
+        <div className="px-5 py-3 border-t border-fg/8 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-fg-subtle">
               {connected ? `Gmail — ${t.settings.connected}` : `${t.settings.gmailIntegration} — ${t.settings.disconnected}`}
             </p>
             {/* Tracking toggle */}
@@ -618,8 +618,8 @@ export function EmailComposer({
               onClick={() => setTrackingEnabled((v) => !v)}
               className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full transition-colors ${
                 trackingEnabled
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-white/6 text-slate-500 hover:text-slate-300 border border-white/8'
+                  ? 'bg-success/20 text-success border border-success/30'
+                  : 'bg-fg/6 text-fg-subtle hover:text-fg-muted border border-fg/8'
               }`}
               title={t.followUps.title}
             >
@@ -631,8 +631,8 @@ export function EmailComposer({
               onClick={() => setSendLater((v) => !v)}
               className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full transition-colors ${
                 sendLater
-                  ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                  : 'bg-white/6 text-slate-500 hover:text-slate-300 border border-white/8'
+                  ? 'bg-accent-500/20 text-indigo-300 border border-indigo-500/30'
+                  : 'bg-fg/6 text-fg-subtle hover:text-fg-muted border border-fg/8'
               }`}
             >
               {t.email.sendLater}
@@ -644,14 +644,14 @@ export function EmailComposer({
                 onChange={(e) => setScheduledAt(e.target.value)}
                 title={t.email.scheduleSendTime}
                 aria-label={t.email.scheduleSendTime}
-                className="bg-surface-2 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
+                className="bg-surface-2 border border-fg/10 rounded-lg px-2 py-1 text-xs text-fg"
               />
             )}
           </div>
           <button type="button"
             onClick={handleSend}
             disabled={sending || !to.trim() || !subject.trim() || (sendLater && !scheduledAt)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full btn-gradient text-white text-sm font-semibold disabled:opacity-40"
+            className="flex items-center gap-2 px-4 py-2 rounded-full btn-gradient text-fg text-sm font-semibold disabled:opacity-40"
           >
             {sending ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             {t.inbox.compose}
@@ -676,7 +676,7 @@ export function EmailComposer({
               onClose()
               return draft
             }}
-            className="text-xs text-slate-400 hover:text-white px-2 py-1 rounded-lg hover:bg-white/6 transition-colors"
+            className="text-xs text-fg-muted hover:text-fg px-2 py-1 rounded-lg hover:bg-fg/6 transition-colors"
           >
             {t.inbox.drafts}
           </button>
