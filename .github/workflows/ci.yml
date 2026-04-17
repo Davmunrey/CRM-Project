@@ -25,6 +25,9 @@ jobs:
       - name: UI guardrails
         run: npm run ui:lint
 
+      - name: i18n guardrails
+        run: npm run i18n:lint
+
       - name: Type check
         run: npx tsc --noEmit
 

@@ -37,7 +37,7 @@ export function OrgSetup() {
     if (!orgName.trim()) { setError(t.orgSetup.errorNameRequired); return }
     if (!slug.trim()) { setError(t.orgSetup.errorSlugRequired); return }
     if (!legalName.trim() || !taxId.trim() || !addressLine1.trim() || !city.trim() || !country.trim() || !billingEmail.trim()) {
-      setError('Complete legal company profile fields to continue')
+      setError(t.orgSetup.errorCompleteLegalProfile)
       return
     }
     if (!supabase) { setError(t.orgSetup.errorNotConfigured); return }

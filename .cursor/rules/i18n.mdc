@@ -1,0 +1,11 @@
+---
+description: Internationalization — all user-visible copy via src/i18n
+globs: src/**/*.tsx,src/**/*.ts
+---
+
+# Internationalization (i18n)
+
+- **Rule:** Any text shown to users (labels, errors, toasts, empty states, placeholders, `aria-label`, page titles, validation messages) must come from **`useTranslations()` → `t.*`** or **`getTranslations()`** in non-React code — not hardcoded English/other prose in components or pages.
+- **Where:** Add keys under `src/i18n/en.ts` and mirror them in **`src/i18n/types.ts`**. Update every locale file that is a full catalog (`es.ts`, `pt.ts`). Locales that spread `...en` (`fr.ts`, `de.ts`, `it.ts`) inherit new keys until you add localized overrides.
+- **CI:** `npm run i18n:lint` (`scripts/i18n-lint.mjs`) runs in CI. It flags long string literals passed to **`setError('...')`** (and similar patterns as the script evolves). Do not bypass with meaningless splits; add proper translation keys.
+- **Exceptions:** Technical identifiers (env var names, URLs, pure numbers), logs, analytics event names, test files, and implementation inside `src/components/ui/**` primitives when the string is not end-user copy. When in doubt, translate.

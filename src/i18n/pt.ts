@@ -1077,6 +1077,7 @@ export const pt: Translations = {
     errorSlugRequired: 'O slug é obrigatório',
     errorNotConfigured: 'Supabase não está configurado',
     errorNotAuthenticated: 'Não autenticado',
+    errorCompleteLegalProfile: 'Preencha os campos do perfil legal da empresa para continuar.',
   },
 
   // ─── Invitations ─────────────────────────────────────────────────────────────
@@ -1116,6 +1117,8 @@ export const pt: Translations = {
   // ─── Errors ──────────────────────────────────────────────────────────────────
   errors: {
     supabaseNotConfigured: 'Supabase não está configurado',
+    supabaseNotConfiguredDetail:
+      'Supabase não está configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY, ou ative VITE_ALLOW_DEMO_MODE=true apenas para demo local.',
     generic: 'Ocorreu um erro',
     gmailConnectionError: 'Erro ao conectar Gmail',
     gmailThreadsLoadError: 'Não foi possível carregar os e-mails',
@@ -1141,6 +1144,14 @@ export const pt: Translations = {
     memberWithoutName: 'Membro {id}',
     tenantInvitationWithOrg: 'Este domínio já pertence a {orgName}. Peça um convite para entrar nesse espaço de trabalho.',
     tenantInvitationGeneric: 'O domínio do seu e-mail já pertence a um espaço de trabalho existente. Peça um convite para entrar.',
+    configurationBootstrapTitle: 'Erro de configuração',
+    configurationBootstrapUses: 'Esta build usa',
+    configurationBootstrapOr: 'ou',
+    configurationBootstrapRequiresValid: 'e exige valores válidos para',
+    configurationBootstrapAnd: 'e',
+    configurationBootstrapDemoIntro: '. Para uma demo estática sem Supabase, defina',
+    configurationBootstrapDemoOutro: ' e compile novamente.',
+    configurationBootstrapFooter: 'Defina as variáveis de ambiente e faça o deploy novamente.',
   },
 
   auditMessages: {

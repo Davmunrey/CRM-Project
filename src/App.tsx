@@ -62,6 +62,28 @@ function CatchAllRedirect() {
   return <Navigate to={user ? '/' : '/login'} replace />
 }
 
+/** Shown before router when production/staging build lacks Supabase env (copy is localized). */
+function BootstrapFatalScreen() {
+  const t = useTranslations()
+  return (
+    <div className="min-h-screen bg-surface-0 text-fg flex items-center justify-center p-8">
+      <div className="max-w-lg rounded-2xl border border-danger/30 bg-danger/10 p-8 text-center">
+        <h1 className="text-xl font-semibold text-fg mb-2">{t.errors.configurationBootstrapTitle}</h1>
+        <p className="text-sm text-fg-muted mb-4">
+          {t.errors.configurationBootstrapUses}{' '}
+          <code className="text-accent-300">VITE_APP_CHANNEL=production</code> {t.errors.configurationBootstrapOr}{' '}
+          <code className="text-accent-300">VITE_APP_CHANNEL=staging</code> {t.errors.configurationBootstrapRequiresValid}{' '}
+          <code className="text-accent-300">VITE_SUPABASE_URL</code> {t.errors.configurationBootstrapAnd}{' '}
+          <code className="text-accent-300">VITE_SUPABASE_ANON_KEY</code>
+          {t.errors.configurationBootstrapDemoIntro} <code className="text-accent-300">VITE_APP_CHANNEL=demo</code>
+          {t.errors.configurationBootstrapDemoOutro}
+        </p>
+        <p className="text-xs text-fg-subtle">{t.errors.configurationBootstrapFooter}</p>
+      </div>
+    </div>
+  )
+}
+
 function AppRoutes() {
   const t = useTranslations()
   useDataInit()
@@ -178,21 +200,7 @@ export default function App() {
   }, [])
 
   if (isBootstrapFatalError) {
-    return (
-      <div className="min-h-screen bg-surface-0 text-fg flex items-center justify-center p-8">
-        <div className="max-w-lg rounded-2xl border border-danger/30 bg-danger/10 p-8 text-center">
-          <h1 className="text-xl font-semibold text-fg mb-2">Configuration error</h1>
-          <p className="text-sm text-fg-muted mb-4">
-            This build uses <code className="text-accent-300">VITE_APP_CHANNEL=production</code> or{' '}
-            <code className="text-accent-300">staging</code> and requires valid{' '}
-            <code className="text-accent-300">VITE_SUPABASE_URL</code> and{' '}
-            <code className="text-accent-300">VITE_SUPABASE_ANON_KEY</code>. For a static demo without Supabase, set{' '}
-            <code className="text-accent-300">VITE_APP_CHANNEL=demo</code> and rebuild.
-          </p>
-          <p className="text-xs text-fg-subtle">Set environment variables and redeploy.</p>
-        </div>
-      </div>
-    )
+    return <BootstrapFatalScreen />
   }
 
   return (

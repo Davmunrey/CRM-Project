@@ -1165,6 +1165,7 @@ export interface Translations {
     errorSlugRequired: string
     errorNotConfigured: string
     errorNotAuthenticated: string
+    errorCompleteLegalProfile: string
   }
 
   // ─── Invitations ─────────────────────────────────────────────────────────────
@@ -1207,6 +1208,8 @@ export interface Translations {
   // ─── Errors ──────────────────────────────────────────────────────────────────
   errors: {
     supabaseNotConfigured: string
+    /** Shown on auth screens when Supabase env is missing and demo mode is off */
+    supabaseNotConfiguredDetail: string
     generic: string
     gmailConnectionError: string
     gmailThreadsLoadError: string
@@ -1232,6 +1235,15 @@ export interface Translations {
     memberWithoutName: string
     tenantInvitationWithOrg: string
     tenantInvitationGeneric: string
+    /** Fatal misconfiguration before router mounts (production/staging without Supabase) */
+    configurationBootstrapTitle: string
+    configurationBootstrapUses: string
+    configurationBootstrapOr: string
+    configurationBootstrapRequiresValid: string
+    configurationBootstrapAnd: string
+    configurationBootstrapDemoIntro: string
+    configurationBootstrapDemoOutro: string
+    configurationBootstrapFooter: string
   }
 
   /** Short descriptions written to the in-app audit log */

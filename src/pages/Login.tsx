@@ -151,7 +151,7 @@ export function Login() {
       }, 400)
     } else {
       setLoading(false)
-      setError('Supabase is not configured. Set VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY, or enable VITE_ALLOW_DEMO_MODE=true for local demo only.')
+      setError(t.errors.supabaseNotConfiguredDetail)
     }
   }
 
