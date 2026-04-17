@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { Product } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { devConsole } from '../lib/devConsole'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 
 const SEED_PRODUCTS: Product[] = (() => {
@@ -63,7 +62,7 @@ export const useProductsStore = create<ProductsStore>()((set, get) => ({
         sku: product.sku, price: product.price, currency: product.currency,
         category: product.category, is_active: product.isActive,
         organization_id: getOrgId(),
-      }).then(({ error }: any) => { if (error) devConsole.error('[productsStore] insert error', error) })
+      }).then(({ error }: any) => { if (error) console.error('[productsStore] insert error', error) })
     }
   },
 
@@ -81,14 +80,14 @@ export const useProductsStore = create<ProductsStore>()((set, get) => ({
       if (updates.category !== undefined) row.category = updates.category
       if (updates.isActive !== undefined) row.is_active = updates.isActive
       ;(supabase as any).from('products').update(row).eq('id', id)
-        .then(({ error }: any) => { if (error) devConsole.error('[productsStore] update error', error) })
+        .then(({ error }: any) => { if (error) console.error('[productsStore] update error', error) })
     }
   },
 
   deleteProduct: (id) => {
     set((s) => ({ products: s.products.filter((p) => p.id !== id) }))
     if (isSupabaseConfigured && supabase) {
-      sbDelete('products', id).catch((e) => devConsole.error('[productsStore] delete error', e))
+      sbDelete('products', id).catch((e) => console.error('[productsStore] delete error', e))
     }
   },
 

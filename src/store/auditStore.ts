@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid'
 import type { AuditAction, AuditEntry } from '../types'
 import { useAuthStore } from './authStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { devConsole } from '../lib/devConsole'
 import { getOrgId } from '../lib/supabaseHelpers'
 
 const MAX_ENTRIES = 500
@@ -65,7 +64,7 @@ export const useAuditStore = create<AuditStore>()((set, get) => ({
         entity_id: entry.entityId, entity_name: entry.entityName,
         details: entry.details, user_id: entry.userId,
         organization_id: getOrgId(),
-      }).then(({ error }: any) => { if (error) devConsole.error('[auditStore] insert error', error) })
+      }).then(({ error }: any) => { if (error) console.error('[auditStore] insert error', error) })
     }
   },
 

@@ -75,7 +75,7 @@ export function GmailCallback() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-6">
+    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-6">
       <div className="flex flex-col items-center gap-4">
         <Loader2 className="w-10 h-10 text-brand-400 animate-spin" />
         <p className="text-slate-300 text-sm font-medium">{t.common.loading}</p>

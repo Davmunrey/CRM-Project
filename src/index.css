@@ -1,28 +1,6 @@
-@import './styles/tokens.css';
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@keyframes shimmer {
-  0% {
-    background-position: -1000px 0;
-  }
-  100% {
-    background-position: 1000px 0;
-  }
-}
-
-@keyframes countUp {
-  0% {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 @layer base {
   :root {
@@ -60,11 +38,6 @@
     color: #fff;
   }
 
-  html.light ::selection {
-    background: rgba(79, 70, 229, 0.22);
-    color: var(--text-main);
-  }
-
   ::-webkit-scrollbar {
     width: 5px;
     height: 5px;
@@ -80,14 +53,6 @@
     background: rgba(255,255,255,0.14);
   }
 
-  html.light ::-webkit-scrollbar-thumb {
-    background: rgba(15, 23, 42, 0.12);
-  }
-
-  html.light ::-webkit-scrollbar-thumb:hover {
-    background: rgba(15, 23, 42, 0.2);
-  }
-
   /* ── Autofill override ───────────────────────────────── */
   /* Prevent browser autofill from applying a white/light background
      that makes white input text invisible on dark themes */
@@ -99,18 +64,6 @@
     -webkit-text-fill-color: var(--text-main) !important;
     caret-color: var(--text-main);
     transition: background-color 9999s ease-in-out 0s;
-  }
-
-  /* Respect user motion preferences: disable non-essential transitions/animations. */
-  @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-      animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
-      scroll-behavior: auto !important;
-    }
   }
 }
 
@@ -159,25 +112,21 @@
     background-clip: text;
   }
 
-  /* ── Brand gradient button (accent tokens + branding) ─ */
+  /* ── Brand gradient button ───────────────────────────── */
   .btn-gradient {
-    background: linear-gradient(
-      135deg,
-      rgb(var(--color-accent-600)) 0%,
-      rgb(var(--color-accent-800)) 100%
-    );
-    box-shadow: 0 0 20px rgb(var(--color-accent-600) / 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    box-shadow: 0 0 20px rgba(37,99,235,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
     transition: all 150ms ease;
   }
 
   .btn-gradient:hover {
-    box-shadow: 0 0 30px rgb(var(--color-accent-600) / 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 30px rgba(37,99,235,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
     transform: translateY(-1px);
   }
 
   .btn-gradient:active {
     transform: translateY(0);
-    box-shadow: 0 0 15px rgb(var(--color-accent-600) / 0.35);
+    box-shadow: 0 0 15px rgba(37,99,235,0.3);
   }
 
   /* ── Glow dot ────────────────────────────────────────── */
@@ -193,9 +142,9 @@
 
   /* ── Nav active indicator ────────────────────────────── */
   .nav-active {
-    background: linear-gradient(90deg, rgb(var(--color-accent-600) / 0.15) 0%, transparent 100%);
-    border-left: 2px solid rgb(var(--color-accent-600));
-    box-shadow: inset 0 0 20px rgb(var(--color-accent-600) / 0.05);
+    background: linear-gradient(90deg, rgba(37,99,235,0.15) 0%, transparent 100%);
+    border-left: 2px solid #2563eb;
+    box-shadow: inset 0 0 20px rgba(37,99,235,0.05);
   }
 
   /* ── Stat card number ────────────────────────────────── */
@@ -209,7 +158,7 @@
   }
 
   .table-row-hover:hover {
-    background: rgb(var(--color-accent-600) / 0.08);
+    background: rgba(37,99,235,0.05);
   }
 
   /* ── Priority dot ────────────────────────────────────── */
@@ -298,18 +247,6 @@
 }
 
 @layer utilities {
-  /** Keyboard focus — use with `outline-none` on interactive elements. */
-  .focus-ring:focus-visible {
-    outline: none;
-    box-shadow:
-      0 0 0 2px rgb(var(--color-surface-0) / 1),
-      0 0 0 4px rgb(var(--color-ring) / 0.45);
-  }
-
-  .focus-ring {
-    outline: none;
-  }
-
   /* ── Skeleton shimmer ────────────────────────────────── */
   .skeleton {
     background: linear-gradient(
@@ -336,8 +273,31 @@
 }
 
 @layer base {
-  /* Shell surfaces use semantic tokens (html.light in tokens.css); keep only
-     overrides where Tailwind utility colors still need a readable light pass. */
+  .light .bg-navy-900,
+  .light .bg-\[\#0d0e1a\],
+  .light .bg-\[\#111220\],
+  .light .bg-\[\#0d0f1e\] {
+    background-color: var(--bg-elevated) !important;
+  }
+
+  .light .bg-\[\#0d0e1a\]\/45 {
+    background-color: color-mix(in srgb, var(--bg-elevated) 90%, #ffffff 10%) !important;
+  }
+
+  .light .app-sidebar {
+    background-color: #eef2f7 !important;
+    border-right-color: rgba(15, 23, 42, 0.14) !important;
+  }
+
+  .light .topbar-surface {
+    background-color: #f8fafc !important;
+    border-bottom-color: rgba(15, 23, 42, 0.14) !important;
+  }
+
+  .light .popover-surface {
+    background-color: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.14) !important;
+  }
 
   .light .auth-page-bg {
     background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%) !important;
@@ -355,6 +315,20 @@
 
   .light .modal-backdrop {
     background: rgba(15, 23, 42, 0.28) !important;
+  }
+
+  .light .bg-navy-900\/50,
+  .light .bg-navy-900\/35,
+  .light .bg-navy-900\/25 {
+    background-color: color-mix(in srgb, var(--bg-panel) 94%, #e2e8f0 6%) !important;
+  }
+
+  .light .bg-navy-800\/60 {
+    background-color: color-mix(in srgb, var(--bg-panel) 80%, transparent) !important;
+  }
+
+  .light .bg-navy-800\/30 {
+    background-color: color-mix(in srgb, #ffffff 92%, #e2e8f0 8%) !important;
   }
 
   .light .bg-white\/4,

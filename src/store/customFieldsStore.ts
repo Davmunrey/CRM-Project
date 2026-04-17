@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { CustomFieldDefinition, CustomFieldDefinitionI18n, CustomFieldEntityType, CustomFieldValue } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { devConsole } from '../lib/devConsole'
 import { getOrgId } from '../lib/supabaseHelpers'
 import { getTranslations, useI18nStore } from '../i18n'
 import type { Language } from '../i18n'
@@ -111,7 +110,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
         id: def.id, entity_type: def.entityType, label: def.label, field_type: def.fieldType,
         placeholder: def.placeholder, required: def.required, order: def.order,
         is_active: def.isActive, options: def.options, organization_id: getOrgId(),
-      }).then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] def insert error', error) })
+      }).then(({ error }: any) => { if (error) console.error('[customFieldsStore] def insert error', error) })
     }
   },
 
@@ -129,7 +128,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
       if (updates.options !== undefined) row.options = updates.options
       if (updates.order !== undefined) row.order = updates.order
       ;(supabase as any).from('custom_field_definitions').update(row).eq('id', id)
-        .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] def update error', error) })
+        .then(({ error }: any) => { if (error) console.error('[customFieldsStore] def update error', error) })
     }
   },
 
@@ -143,7 +142,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
     })
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('custom_field_definitions').delete().eq('id', id)
-        .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] def delete error', error) })
+        .then(({ error }: any) => { if (error) console.error('[customFieldsStore] def delete error', error) })
     }
   },
 
@@ -158,7 +157,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
     if (isSupabaseConfigured && supabase) {
       orderedIds.forEach((id, idx) => {
         ;(supabase as any).from('custom_field_definitions').update({ order: idx + 1 }).eq('id', id)
-          .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] reorder error', error) })
+          .then(({ error }: any) => { if (error) console.error('[customFieldsStore] reorder error', error) })
       })
     }
   },
@@ -176,7 +175,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
       ;(supabase as any).from('custom_field_values').upsert(
         { entity_id: entityId, field_id: fieldId, value, organization_id: getOrgId() },
         { onConflict: 'entity_id,field_id' }
-      ).then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] value upsert error', error) })
+      ).then(({ error }: any) => { if (error) console.error('[customFieldsStore] value upsert error', error) })
     }
   },
 
@@ -195,7 +194,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
     })
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('custom_field_values').delete().eq('entity_id', entityId)
-        .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] deleteEntityValues error', error) })
+        .then(({ error }: any) => { if (error) console.error('[customFieldsStore] deleteEntityValues error', error) })
     }
   },
 
@@ -224,7 +223,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
           placeholder: updates.placeholder ?? null,
           options: updates.options ?? null,
         }, { onConflict: 'field_id,language_code' })
-        .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] i18n upsert error', error) })
+        .then(({ error }: any) => { if (error) console.error('[customFieldsStore] i18n upsert error', error) })
     }
   },
 

@@ -189,7 +189,7 @@ export function PipelineTimeline() {
         <select
           value={stageFilter}
           onChange={(e) => setStageFilter(e.target.value as DealStage | '')}
-          className="bg-surface-2 border border-white/8 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500/40"
+          className="bg-[#0d0e1a] border border-white/8 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500/40"
         >
           <option value="">{t.deals.stage}</option>
           {(['lead', 'qualified', 'proposal', 'negotiation', 'closed_won'] as DealStage[]).map((s) => (
@@ -199,7 +199,7 @@ export function PipelineTimeline() {
         <select
           value={assigneeFilter}
           onChange={(e) => setAssigneeFilter(e.target.value)}
-          className="bg-surface-2 border border-white/8 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500/40"
+          className="bg-[#0d0e1a] border border-white/8 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-500/40"
         >
           <option value="">{t.common.assignedTo}</option>
           {orgUsers.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
@@ -218,7 +218,7 @@ export function PipelineTimeline() {
       {/* Timeline */}
       <div className="glass rounded-2xl overflow-hidden">
         {/* Month header */}
-        <div className="flex border-b border-white/8 bg-surface-1/40">
+        <div className="flex border-b border-white/8 bg-navy-900/40">
           <div className="w-48 flex-shrink-0 px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider border-r border-white/6">
             {t.deals.title}
           </div>

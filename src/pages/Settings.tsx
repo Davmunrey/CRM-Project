@@ -62,7 +62,7 @@ export function Settings() {
     { id: 'advanced', label: t.settings.tabAdvanced },
   ]
   const { language, setLanguage } = useI18nStore()
-  const { settings, updateThemePreference, updateUiDensity, updateCurrency, updateLeadSlaHours, updatePermissionProfile, updateBranding, updateGoogleClientId, addTag, removeTag, resetToDefaults, reorderStages, addPipelineStage } = useSettingsStore()
+  const { settings, updateThemePreference, updateCurrency, updateLeadSlaHours, updatePermissionProfile, updateBranding, updateGoogleClientId, addTag, removeTag, resetToDefaults, reorderStages, addPipelineStage } = useSettingsStore()
   const { disabledTypes, toggleType } = useNotificationsStore()
   const contactsStore = useContactsStore()
   const companiesStore = useCompaniesStore()
@@ -670,7 +670,7 @@ export function Settings() {
 
   return (
     <div className="crm-page space-y-8">
-      <section className="bg-surface-2/90 border border-white/8 rounded-2xl p-3">
+      <section className="bg-navy-800/60 border border-white/8 rounded-2xl p-3">
         <div className="flex gap-2 flex-wrap">
           {SETTINGS_TABS.map((tab) => (
             <button
@@ -689,7 +689,7 @@ export function Settings() {
         </div>
       </section>
 
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('onboarding') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('onboarding') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-white mb-1">{t.settings.onboardingTitle}</h2>
         <p className="text-xs text-slate-500 mb-4">{t.settings.onboardingIntro}</p>
         <ul className="space-y-4">
@@ -770,7 +770,7 @@ export function Settings() {
       </section>
 
       {/* ── Language Selector ──────────────────────────────────────────── */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 h-7 rounded-lg bg-sky-500/20 flex items-center justify-center">
             <Globe size={14} className="text-sky-400" />
@@ -798,7 +798,7 @@ export function Settings() {
           ))}
         </div>
 
-        <div className="mt-4 max-w-xs space-y-4">
+        <div className="mt-4 max-w-xs">
           <Select
             label={t.settings.theme}
             value={settings.themePreference}
@@ -809,20 +809,10 @@ export function Settings() {
               { value: 'dark', label: t.settings.themeDark },
             ]}
           />
-          <Select
-            label={t.settings.uiDensity}
-            value={settings.uiDensity}
-            onChange={(e) => updateUiDensity(e.target.value as 'comfortable' | 'compact')}
-            options={[
-              { value: 'comfortable', label: t.settings.uiDensityComfortable },
-              { value: 'compact', label: t.settings.uiDensityCompact },
-            ]}
-            hint={t.settings.uiDensityHelp}
-          />
         </div>
       </section>
 
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-white mb-3">{t.settings.emailProviderHealth}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="p-3 rounded-xl bg-white/4 border border-white/8">
@@ -841,7 +831,7 @@ export function Settings() {
       </section>
 
       {/* ── Gmail Configuration ──────────────────────────────────────────── */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 h-7 rounded-lg bg-red-500/20 flex items-center justify-center">
             <Mail size={14} className="text-red-400" />
@@ -875,7 +865,7 @@ export function Settings() {
                 value={googleClientId}
                 onChange={(e) => setGoogleClientId(e.target.value)}
                 placeholder={t.settings.placeholderGoogleOAuthClientId}
-                className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/40"
+                className="w-full bg-[#0d0e1a] border border-white/8 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/40"
               />
             </div>
             <Button
@@ -896,7 +886,7 @@ export function Settings() {
         )}
       </section>
 
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-white mb-3">{t.settings.emailSignatures}</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -909,7 +899,7 @@ export function Settings() {
             <div className="flex items-center gap-2">
               <button type="button" onClick={() => insertAroundSelection('<strong>', '</strong>')} className="px-2 py-1 rounded-md bg-white/6 border border-white/10 text-slate-300"><Bold size={12} /></button>
               <button type="button" onClick={() => insertAroundSelection('<em>', '</em>')} className="px-2 py-1 rounded-md bg-white/6 border border-white/10 text-slate-300"><Italic size={12} /></button>
-              <button type="button" onClick={() => insertAroundSelection('<a href="https://">', '</a>')} className="px-2 py-1 rounded-md bg-white/6 border border-white/10 text-slate-300"><LinkIcon size={12} /></button>
+              <button type="button" onClick={() => insertAroundSelection('<a href=\"https://\">', '</a>')} className="px-2 py-1 rounded-md bg-white/6 border border-white/10 text-slate-300"><LinkIcon size={12} /></button>
               <label className="px-2 py-1 rounded-md bg-white/6 border border-white/10 text-slate-300 cursor-pointer inline-flex items-center">
                 <ImageIcon size={12} />
                 <input
@@ -937,7 +927,7 @@ export function Settings() {
               value={signatureHtml}
               onChange={(e) => setSignatureHtml(e.target.value)}
               rows={7}
-              className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none"
+              className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none"
               placeholder={t.settings.placeholderEmailSignatureHtml}
             />
             <div className="flex gap-2">
@@ -981,7 +971,7 @@ export function Settings() {
       </section>
 
       {/* ── Custom Fields ────────────────────────────────────────────────────── */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('data') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('data') ? '' : 'hidden'}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-violet-500/20 flex items-center justify-center">
@@ -1018,7 +1008,7 @@ export function Settings() {
 
         {/* Inline add / edit form */}
         {cfShowForm && (
-          <div className="mb-4 p-4 bg-surface-2 border border-white/10 rounded-xl space-y-3">
+          <div className="mb-4 p-4 bg-[#0d0e1a] border border-white/10 rounded-xl space-y-3">
             <p className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
               {cfEditingId ? `${t.common.edit}` : `${t.common.add} — ${t.settings.entityLabels[cfActiveEntity]}`}
             </p>
@@ -1032,7 +1022,7 @@ export function Settings() {
                   value={cfLabel}
                   onChange={(e) => setCfLabel(e.target.value)}
                   placeholder={t.settings.fieldPlaceholderHint}
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/40"
+                  className="w-full bg-[#0d0e1a] border border-white/8 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/40"
                 />
               </div>
               <div className="w-44">
@@ -1042,10 +1032,10 @@ export function Settings() {
                   onChange={(e) => setCfFieldType(e.target.value as CustomFieldType)}
                   aria-label={t.settings.fieldType}
                   title={t.settings.fieldType}
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 appearance-none cursor-pointer"
+                  className="w-full bg-[#0d0e1a] border border-white/8 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 appearance-none cursor-pointer"
                 >
                   {FIELD_TYPES.map((ft) => (
-                    <option key={ft} value={ft} className="bg-surface-1 text-fg">
+                    <option key={ft} value={ft} className="bg-navy-900 text-white">
                       {t.settings.fieldTypeLabels[ft]}
                     </option>
                   ))}
@@ -1064,7 +1054,7 @@ export function Settings() {
                   onChange={(e) => setCfOptions(e.target.value)}
                   placeholder={t.settings.optionsPlaceholder}
                   rows={4}
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/40 resize-none"
+                  className="w-full bg-[#0d0e1a] border border-white/8 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/40 resize-none"
                 />
               </div>
             )}
@@ -1078,7 +1068,7 @@ export function Settings() {
                   value={cfPlaceholder}
                   onChange={(e) => setCfPlaceholder(e.target.value)}
                   placeholder={t.settings.valuePlaceholderHint}
-                  className="w-full bg-surface-2 border border-white/8 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/40"
+                  className="w-full bg-[#0d0e1a] border border-white/8 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/40"
                 />
               </div>
             )}
@@ -1193,7 +1183,7 @@ export function Settings() {
       </section>
 
       {/* Currency */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-white mb-4">{t.settings.currency}</h2>
         <Select
           label={t.settings.currency}
@@ -1209,7 +1199,7 @@ export function Settings() {
       </section>
 
       {/* Branding */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('branding') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('branding') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-white mb-4">{t.settings.branding}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Input
@@ -1300,7 +1290,7 @@ export function Settings() {
       </section>
 
       {/* Pipeline Stages */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('pipeline') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('pipeline') ? '' : 'hidden'}`}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-base font-semibold text-white">{t.settings.pipeline}</h2>
           <Button size="sm" leftIcon={<Plus size={13} />} onClick={handleAddPipelineStage}>
@@ -1410,7 +1400,7 @@ export function Settings() {
       </section>
 
       {/* Tags */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-white mb-4">{t.settings.tags}</h2>
         <div className="flex gap-2 mb-4">
           <Input
@@ -1427,7 +1417,7 @@ export function Settings() {
         </div>
         <div className="flex flex-wrap gap-2">
           {settings.tags.map((tag) => (
-            <div key={tag} className="flex items-center gap-1.5 bg-surface-2 border border-white/10 rounded-full px-3 py-1">
+            <div key={tag} className="flex items-center gap-1.5 bg-[#0d0e1a] border border-white/10 rounded-full px-3 py-1">
               <span className="text-xs text-slate-300">{tag}</span>
               <button type="button"
                 onClick={() => { removeTag(tag); toast.success(t.common.delete + ' ✓') }}
@@ -1442,7 +1432,7 @@ export function Settings() {
       </section>
 
       {/* Users */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-white mb-4">{t.settings.users}</h2>
         <div className="space-y-3">
           {usersForSettings.map((user) => (
@@ -1512,7 +1502,7 @@ export function Settings() {
       </section>
 
       {/* Data Management */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('data') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('data') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-white mb-2">{t.settings.importExport}</h2>
         <p className="text-xs text-slate-500 mb-4">{t.settings.exportData} / {t.settings.importData}</p>
         <div className="flex flex-wrap gap-3">
@@ -1540,7 +1530,7 @@ export function Settings() {
       </section>
 
       {/* Notification Preferences */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-white mb-1">{t.settings.notifications}</h2>
         <p className="text-xs text-slate-500 mb-4">{t.common.enabled} / {t.common.disabled}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1568,7 +1558,7 @@ export function Settings() {
         </div>
       </section>
 
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('navigation') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('navigation') ? '' : 'hidden'}`}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-base font-semibold text-white">{t.settings.navEditorTitle}</h2>
@@ -1611,7 +1601,7 @@ export function Settings() {
                     {(navPrefs.itemOrderBySection[section.id] ?? createDefaultNavigationPreferences().itemOrderBySection[section.id]).map((itemId) => {
                       const itemHidden = navPrefs.hiddenBuiltinItems.includes(itemId)
                       return (
-                        <div key={itemId} className="flex items-center justify-between text-xs text-slate-400 bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5">
+                        <div key={itemId} className="flex items-center justify-between text-xs text-slate-400 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5">
                           <span>{itemId}</span>
                           <div className="flex gap-1">
                             <button type="button" className="px-1.5 py-0.5 border border-white/12 rounded" onClick={() => moveBuiltinItem(section.id, itemId, -1)}>↑</button>
@@ -1744,7 +1734,7 @@ export function Settings() {
                   </Button>
                 </div>
                 {group.items.map((item) => (
-                  <div key={item.id} className="p-2 bg-surface-2 border border-white/10 rounded-lg space-y-2">
+                  <div key={item.id} className="p-2 bg-[#0d0e1a] border border-white/10 rounded-lg space-y-2">
                     <Input
                       label={t.settings.navLabel}
                       value={item.label}
@@ -1780,7 +1770,7 @@ export function Settings() {
       </section>
 
       {/* Lead Maintenance Ops */}
-      <section className={`bg-surface-2/90 border border-white/8 rounded-2xl p-6 ${tabVisible('advanced') ? '' : 'hidden'}`}>
+      <section className={`bg-navy-800/60 border border-white/8 rounded-2xl p-6 ${tabVisible('advanced') ? '' : 'hidden'}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isSlaBreached ? 'bg-amber-500/20' : 'bg-emerald-500/20'}`}>

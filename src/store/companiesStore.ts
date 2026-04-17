@@ -4,7 +4,6 @@ import type { Company, CompanyFilters } from '../types'
 import { seedCompanies } from '../utils/seedData'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
-import { normalizeIndustryValue } from '../lib/industries'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = () => supabase as any
@@ -14,7 +13,7 @@ function rowToCompany(row: Record<string, unknown>): Company {
     id: row.id as string,
     name: (row.name as string) ?? '',
     domain: (row.domain as string) ?? '',
-    industry: normalizeIndustryValue((row.industry as string) ?? 'other'),
+    industry: (row.industry as Company['industry']) ?? 'other',
     size: (row.size as string) ?? '',
     country: (row.country as string) ?? '',
     city: (row.city as string) ?? '',
@@ -35,7 +34,7 @@ function companyToRow(c: Partial<Company>): Record<string, unknown> {
   const row: Record<string, unknown> = {}
   if (c.name !== undefined) row.name = c.name
   if (c.domain !== undefined) row.domain = c.domain
-  if (c.industry !== undefined) row.industry = normalizeIndustryValue(c.industry)
+  if (c.industry !== undefined) row.industry = c.industry
   if (c.size !== undefined) row.size = c.size
   if (c.country !== undefined) row.country = c.country
   if (c.city !== undefined) row.city = c.city

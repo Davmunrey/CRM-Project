@@ -340,7 +340,7 @@ export function EmailComposer({
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-surface-0/70 backdrop-blur-md" onClick={requestClose} />
+      <div className="absolute inset-0 bg-navy-950/70 backdrop-blur-md" onClick={requestClose} />
       <div className="relative w-full max-w-2xl mx-4 mb-4 sm:mb-0 glass rounded-2xl shadow-float border-white/10 overflow-hidden animate-slide-up">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
@@ -371,7 +371,7 @@ export function EmailComposer({
         {/* Template picker */}
         {showTemplates && (
           <div className="border-b border-white/8 max-h-56 overflow-y-auto">
-            <div className="px-4 py-2 border-b border-white/6 sticky top-0 bg-surface-1">
+            <div className="px-4 py-2 border-b border-white/6 sticky top-0 bg-[#111220]">
               <p className="text-xs font-medium text-amber-400">{t.emailTemplates.title}</p>
             </div>
             {templates.length === 0 ? (
@@ -492,14 +492,14 @@ export function EmailComposer({
             onChange={(e) => setBody(e.target.value)}
             placeholder={`${t.common.description}...`}
             rows={10}
-            className="w-full bg-surface-2/45 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed"
+            className="w-full bg-[#0d0e1a]/45 border border-white/8 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none resize-none leading-relaxed"
           />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               value={senderName}
               onChange={(e) => setSenderName(e.target.value)}
               placeholder={t.email.senderNamePlaceholder}
-              className="bg-surface-2/45 border border-white/8 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 outline-none"
+              className="bg-[#0d0e1a]/45 border border-white/8 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 outline-none"
             />
             <label className="inline-flex items-center gap-2 text-xs text-slate-400">
               <input
@@ -520,12 +520,12 @@ export function EmailComposer({
                 const next = savedSignatures.find((s) => s.id === nextId)
                 setSignature(next?.html ?? '')
               }}
-              className="w-full bg-surface-2/45 border border-white/8 rounded-xl px-3 py-2 text-xs text-white outline-none"
+              className="w-full bg-[#0d0e1a]/45 border border-white/8 rounded-xl px-3 py-2 text-xs text-white outline-none"
               aria-label={t.email.signatureSelectLabel}
               title={t.email.signatureSelectLabel}
             >
               {savedSignatures.map((sig) => (
-                <option key={sig.id} value={sig.id} className="bg-surface-1 text-white">
+                <option key={sig.id} value={sig.id} className="bg-[#111220] text-white">
                   {sig.name}
                 </option>
               ))}
@@ -536,7 +536,7 @@ export function EmailComposer({
             onChange={(e) => setSignature(e.target.value)}
             placeholder={t.email.signaturePlaceholder}
             rows={3}
-            className="w-full bg-surface-2/45 border border-white/8 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 outline-none resize-y leading-relaxed"
+            className="w-full bg-[#0d0e1a]/45 border border-white/8 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 outline-none resize-y leading-relaxed"
           />
           <div className="flex flex-wrap gap-1.5">
             {quickReplies.map((snippet) => (
@@ -644,7 +644,7 @@ export function EmailComposer({
                 onChange={(e) => setScheduledAt(e.target.value)}
                 title={t.email.scheduleSendTime}
                 aria-label={t.email.scheduleSendTime}
-                className="bg-surface-2 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
+                className="bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
               />
             )}
           </div>

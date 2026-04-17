@@ -10,8 +10,7 @@ import { Button } from '../ui/Button'
 import type { Company } from '../../types'
 import { COMPANY_SIZE_OPTIONS } from '../../utils/constants'
 import { CustomFieldsForm } from '../shared/CustomFieldRenderer'
-import { useI18nStore, useTranslations } from '../../i18n'
-import { getIndustryOptions, normalizeIndustryValue } from '../../lib/industries'
+import { useTranslations } from '../../i18n'
 
 type FormValues = z.infer<ReturnType<typeof createCompanySchema>>
 
@@ -23,15 +22,13 @@ interface CompanyFormProps {
 
 export function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
   const schema = useMemo(() => createCompanySchema(t), [t])
-  const industryOptions = useMemo(() => getIndustryOptions(language), [language])
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: company?.name ?? '',
       domain: company?.domain ?? '',
-      industry: normalizeIndustryValue(company?.industry ?? 'computer-software'),
+      industry: company?.industry ?? 'saas',
       size: company?.size ?? '',
       country: company?.country ?? '',
       city: company?.city ?? '',
@@ -46,7 +43,6 @@ export function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
   const handleFormSubmit = (data: FormValues) => {
     onSubmit({
       ...data,
-      industry: normalizeIndustryValue(data.industry),
       revenue: data.revenue ? Number(data.revenue) : undefined,
     })
   }
@@ -62,7 +58,16 @@ export function CompanyForm({ company, onSubmit, onCancel }: CompanyFormProps) {
         <Select
           label={t.companies.industry}
           required
-          options={industryOptions}
+          options={[
+            { value: 'fintech', label: t.companies.industryLabels.fintech },
+            { value: 'saas', label: t.companies.industryLabels.saas },
+            { value: 'consulting', label: t.companies.industryLabels.consulting },
+            { value: 'insurance', label: t.companies.industryLabels.insurance },
+            { value: 'banking', label: t.companies.industryLabels.banking },
+            { value: 'retail', label: t.companies.industryLabels.retail },
+            { value: 'healthcare', label: t.companies.industryLabels.healthcare },
+            { value: 'other', label: t.companies.industryLabels.other },
+          ]}
           {...register('industry')}
         />
         <Select

@@ -3,7 +3,6 @@ import { persist } from 'zustand/middleware'
 import { v4 as uuidv4 } from 'uuid'
 import type { AuthUser, Organization, Invitation, UserRole, Session } from '../types/auth'
 import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supabase'
-import { devConsole } from '../lib/devConsole'
 import { useAuditStore } from './auditStore'
 import { toast } from './toastStore'
 import { getTranslations } from '../i18n'
@@ -468,7 +467,7 @@ export const useAuthStore = create<AuthState>()(
 
           void supabase.auth.updateUser({ data }).then(({ data: res, error }) => {
             if (error) {
-              devConsole.error('[authStore] supabase.auth.updateUser', error)
+              console.error('[authStore] supabase.auth.updateUser', error)
               toast.error(error.message)
               return
             }

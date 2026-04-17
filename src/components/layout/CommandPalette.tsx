@@ -128,7 +128,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" aria-modal="true">
-      <div className="absolute inset-0 bg-surface-0/80 backdrop-blur-md" onClick={onClose} />
+      <div className="absolute inset-0 bg-navy-950/80 backdrop-blur-md" onClick={onClose} />
       <div className="relative w-full max-w-lg mx-4 glass rounded-2xl shadow-float border-white/12 overflow-hidden animate-scale-in">
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/8">

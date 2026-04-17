@@ -9,7 +9,7 @@ export function OrgAccessRequired() {
   const logout = useAuthStore((s) => s.logout)
 
   return (
-    <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
+    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md text-center">
         <div className="w-14 h-14 rounded-full bg-amber-500/15 flex items-center justify-center mx-auto mb-4">
           <MailWarning size={28} className="text-amber-400" />

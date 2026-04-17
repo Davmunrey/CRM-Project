@@ -59,7 +59,7 @@ export function DealCard({ deal, index, onClick }: DealCardProps) {
           {...provided.dragHandleProps}
           onClick={onClick}
           className={`
-            bg-surface-1 border rounded-xl p-3 cursor-pointer
+            bg-[#111220] border rounded-xl p-3 cursor-pointer
             transition-all duration-150 select-none
             ${snapshot.isDragging
               ? 'border-indigo-500 shadow-xl shadow-indigo-500/10 rotate-1'

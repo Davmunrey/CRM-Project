@@ -22,9 +22,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: UI guardrails
-        run: npm run ui:lint
-
       - name: Type check
         run: npx tsc --noEmit
 

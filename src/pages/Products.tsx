@@ -173,7 +173,7 @@ function ProductCard({ product }: { product: Product }) {
                 {categoryLabels[product.category]}
               </span>
               {!product.isActive && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-surface-2 border border-white/8 text-slate-500">{t.common.inactive}</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#0d0e1a] border border-white/8 text-slate-500">{t.common.inactive}</span>
               )}
             </div>
           </div>

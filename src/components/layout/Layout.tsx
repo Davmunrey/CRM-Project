@@ -52,7 +52,7 @@ export function Layout({ children, title }: LayoutProps) {
   }, [])
 
   return (
-    <div className="flex h-screen flex-col bg-surface-1 overflow-hidden">
+    <div className="flex h-screen flex-col bg-navy-900 overflow-hidden">
       <EnvironmentBanner />
       <div className="flex min-h-0 flex-1 overflow-hidden">
       <a

@@ -21,12 +21,10 @@ import { ContactStatusBadge } from '../components/contacts/ContactStatusBadge'
 import { EmailComposer } from '../components/email/EmailComposer'
 import { toast } from '../store/toastStore'
 import { formatDate, formatCurrency, formatRelativeDate } from '../utils/formatters'
-import { DEAL_STAGE_COLORS, ACTIVITY_TYPE_COLORS } from '../utils/constants'
+import { COMPANY_INDUSTRY_LABELS, DEAL_STAGE_COLORS, ACTIVITY_TYPE_COLORS } from '../utils/constants'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import type { Company, Deal, Contact, Activity, CRMEmail, DealStage } from '../types'
 import { CustomFieldsDisplay } from '../components/shared/CustomFieldRenderer'
-import { useI18nStore } from '../i18n'
-import { getIndustryLabel } from '../lib/industries'
 
 type TabId = 'overview' | 'contacts' | 'deals' | 'activities' | 'emails'
 
@@ -44,7 +42,6 @@ const STATUS_CONFIG: Record<string, { color: string; bg: string }> = {
 
 export function CompanyDetail() {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
@@ -149,7 +146,7 @@ export function CompanyDetail() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold text-white">{company.name}</h2>
-                <p className="text-slate-400 mt-0.5">{getIndustryLabel(company.industry, language)}</p>
+                <p className="text-slate-400 mt-0.5">{COMPANY_INDUSTRY_LABELS[company.industry]}</p>
                 <div className="flex items-center gap-3 mt-2 text-sm text-slate-500">
                   {company.website && (
                     <a href={company.website} target="_blank" rel="noopener noreferrer"
@@ -196,7 +193,7 @@ export function CompanyDetail() {
           { label: t.dashboard.openDeals, value: kpis.openDeals, icon: <TrendingUp size={15} />, color: 'text-amber-400' },
           { label: t.deals.pipeline, value: formatCurrency(kpis.totalPipeline), icon: <DollarSign size={15} />, color: 'text-emerald-400' },
           { label: t.deals.won, value: formatCurrency(kpis.totalWon), icon: <DollarSign size={15} />, color: 'text-emerald-400' },
-          { label: t.reports.conversionRate, value: `${kpis.winRate}%`, icon: <TrendingUp size={15} />, color: 'text-brand-400' },
+          { label: 'Tasa de conversión', value: `${kpis.winRate}%`, icon: <TrendingUp size={15} />, color: 'text-brand-400' },
         ].map((kpi) => (
           <div key={kpi.label} className="glass rounded-xl border-white/8 p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -234,7 +231,7 @@ export function CompanyDetail() {
             {[
               { label: t.common.name, value: company.name },
               { label: t.companies.website, value: company.domain || '\u2014' },
-              { label: t.companies.industry, value: getIndustryLabel(company.industry, language) },
+              { label: t.companies.industry, value: COMPANY_INDUSTRY_LABELS[company.industry] },
               { label: t.companies.size, value: company.size || '\u2014' },
               { label: t.companies.country, value: company.country || '\u2014' },
               { label: t.companies.city, value: company.city || '\u2014' },
@@ -379,7 +376,7 @@ export function CompanyDetail() {
                 return (
                   <div key={a.id} className="relative mb-3">
                     {/* Dot */}
-                    <div className="absolute -left-6 top-3 w-[9px] h-[9px] rounded-full border-2 border-surface-1" style={{ backgroundColor: typeColor }} />
+                    <div className="absolute -left-6 top-3 w-[9px] h-[9px] rounded-full border-2 border-navy-900" style={{ backgroundColor: typeColor }} />
                     <div className="glass rounded-xl border-white/8 p-3">
                       <ActivityItem
                         activity={a}

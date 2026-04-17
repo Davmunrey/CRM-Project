@@ -2,30 +2,7 @@ import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { Button } from './Button'
-import { IconButton } from './IconButton'
 import { useTranslations } from '../../i18n'
-
-export function DialogPanelHeader({
-  title,
-  onClose,
-  closeLabel,
-}: {
-  title: string
-  onClose: () => void
-  closeLabel: string
-}) {
-  return (
-    <div className="flex items-center justify-between px-6 py-4 border-b border-white/6 flex-shrink-0">
-      <h2 className="text-base font-semibold text-fg">{title}</h2>
-      <IconButton
-        type="button"
-        aria-label={closeLabel}
-        onClick={onClose}
-        icon={<X size={16} aria-hidden />}
-      />
-    </div>
-  )
-}
 
 interface SlideOverProps {
   isOpen: boolean
@@ -85,19 +62,35 @@ export function SlideOver({ isOpen, onClose, title, children, width = 'lg' }: Sl
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden" aria-modal="true" role="dialog">
+      {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-surface-0/80 backdrop-blur-md animate-fade-in modal-backdrop"
+        className="absolute inset-0 bg-navy-950/80 backdrop-blur-md animate-fade-in modal-backdrop"
         onClick={onClose}
       />
+      {/* Panel */}
       <div ref={panelRef} className={`absolute inset-y-0 right-0 flex w-full ${widthClasses[width]} animate-slide-in`}>
-        <div className="slide-panel flex flex-col w-full bg-surface-2/95 border-l border-white/8 shadow-float backdrop-blur-sm">
-          <DialogPanelHeader title={title} onClose={onClose} closeLabel={t.common.close} />
+        <div className="slide-panel flex flex-col w-full bg-navy-800/60 border-l border-white/8 shadow-float">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/6 flex-shrink-0">
+            <h2 className="text-base font-semibold text-white">{title}</h2>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t.common.close}
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          {/* Content */}
           <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
         </div>
       </div>
     </div>
   )
 }
+
+// ─── Centered Modal ───────────────────────────────────────────────────────────
 
 interface ModalProps {
   isOpen: boolean
@@ -159,19 +152,33 @@ export function Modal({ isOpen, onClose, title, children, size = 'lg' }: ModalPr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-modal="true" role="dialog">
       <div
-        className="absolute inset-0 bg-surface-0/80 backdrop-blur-md animate-fade-in modal-backdrop"
+        className="absolute inset-0 bg-navy-950/80 backdrop-blur-md animate-fade-in modal-backdrop"
         onClick={onClose}
       />
       <div
         ref={panelRef}
         className={`relative w-full ${modalSizeClasses[size]} glass border border-white/10 rounded-2xl shadow-float animate-scale-in flex flex-col max-h-[90vh]`}
       >
-        <DialogPanelHeader title={title} onClose={onClose} closeLabel={t.common.close} />
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/6 flex-shrink-0">
+          <h2 className="text-base font-semibold text-white">{title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={t.common.close}
+            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
       </div>
     </div>
   )
 }
+
+// ─── Confirm Dialog ───────────────────────────────────────────────────────────
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -206,10 +213,10 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true" role="dialog">
-      <div className="absolute inset-0 bg-surface-0/80 backdrop-blur-md" onClick={onClose} />
+      <div className="absolute inset-0 bg-navy-950/80 backdrop-blur-md" onClick={onClose} />
       <div className="relative glass rounded-2xl shadow-float p-6 w-full max-w-sm mx-4 animate-scale-in border-white/10">
-        <h3 className="text-base font-semibold text-fg mb-2">{title}</h3>
-        <p className="text-sm text-fg-muted mb-6">{message}</p>
+        <h3 className="text-base font-semibold text-white mb-2">{title}</h3>
+        <p className="text-sm text-slate-400 mb-6">{message}</p>
         <div className="flex gap-3 justify-end">
           <Button type="button" variant="ghost" onClick={onClose}>
             {t.common.cancel}

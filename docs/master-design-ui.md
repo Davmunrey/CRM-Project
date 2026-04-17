@@ -2,8 +2,6 @@
 
 > Consolidated **2026-04-15**. Layout shells, theme, navigation/settings sidebar, and profile display names.
 
-**Companion (tokens, Tailwind, scripts, guardrails):** [`design-system-reference.md`](./design-system-reference.md).
-
 **Replaces:** design-system-and-layout, theme-system, navigation-settings-sidebar-runbook, user-profile-display-names.
 
 ## Table of contents

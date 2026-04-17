@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { SalesGoal } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { devConsole } from '../lib/devConsole'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 import { useAuthStore } from './authStore'
 
@@ -71,7 +70,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
         organization_id: getOrgId(),
       })
       if (error) {
-        devConsole.error('[goalsStore] insert error', error)
+        console.error('[goalsStore] insert error', error)
         set((s) => ({ goals: s.goals.filter((g) => g.id !== goal.id), error: error.message }))
         return { error: error.message as string }
       }
@@ -91,14 +90,14 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
       if (updates.startDate !== undefined) row.start_date = updates.startDate
       if (updates.endDate !== undefined) row.end_date = updates.endDate
       ;(supabase as any).from('sales_goals').update(row).eq('id', id)
-        .then(({ error }: any) => { if (error) devConsole.error('[goalsStore] update error', error) })
+        .then(({ error }: any) => { if (error) console.error('[goalsStore] update error', error) })
     }
   },
 
   deleteGoal: (id) => {
     set((s) => ({ goals: s.goals.filter((g) => g.id !== id) }))
     if (isSupabaseConfigured && supabase) {
-      sbDelete('sales_goals', id).catch((e) => devConsole.error('[goalsStore] delete error', e))
+      sbDelete('sales_goals', id).catch((e) => console.error('[goalsStore] delete error', e))
     }
   },
 

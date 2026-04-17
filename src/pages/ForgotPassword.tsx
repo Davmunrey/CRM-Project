@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Zap, Mail, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Zap, Mail, Loader2, ArrowRight, ShieldCheck } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { Card } from '../components/ui/Card'
 
 export function ForgotPassword() {
   const t = useTranslations()
@@ -40,9 +37,9 @@ export function ForgotPassword() {
   }
 
   return (
-    <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
+    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="auth-bg-blob absolute top-1/4 left-1/4 w-96 h-96 bg-accent-600/10 rounded-full blur-3xl" />
+        <div className="auth-bg-blob absolute top-1/4 left-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
         <div className="auth-bg-blob absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-600/8 rounded-full blur-3xl" />
       </div>
 
@@ -55,29 +52,29 @@ export function ForgotPassword() {
             {branding.logoUrl ? (
               <img src={branding.logoUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <Zap size={24} className="text-fg" />
+              <Zap size={24} className="text-white" />
             )}
           </div>
-          <h1 className="text-2xl font-bold text-fg">{branding.appName}</h1>
-          <p className="text-sm text-fg-muted mt-1">{t.auth.forgotPasswordTitle}</p>
+          <h1 className="text-2xl font-bold text-white">{branding.appName}</h1>
+          <p className="text-sm text-slate-500 mt-1">{t.auth.forgotPasswordTitle}</p>
         </div>
 
-        <Card className="p-8">
+        <div className="glass rounded-2xl shadow-float border-white/10 p-8">
           {success ? (
             <div className="text-center py-4">
               <ShieldCheck size={40} className="text-emerald-400 mx-auto mb-3" />
-              <p className="text-fg font-semibold mb-1">{t.auth.checkEmailTitle}</p>
-              <p className="text-sm text-fg-muted">
+              <p className="text-white font-semibold mb-1">{t.auth.checkEmailTitle}</p>
+              <p className="text-sm text-slate-400">
                 {t.auth.checkEmailSent}{' '}
-                <span className="text-accent-400">{email}</span>
+                <span className="text-brand-400">{email}</span>
               </p>
-              <Link to="/login" className="mt-4 inline-block text-sm text-accent-400 hover:text-accent-300 transition-colors">
+              <Link to="/login" className="mt-4 inline-block text-sm text-brand-400 hover:text-brand-300 transition-colors">
                 {t.auth.backToLogin}
               </Link>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
-              <p className="text-sm text-fg-muted">
+              <p className="text-sm text-slate-400">
                 {t.auth.checkEmailInstructions}
               </p>
 
@@ -87,36 +84,45 @@ export function ForgotPassword() {
                 </div>
               )}
 
-              <Input
-                label={t.auth.email}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t.auth.emailPlaceholder}
-                required
-                autoFocus
-                leftIcon={<Mail size={16} aria-hidden />}
-              />
+              <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1.5">{t.auth.email}</label>
+                <div className="relative">
+                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t.auth.emailPlaceholder}
+                    required
+                    autoFocus
+                    className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 transition-colors"
+                  />
+                </div>
+              </div>
 
-              <Button
+              <button
                 type="submit"
-                className="w-full rounded-xl"
-                size="lg"
                 disabled={loading || !email}
-                loading={loading}
-                rightIcon={<ArrowRight size={16} aria-hidden />}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl btn-gradient text-white font-semibold text-sm disabled:opacity-50 transition-all"
               >
-                {t.auth.sendLink}
-              </Button>
+                {loading ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <>
+                    {t.auth.sendLink}
+                    <ArrowRight size={16} />
+                  </>
+                )}
+              </button>
 
               <div className="pt-2 text-center">
-                <Link to="/login" className="text-sm text-fg-muted hover:text-fg transition-colors">
+                <Link to="/login" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">
                   {t.auth.backToLogin}
                 </Link>
               </div>
             </form>
           )}
-        </Card>
+        </div>
       </div>
     </div>
   )

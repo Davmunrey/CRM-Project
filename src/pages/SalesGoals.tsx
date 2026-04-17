@@ -211,7 +211,7 @@ export function SalesGoals() {
               <select
                 value={form.type}
                 onChange={(e) => setForm({ ...form, type: e.target.value as SalesGoal['type'] })}
-                className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40"
+                className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40"
               >
                 <option value="revenue">{t.goals.revenue}</option>
                 <option value="deals_closed">{t.goals.dealsClosed}</option>
@@ -226,7 +226,7 @@ export function SalesGoals() {
                 value={form.target || ''}
                 onChange={(e) => setForm({ ...form, target: Number(e.target.value) })}
                 placeholder={t.goals.targetValuePlaceholder}
-                className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600"
+                className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40 placeholder:text-slate-600"
               />
             </div>
             <div>
@@ -234,7 +234,7 @@ export function SalesGoals() {
               <select
                 value={form.period}
                 onChange={(e) => setForm({ ...form, period: e.target.value as SalesGoal['period'] })}
-                className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40"
+                className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40"
               >
                 <option value="monthly">{t.goals.monthly}</option>
                 <option value="quarterly">{t.goals.quarterly}</option>
@@ -248,7 +248,7 @@ export function SalesGoals() {
                   type="date"
                   value={form.startDate}
                   onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40"
+                  className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40"
                 />
               </div>
               <div>
@@ -257,7 +257,7 @@ export function SalesGoals() {
                   type="date"
                   value={form.endDate}
                   onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40"
+                  className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-brand-500/40"
                 />
               </div>
             </div>

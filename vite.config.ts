@@ -57,8 +57,8 @@ export default defineConfig(({ command, mode }) => {
     test: {
       environment: 'jsdom',
       globals: true,
-      /** `forks` avoids thread-pool hangs on Windows with Vitest 4 + jsdom. */
-      pool: 'forks',
+      pool: 'threads',
+      /** Keep worker count modest on Windows to avoid pool hangs / "Timeout waiting for worker to respond". */
       maxWorkers: 4,
       minWorkers: 1,
       testTimeout: 30_000,

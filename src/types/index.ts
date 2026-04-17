@@ -53,7 +53,15 @@ export interface Lead {
 // ─── Company ─────────────────────────────────────────────────────────────────
 
 export type CompanyStatus = 'prospect' | 'customer' | 'partner' | 'churned'
-export type CompanyIndustry = string
+export type CompanyIndustry =
+  | 'fintech'
+  | 'saas'
+  | 'consulting'
+  | 'insurance'
+  | 'banking'
+  | 'retail'
+  | 'healthcare'
+  | 'other'
 
 export interface Company {
   id: string
@@ -141,13 +149,9 @@ export interface User {
   role: string
 }
 
-export type UiDensity = 'comfortable' | 'compact'
-
 export interface AppSettings {
   currency: DealCurrency
   themePreference: 'system' | 'light' | 'dark'
-  /** Row/control density; mirrored on `document.documentElement.dataset.density`. */
-  uiDensity: UiDensity
   pipelineStages: PipelineStage[]
   leadSlaHours: number
   permissionProfiles: Record<import('./auth').UserRole, import('./auth').Permission[]>

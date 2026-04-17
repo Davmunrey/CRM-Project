@@ -7,9 +7,6 @@ import { useTranslations } from '../i18n'
 import type { LeadLifecycleStage } from '../types'
 import { formatDateTime } from '../utils/formatters'
 import { toast } from '../store/toastStore'
-import { PageHeader } from '../components/ui/PageHeader'
-import { Toolbar } from '../components/ui/Toolbar'
-import { Button } from '../components/ui/Button'
 
 const STAGES: LeadLifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'opportunity', 'customer']
 
@@ -72,7 +69,7 @@ function HintPopover({ text }: { text: string }) {
       </button>
       {open && position && createPortal(
         <div
-          className="fixed z-[80] w-64 rounded-lg border border-white/10 bg-surface-1 p-2 text-[11px] leading-4 text-slate-300 shadow-xl"
+          className="fixed z-[80] w-64 rounded-lg border border-white/10 bg-[#111220] p-2 text-[11px] leading-4 text-slate-300 shadow-xl"
           style={{ top: position.top, left: position.left }}
         >
           {text}
@@ -128,29 +125,38 @@ export function Leads() {
 
   return (
     <div className="crm-page space-y-5">
-      <PageHeader
-        showTitle={false}
-        title={t.nav.leads}
-        subtitle={`${filtered.length} ${t.leads.title.toLowerCase()} · ${hotCount} ${t.leads.hot.toLowerCase()}`}
-        actions={
-          <>
-            <Button variant="secondary" size="sm" leftIcon={<RefreshCw size={14} />} onClick={() => { fetchLeads() }}>
-              {t.leads.refresh}
-            </Button>
-            <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setShowQuickAdd((v) => !v)}>
-              {t.leads.addLead}
-            </Button>
-          </>
-        }
-      />
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h2 className="text-xl font-bold text-white">{t.leads.title}</h2>
+          <p className="text-sm text-slate-500">{filtered.length} {t.leads.title.toLowerCase()} • {hotCount} {t.leads.hot.toLowerCase()}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => { fetchLeads() }}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg bg-white/6 text-slate-300 hover:bg-white/10"
+          >
+            <RefreshCw size={12} />
+            {t.leads.refresh}
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowQuickAdd((v) => !v)}
+            className="inline-flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg btn-gradient text-white"
+          >
+            <Plus size={12} />
+            {t.leads.addLead}
+          </button>
+        </div>
+      </div>
 
       {showQuickAdd && (
         <div className="glass rounded-2xl border-white/10 p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-            <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t.leads.firstName} className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
-            <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t.leads.lastName} className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
-            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.common.email} className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
-            <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder={t.leads.company} className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+            <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t.leads.firstName} className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+            <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t.leads.lastName} className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.common.email} className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
+            <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder={t.leads.company} className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none" />
           </div>
           <div className="mt-3">
             <button
@@ -181,18 +187,17 @@ export function Leads() {
         </div>
       )}
 
-      <Toolbar>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t.leads.searchPlaceholder}
-          className="md:col-span-2 bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
+          className="md:col-span-2 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
         />
         <select
           value={stageFilter}
           onChange={(e) => setStageFilter((e.target.value as LeadLifecycleStage) || '')}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
+          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
         >
           <option value="">{t.leads.allStages}</option>
           {STAGES.map((stage) => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}
@@ -200,7 +205,7 @@ export function Leads() {
         <select
           value={scoreFilter}
           onChange={(e) => setScoreFilter((e.target.value as 'hot' | 'warm' | 'cold') || '')}
-          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
+          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-sm text-white outline-none"
         >
           <option value="">{t.leads.allScores}</option>
           <option value="hot">{t.leads.hot} (70+)</option>
@@ -208,7 +213,6 @@ export function Leads() {
           <option value="cold">{t.leads.cold} (&lt;40)</option>
         </select>
       </div>
-      </Toolbar>
 
       <div className="glass rounded-2xl border-white/8 overflow-hidden">
         <div className="px-4 py-3 border-b border-white/6 text-xs text-slate-400 uppercase tracking-wider">{t.leads.leadInbox}</div>

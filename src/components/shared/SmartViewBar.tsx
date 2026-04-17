@@ -108,7 +108,7 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
         <div className="relative">
           <button type="button"
             onClick={() => setShowDropdown((v) => !v)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-surface-2 border border-white/8 text-slate-500 hover:text-slate-300 transition-colors"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-[#0d0e1a] border border-white/8 text-slate-500 hover:text-slate-300 transition-colors"
           >
             <Plus size={12} />
             {t.common.view}
@@ -121,7 +121,7 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
                 onClick={() => setShowDropdown(false)}
               />
               <div
-                className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-white/10 shadow-2xl z-50 py-1 bg-surface-2"
+                className="absolute top-full left-0 mt-1 w-56 rounded-xl border border-white/10 shadow-2xl z-50 py-1 bg-[#0d0f1e]"
               >
                 {unpinnedViews.map((view) => (
                   <div

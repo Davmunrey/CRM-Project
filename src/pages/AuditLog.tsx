@@ -191,7 +191,7 @@ export function AuditLog() {
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   entityFilter === opt.value
                     ? 'btn-gradient text-white'
-                    : 'bg-surface-2 border border-white/10 text-slate-300 hover:bg-white/4'
+                    : 'bg-[#0d0e1a] border border-white/10 text-slate-300 hover:bg-white/4'
                 }`}
               >
                 {opt.label}
@@ -207,7 +207,7 @@ export function AuditLog() {
               onChange={(e) => setDateFrom(e.target.value)}
               aria-label={`${t.common.from} ${t.common.date}`}
               title={`${t.common.from} ${t.common.date}`}
-              className="bg-surface-2 border border-white/10 rounded-full px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-white/20"
+              className="bg-[#0d0e1a] border border-white/10 rounded-full px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-white/20"
             />
             <span className="text-slate-400 text-sm">{t.common.to}:</span>
             <input
@@ -216,7 +216,7 @@ export function AuditLog() {
               onChange={(e) => setDateTo(e.target.value)}
               aria-label={`${t.common.to} ${t.common.date}`}
               title={`${t.common.to} ${t.common.date}`}
-              className="bg-surface-2 border border-white/10 rounded-full px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-white/20"
+              className="bg-[#0d0e1a] border border-white/10 rounded-full px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-white/20"
             />
           </div>
         </div>

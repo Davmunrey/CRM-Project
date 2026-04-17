@@ -26,7 +26,7 @@ Use this checklist before shipping a "sell-ready" baseline release.
 
 - Status: Active
 - Owner: Product/QA
-- Last updated: 2026-04-17
+- Last updated: 2026-04-16
 - Canonical: Yes
 
 ## Scope and Planning
@@ -55,7 +55,6 @@ Use this checklist before shipping a "sell-ready" baseline release.
 - [x] Manual multilingual regression signed off.
 - [x] Known issues documented with severity and owner.
 - [x] Layout and theme spot-check (dark + light) on Dashboard, Deals, Inbox, and Settings per [`master-design-ui` — design system](./master-design-ui.md#design-system-and-layout).
-- [x] **UI/UX regression gate:** `npm run ui:lint` green; Vitest + `vitest-axe` smoke on auth flows (`tests/auth/*`) and chart/list pages (`tests/a11y/key-pages.test.tsx` — Dashboard + Contacts in dark and light); theme preference persists via `useSettingsStore` (see `tests/components/Topbar.theme.test.tsx`, `tests/store/themePreferencePersistence.test.ts`). Canonical reference: [`design-system-reference.md`](./design-system-reference.md).
 
 ## Operations and Handoff
 
@@ -103,8 +102,6 @@ For each locale in scope, spot-check: **login**, **create contact**, **create/mo
 
 - [ ] Dates and numbers match **org + user locale** expectations on Dashboard or Reports if those areas changed.
 - [ ] Currency sample (if deals/reports touched): symbol position and decimals look correct for the locale.
-- [ ] If company industries changed: company form, companies filters/list, company detail, and CSV import render localized labels consistently for all supported locales.
-- [ ] If industry taxonomy changed: no hardcoded industry arrays remain outside `src/lib/industries.ts`; legacy values are normalized without breaking existing records/views.
 
 ### Sign-off line
 

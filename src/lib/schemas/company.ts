@@ -1,12 +1,11 @@
 import { z } from 'zod'
 import type { Translations } from '../../i18n/types'
-import { normalizeIndustryValue } from '../industries'
 
 export const createCompanySchema = (t: Translations) =>
   z.object({
     name: z.string().min(1, t.formErrors.companyNameRequired),
     domain: z.string(),
-    industry: z.string().transform((value) => normalizeIndustryValue(value)),
+    industry: z.enum(['fintech', 'saas', 'consulting', 'insurance', 'banking', 'retail', 'healthcare', 'other']),
     size: z.string(),
     country: z.string(),
     city: z.string(),

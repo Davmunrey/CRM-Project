@@ -6,7 +6,6 @@ import { useAuditStore } from '../../store/auditStore'
 import { toast } from '../../store/toastStore'
 import type { ContactStatus, ContactSource } from '../../types'
 import { useTranslations } from '../../i18n'
-import { normalizeIndustryValue } from '../../lib/industries'
 
 interface CSVImportProps {
   isOpen: boolean
@@ -257,7 +256,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
           addCompany({
             name: record.name,
             domain: record.domain || '',
-            industry: normalizeIndustryValue(record.industry || 'other'),
+            industry: record.industry || 'other',
             size: record.size || '',
             country: record.country || '',
             city: record.city || '',
@@ -299,7 +298,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-surface-0/70 backdrop-blur-md" onClick={onClose} />
+      <div className="absolute inset-0 bg-navy-950/70 backdrop-blur-md" onClick={onClose} />
       <div className="relative w-full max-w-2xl mx-4 glass rounded-2xl shadow-float border-white/10 overflow-hidden animate-scale-in max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/8 flex-shrink-0">
@@ -397,7 +396,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                     <select
                       value={mapping[field.key] || ''}
                       onChange={(e) => setMapping({ ...mapping, [field.key]: e.target.value })}
-                      className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-brand-500/40"
+                      className="flex-1 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-brand-500/40"
                     >
                       <option value="">— {t.csvImport.doNotMap} —</option>
                       {csvHeaders.map((h) => (
