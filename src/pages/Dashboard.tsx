@@ -348,7 +348,7 @@ export function Dashboard() {
                 {t.dashboard.remaining} {formatCurrency(quotaProgress.remaining)}
               </p>
             </div>
-            <div className="w-full h-3 bg-navy-800/60 rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-surface-2/90 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
@@ -405,7 +405,7 @@ export function Dashboard() {
               const contact = activity.contactId ? getContact(activity.contactId) : undefined
               return (
                 <div key={activity.id} className="flex items-start gap-3 pb-3 border-b border-white/6 last:border-0 last:pb-0">
-                  <div className="w-8 h-8 rounded-lg bg-navy-800/60 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-surface-2/90 flex items-center justify-center flex-shrink-0">
                     <Activity size={13} className="text-brand-400" />
                   </div>
                   <div className="flex-1 min-w-0">

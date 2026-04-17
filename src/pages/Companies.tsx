@@ -15,10 +15,13 @@ import { CompanyForm } from '../components/companies/CompanyForm'
 import { Select } from '../components/ui/Select'
 import { toast } from '../store/toastStore'
 import { formatCurrency } from '../utils/formatters'
-import { COMPANY_INDUSTRY_LABELS, COMPANY_SIZE_OPTIONS } from '../utils/constants'
+import { COMPANY_SIZE_OPTIONS } from '../utils/constants'
 import type { Company, CompanyStatus, SmartViewFilter } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
-import { useLocalizedCompanies, useTranslations } from '../i18n'
+import { useI18nStore, useLocalizedCompanies, useTranslations } from '../i18n'
+import { PageHeader } from '../components/ui/PageHeader'
+import { Toolbar } from '../components/ui/Toolbar'
+import { getIndustryLabel, getIndustryOptions, normalizeIndustryValue } from '../lib/industries'
 
 type StatusBadge = 'yellow' | 'green' | 'indigo' | 'red'
 const STATUS_COLORS: Record<string, StatusBadge> = {
@@ -27,7 +30,10 @@ const STATUS_COLORS: Record<string, StatusBadge> = {
 
 export function Companies() {
   const t = useTranslations()
+  const language = useI18nStore((s) => s.language)
   const navigate = useNavigate()
+  const industryOptions = useMemo(() => getIndustryOptions(language), [language])
+
   const { companies, addCompany, updateCompany, deleteCompany } = useCompaniesStore()
   const localizedCompanies = useLocalizedCompanies(companies)
   const contacts = useContactsStore((s) => s.contacts)
@@ -50,7 +56,7 @@ export function Companies() {
   const filtered = useMemo(() => {
     return localizedCompanies.filter((c) => {
       if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false
-      if (industryFilter && c.industry !== industryFilter) return false
+      if (industryFilter && normalizeIndustryValue(c.industry) !== industryFilter) return false
       if (statusFilter && c.status !== statusFilter) return false
       if (sizeFilter && c.size !== sizeFilter) return false
       // Apply smart view filters
@@ -106,8 +112,9 @@ export function Companies() {
 
   return (
     <div className="crm-page space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <PageHeader showTitle={false} title={t.nav.companies} />
+      <Toolbar>
+      <div className="flex items-center gap-3 flex-wrap w-full">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-72" />
         <Button
           variant={showFilters ? 'secondary' : 'ghost'}
@@ -157,6 +164,7 @@ export function Companies() {
           </PermissionGate>
         </div>
       </div>
+      </Toolbar>
 
       {/* Smart Views bar */}
       <SmartViewBar entityType="company" onFiltersChange={setViewFilters} />
@@ -165,7 +173,7 @@ export function Companies() {
       {showFilters && (
         <div className="flex gap-3 flex-wrap items-center glass p-4">
           <Select
-            options={Object.entries(COMPANY_INDUSTRY_LABELS).map(([v, l]) => ({ value: v, label: l }))}
+            options={industryOptions}
             placeholder={t.companies.industry}
             value={industryFilter}
             onChange={(e) => setIndustryFilter(e.target.value)}
@@ -258,7 +266,7 @@ export function Companies() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-400 text-xs">
-                      {COMPANY_INDUSTRY_LABELS[company.industry] ?? company.industry}
+                      {getIndustryLabel(company.industry, language)}
                     </td>
                     <td className="px-4 py-3 text-slate-400 text-xs">{company.size || '—'}</td>
                     <td className="px-4 py-3 text-slate-400 text-xs">{company.country || '—'}</td>

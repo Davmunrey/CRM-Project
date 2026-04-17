@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { axe } from 'vitest-axe'
 import { Login } from '../../src/pages/Login'
 import { TestRouter } from '../utils/TestRouter'
 
@@ -39,6 +40,12 @@ describe('Login', () => {
     await waitFor(() => {
       expect(mockSignIn).toHaveBeenCalledWith({ email: 'user@test.com', password: 'secret123' })
     })
+  })
+
+  it('A11Y: initial login view has no serious axe violations', async () => {
+    mockSignIn.mockResolvedValue({ error: null })
+    const { container } = renderLogin()
+    expect(await axe(container)).toHaveNoViolations()
   })
 
   it('AUTH-01: shows error message when signIn returns an error', async () => {

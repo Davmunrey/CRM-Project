@@ -116,7 +116,7 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
               onChange={(e) => setSelectedContactId(e.target.value)}
               aria-label={t.contacts.title}
               title={t.contacts.title}
-              className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500/50 [&>option]:bg-navy-900 [&>option]:text-white"
+              className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
             >
               <option value="">— {t.common.selectAll} —</option>
               {contacts.map((c) => (
@@ -130,7 +130,7 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
           <div className="flex items-center gap-3 pt-2">
             <button type="button"
               onClick={onClose}
-              className="flex-1 bg-[#0d0e1a] border border-white/10 text-slate-300 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-white/10 transition-colors"
+              className="flex-1 bg-surface-2 border border-white/10 text-slate-300 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-white/10 transition-colors"
             >
               {t.common.cancel}
             </button>
@@ -177,7 +177,7 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
             onChange={(e) => onChange({ ...step, type: e.target.value as SequenceStepType })}
             aria-label={t.common.type}
             title={t.common.type}
-            className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-brand-500/50 [&>option]:bg-navy-900 [&>option]:text-white"
+            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-brand-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
           >
             {(Object.keys(stepTypeLabels) as SequenceStepType[]).map((k) => (
               <option key={k} value={k}>{stepTypeLabels[k]}</option>
@@ -195,7 +195,7 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
             onChange={(e) => onChange({ ...step, delayDays: parseInt(e.target.value) || 0 })}
             aria-label={t.activities.dueDate}
             title={t.activities.dueDate}
-            className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-brand-500/50"
+            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-brand-500/50"
           />
         </div>
 
@@ -209,7 +209,7 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
                 value={step.subject ?? ''}
                 onChange={(e) => onChange({ ...step, subject: e.target.value })}
                 placeholder={`${t.activities.subject}...`}
-                className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+                className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
               />
             </div>
             <div className="col-span-2">
@@ -221,7 +221,7 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
                 onChange={(e) => onChange({ ...step, bodyTemplate: e.target.value })}
                 placeholder={`${t.common.description}...`}
                 rows={3}
-                className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none font-mono"
+                className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none font-mono"
               />
             </div>
           </>
@@ -236,7 +236,7 @@ function StepFormRow({ step, index, onChange, onRemove }: StepFormProps) {
               value={step.taskDescription ?? ''}
               onChange={(e) => onChange({ ...step, taskDescription: e.target.value })}
               placeholder={`${t.common.description}...`}
-              className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+              className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
             />
           </div>
         )}
@@ -317,7 +317,7 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={handleClose} />
-      <div className="relative z-10 ml-auto w-full max-w-xl h-full bg-navy-900 border-l border-white/8 flex flex-col shadow-2xl">
+      <div className="relative z-10 ml-auto w-full max-w-xl h-full bg-surface-1 border-l border-white/8 flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/8">
           <div>
@@ -344,7 +344,7 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder={`${t.sequences.title}...`}
-              className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+              className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
             />
           </div>
 
@@ -356,7 +356,7 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder={`${t.common.description}...`}
               rows={2}
-              className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none"
+              className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none"
             />
           </div>
 
@@ -406,7 +406,7 @@ function NewSequenceSlideOver({ open, onClose }: NewSequenceSlideOverProps) {
         <div className="px-6 py-4 border-t border-white/8 flex items-center gap-3">
           <button type="button"
             onClick={handleClose}
-            className="flex-1 bg-[#0d0e1a] border border-white/10 text-slate-300 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-white/10 transition-colors"
+            className="flex-1 bg-surface-2 border border-white/10 text-slate-300 text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-white/10 transition-colors"
           >
             {t.common.cancel}
           </button>
@@ -517,7 +517,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                   <div key={step.id} className="flex gap-4">
                     {/* Timeline line */}
                     <div className="flex flex-col items-center flex-shrink-0">
-                      <div className="w-9 h-9 rounded-xl bg-[#0d0e1a] border border-white/10 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-xl bg-surface-2 border border-white/10 flex items-center justify-center">
                         <StepIcon type={step.type} size={15} />
                       </div>
                       {idx < viewSequence.steps.length - 1 && (
@@ -822,7 +822,7 @@ export function Sequences() {
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-2xl bg-[#0d0e1a] border border-white/8 flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-surface-2 border border-white/8 flex items-center justify-center mx-auto mb-4">
                   <ListOrdered size={28} className="text-slate-600" />
                 </div>
                 <h3 className="text-white font-medium mb-1">{t.common.view} {t.sequences.title.toLowerCase()}</h3>

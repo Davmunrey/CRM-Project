@@ -28,6 +28,8 @@ import type { Contact, ContactStatus, DuplicateGroup, SmartViewFilter } from '..
 import { Users } from 'lucide-react'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { useAuthStore } from '../store/authStore'
+import { PageHeader } from '../components/ui/PageHeader'
+import { Toolbar } from '../components/ui/Toolbar'
 
 const CONTACT_SOURCE_LABELS_IMPORT = CONTACT_SOURCE_LABELS
 
@@ -189,8 +191,9 @@ export function Contacts() {
 
   return (
     <div className="crm-page space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <PageHeader showTitle={false} title={t.nav.contacts} />
+      <Toolbar>
+      <div className="flex items-center gap-3 flex-wrap w-full">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-72" />
 
         <Button
@@ -230,7 +233,7 @@ export function Contacts() {
                   setSelectedIds(new Set())
                   e.target.value = ''
                 }}
-                className="bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none"
+                className="bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none"
                 defaultValue=""
                 aria-label={t.common.changeStatus}
                 title={t.common.changeStatus}
@@ -250,7 +253,7 @@ export function Contacts() {
                   setSelectedIds(new Set())
                   e.target.value = ''
                 }}
-                className="bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none"
+                className="bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none"
                 defaultValue=""
                 aria-label={t.common.assignedTo}
                 title={t.common.assignedTo}
@@ -265,7 +268,7 @@ export function Contacts() {
                   id="bulkTagInput"
                   type="text"
                   placeholder={`${t.common.tags}...`}
-                  className="bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none w-24"
+                  className="bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none w-24"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const tag = (e.target as HTMLInputElement).value.trim()
@@ -335,6 +338,7 @@ export function Contacts() {
           </PermissionGate>
         </div>
       </div>
+      </Toolbar>
 
       {/* Smart Views bar */}
       <SmartViewBar entityType="contact" onFiltersChange={setViewFilters} />
@@ -577,7 +581,7 @@ export function Contacts() {
           {/* Modal */}
           <div className="relative w-full max-w-3xl max-h-[80vh] overflow-y-auto glass border border-white/8 rounded-2xl shadow-2xl">
             {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-white/8 bg-[#0d0e1a] rounded-t-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 border-b border-white/8 bg-surface-2 rounded-t-2xl">
               <div>
                 <h2 className="text-lg font-bold text-slate-200">{t.contacts.duplicatesFound}</h2>
                 <p className="text-xs text-slate-500 mt-0.5">

@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Zap, Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Zap, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Card } from '../components/ui/Card'
+import { Select } from '../components/ui/Select'
+import { IconButton } from '../components/ui/IconButton'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { LANGUAGE_FLAGS, LANGUAGE_LABELS, useI18nStore, useTranslations } from '../i18n'
@@ -150,8 +155,13 @@ export function Login() {
     }
   }
 
+  const languageOptions = (['en', 'es', 'pt', 'fr', 'de', 'it'] as Language[]).map((lang) => ({
+    value: lang,
+    label: `${LANGUAGE_FLAGS[lang]} ${LANGUAGE_LABELS[lang]}`,
+  }))
+
   return (
-    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+    <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
       {/* Background decoration */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="auth-bg-blob absolute top-1/4 left-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
@@ -162,28 +172,25 @@ export function Login() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="flex justify-end mb-3">
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value as Language)}
-              className="bg-[#0d0e1a] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-brand-500/50"
-              aria-label={t.settings.language}
-              title={t.settings.language}
-            >
-              {(['en', 'es', 'pt', 'fr', 'de', 'it'] as Language[]).map((lang) => (
-                <option key={lang} value={lang}>
-                  {LANGUAGE_FLAGS[lang]} {LANGUAGE_LABELS[lang]}
-                </option>
-              ))}
-            </select>
+            <div className="w-[min(100%,220px)]">
+              <Select
+                aria-label={t.settings.language}
+                title={t.settings.language}
+                options={languageOptions}
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as Language)}
+                className="!py-1.5 !text-xs rounded-lg"
+              />
+            </div>
           </div>
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto shadow-brand-sm mb-4 overflow-hidden" style={{ backgroundColor: branding.primaryColor }}>
             {branding.logoUrl ? (
               <img src={branding.logoUrl} alt={branding.appName} className="w-full h-full object-cover" />
             ) : (
-              <Zap size={24} className="text-white" />
+              <Zap size={24} className="text-fg" />
             )}
           </div>
-          <h1 className="text-2xl font-bold text-white">{branding.appName}</h1>
+          <h1 className="text-2xl font-bold text-fg">{branding.appName}</h1>
           {branding.customDomain && (
             <p className="text-xs text-slate-500 mt-1">{branding.customDomain}</p>
           )}
@@ -197,7 +204,7 @@ export function Login() {
         </div>
 
         {/* Login form */}
-        <div className="glass rounded-2xl shadow-float border-white/10 p-8">
+        <Card className="p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
@@ -205,64 +212,53 @@ export function Login() {
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">{t.auth.email}</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t.auth.emailPlaceholder}
-                  required
-                  autoFocus
-                  className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 transition-colors"
-                />
-              </div>
-            </div>
+            <Input
+              label={t.auth.email}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t.auth.emailPlaceholder}
+              required
+              autoFocus
+              leftIcon={<Mail size={16} aria-hidden />}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">{t.auth.password}</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t.auth.password}
-                  required
-                  className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl pl-11 pr-11 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 transition-colors"
-                />
-                <button
+            <Input
+              label={t.auth.password}
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={t.auth.password}
+              required
+              leftIcon={<Lock size={16} aria-hidden />}
+              rightAction={(
+                <IconButton
                   type="button"
+                  variant="subtle"
+                  className="p-1.5"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  icon={showPassword ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
-            </div>
+                />
+              )}
+            />
 
             <div className="text-right -mt-2">
-              <Link to="/forgot-password" className="text-xs text-slate-500 hover:text-brand-400 transition-colors">
+              <Link to="/forgot-password" className="text-xs text-fg-muted hover:text-accent-400 transition-colors">
                 {t.auth.forgotPassword}
               </Link>
             </div>
 
-            <button
+            <Button
               type="submit"
+              className="w-full rounded-xl"
+              size="lg"
               disabled={loading || !email || !password}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl btn-gradient text-white font-semibold text-sm disabled:opacity-50 transition-all"
+              loading={loading}
+              rightIcon={<ArrowRight size={16} aria-hidden />}
             >
-              {loading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <>
-                  {t.auth.loginButton}
-                  <ArrowRight size={16} />
-                </>
-              )}
-            </button>
+              {t.auth.loginButton}
+            </Button>
           </form>
 
           {isSupabaseConfigured && (
@@ -275,75 +271,80 @@ export function Login() {
 
               <div className="space-y-2">
                 {authProviderConfig.google && (
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    className="w-full justify-center rounded-xl"
                     onClick={() => handleOAuthLogin('google')}
                     disabled={providerLoading !== null}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-sm text-slate-200 hover:bg-white/5 disabled:opacity-60 transition-colors"
+                    leftIcon={<GoogleLogo />}
                   >
-                    <GoogleLogo />
                     {providerLoading === 'google' ? `${t.auth.connecting} Google...` : `${t.common.continue} Google`}
-                  </button>
+                  </Button>
                 )}
                 {authProviderConfig.azure && (
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    className="w-full justify-center rounded-xl"
                     onClick={() => handleOAuthLogin('azure')}
                     disabled={providerLoading !== null}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-sm text-slate-200 hover:bg-white/5 disabled:opacity-60 transition-colors"
+                    leftIcon={<MicrosoftLogo />}
                   >
-                    <MicrosoftLogo />
                     {providerLoading === 'azure' ? `${t.auth.connecting} Azure...` : `${t.common.continue} Azure`}
-                  </button>
+                  </Button>
                 )}
                 {authProviderConfig.apple && (
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    className="w-full justify-center rounded-xl"
                     onClick={() => handleOAuthLogin('apple')}
                     disabled={providerLoading !== null}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 text-sm text-slate-200 hover:bg-white/5 disabled:opacity-60 transition-colors"
+                    leftIcon={<AppleLogo />}
                   >
-                    <AppleLogo />
                     {providerLoading === 'apple' ? `${t.auth.connecting} Apple...` : `${t.common.continue} Apple`}
-                  </button>
+                  </Button>
                 )}
               </div>
 
               {authProviderConfig.saml && (
-                <div className="mt-3 rounded-2xl border border-slate-200 p-4 bg-white shadow-sm">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500 mb-2">{t.auth.saml}</p>
+                <Card variant="muted" className="mt-3 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-fg-muted mb-2">{t.auth.saml}</p>
                   <div className="flex flex-col sm:flex-row gap-2.5">
-                    <input
+                    <Input
                       type="text"
                       value={ssoDomain}
                       onChange={(e) => setSsoDomain(e.target.value)}
                       placeholder={t.auth.samlDomainPlaceholder}
-                      className="flex-1 min-w-0 bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 outline-none focus:border-brand-500/70 focus:ring-2 focus:ring-brand-500/25 transition-colors"
+                      className="flex-1 min-w-0"
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
+                      size="sm"
+                      className="sm:w-auto w-full whitespace-nowrap rounded-xl"
                       onClick={handleSamlLogin}
                       disabled={providerLoading !== null}
-                      className="sm:w-auto w-full px-4 py-2.5 rounded-xl border border-brand-400 bg-brand-500 text-xs font-semibold text-white hover:bg-brand-600 disabled:opacity-60 transition-colors whitespace-nowrap"
                     >
                       {providerLoading === 'saml' ? `${t.auth.connecting}...` : t.auth.useSaml}
-                    </button>
+                    </Button>
                   </div>
-                  <p className="mt-2 text-[11px] text-slate-500">{t.auth.companyDomainRequired}</p>
-                </div>
+                  <p className="mt-2 text-[11px] text-fg-muted">{t.auth.companyDomainRequired}</p>
+                </Card>
               )}
             </>
           )}
 
           <div className="mt-6 pt-5 border-t border-white/6 text-center">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-fg-muted">
               {t.auth.noAccount}{' '}
-              <Link to="/register" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
+              <Link to="/register" className="text-accent-400 hover:text-accent-300 font-medium transition-colors">
                 {t.auth.register}
               </Link>
             </p>
           </div>
-        </div>
+        </Card>
 
         {(branding.privacyUrl || branding.termsUrl) && (
           <div className="mt-3 text-center text-[11px] text-slate-600">

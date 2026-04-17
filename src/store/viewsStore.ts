@@ -1,7 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { v4 as uuidv4 } from 'uuid'
-import type { SmartView, SmartViewFilter, CustomFieldEntityType, InboxSavedView, InboxAdvancedFilters } from '../types'
+import type { SmartView, CustomFieldEntityType, InboxSavedView, InboxAdvancedFilters } from '../types'
+import { normalizeIndustryValue } from '../lib/industries'
 
 // ─── Seed Views ──────────────────────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ const SEED_VIEWS: SmartView[] = [
   },
   {
     id: 'sv-05', name: 'Empresas SaaS', nameKey: 'sv05', entityType: 'company',
-    filters: [{ field: 'industry', operator: 'eq', value: 'saas' }],
+    filters: [{ field: 'industry', operator: 'eq', value: 'computer-software' }],
     sortField: 'name', sortDirection: 'asc',
     isPinned: true, icon: 'cloud', color: 'sky',
     createdBy: 'David Muñoz', createdAt: now, updatedAt: now,
@@ -91,11 +92,16 @@ function normalizeViewName(value: string): string {
 
 function normalizeSeedViewLocalization(views: SmartView[]): SmartView[] {
   return views.map((view) => {
-    if (view.nameKey) return view
+    const normalizedFilters = view.filters.map((filter) => (
+      filter.field === 'industry'
+        ? { ...filter, value: typeof filter.value === 'string' ? normalizeIndustryValue(filter.value) : filter.value }
+        : filter
+    ))
+    if (view.nameKey) return { ...view, filters: normalizedFilters }
     const migratedKey = LEGACY_NAMEKEY_BY_ID[view.id]
       ?? LEGACY_NAMEKEY_BY_NAME[normalizeViewName(view.name)]
     if (!migratedKey) return view
-    return { ...view, nameKey: migratedKey }
+    return { ...view, nameKey: migratedKey, filters: normalizedFilters }
   })
 }
 

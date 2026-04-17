@@ -37,7 +37,8 @@ import { useDataInit } from './hooks/useDataInit'
 import { GmailTokenProvider } from './contexts/GmailTokenContext'
 import { GmailCallback } from './pages/GmailCallback'
 import { useSettingsStore } from './store/settingsStore'
-import { applyTheme } from './lib/theme'
+import { applyTheme, applyUiDensity } from './lib/theme'
+import { applyBrandingAccentToDocument } from './lib/brandingAccent'
 import { isBootstrapFatalError } from './lib/supabase'
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
@@ -147,6 +148,8 @@ export default function App() {
     const applyCurrentTheme = () => {
       const { settings } = useSettingsStore.getState()
       applyTheme(settings.themePreference ?? 'system')
+      applyUiDensity(settings.uiDensity)
+      applyBrandingAccentToDocument(settings.branding.primaryColor)
     }
 
     applyCurrentTheme()
@@ -168,7 +171,7 @@ export default function App() {
 
   if (isBootstrapFatalError) {
     return (
-      <div className="min-h-screen bg-navy-950 text-slate-200 flex items-center justify-center p-8">
+      <div className="min-h-screen bg-surface-0 text-slate-200 flex items-center justify-center p-8">
         <div className="max-w-lg rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center">
           <h1 className="text-xl font-semibold text-white mb-2">Configuration error</h1>
           <p className="text-sm text-slate-300 mb-4">

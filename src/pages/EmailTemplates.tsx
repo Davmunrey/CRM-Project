@@ -232,13 +232,13 @@ export function EmailTemplates() {
               value={quickReplyTitle}
               onChange={(e) => setQuickReplyTitle(e.target.value)}
               placeholder={t.emailTemplates.quickReplyTitlePlaceholder}
-              className="bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600"
+              className="bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600"
             />
             <input
               value={quickReplyBody}
               onChange={(e) => setQuickReplyBody(e.target.value)}
               placeholder={t.emailTemplates.quickReplyBodyPlaceholder}
-              className="bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600"
+              className="bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-slate-600"
             />
           </div>
           <button type="button"
@@ -302,7 +302,7 @@ export function EmailTemplates() {
                 placeholder={t.common.searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-[#0d0e1a] border border-white/10 rounded-full pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500/50"
+                className="w-full bg-surface-2 border border-white/10 rounded-full pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-500/50"
               />
             </div>
           </div>
@@ -379,21 +379,21 @@ export function EmailTemplates() {
                 <div className="flex items-center gap-2">
                   <button type="button"
                     onClick={() => setPreview(!preview)}
-                    className="bg-[#0d0e1a] border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
+                    className="bg-surface-2 border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
                   >
                     {preview ? <EyeOff size={13} /> : <Eye size={13} />}
                     {preview ? t.common.edit : t.common.view}
                   </button>
                   <button type="button"
                     onClick={handleCopyBody}
-                    className="bg-[#0d0e1a] border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
+                    className="bg-surface-2 border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
                   >
                     <Copy size={13} />
                     {t.common.export}
                   </button>
                   <button type="button"
                     onClick={handleDuplicate}
-                    className="bg-[#0d0e1a] border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
+                    className="bg-surface-2 border border-white/10 text-slate-300 text-xs font-medium px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-white/10 transition-colors"
                   >
                     <Copy size={13} />
                     {t.common.create}
@@ -430,7 +430,7 @@ export function EmailTemplates() {
                       type="text"
                       value={draftName}
                       onChange={(e) => { setDraftName(e.target.value); markDirty() }}
-                      className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500/50"
+                      className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500/50"
                     />
                   )}
                 </div>
@@ -446,7 +446,7 @@ export function EmailTemplates() {
                     <select
                       value={draftCategory}
                       onChange={(e) => { setDraftCategory(e.target.value as EmailTemplate['category']); markDirty() }}
-                      className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500/50 [&>option]:bg-navy-900 [&>option]:text-white"
+                      className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500/50 [&>option]:bg-surface-1 [&>option]:text-fg"
                     >
                       {Object.entries(categoryLabels).map(([val, label]) => (
                         <option key={val} value={val}>{label}</option>
@@ -468,7 +468,7 @@ export function EmailTemplates() {
                       value={draftSubject}
                       onChange={(e) => { setDraftSubject(e.target.value); markDirty() }}
                       placeholder={`${t.activities.subject}...`}
-                      className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+                      className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
                     />
                   )}
                 </div>
@@ -486,7 +486,7 @@ export function EmailTemplates() {
                       onChange={(e) => { setDraftBody(e.target.value); markDirty() }}
                       placeholder={`${t.common.description}... {{variable}}`}
                       rows={12}
-                      className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-mono placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none leading-relaxed"
+                      className="w-full bg-surface-2 border border-white/10 rounded-xl px-4 py-3 text-sm text-slate-200 font-mono placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none leading-relaxed"
                     />
                   )}
                 </div>
@@ -522,7 +522,7 @@ export function EmailTemplates() {
             /* Empty state */
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-2xl bg-[#0d0e1a] border border-white/8 flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 rounded-2xl bg-surface-2 border border-white/8 flex items-center justify-center mx-auto mb-4">
                   <Mail size={28} className="text-slate-600" />
                 </div>
                 <h3 className="text-white font-medium mb-1">{t.common.view} {t.emailTemplates.title.toLowerCase()}</h3>

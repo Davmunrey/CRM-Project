@@ -92,7 +92,7 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
         </div>
         <button type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[#0d0e1a] border border-white/8 text-slate-400 hover:text-white hover:border-white/15 transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-surface-2 border border-white/8 text-slate-400 hover:text-white hover:border-white/15 transition-colors"
         >
           <Upload size={12} />
           {t.email.addFile}

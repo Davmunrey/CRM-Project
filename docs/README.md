@@ -25,7 +25,7 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present): `
 | Security, compliance, SSO, evidence, Gitea | [`master-security-compliance.md`](./master-security-compliance.md) | Auth/SSO handoff, hardening matrix, evidence index, Supabase external checklist, DSAR, compliance mapping |
 | Email (deliverability, privacy, release, smoke) | [`master-email-operations.md`](./master-email-operations.md) | Resend/DNS, mailbox privacy, release checklist, 15‑min smoke |
 | Leads: scoring backend, maintenance, retention | [`master-lead-management.md`](./master-lead-management.md) | Edge maintenance contract, Ops dashboard, runbook, data retention |
-| Design system, theme, navigation, profiles | [`master-design-ui.md`](./master-design-ui.md) | Page shells (`crm-page` / `crm-page-full`), navigation runbook, user display names |
+| Design system, theme, navigation, profiles | [`master-design-ui.md`](./master-design-ui.md) · [`design-system-reference.md`](./design-system-reference.md) | Page shells, navigation runbook; **reference** adds tokens, primitives, `ui:lint`, density |
 | Release, QA, go/no-go, production handoff | [`master-release-qa.md`](./master-release-qa.md) | Sell-ready checklist, QA evidence, go/no-go, production handoff |
 | Implementation history (full handoff) | [`master-implementation-history.md`](./master-implementation-history.md) | Part A §1–12 · Part B §13–23 |
 | Roadmap 30/60/90 + execution backlog | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Horizon roadmap · Pro backlog board |

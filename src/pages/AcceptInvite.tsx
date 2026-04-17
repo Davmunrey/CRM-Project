@@ -132,7 +132,7 @@ export function AcceptInvite() {
 
   if (pageState === 'loading') {
     return (
-      <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+      <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
         <Loader2 size={32} className="animate-spin text-brand-400" aria-label={t.common.loading} />
       </div>
     )
@@ -140,7 +140,7 @@ export function AcceptInvite() {
 
   if (pageState === 'error') {
     return (
-      <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+      <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
         <div className="relative w-full max-w-md glass rounded-2xl border border-white/10 p-8 text-center shadow-float">
           <div className="w-14 h-14 rounded-full bg-red-500/15 flex items-center justify-center mx-auto mb-4">
             <XCircle size={28} className="text-red-400" aria-hidden />
@@ -160,7 +160,7 @@ export function AcceptInvite() {
 
   if (pageState === 'success') {
     return (
-      <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+      <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
         <div className="relative w-full max-w-md glass rounded-2xl border border-white/10 p-8 text-center shadow-float">
           <div className="w-14 h-14 rounded-full bg-emerald-500/15 flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={28} className="text-emerald-400" aria-hidden />
@@ -181,7 +181,7 @@ export function AcceptInvite() {
   }
 
   return (
-    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+    <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
       <div className="relative w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-brand-500/20 flex items-center justify-center mb-4 border border-brand-500/25">

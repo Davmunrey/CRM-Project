@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { AppSettings, DealCurrency } from '../types'
+import type { AppSettings, DealCurrency, UiDensity } from '../types'
 import { seedSettings } from '../utils/seedData'
 import { LS_KEYS } from '../utils/constants'
 import type { Permission, UserRole } from '../types/auth'
@@ -9,6 +9,7 @@ interface SettingsState {
   settings: AppSettings
 
   updateThemePreference: (themePreference: AppSettings['themePreference']) => void
+  updateUiDensity: (uiDensity: UiDensity) => void
   updateCurrency: (currency: DealCurrency) => void
   updateLeadSlaHours: (hours: number) => void
   updatePermissionProfile: (role: UserRole, permissions: Permission[]) => void
@@ -41,6 +42,10 @@ export const useSettingsStore = create<SettingsState>()(
 
       updateThemePreference: (themePreference) => {
         set((state) => ({ settings: { ...state.settings, themePreference } }))
+      },
+
+      updateUiDensity: (uiDensity) => {
+        set((state) => ({ settings: { ...state.settings, uiDensity } }))
       },
 
       updateCurrency: (currency) => {
@@ -218,6 +223,23 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: LS_KEYS.settings,
-    }
+      merge: (persisted, current) => {
+        const cur = current as SettingsState
+        const raw = persisted as unknown
+        if (!raw || typeof raw !== 'object') return cur
+        const obj = raw as Record<string, unknown>
+        const partial = (obj.state && typeof obj.state === 'object' ? obj.state : obj) as Partial<SettingsState>
+        if (!partial.settings) return cur
+        const ps = partial.settings
+        return {
+          ...cur,
+          settings: {
+            ...cur.settings,
+            ...ps,
+            uiDensity: ps.uiDensity === 'compact' || ps.uiDensity === 'comfortable' ? ps.uiDensity : 'comfortable',
+          },
+        }
+      },
+    },
   )
 )

@@ -147,7 +147,7 @@ function FieldInput({
   onChange: (v: CustomFieldValue['value']) => void
 }) {
   const t = useTranslations()
-  const base = 'w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-brand-500/50'
+  const base = 'w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-brand-500/50'
   const selectBase = `${base} appearance-none`
 
   switch (def.fieldType) {
