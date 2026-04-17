@@ -12,6 +12,7 @@ import { formatCurrency } from '../../utils/formatters'
 import { toast } from '../../store/toastStore'
 import { useTranslations } from '../../i18n'
 import { Select } from '../ui/Select'
+import { resolveSendContextFromTo } from '../../features/inbox'
 
 interface EmailComposerProps {
   isOpen: boolean
@@ -89,6 +90,14 @@ export function EmailComposer({
   const draftKey = useMemo(
     () => `crm_email_draft:${contactId ?? 'na'}:${dealId ?? 'na'}:${companyId ?? 'na'}:${defaultTo}`,
     [companyId, contactId, dealId, defaultTo],
+  )
+
+  const inferredSend = useMemo(
+    () =>
+      contactId || dealId || companyId
+        ? { contactId, dealId, companyId }
+        : resolveSendContextFromTo(to, contacts, deals),
+    [contactId, dealId, companyId, to, contacts, deals],
   )
 
   useEffect(() => {
@@ -187,9 +196,17 @@ export function EmailComposer({
 
   if (!isOpen) return null
 
-  const contact = contactId ? contacts.find((c) => c.id === contactId) : undefined
-  const deal = dealId ? deals.find((d) => d.id === dealId) : undefined
-  const company = companyId ? companies.find((c) => c.id === companyId) : contact?.companyId ? companies.find((c) => c.id === contact.companyId) : undefined
+  const contact = (contactId ?? inferredSend.contactId)
+    ? contacts.find((c) => c.id === (contactId ?? inferredSend.contactId))
+    : undefined
+  const deal = (dealId ?? inferredSend.dealId)
+    ? deals.find((d) => d.id === (dealId ?? inferredSend.dealId))
+    : undefined
+  const company = (companyId ?? inferredSend.companyId)
+    ? companies.find((c) => c.id === (companyId ?? inferredSend.companyId))
+    : contact?.companyId
+      ? companies.find((c) => c.id === contact.companyId)
+      : undefined
 
   const hasUnsavedDraft = !!(to.trim() || cc.trim() || bcc.trim() || replyTo.trim() || subject.trim() || body.trim())
   const requestClose = () => {
@@ -288,9 +305,9 @@ export function EmailComposer({
         subject,
         body: finalBody,
         htmlBody: `${htmlMain}${signatureHtmlBlock}`,
-        contactId,
-        dealId,
-        companyId,
+        contactId: contactId ?? inferredSend.contactId,
+        dealId: dealId ?? inferredSend.dealId,
+        companyId: companyId ?? inferredSend.companyId,
         senderName: senderName.trim() || undefined,
         trackingEnabled,
       }
@@ -312,8 +329,8 @@ export function EmailComposer({
           ? `Email scheduled to ${toList.join(', ')} (${scheduledAt}): ${subject}`
           : `Email sent to ${toList.join(', ')}: ${subject}`,
         status: 'completed',
-        contactId,
-        dealId,
+        contactId: contactId ?? inferredSend.contactId,
+        dealId: dealId ?? inferredSend.dealId,
         createdBy: '',
       })
       if (!sendLater) {

@@ -104,6 +104,19 @@ async function gmailFetch<T>(path: string, token: string, options: RequestInit =
 
 // ─── Send email ───────────────────────────────────────────────────────────────
 
+function encodeBody(value: string): string {
+  return btoa(unescape(encodeURIComponent(value)))
+}
+
+function formatBase64(value: string): string {
+  return value.replace(/(.{76})/g, '$1\r\n')
+}
+
+function htmlToRoughPlain(html: string): string {
+  const t = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  return t || ' '
+}
+
 function buildMimeMessage(params: {
   to: string[]
   cc?: string[]
@@ -121,7 +134,7 @@ function buildMimeMessage(params: {
   const cc = params.cc ? sanitizeList(params.cc) : []
   const bcc = params.bcc ? sanitizeList(params.bcc) : []
 
-  const lines = [
+  const commonHeaders = [
     `To: ${to.join(', ')}`,
     cc.length ? `Cc: ${cc.join(', ')}` : null,
     bcc.length ? `Bcc: ${bcc.join(', ')}` : null,
@@ -129,14 +142,40 @@ function buildMimeMessage(params: {
     params.from ? `From: ${sanitizeHeader(params.from)}` : null,
     `Subject: ${sanitizeHeader(params.subject)}`,
     'MIME-Version: 1.0',
-    `Content-Type: ${params.htmlBody ? 'text/html' : 'text/plain'}; charset=utf-8`,
-    'Content-Transfer-Encoding: base64',
-    '',
-    params.htmlBody ?? params.body,
-  ].filter(Boolean)
+  ].filter(Boolean) as string[]
 
-  const raw = lines.join('\r\n')
-  return btoa(unescape(encodeURIComponent(raw)))
+  let mimeLines: string[]
+  if (params.htmlBody) {
+    const altBoundary = `alt_${crypto.randomUUID().replace(/-/g, '')}`
+    const plain = params.body.trim() ? params.body : htmlToRoughPlain(params.htmlBody)
+    mimeLines = [
+      ...commonHeaders,
+      `Content-Type: multipart/alternative; boundary="${altBoundary}"`,
+      '',
+      `--${altBoundary}`,
+      'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      formatBase64(encodeBody(plain)),
+      `--${altBoundary}`,
+      'Content-Type: text/html; charset=UTF-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      formatBase64(encodeBody(params.htmlBody)),
+      `--${altBoundary}--`,
+    ]
+  } else {
+    mimeLines = [
+      ...commonHeaders,
+      'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      formatBase64(encodeBody(params.body)),
+    ]
+  }
+
+  const raw = mimeLines.join('\r\n')
+  return encodeBody(raw)
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '')
@@ -159,9 +198,6 @@ export async function sendGmailEmail(
   },
   accessToken: string,
 ): Promise<{ id: string; threadId: string }> {
-  const encodeBody = (value: string) => btoa(unescape(encodeURIComponent(value)))
-  const formatBase64 = (value: string) => value.replace(/(.{76})/g, '$1\r\n')
-
   const buildMultipartMimeMessage = () => {
     const boundary = `crm-pro-${crypto.randomUUID()}`
     const sanitizeHeader = (value: string) => value.replace(/[\r\n]+/g, ' ').trim()
@@ -169,6 +205,35 @@ export async function sendGmailEmail(
     const to = sanitizeList(params.to)
     const cc = params.cc ? sanitizeList(params.cc) : []
     const bcc = params.bcc ? sanitizeList(params.bcc) : []
+    const firstPart: string[] = []
+    if (params.htmlBody) {
+      const altBoundary = `alt_${crypto.randomUUID().replace(/-/g, '')}`
+      const plain = params.body.trim() ? params.body : htmlToRoughPlain(params.htmlBody)
+      firstPart.push(
+        `--${boundary}`,
+        `Content-Type: multipart/alternative; boundary="${altBoundary}"`,
+        '',
+        `--${altBoundary}`,
+        'Content-Type: text/plain; charset="UTF-8"',
+        'Content-Transfer-Encoding: base64',
+        '',
+        formatBase64(encodeBody(plain)),
+        `--${altBoundary}`,
+        'Content-Type: text/html; charset="UTF-8"',
+        'Content-Transfer-Encoding: base64',
+        '',
+        formatBase64(encodeBody(params.htmlBody)),
+        `--${altBoundary}--`,
+      )
+    } else {
+      firstPart.push(
+        `--${boundary}`,
+        'Content-Type: text/plain; charset="UTF-8"',
+        'Content-Transfer-Encoding: base64',
+        '',
+        formatBase64(encodeBody(params.body)),
+      )
+    }
     const lines: string[] = [
       `To: ${to.join(', ')}`,
       cc.length ? `Cc: ${cc.join(', ')}` : '',
@@ -178,11 +243,7 @@ export async function sendGmailEmail(
       'MIME-Version: 1.0',
       `Content-Type: multipart/mixed; boundary="${boundary}"`,
       '',
-      `--${boundary}`,
-      `Content-Type: ${params.htmlBody ? 'text/html' : 'text/plain'}; charset="UTF-8"`,
-      'Content-Transfer-Encoding: base64',
-      '',
-      formatBase64(encodeBody(params.htmlBody ?? params.body)),
+      ...firstPart,
     ].filter(Boolean)
 
     for (const attachment of params.attachments ?? []) {

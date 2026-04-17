@@ -30,10 +30,19 @@ export interface Database {
           last_contacted_at: string | null
           custom_fields: Json
           organization_id: string
+          marketing_opt_in: boolean
+          marketing_opt_in_at: string | null
+          marketing_opt_in_source: string | null
         }
-        Insert: Omit<Database['public']['Tables']['contacts']['Row'], 'created_at' | 'updated_at'> & {
+        Insert: Omit<
+          Database['public']['Tables']['contacts']['Row'],
+          'created_at' | 'updated_at' | 'marketing_opt_in' | 'marketing_opt_in_at' | 'marketing_opt_in_source'
+        > & {
           created_at?: string
           updated_at?: string
+          marketing_opt_in?: boolean
+          marketing_opt_in_at?: string | null
+          marketing_opt_in_source?: string | null
         }
         Update: Partial<Database['public']['Tables']['contacts']['Insert']>
       }

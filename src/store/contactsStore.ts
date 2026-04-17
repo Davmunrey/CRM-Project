@@ -32,6 +32,9 @@ function rowToContact(row: Record<string, unknown>): Contact {
     notes: (row.notes as string) ?? '',
     linkedDeals: (row.linked_deals as string[]) ?? [],
     avatar: (row.avatar as string) ?? undefined,
+    marketingOptIn: (row.marketing_opt_in as boolean | undefined) ?? false,
+    marketingOptInAt: (row.marketing_opt_in_at as string) ?? undefined,
+    marketingOptInSource: (row.marketing_opt_in_source as string) ?? undefined,
   }
 }
 
@@ -51,6 +54,9 @@ function contactToRow(c: Partial<Contact>): Record<string, unknown> {
   if (c.notes !== undefined) row.notes = c.notes
   if (c.linkedDeals !== undefined) row.linked_deals = c.linkedDeals
   if (c.avatar !== undefined) row.avatar = c.avatar
+  if (c.marketingOptIn !== undefined) row.marketing_opt_in = c.marketingOptIn
+  if (c.marketingOptInAt !== undefined) row.marketing_opt_in_at = c.marketingOptInAt
+  if (c.marketingOptInSource !== undefined) row.marketing_opt_in_source = c.marketingOptInSource
   return row
 }
 

@@ -22,35 +22,18 @@ import type { GmailThread, CRMEmail, Contact, InboxAdvancedFilters } from '../ty
 import { formatDateTime, formatRelativeDate } from '../utils/formatters'
 import { trackUxAction } from '../lib/uxMetrics'
 import { buildInboxQueryMatcher } from '../utils/inboxQuery'
+import { toGmailThreadsListQuery } from '../utils/inboxGmailQuery'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
 import { Select } from '../components/ui/Select'
+import {
+  extractEmail,
+  parseEmails,
+  type ThreadMatch,
+  buildAutoThreadMatchMap,
+  buildPersistedThreadMatchMap,
+} from '../features/inbox'
 
 // ─── Thread item ──────────────────────────────────────────────────────────────
-function extractEmail(from: string): string {
-  const match = from.match(/<([^>]+)>/)
-  return (match ? match[1] : from).toLowerCase().trim()
-}
-
-function emailDomain(email: string): string {
-  const atIdx = email.indexOf('@')
-  return atIdx >= 0 ? email.slice(atIdx + 1).toLowerCase() : ''
-}
-
-function parseEmails(header: string): string[] {
-  if (!header) return []
-  return header
-    .split(',')
-    .map((part) => extractEmail(part))
-    .filter(Boolean)
-}
-
-interface ThreadMatch {
-  contact?: Contact
-  companyId?: string
-  companyName?: string
-  dealId?: string
-  dealTitle?: string
-}
 
 function ThreadItem({
   thread,
@@ -229,7 +212,7 @@ function LocalEmailItem({
           <p className={`text-xs truncate ${unread ? 'text-fg font-semibold' : 'text-fg'}`}>{email.subject || ''}</p>
           <p className="text-[10px] text-fg-subtle truncate mt-0.5">{email.body.slice(0, 80)}</p>
           {email.status === 'scheduled' && (
-            <span className="inline-flex items-center gap-1 mt-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-500/15 text-indigo-300 border border-indigo-500/20">
+            <span className="inline-flex items-center gap-1 mt-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-500/15 text-accent-300 border border-accent-500/25">
               <Clock size={9} />
               {email.scheduledFor ? formatDateTime(email.scheduledFor) : t.inbox.scheduled}
             </span>
@@ -360,7 +343,7 @@ function ThreadView({
           {match?.dealId && (
             <Link
               to="/deals"
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/30 transition-colors"
+              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-info/15 text-info border border-info/25 hover:bg-info/25 transition-colors"
             >
               {t.inbox.dealPlaceholder}: {match.dealTitle}
             </Link>
@@ -418,7 +401,7 @@ function ThreadView({
           </button>
           <button type="button"
             onClick={() => onThreadAction(thread, 'mark_unread')}
-            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-accent-500/15 hover:text-indigo-300 transition-colors"
+            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-accent-500/15 hover:text-accent-300 transition-colors"
           >
             {t.inbox.markUnread}
           </button>
@@ -455,6 +438,15 @@ function ThreadView({
                 className="[&_button]:rounded-full [&_button]:text-[10px] [&_button]:py-0.5 [&_button]:px-2 [&_button]:min-h-0"
               />
             </div>
+            {match?.dealId && manualDealId !== match.dealId && (
+              <button type="button"
+                onClick={() => setManualDealId(match.dealId ?? '')}
+                className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-info/15 text-info border border-info/25 hover:bg-info/25 transition-colors"
+                title={t.inbox.dealPlaceholder}
+              >
+                {t.inbox.useMatchedDeal}
+              </button>
+            )}
             <button type="button"
               onClick={() => onManualLinkSave(thread, manualContactId || undefined, manualDealId || undefined)}
               className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-600/20 text-accent-300 border border-accent-500/30 hover:bg-accent-600/30 transition-colors"
@@ -491,7 +483,7 @@ function ThreadView({
                 </button>
                 <button type="button"
                   onClick={() => onReplyAll(thread, i)}
-                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-fg/6 hover:bg-indigo-600/20 hover:text-indigo-300 transition-colors"
+                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-fg/6 hover:bg-info/20 hover:text-info transition-colors"
                 >
                   <Reply size={11} />
                   {t.inbox.replyAll}
@@ -663,12 +655,12 @@ export function Inbox() {
   const t = useTranslations()
   const currentUser = useAuthStore((s) => s.currentUser)
   const {
-    emails, threads, threadsLoading, isGmailConnected,
-    gmailAddress, threadLinks, threadWorkspace, threadsError, threadsLastSyncedAt, threadsNextPageToken, threadsHistoryId, syncState, lastSyncErrorAt, lastSyncErrorMessage, loadThreads, fetchThreadLinks, fetchThreadWorkspace, setThreadLink, clearThreadLink, setThreadOwner, setThreadNote, deleteEmail, disconnectGmail,
+    emails, threads, threadsLoading,
+    gmailAddress, threadLinks, threadWorkspace, threadsError, threadsLastSyncedAt, threadsNextPageToken, threadsHistoryId, syncState, lastSyncErrorAt, lastSyncErrorMessage, fetchThreadLinks, fetchThreadWorkspace, setThreadLink, clearThreadLink, setThreadOwner, setThreadNote, deleteEmail, disconnectGmail,
     trackEmailOpen, trackEmailClick, processScheduledEmails, refreshTrackingMetrics, wakeDueSnoozedEmails, snoozeEmail,
   } = useEmailStore()
   const { inboxViews, addInboxView, deleteInboxView } = useViewsStore()
-  const { accessToken, setGmailToken, clearGmailToken, isTokenValid } = useGmailToken()
+  const { accessToken, setGmailToken, clearGmailToken } = useGmailToken()
   const contacts = useContactsStore((s) => s.contacts)
   const deals = useDealsStore((s) => s.deals)
   const companies = useCompaniesStore((s) => s.companies)
@@ -745,7 +737,8 @@ export function Inbox() {
 
   const handleLoadThreads = async (query = '', options: { silent?: boolean } = {}) => {
     try {
-      await refreshAndRetry((token) => useEmailStore.getState().loadThreads(token, query))
+      const gmailQuery = toGmailThreadsListQuery(query)
+      await refreshAndRetry((token) => useEmailStore.getState().loadThreads(token, gmailQuery))
       if (query.trim()) trackUxAction('inbox_search', { queryLength: query.trim().length })
     } catch (err) {
       if (!options.silent) toast.error(err instanceof Error ? err.message : t.errors.generic)
@@ -756,7 +749,7 @@ export function Inbox() {
     if (!threadsNextPageToken) return
     try {
       await refreshAndRetry((token) =>
-        useEmailStore.getState().loadThreads(token, listQuery, {
+        useEmailStore.getState().loadThreads(token, toGmailThreadsListQuery(listQuery.trim()), {
           append: true,
           pageToken: threadsNextPageToken,
         }),
@@ -879,9 +872,24 @@ export function Inbox() {
     { id: 'drafts', label: t.inbox.drafts, icon: <Mail size={15} />, count: countNeedsAttention(draftEmails) },
     { id: 'snoozed', label: t.inbox.snoozed, icon: <Clock size={15} />, count: countNeedsAttention(snoozedEmails) },
   ]
+  /** CRM emails linked by gmailThreadId supply is:tracked / opened / clicked for Gmail threads (client filter). */
+  const threadCrmTrackingById = useMemo(() => {
+    const map = new Map<string, { tracked: boolean; opened: boolean; clicked: boolean }>()
+    for (const e of mailboxEmails) {
+      const tid = e.gmailThreadId
+      if (!tid) continue
+      const cur = map.get(tid) ?? { tracked: false, opened: false, clicked: false }
+      if (e.trackingEnabled) cur.tracked = true
+      if ((e.openCount ?? 0) > 0) cur.opened = true
+      if ((e.clickCount ?? 0) > 0) cur.clicked = true
+      map.set(tid, cur)
+    }
+    return map
+  }, [mailboxEmails])
   const queryMatcher = useMemo(() => buildInboxQueryMatcher(listQuery), [listQuery])
   const filteredThreads = threads.filter((thread) => {
     const lastMsg = thread.messages[thread.messages.length - 1]
+    const crm = threadCrmTrackingById.get(thread.id) ?? { tracked: false, opened: false, clicked: false }
     return queryMatcher({
       from: lastMsg?.from ?? '',
       to: parseEmails(lastMsg?.to ?? ''),
@@ -890,9 +898,9 @@ export function Inbox() {
       body: thread.messages.map((msg) => msg.body ?? msg.snippet ?? '').join('\n'),
       unread: Boolean(lastMsg?.labelIds?.includes('UNREAD')),
       hasAttachment: thread.messages.some((message) => (message.attachments?.length ?? 0) > 0),
-      tracked: false,
-      opened: false,
-      clicked: false,
+      tracked: crm.tracked,
+      opened: crm.opened,
+      clicked: crm.clicked,
       mine: (threadWorkspace[thread.id]?.ownerUserId ?? '') === (currentUser?.id ?? ''),
     })
   })
@@ -951,59 +959,15 @@ export function Inbox() {
   const selectedThread = threads.find((th) => th.id === selectedThreadId) ?? null
   const selectedEmail = mailboxEmails.find((e) => e.id === selectedEmailId) ?? null
 
-  const threadMatchById = useMemo(() => {
-    const byId = new Map<string, ThreadMatch>()
-    const contactsByEmail = new Map(contacts.filter((c) => !!c.email).map((c) => [c.email.toLowerCase(), c] as const))
-    const companyById = new Map(companies.map((c) => [c.id, c] as const))
-    const companyByDomain = new Map(
-      companies.filter((c) => !!c.domain).map((c) => [c.domain.toLowerCase(), c] as const),
-    )
+  const threadMatchById = useMemo(
+    () => buildAutoThreadMatchMap(threads, contacts, companies, deals),
+    [threads, contacts, companies, deals],
+  )
 
-    for (const thread of threads) {
-      const addresses = thread.messages.flatMap((msg) => [extractEmail(msg.from), ...msg.to.split(',').map((p) => extractEmail(p))]).filter(Boolean)
-      const uniqueAddresses = [...new Set(addresses)]
-      const matchedContact = uniqueAddresses.map((addr) => contactsByEmail.get(addr)).find(Boolean)
-
-      let companyId = matchedContact?.companyId
-      if (!companyId) {
-        const domainMatchedCompany = uniqueAddresses
-          .map((addr) => emailDomain(addr))
-          .map((domain) => companyByDomain.get(domain))
-          .find(Boolean)
-        companyId = domainMatchedCompany?.id
-      }
-
-      const relatedDeal = deals.find((d) =>
-        (matchedContact && d.contactId === matchedContact.id) ||
-        (companyId && d.companyId === companyId),
-      )
-
-      byId.set(thread.id, {
-        contact: matchedContact,
-        companyId,
-        companyName: companyId ? companyById.get(companyId)?.name : undefined,
-        dealId: relatedDeal?.id,
-        dealTitle: relatedDeal?.title,
-      })
-    }
-    return byId
-  }, [threads, contacts, companies, deals])
-
-  const persistedThreadMatchById = useMemo(() => {
-    const byId = new Map<string, ThreadMatch>()
-    for (const [threadId, link] of Object.entries(threadLinks)) {
-      const contact = link.contactId ? contacts.find((c) => c.id === link.contactId) : undefined
-      const companyId = link.companyId ?? contact?.companyId
-      byId.set(threadId, {
-        contact,
-        companyId: companyId ?? undefined,
-        companyName: companyId ? companies.find((c) => c.id === companyId)?.name : undefined,
-        dealId: link.dealId ?? undefined,
-        dealTitle: link.dealId ? deals.find((d) => d.id === link.dealId)?.title : undefined,
-      })
-    }
-    return byId
-  }, [threadLinks, contacts, companies, deals])
+  const persistedThreadMatchById = useMemo(
+    () => buildPersistedThreadMatchMap(threadLinks, contacts, companies, deals),
+    [threadLinks, contacts, companies, deals],
+  )
 
   const selectedThreadMatch = selectedThread
     ? (persistedThreadMatchById.get(selectedThread.id) ?? threadMatchById.get(selectedThread.id) ?? null)
@@ -1073,6 +1037,31 @@ export function Inbox() {
       : syncVisualState === 'stale'
         ? t.inbox.syncStale
         : t.inbox.syncHealthy
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (folder !== 'inbox') return
+      const el = e.target as HTMLElement | null
+      if (!el) return
+      if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable) return
+      if (e.key !== 'j' && e.key !== 'k' && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
+      const list = inboxThreadsVisible
+      if (!list.length) return
+      e.preventDefault()
+      const down = e.key === 'j' || e.key === 'ArrowDown'
+      let i = list.findIndex((th) => th.id === selectedThreadId)
+      if (i < 0) i = 0
+      else if (down) i = Math.min(list.length - 1, i + 1)
+      else i = Math.max(0, i - 1)
+      const pick = list[i]
+      if (pick) {
+        setSelectedThreadId(pick.id)
+        setSelectedEmailId(null)
+      }
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [folder, inboxThreadsVisible, selectedThreadId])
 
   const applyInboxSavedView = (viewId: string) => {
     setSelectedInboxViewId(viewId)
@@ -1307,9 +1296,9 @@ export function Inbox() {
   }
 
   return (
-    <div className="crm-page-full flex h-full min-h-0 overflow-hidden gap-3 py-3 sm:py-4">
+    <div className="crm-page-full flex flex-col lg:flex-row h-full min-h-0 overflow-hidden gap-3 py-3 sm:py-4">
       {/* ── Left: Folders ────────────────────────────────────────────────── */}
-      <div className="w-52 flex-shrink-0 border border-fg/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/50">
+      <div className="w-full min-h-0 lg:w-52 lg:flex-shrink-0 border border-fg/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/50">
         <div className="p-3 border-b border-fg/6">
           <PermissionGate permission="email:send">
             <button type="button"
@@ -1387,7 +1376,7 @@ export function Inbox() {
       </div>
 
       {/* ── Center: Email list ───────────────────────────────────────────── */}
-      <div className="w-80 flex-shrink-0 border border-fg/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/35">
+      <div className="w-full min-h-[220px] lg:min-h-0 lg:w-80 lg:flex-shrink-0 border border-fg/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/35">
         <div className="flex items-center justify-between px-4 py-3 border-b border-fg/6 flex-shrink-0">
           <div>
             <span className="text-sm font-semibold text-fg capitalize">{FOLDERS.find((f) => f.id === folder)?.label}</span>
@@ -1421,7 +1410,7 @@ export function Inbox() {
             </button>
             <button type="button"
               onClick={() => applyBulkThreadAction('mark_unread')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-indigo-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
             >
               {t.inbox.markUnread}
             </button>
@@ -1452,7 +1441,7 @@ export function Inbox() {
             <button
               type="button"
               onClick={() => applyBulkLocalEmailAction('mark_unread')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-indigo-300 transition-colors"
+              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
             >
               {t.inbox.markUnread}
             </button>

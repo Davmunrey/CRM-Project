@@ -3,7 +3,7 @@ import { useLocalizedCompanies, useLocalizedContacts, useLocalizedOrgUsers, useT
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Plus, Download, Trash2, LayoutGrid, LayoutList, Edit2,
-  Filter, X, Search,
+  Filter, X, Search, Mail,
 } from 'lucide-react'
 import { useContactsStore } from '../store/contactsStore'
 import { useCompaniesStore } from '../store/companiesStore'
@@ -16,6 +16,8 @@ import { SearchBar } from '../components/shared/SearchBar'
 import { SmartViewBar } from '../components/shared/SmartViewBar'
 import { EmptyState } from '../components/shared/EmptyState'
 import { SlideOver, ConfirmDialog } from '../components/ui/Modal'
+import { isSupabaseConfigured } from '../lib/supabase'
+import { enqueueBulkEmailJobs } from '../features/inbox'
 import { ContactForm } from '../components/contacts/ContactForm'
 import { ContactStatusBadge } from '../components/contacts/ContactStatusBadge'
 import { Select } from '../components/ui/Select'
@@ -68,6 +70,12 @@ export function Contacts() {
   const [viewFilters, setViewFilters] = useState<SmartViewFilter[]>([])
   const [bulkContactStatus, setBulkContactStatus] = useState('')
   const [bulkContactAssign, setBulkContactAssign] = useState('')
+  const [bulkEmailOpen, setBulkEmailOpen] = useState(false)
+  const [bulkEmailSubject, setBulkEmailSubject] = useState('')
+  const [bulkEmailBody, setBulkEmailBody] = useState('')
+  const [bulkEmailMarketing, setBulkEmailMarketing] = useState(false)
+  const [bulkEmailStagger, setBulkEmailStagger] = useState('45')
+  const [bulkEmailSubmitting, setBulkEmailSubmitting] = useState(false)
 
   const getCompanyName = useCallback(
     (id: string) => localizedCompanies.find((c) => c.id === id)?.name ?? '—',
@@ -270,6 +278,12 @@ export function Contacts() {
               </div>
 
               {/* Mass Tag */}
+              <PermissionGate permission="email:send">
+                <Button variant="secondary" size="sm" leftIcon={<Mail size={14} />} onClick={() => setBulkEmailOpen(true)}>
+                  {t.contacts.bulkEmailQueue}
+                </Button>
+              </PermissionGate>
+
               <div className="flex items-center gap-1">
                 <input
                   id="bulkTagInput"
@@ -557,6 +571,105 @@ export function Contacts() {
           onSubmit={editContact ? handleEdit : handleCreate}
           onCancel={() => { setIsFormOpen(false); setEditContact(undefined) }}
         />
+      </SlideOver>
+
+      <SlideOver
+        isOpen={bulkEmailOpen}
+        onClose={() => {
+          setBulkEmailOpen(false)
+          setBulkEmailSubject('')
+          setBulkEmailBody('')
+        }}
+        title={t.contacts.bulkEmailQueue}
+        width="md"
+      >
+        <div className="space-y-3 px-1 pb-4">
+          {!isSupabaseConfigured && (
+            <p className="text-xs text-warning">{t.contacts.bulkEmailNeedSupabase}</p>
+          )}
+          <div>
+            <label className="text-xs font-medium text-fg-muted" htmlFor="bulk-email-subject">{t.contacts.bulkEmailSubject}</label>
+            <input
+              id="bulk-email-subject"
+              value={bulkEmailSubject}
+              onChange={(e) => setBulkEmailSubject(e.target.value)}
+              className="mt-1 w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-fg-muted" htmlFor="bulk-email-body">{t.contacts.bulkEmailBody}</label>
+            <textarea
+              id="bulk-email-body"
+              value={bulkEmailBody}
+              onChange={(e) => setBulkEmailBody(e.target.value)}
+              rows={6}
+              className="mt-1 w-full bg-surface-2 border border-fg/10 rounded-lg px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 resize-y min-h-[120px]"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-xs text-fg-muted cursor-pointer">
+            <input
+              type="checkbox"
+              checked={bulkEmailMarketing}
+              onChange={(e) => setBulkEmailMarketing(e.target.checked)}
+              className="rounded border-fg/20"
+            />
+            {t.contacts.bulkEmailMarketingHint}
+          </label>
+          <div>
+            <label className="text-xs font-medium text-fg-muted" htmlFor="bulk-email-stagger">{t.contacts.bulkEmailStaggerLabel}</label>
+            <input
+              id="bulk-email-stagger"
+              type="number"
+              min={5}
+              value={bulkEmailStagger}
+              onChange={(e) => setBulkEmailStagger(e.target.value)}
+              className="mt-1 w-28 bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5 text-sm text-fg"
+            />
+          </div>
+          <Button
+            variant="primary"
+            disabled={
+              !isSupabaseConfigured
+              || bulkEmailSubmitting
+              || !bulkEmailSubject.trim()
+              || !bulkEmailBody.trim()
+              || selectedIds.size === 0
+            }
+            onClick={async () => {
+              setBulkEmailSubmitting(true)
+              try {
+                const selected = contacts.filter((c) => selectedIds.has(c.id))
+                const stagger = Math.max(5, Number(bulkEmailStagger) || 45)
+                const { enqueued, skipped } = await enqueueBulkEmailJobs(
+                  selected,
+                  {
+                    subject: bulkEmailSubject.trim(),
+                    body: bulkEmailBody,
+                    htmlBody: bulkEmailBody.replace(/\n/g, '<br/>'),
+                    staggerSeconds: stagger,
+                    marketingOnly: bulkEmailMarketing,
+                  },
+                  currentUser?.id,
+                )
+                toast.success(
+                  t.contacts.bulkEmailEnqueuedSummary
+                    .replace('{enqueued}', String(enqueued))
+                    .replace('{skipped}', String(skipped)),
+                )
+                setBulkEmailOpen(false)
+                setBulkEmailSubject('')
+                setBulkEmailBody('')
+                setSelectedIds(new Set())
+              } catch (e) {
+                toast.error(e instanceof Error ? e.message : String(e))
+              } finally {
+                setBulkEmailSubmitting(false)
+              }
+            }}
+          >
+            {t.contacts.bulkEmailEnqueue}
+          </Button>
+        </div>
       </SlideOver>
 
       {/* Delete confirm */}

@@ -228,6 +228,14 @@ export interface Translations {
     updated: string
     deleted: string
     bulkDeleted: string
+    bulkEmailQueue: string
+    bulkEmailSubject: string
+    bulkEmailBody: string
+    bulkEmailEnqueue: string
+    bulkEmailMarketingHint: string
+    bulkEmailStaggerLabel: string
+    bulkEmailEnqueuedSummary: string
+    bulkEmailNeedSupabase: string
     statusLabels: {
       prospect: string
       customer: string
@@ -1064,6 +1072,7 @@ export interface Translations {
     saveLink: string
     contactPlaceholder: string
     dealPlaceholder: string
+    useMatchedDeal: string
     refreshInbox: string
     selectThread: string
     selectMessage: string

@@ -21,6 +21,10 @@ export interface Contact {
   notes: string
   linkedDeals: string[]
   avatar?: string
+  /** Marketing email consent (bulk / campaigns); default false when unknown. */
+  marketingOptIn?: boolean
+  marketingOptInAt?: string
+  marketingOptInSource?: string
 }
 
 export type LeadLifecycleStage = 'subscriber' | 'lead' | 'mql' | 'sql' | 'opportunity' | 'customer'
