@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Zap, User, Mail, Lock, Building2, Loader2, ArrowRight, ShieldCheck } from 'lucide-react'
+import { Zap, User, Mail, Lock, Building2, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
 import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supabase'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { Card } from '../components/ui/Card'
 
 export function Register() {
   const t = useTranslations()
@@ -44,12 +47,9 @@ export function Register() {
       if (sbError) {
         setError(sbError.message)
       } else if (data.session) {
-        // Email confirmations disabled in Supabase Dashboard — user is immediately logged in.
-        // Provision the tenant immediately when possible (fallback also runs in auth init).
         await useAuthStore.getState().ensureTenantForCurrentUser()
         navigate('/')
       } else {
-        // Email confirmation required — show "check your email" screen
         setSuccess(true)
       }
     } else if (isOfflineDemoMode) {
@@ -69,9 +69,9 @@ export function Register() {
   }
 
   return (
-    <div className="auth-page-bg min-h-screen bg-navy-950 flex items-center justify-center p-4">
+    <div className="auth-page-bg min-h-screen bg-surface-0 flex items-center justify-center p-4">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="auth-bg-blob absolute top-1/4 right-1/4 w-96 h-96 bg-brand-600/10 rounded-full blur-3xl" />
+        <div className="auth-bg-blob absolute top-1/4 right-1/4 w-96 h-96 bg-accent-600/10 rounded-full blur-3xl" />
         <div className="auth-bg-blob absolute bottom-1/3 left-1/3 w-96 h-96 bg-emerald-600/8 rounded-full blur-3xl" />
       </div>
 
@@ -84,11 +84,11 @@ export function Register() {
             {branding.logoUrl ? (
               <img src={branding.logoUrl} alt="" className="w-full h-full object-cover" />
             ) : (
-              <Zap size={24} className="text-white" />
+              <Zap size={24} className="text-fg" />
             )}
           </div>
-          <h1 className="text-2xl font-bold text-white">{t.auth.registerButton}</h1>
-          <p className="text-sm text-slate-500 mt-1">{branding.appName}</p>
+          <h1 className="text-2xl font-bold text-fg">{t.auth.registerButton}</h1>
+          <p className="text-sm text-fg-muted mt-1">{branding.appName}</p>
           {isSupabaseConfigured && (
             <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
               <ShieldCheck size={11} className="text-emerald-400" />
@@ -97,12 +97,12 @@ export function Register() {
           )}
         </div>
 
-        <div className="glass rounded-2xl shadow-float border-white/10 p-8">
+        <Card className="p-8">
           {success ? (
             <div className="text-center py-4">
               <ShieldCheck size={40} className="text-emerald-400 mx-auto mb-3" />
-              <p className="text-white font-semibold mb-1">{t.auth.checkEmailTitle}</p>
-              <p className="text-sm text-slate-400">{t.auth.checkEmailConfirmation} <span className="text-brand-400">{email}</span></p>
+              <p className="text-fg font-semibold mb-1">{t.auth.checkEmailTitle}</p>
+              <p className="text-sm text-fg-muted">{t.auth.checkEmailConfirmation} <span className="text-accent-400">{email}</span></p>
             </div>
           ) : (
           <>
@@ -113,95 +113,71 @@ export function Register() {
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">{t.companies.title}</label>
-              <div className="relative">
-                <Building2 size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type="text"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  placeholder={t.companies.title}
-                  required
-                  autoFocus
-                  className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 transition-colors"
-                />
-              </div>
-            </div>
+            <Input
+              label={t.companies.title}
+              type="text"
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+              placeholder={t.companies.title}
+              required
+              autoFocus
+              leftIcon={<Building2 size={16} aria-hidden />}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">{t.common.name}</label>
-              <div className="relative">
-                <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t.common.name}
-                  required
-                  className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 transition-colors"
-                />
-              </div>
-            </div>
+            <Input
+              label={t.common.name}
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t.common.name}
+              required
+              leftIcon={<User size={16} aria-hidden />}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">{t.auth.email}</label>
-              <div className="relative">
-                <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t.auth.emailPlaceholder}
-                  required
-                  className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 transition-colors"
-                />
-              </div>
-            </div>
+            <Input
+              label={t.auth.email}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t.auth.emailPlaceholder}
+              required
+              leftIcon={<Mail size={16} aria-hidden />}
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">{t.auth.password}</label>
-              <div className="relative">
-                <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={t.auth.password}
-                  required
-                  minLength={6}
-                  className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-brand-500/50 transition-colors"
-                />
-              </div>
-            </div>
+            <Input
+              label={t.auth.password}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={t.auth.password}
+              required
+              minLength={6}
+              leftIcon={<Lock size={16} aria-hidden />}
+            />
 
-            <button
+            <Button
               type="submit"
+              className="w-full rounded-xl"
+              size="lg"
               disabled={loading || !name || !email || !password || !orgName}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl btn-gradient text-white font-semibold text-sm disabled:opacity-50 transition-all"
+              loading={loading}
+              rightIcon={<ArrowRight size={16} aria-hidden />}
             >
-              {loading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <>
-                  {t.auth.registerButton}
-                  <ArrowRight size={16} />
-                </>
-              )}
-            </button>
+              {t.auth.registerButton}
+            </Button>
           </form>
 
           <div className="mt-6 pt-5 border-t border-white/6 text-center">
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-fg-muted">
               {t.auth.hasAccount}{' '}
-              <Link to="/login" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
+              <Link to="/login" className="text-accent-400 hover:text-accent-300 font-medium transition-colors">
                 {t.auth.login}
               </Link>
             </p>
           </div>
           </>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   )

@@ -415,7 +415,7 @@ function ThreadView({
             <select
               value={manualContactId}
               onChange={(e) => setManualContactId(e.target.value)}
-              className="bg-[#0d0e1a] border border-white/10 rounded-full px-2 py-0.5 text-[10px] text-slate-300"
+              className="bg-surface-2 border border-white/10 rounded-full px-2 py-0.5 text-[10px] text-slate-300"
               title={t.inbox.contactPlaceholder}
               aria-label={t.inbox.contactPlaceholder}
             >
@@ -427,7 +427,7 @@ function ThreadView({
             <select
               value={manualDealId}
               onChange={(e) => setManualDealId(e.target.value)}
-              className="bg-[#0d0e1a] border border-white/10 rounded-full px-2 py-0.5 text-[10px] text-slate-300"
+              className="bg-surface-2 border border-white/10 rounded-full px-2 py-0.5 text-[10px] text-slate-300"
               title={t.inbox.dealPlaceholder}
               aria-label={t.inbox.dealPlaceholder}
             >
@@ -1001,7 +1001,7 @@ export function Inbox() {
       return (threadWorkspace[thread.id]?.ownerUserId ?? '') === (currentUser?.id ?? '')
     }
     const match = persistedThreadMatchById.get(thread.id) ?? threadMatchById.get(thread.id)
-    if (!Boolean(match?.contact || match?.companyId || match?.dealId)) return false
+    if (!(match?.contact || match?.companyId || match?.dealId)) return false
     return true
   }).filter((thread) => {
     const lastMsg = thread.messages[thread.messages.length - 1]
@@ -1286,7 +1286,7 @@ export function Inbox() {
   return (
     <div className="crm-page-full flex h-full min-h-0 overflow-hidden gap-3 py-3 sm:py-4">
       {/* ── Left: Folders ────────────────────────────────────────────────── */}
-      <div className="w-52 flex-shrink-0 border border-white/8 rounded-2xl overflow-hidden flex flex-col bg-navy-900/50">
+      <div className="w-52 flex-shrink-0 border border-white/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/50">
         <div className="p-3 border-b border-white/6">
           <PermissionGate permission="email:send">
             <button type="button"
@@ -1364,7 +1364,7 @@ export function Inbox() {
       </div>
 
       {/* ── Center: Email list ───────────────────────────────────────────── */}
-      <div className="w-80 flex-shrink-0 border border-white/8 rounded-2xl overflow-hidden flex flex-col bg-navy-900/35">
+      <div className="w-80 flex-shrink-0 border border-white/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/35">
         <div className="flex items-center justify-between px-4 py-3 border-b border-white/6 flex-shrink-0">
           <div>
             <span className="text-sm font-semibold text-white capitalize">{FOLDERS.find((f) => f.id === folder)?.label}</span>
@@ -1487,7 +1487,7 @@ export function Inbox() {
               value={listQuery}
               onChange={(e) => setListQuery(e.target.value)}
               placeholder={t.inbox.searchPlaceholder}
-              className="w-full bg-[#0d0e1a] border border-white/8 rounded-lg pl-7 pr-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-brand-500/40"
+              className="w-full bg-surface-2 border border-white/8 rounded-lg pl-7 pr-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-brand-500/40"
             />
           </div>
           <p className="mt-1 text-[10px] text-slate-600">{t.inbox.searchOperatorsHint}</p>
@@ -1540,7 +1540,7 @@ export function Inbox() {
               <select
                 value={selectedInboxViewId}
                 onChange={(e) => applyInboxSavedView(e.target.value)}
-                className="flex-1 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
+                className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
               >
                 <option value="">{t.inbox.savedViews}</option>
                 {inboxViews.map((view) => (
@@ -1564,7 +1564,7 @@ export function Inbox() {
                 value={newInboxViewName}
                 onChange={(e) => setNewInboxViewName(e.target.value)}
                 placeholder={t.inbox.savedViewNamePlaceholder}
-                className="flex-1 bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
+                className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-2 py-1 text-xs text-slate-200"
               />
               <button type="button"
                 onClick={saveCurrentInboxView}
@@ -1769,14 +1769,14 @@ export function Inbox() {
       </div>
 
       {/* ── Right: Email/Thread view ─────────────────────────────────────── */}
-      <div className="flex-1 min-w-0 overflow-hidden border border-white/8 rounded-2xl bg-navy-900/25">
+      <div className="flex-1 min-w-0 overflow-hidden border border-white/8 rounded-2xl bg-surface-1/25">
         {folder === 'inbox' && selectedThread && (
           <div className="px-3 py-2 border-b border-white/6 flex items-center gap-2 flex-wrap">
             <select
               aria-label={t.common.assignedTo}
               value={selectedWorkspace?.ownerUserId ?? ''}
               onChange={(e) => setThreadOwner(selectedThread.id, e.target.value || undefined)}
-              className="bg-[#0d0e1a] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-300"
+              className="bg-surface-2 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-300"
             >
               <option value="">{t.common.assignedTo}</option>
               {orgUsers.map((u) => (
@@ -1787,7 +1787,7 @@ export function Inbox() {
               value={selectedWorkspace?.internalNote ?? ''}
               onChange={(e) => setThreadNote(selectedThread.id, e.target.value)}
               placeholder={t.common.notes}
-              className="flex-1 min-w-[220px] bg-[#0d0e1a] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 placeholder-slate-600"
+              className="flex-1 min-w-[220px] bg-surface-2 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 placeholder-slate-600"
             />
           </div>
         )}

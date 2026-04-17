@@ -1,0 +1,23 @@
+---
+description: Prioriza la Ola B del plan roadmap_y_huecos (Gmail, email analytics, DEPLOY/docs).
+globs:
+  - docs/project-state.md
+  - docs/google-gmail-oauth-verification.md
+  - docs/deployment-spa-and-env.md
+  - docs/smoke-checklist-production.md
+  - .planning/REQUIREMENTS.md
+  - src/lib/emailTracking.ts
+  - src/store/emailStore.ts
+  - supabase/functions/**/*.ts
+alwaysApply: false
+---
+
+# Ola B — propiedad del agente
+
+Cuando trabajes en los archivos anteriores o en el plan **roadmap_y_huecos** (huecos Gmail, analítica de email, Phase 10 / DEPLOY):
+
+1. **Prioriza B1 → B2 → B3** frente a olas A o C, salvo que el usuario pida explícitamente otra cosa.
+2. **B1:** estado y enlaces en `docs/google-gmail-oauth-verification.md` y tabla Gaps de `docs/project-state.md`; redirects / canales según `docs/deployment-spa-and-env.md`.
+3. **B2:** discovery sobre `src/lib/emailTracking.ts`, `emailStore`, Edge Functions en `supabase/functions/`; diseño de verdad servidor y UI Reports (estimado vs servidor); actualiza masters / Gaps cuando el alcance cambie.
+4. **B3:** `.planning/REQUIREMENTS.md` (`DEPLOY-*`), `docs/smoke-checklist-production.md`, evidencia en `docs/master-release-qa.md` — sin marcar hecho lo que dependa de deploy real hasta que haya evidencia o instrucción explícita del usuario.
+5. Aplica la **regla transversal de documentación** del plan (releer y actualizar docs tocados en cada PR o cierre parcial).

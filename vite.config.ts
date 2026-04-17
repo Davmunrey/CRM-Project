@@ -57,15 +57,10 @@ export default defineConfig(({ command, mode }) => {
     test: {
       environment: 'jsdom',
       globals: true,
-      /**
-       * `forks` + one worker + no file parallelism: reliable with Zustand + jsdom on Windows/Vitest 4.
-       * Do not raise `maxWorkers` for `threads` here without profiling — parallel workers + shared
-       * global `localStorage` in `tests/setup.ts` causes flaky hangs.
-       */
+      /** `forks` avoids thread-pool hangs on Windows with Vitest 4 + jsdom. */
       pool: 'forks',
-      maxWorkers: 1,
+      maxWorkers: 4,
       minWorkers: 1,
-      fileParallelism: false,
       testTimeout: 30_000,
       hookTimeout: 30_000,
       setupFiles: ['./tests/setup.ts'],

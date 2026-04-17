@@ -33,6 +33,8 @@ import { DEAL_PRIORITY_COLORS } from '../utils/constants'
 
 import type { Deal, DealStage, QuoteItem, SmartViewFilter } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
+import { PageHeader } from '../components/ui/PageHeader'
+import { Toolbar } from '../components/ui/Toolbar'
 import { EmailComposer } from '../components/email/EmailComposer'
 import { useAuthStore } from '../store/authStore'
 import { useProductsStore } from '../store/productsStore'
@@ -414,7 +416,7 @@ function QuoteBuilder({
           onChange={(e) => { if (e.target.value) { addFromProduct(e.target.value); e.target.value = '' } }}
           aria-label={`${t.common.add} ${t.products.title.toLowerCase()} ${t.deals.quote.toLowerCase()}`}
           title={`${t.common.add} ${t.products.title.toLowerCase()} ${t.deals.quote.toLowerCase()}`}
-          className="flex-1 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+          className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
         >
           <option value="" disabled>+ {t.deals.addItem}...</option>
           {products.map((p) => {
@@ -551,7 +553,7 @@ function QuoteBuilder({
         <select
           value={documentType}
           onChange={(e) => setDocumentType(e.target.value as QuoteDocumentType)}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
           aria-label={t.deals.documentType}
           title={t.deals.documentType}
         >
@@ -563,7 +565,7 @@ function QuoteBuilder({
           type="text"
           value={quoteNumber}
           onChange={(e) => setQuoteNumber(e.target.value)}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
           aria-label={t.deals.quoteNumber}
           title={t.deals.quoteNumber}
           placeholder={t.deals.quoteNumber}
@@ -574,7 +576,7 @@ function QuoteBuilder({
           max={100}
           value={vatPercent}
           onChange={(e) => setVatPercent(Math.min(100, Math.max(0, Number(e.target.value))))}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
           aria-label={t.deals.vatPercent}
           title={t.deals.vatPercent}
           placeholder={t.deals.vatPercent}
@@ -584,7 +586,7 @@ function QuoteBuilder({
           min={1}
           value={validityDays}
           onChange={(e) => setValidityDays(Math.max(1, Number(e.target.value)))}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
           aria-label={t.deals.validityDays}
           title={t.deals.validityDays}
           placeholder={t.deals.validityDays}
@@ -596,21 +598,21 @@ function QuoteBuilder({
           value={clientTaxId}
           onChange={(e) => setClientTaxId(e.target.value)}
           placeholder={t.deals.clientTaxIdPlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
         <input
           type="text"
           value={contactPerson}
           onChange={(e) => setContactPerson(e.target.value)}
           placeholder={t.deals.contactPersonPlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
         <input
           type="text"
           value={clientAddress}
           onChange={(e) => setClientAddress(e.target.value)}
           placeholder={t.deals.clientAddressPlaceholder}
-          className="sm:col-span-2 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="sm:col-span-2 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -621,7 +623,7 @@ function QuoteBuilder({
           value={globalDiscountPercent}
           onChange={(e) => setGlobalDiscountPercent(Math.min(100, Math.max(0, Number(e.target.value))))}
           placeholder={t.deals.globalDiscountPlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
         <input
           type="number"
@@ -630,7 +632,7 @@ function QuoteBuilder({
           value={withholdingPercent}
           onChange={(e) => setWithholdingPercent(Math.min(100, Math.max(0, Number(e.target.value))))}
           placeholder={t.deals.withholdingPercent}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
         <input
           type="number"
@@ -638,7 +640,7 @@ function QuoteBuilder({
           value={paymentDays}
           onChange={(e) => setPaymentDays(Math.max(0, Number(e.target.value)))}
           placeholder={t.deals.paymentDaysPlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -647,35 +649,35 @@ function QuoteBuilder({
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
           placeholder={t.deals.paymentMethodPlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
         <input
           type="text"
           value={reference}
           onChange={(e) => setReference(e.target.value)}
           placeholder={t.deals.referencePlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
         <input
           type="text"
           value={bankName}
           onChange={(e) => setBankName(e.target.value)}
           placeholder={t.deals.bankNamePlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
         <input
           type="text"
           value={bankIban}
           onChange={(e) => setBankIban(e.target.value)}
           placeholder={t.deals.ibanPlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
         <input
           type="text"
           value={accountHolder}
           onChange={(e) => setAccountHolder(e.target.value)}
           placeholder={t.deals.accountHolderPlaceholder}
-          className="sm:col-span-2 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
+          className="sm:col-span-2 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white"
         />
       </div>
       <div className="grid grid-cols-1 gap-2">
@@ -683,19 +685,19 @@ function QuoteBuilder({
           value={lateFeeClause}
           onChange={(e) => setLateFeeClause(e.target.value)}
           placeholder={t.deals.lateFeeClausePlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white min-h-[60px]"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white min-h-[60px]"
         />
         <textarea
           value={acceptanceClause}
           onChange={(e) => setAcceptanceClause(e.target.value)}
           placeholder={t.deals.acceptanceClausePlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white min-h-[60px]"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white min-h-[60px]"
         />
         <textarea
           value={additionalNotes}
           onChange={(e) => setAdditionalNotes(e.target.value)}
           placeholder={t.deals.additionalNotesPlaceholder}
-          className="bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white min-h-[60px]"
+          className="bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white min-h-[60px]"
         />
       </div>
 
@@ -944,8 +946,21 @@ export function Deals() {
 
   return (
     <div className="crm-page-full flex flex-col">
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap py-3 shrink-0 border-b border-white/6">
+      <div className="shrink-0 px-4 pt-3 sm:px-6">
+        <PageHeader
+          showTitle={false}
+          title={t.nav.deals}
+          actions={
+            <PermissionGate permission="deals:create">
+              <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setIsFormOpen(true)}>
+                {t.deals.newDeal}
+              </Button>
+            </PermissionGate>
+          }
+        />
+      </div>
+      <Toolbar className="!flex-row flex-wrap items-center gap-3 py-3 shrink-0 border-b border-white/6 px-4 sm:px-6">
+        <div className="flex w-full flex-wrap items-center gap-3">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-64" />
         <Button
           variant={showFilters ? 'secondary' : 'ghost'}
@@ -986,13 +1001,9 @@ export function Deals() {
               <LayoutList size={16} />
             </button>
           </div>
-          <PermissionGate permission="deals:create">
-            <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setIsFormOpen(true)}>
-              {t.deals.newDeal}
-            </Button>
-          </PermissionGate>
         </div>
-      </div>
+        </div>
+      </Toolbar>
 
       {/* Smart Views bar */}
       <div className="py-2 border-b border-white/6">
@@ -1001,7 +1012,7 @@ export function Deals() {
 
       {/* Filters */}
       {showFilters && (
-        <div className="flex gap-3 flex-wrap items-center py-3 border-b border-white/6 bg-navy-800/30">
+        <div className="flex gap-3 flex-wrap items-center py-3 border-b border-white/6 bg-surface-2/30">
           <Select
             options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
             placeholder={t.common.assignedTo}
@@ -1089,10 +1100,10 @@ export function Deals() {
               action={{ label: t.deals.newDeal, onClick: () => setIsFormOpen(true) }}
             />
           ) : (
-            <div className="bg-[#111220] border border-white/8 rounded-2xl overflow-hidden">
+            <div className="bg-surface-1 border border-white/8 rounded-2xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/6 bg-navy-800/30">
+                  <tr className="border-b border-white/6 bg-surface-2/30">
                     <th className="px-4 py-3 text-left w-10">
                       <input
                         type="checkbox"

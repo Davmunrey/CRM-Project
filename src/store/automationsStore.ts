@@ -5,6 +5,7 @@ import { useActivitiesStore } from './activitiesStore'
 import { useNotificationsStore } from './notificationsStore'
 import { useDealsStore } from './dealsStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { devConsole } from '../lib/devConsole'
 import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
 
 // ─── Seed Data ────────────────────────────────────────────────────────────────
@@ -158,7 +159,7 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
   deleteRule: (id) => {
     set((s) => ({ rules: s.rules.filter((r) => r.id !== id) }))
     if (isSupabaseConfigured && supabase) {
-      sbDelete('automation_rules', id).catch((e) => console.error('[automationsStore] delete error', e))
+      sbDelete('automation_rules', id).catch((e) => devConsole.error('[automationsStore] delete error', e))
     }
   },
 

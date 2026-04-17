@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './database.types'
+import { devConsole } from './devConsole'
 import { appChannel } from './envChannel'
 
 /**
@@ -55,12 +56,12 @@ const isVitest = import.meta.env.MODE === 'test'
 
 if (dataRuntime === 'unconfigured' && import.meta.env.DEV && !isVitest) {
   if (readDemoModeFlag()) {
-    console.warn(
+    devConsole.warn(
       '[CRM] Supabase env vars missing. Offline demo mode is ON (VITE_ALLOW_DEMO_MODE).\n' +
         'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to use real auth.',
     )
   } else {
-    console.warn(
+    devConsole.warn(
       '[CRM] Supabase env vars missing or invalid. Auth/data are disabled until configured.\n' +
         'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, or set VITE_ALLOW_DEMO_MODE=true for local demo only.',
     )

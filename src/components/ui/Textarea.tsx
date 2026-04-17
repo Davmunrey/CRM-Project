@@ -1,5 +1,5 @@
 import type { TextareaHTMLAttributes } from 'react'
-import { forwardRef } from 'react'
+import { forwardRef, useId } from 'react'
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string
@@ -7,30 +7,41 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, className = '', ...props }, ref) => {
+  ({ label, error, className = '', id, ...props }, ref) => {
+    const genId = useId()
+    const taId = id ?? genId
+    const errId = `${taId}-error`
+
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label className="text-sm font-medium text-slate-300">
+          <label htmlFor={taId} className="text-sm font-medium text-fg-muted">
             {label}
             {props.required && <span className="text-red-400 ml-1">*</span>}
           </label>
         )}
         <textarea
+          id={taId}
           ref={ref}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errId : undefined}
           className={`
-            w-full rounded-xl border bg-[#0d0e1a] text-slate-100 text-sm
-            placeholder:text-slate-600
-            focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 focus-visible:border-brand-500/50
+            w-full rounded-xl border bg-surface-2 text-fg text-sm
+            placeholder:text-fg-muted/80
+            focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500/40 focus-visible:border-accent-500/50
             disabled:opacity-50 disabled:cursor-not-allowed
-            transition-all duration-150 p-3 resize-none
+            transition-all duration-base p-3 resize-none
             ${error ? 'border-red-500/50' : 'border-white/10 hover:border-white/15'}
             ${className}
           `}
           rows={4}
           {...props}
         />
-        {error && <p className="text-xs text-red-400">{error}</p>}
+        {error && (
+          <p id={errId} role="alert" className="text-xs text-red-400">
+            {error}
+          </p>
+        )}
       </div>
     )
   }

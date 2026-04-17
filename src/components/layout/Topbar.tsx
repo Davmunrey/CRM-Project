@@ -1,4 +1,4 @@
-import { Bell, Search, LogOut, User, ChevronDown, Check } from 'lucide-react'
+import { Bell, Search, LogOut, User, ChevronDown, Check, Sun, Moon, Monitor } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -14,6 +14,7 @@ import { formatRelativeDate } from '../../utils/formatters'
 import { useTranslations } from '../../i18n'
 import type { Activity, CRMNotification } from '../../types'
 import type { FollowUpReminder } from '../../types'
+import type { ThemePreference } from '../../lib/theme'
 
 interface TopbarProps {
   title: string
@@ -29,6 +30,10 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
   const t = useTranslations()
   const [showNotifs, setShowNotifs] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showThemeMenu, setShowThemeMenu] = useState(false)
+  const [themePreference, setThemePreference] = useState<ThemePreference>(
+    () => useSettingsStore.getState().settings.themePreference ?? 'system',
+  )
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
   const navigate = useNavigate()
 
@@ -39,7 +44,10 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
     return unsub
   }, [])
   useEffect(() => {
-    const unsub = useSettingsStore.subscribe((s) => setBranding(s.settings.branding))
+    const unsub = useSettingsStore.subscribe((s) => {
+      setBranding(s.settings.branding)
+      setThemePreference(s.settings.themePreference ?? 'system')
+    })
     return unsub
   }, [])
 
@@ -86,23 +94,69 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowNotifs(false)
+      if (e.key === 'Escape') {
+        setShowNotifs(false)
+        setShowThemeMenu(false)
+      }
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [])
 
   return (
-    <header className="topbar-surface h-16 flex items-center gap-4 px-6 border-b border-white/6 bg-navy-900 flex-shrink-0 relative z-30">
+    <header className="topbar-surface h-16 flex items-center gap-4 px-6 border-b border-white/6 bg-surface-1 flex-shrink-0 relative z-30">
       <h1 className="text-base font-semibold text-white mr-auto tracking-tight">
         <span className="text-slate-500 mr-1">{branding.appName} ·</span> {title}
       </h1>
+
+      {/* Theme (persists via settings store; App applies document theme) */}
+      <div className="relative">
+        <button
+          type="button"
+          aria-haspopup="menu"
+          aria-expanded={showThemeMenu}
+          aria-label={t.settings.theme}
+          title={t.settings.theme}
+          onClick={() => setShowThemeMenu((v) => !v)}
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/6 transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+        >
+          {themePreference === 'light' ? <Sun size={18} /> : themePreference === 'dark' ? <Moon size={18} /> : <Monitor size={18} />}
+        </button>
+        {showThemeMenu && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowThemeMenu(false)} />
+            <div
+              className="popover-surface absolute right-0 top-full mt-2 w-48 border border-white/10 rounded-xl shadow-float z-50 py-1 animate-scale-in bg-surface-1"
+              role="menu"
+            >
+              {(['light', 'dark', 'system'] as const).map((pref) => (
+                <button
+                  key={pref}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    useSettingsStore.getState().updateThemePreference(pref)
+                    setShowThemeMenu(false)
+                  }}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 text-xs text-slate-300 hover:text-white hover:bg-white/6 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    {pref === 'light' ? <Sun size={14} /> : pref === 'dark' ? <Moon size={14} /> : <Monitor size={14} />}
+                    {pref === 'light' ? t.settings.themeLight : pref === 'dark' ? t.settings.themeDark : t.settings.themeSystem}
+                  </span>
+                  {themePreference === pref ? <Check size={14} className="text-brand-400 shrink-0" /> : null}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* Command palette trigger */}
       <button
         type="button"
         onClick={onOpenCommandPalette}
-        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-navy-800/60 border border-white/8 hover:bg-white/6 hover:border-white/12 transition-all duration-150 text-slate-500 hover:text-slate-300 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
+        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-2/90 border border-white/8 hover:bg-white/6 hover:border-white/12 transition-all duration-150 text-slate-500 hover:text-slate-300 text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500"
       >
         <Search size={13} />
         <span>{t.common.search}...</span>
@@ -129,7 +183,7 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
         </button>
 
         {showNotifs && (
-          <div className="popover-surface absolute right-0 top-full mt-2 w-96 border border-white/10 rounded-2xl shadow-float overflow-hidden animate-scale-in z-50 bg-navy-900">
+          <div className="popover-surface absolute right-0 top-full mt-2 w-96 border border-white/10 rounded-2xl shadow-float overflow-hidden animate-scale-in z-50 bg-surface-1">
             <div className="px-4 py-3 border-b border-white/6 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-white">{t.nav.notifications}</p>
@@ -254,7 +308,7 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
         {showUserMenu && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
-            <div className="popover-surface absolute right-0 top-full mt-2 w-56 border border-white/10 rounded-xl shadow-float z-50 py-1 animate-scale-in bg-navy-900">
+            <div className="popover-surface absolute right-0 top-full mt-2 w-56 border border-white/10 rounded-xl shadow-float z-50 py-1 animate-scale-in bg-surface-1">
               <div className="px-3 py-2 border-b border-white/6">
                 <p className="text-xs font-semibold text-white">{currentUser?.name}</p>
                 <p className="text-[10px] text-slate-500">{currentUser?.email}</p>

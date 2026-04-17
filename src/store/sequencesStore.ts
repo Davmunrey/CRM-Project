@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { EmailSequence, SequenceEnrollment, EnrollmentStatus } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { devConsole } from '../lib/devConsole'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 
 // ─── Seed data ───────────────────────────────────────────────────────────────
@@ -96,7 +97,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
         id: newSeq.id, name: newSeq.name, description: newSeq.description,
         steps: newSeq.steps, created_by: newSeq.createdBy, is_active: newSeq.isActive,
         enrolled_count: 0, organization_id: getOrgId(),
-      }).then(({ error }: any) => { if (error) console.error('[sequencesStore] insert error', error) })
+      }).then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] insert error', error) })
     }
     return newSeq
   },
@@ -111,7 +112,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
       if (updates.isActive !== undefined) row.is_active = updates.isActive
       if (updates.enrolledCount !== undefined) row.enrolled_count = updates.enrolledCount
       ;(supabase as any).from('email_sequences').update(row).eq('id', id)
-        .then(({ error }: any) => { if (error) console.error('[sequencesStore] update error', error) })
+        .then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] update error', error) })
     }
   },
 
@@ -121,7 +122,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
       enrollments: s.enrollments.filter((e) => e.sequenceId !== id),
     }))
     if (isSupabaseConfigured && supabase) {
-      sbDelete('email_sequences', id).catch((e) => console.error('[sequencesStore] delete error', e))
+      sbDelete('email_sequences', id).catch((e) => devConsole.error('[sequencesStore] delete error', e))
     }
   },
 
@@ -148,7 +149,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
         id: enrollment.id, sequence_id: sequenceId, contact_id: contactId,
         contact_name: contactName, current_step: 0, status: 'active',
         enrolled_at: now, next_step_at: nextStepAt, organization_id: getOrgId(),
-      }).then(({ error }: any) => { if (error) console.error('[sequencesStore] enroll error', error) })
+      }).then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] enroll error', error) })
     }
     return enrollment
   },
@@ -157,7 +158,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
     set((s) => ({ enrollments: s.enrollments.map((e) => e.id === enrollmentId ? { ...e, status: 'paused' as EnrollmentStatus } : e) }))
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('sequence_enrollments').update({ status: 'paused' }).eq('id', enrollmentId)
-        .then(({ error }: any) => { if (error) console.error('[sequencesStore] pause error', error) })
+        .then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] pause error', error) })
     }
   },
 
@@ -165,7 +166,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
     set((s) => ({ enrollments: s.enrollments.map((e) => e.id === enrollmentId ? { ...e, status: 'active' as EnrollmentStatus } : e) }))
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('sequence_enrollments').update({ status: 'active' }).eq('id', enrollmentId)
-        .then(({ error }: any) => { if (error) console.error('[sequencesStore] resume error', error) })
+        .then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] resume error', error) })
     }
   },
 
@@ -174,14 +175,14 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
     set((s) => ({ enrollments: s.enrollments.map((e) => e.id === enrollmentId ? { ...e, status: 'completed' as EnrollmentStatus, completedAt: now } : e) }))
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('sequence_enrollments').update({ status: 'completed', completed_at: now }).eq('id', enrollmentId)
-        .then(({ error }: any) => { if (error) console.error('[sequencesStore] complete error', error) })
+        .then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] complete error', error) })
     }
   },
 
   unenrollContact: (enrollmentId) => {
     set((s) => ({ enrollments: s.enrollments.filter((e) => e.id !== enrollmentId) }))
     if (isSupabaseConfigured && supabase) {
-      sbDelete('sequence_enrollments', enrollmentId).catch((e) => console.error('[sequencesStore] unenroll error', e))
+      sbDelete('sequence_enrollments', enrollmentId).catch((e) => devConsole.error('[sequencesStore] unenroll error', e))
     }
   },
 

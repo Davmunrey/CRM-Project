@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { EmailTemplate } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { devConsole } from '../lib/devConsole'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 import { useAuthStore } from './authStore'
 
@@ -102,7 +103,7 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
         id: newTemplate.id, name: newTemplate.name, subject: newTemplate.subject,
         body: newTemplate.body, category: newTemplate.category, variables: newTemplate.variables,
         usage_count: 0, organization_id: getOrgId(),
-      }).then(({ error }: any) => { if (error) console.error('[templateStore] insert error', error) })
+      }).then(({ error }: any) => { if (error) devConsole.error('[templateStore] insert error', error) })
     }
     return newTemplate
   },
@@ -119,14 +120,14 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
       if (updates.category !== undefined) row.category = updates.category
       if (updates.variables !== undefined) row.variables = updates.variables
       ;(supabase as any).from('email_templates').update(row).eq('id', id)
-        .then(({ error }: any) => { if (error) console.error('[templateStore] update error', error) })
+        .then(({ error }: any) => { if (error) devConsole.error('[templateStore] update error', error) })
     }
   },
 
   deleteTemplate: (id) => {
     set((s) => ({ templates: s.templates.filter((t) => t.id !== id) }))
     if (isSupabaseConfigured && supabase) {
-      sbDelete('email_templates', id).catch((e) => console.error('[templateStore] delete error', e))
+      sbDelete('email_templates', id).catch((e) => devConsole.error('[templateStore] delete error', e))
     }
   },
 
@@ -186,7 +187,7 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
       const t = get().templates.find((x) => x.id === id)
       if (t) {
         ;(supabase as any).from('email_templates').update({ usage_count: t.usageCount }).eq('id', id)
-          .then(({ error }: any) => { if (error) console.error('[templateStore] usage error', error) })
+          .then(({ error }: any) => { if (error) devConsole.error('[templateStore] usage error', error) })
       }
     }
   },

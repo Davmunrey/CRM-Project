@@ -23,6 +23,8 @@ import { Select } from '../components/ui/Select'
 import { toast } from '../store/toastStore'
 import type { Activity, ActivityType } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
+import { PageHeader } from '../components/ui/PageHeader'
+import { Toolbar } from '../components/ui/Toolbar'
 import { hasPermission } from '../utils/permissions'
 import { trackUxAction } from '../lib/uxMetrics'
 
@@ -309,6 +311,18 @@ export function Activities() {
 
   return (
     <div className="crm-page space-y-4">
+      <PageHeader
+        showTitle={false}
+        title={t.nav.activities}
+        actions={
+          <PermissionGate permission="activities:create">
+            <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setIsFormOpen(true)}>
+              {t.activities.newActivity}
+            </Button>
+          </PermissionGate>
+        }
+      />
+
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         <div className="glass p-4">
@@ -347,8 +361,8 @@ export function Activities() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <Toolbar>
+      <div className="flex items-center gap-3 flex-wrap w-full">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-72" />
         <Button
           variant={showFilters ? 'secondary' : 'ghost'}
@@ -386,15 +400,8 @@ export function Activities() {
             {t.calendar.title}
           </button>
         </div>
-
-        <div className="ml-auto">
-          <PermissionGate permission="activities:create">
-            <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setIsFormOpen(true)}>
-              {t.activities.newActivity}
-            </Button>
-          </PermissionGate>
-        </div>
       </div>
+      </Toolbar>
 
       {/* Filters */}
       {showFilters && (

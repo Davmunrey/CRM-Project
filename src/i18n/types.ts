@@ -553,6 +553,10 @@ export interface Translations {
     themeSystem: string
     themeLight: string
     themeDark: string
+    uiDensity: string
+    uiDensityComfortable: string
+    uiDensityCompact: string
+    uiDensityHelp: string
     tags: string
     addTag: string
     pipeline: string

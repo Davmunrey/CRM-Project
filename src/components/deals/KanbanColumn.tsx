@@ -46,7 +46,7 @@ export function KanbanColumn({ stage, deals, onDealClick, color }: KanbanColumnP
               kanban-dropzone flex-1 rounded-xl min-h-[200px] p-2 space-y-2 transition-colors
               ${snapshot.isDraggingOver
                 ? 'bg-indigo-500/10 border border-indigo-500/30'
-                : 'bg-navy-800/30 border border-white/6'
+                : 'bg-surface-2/30 border border-white/6'
               }
             `}
           >

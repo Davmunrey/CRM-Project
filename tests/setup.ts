@@ -1,15 +1,9 @@
 import '@testing-library/jest-dom'
-import { beforeEach } from 'vitest'
+import * as axeMatchers from 'vitest-axe/matchers'
+import { beforeEach, expect } from 'vitest'
 import { useI18nStore } from '../src/i18n'
 
-/** jsdom has no ResizeObserver; chart/layout code paths may stall without it. */
-if (typeof globalThis.ResizeObserver === 'undefined') {
-  globalThis.ResizeObserver = class {
-    observe(): void {}
-    unobserve(): void {}
-    disconnect(): void {}
-  } as typeof ResizeObserver
-}
+expect.extend(axeMatchers)
 
 beforeEach(() => {
   window.localStorage.clear()

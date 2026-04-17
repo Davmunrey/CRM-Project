@@ -350,7 +350,7 @@ export function Sidebar() {
   return (
     <aside
       className={`
-        app-sidebar flex flex-col h-screen bg-navy-900 border-r border-white/6
+        app-sidebar flex flex-col h-screen bg-surface-1 border-r border-white/6
         transition-all duration-200 ease-out flex-shrink-0
         ${collapsed ? 'w-[60px]' : 'w-[220px]'}
       `}

@@ -86,7 +86,7 @@ function ActionEditor({
           onChange={(e) => onChange({ type: e.target.value as AutomationActionType })}
           aria-label={t.automations.action}
           title={t.automations.action}
-          className="flex-1 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+          className="flex-1 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
         >
           {(Object.keys(actionLabels) as AutomationActionType[]).map((k) => (
             <option key={k} value={k}>{actionLabels[k]}</option>
@@ -104,7 +104,7 @@ function ActionEditor({
             onChange={(e) => onChange({ ...action, activityType: e.target.value as ActivityType })}
             aria-label={t.common.type}
             title={t.common.type}
-            className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
           >
             {ACTIVITY_TYPE_OPTIONS.map((k) => (
               <option key={k} value={k}>{t.activities.typeLabels[k]}</option>
@@ -115,7 +115,7 @@ function ActionEditor({
             placeholder={t.activities.subject}
             value={action.activitySubject ?? ''}
             onChange={(e) => onChange({ ...action, activitySubject: e.target.value })}
-            className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
           />
           <div className="flex items-center gap-2">
             <input
@@ -126,7 +126,7 @@ function ActionEditor({
               onChange={(e) => onChange({ ...action, activityDaysFromNow: Number(e.target.value) })}
               aria-label={t.automations.trigger}
               title={t.automations.trigger}
-              className="w-20 bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+              className="w-20 bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
             />
             <span className="text-xs text-slate-500">{t.automations.trigger.toLowerCase()}</span>
           </div>
@@ -140,14 +140,14 @@ function ActionEditor({
             placeholder={t.settings.notifications}
             value={action.notificationTitle ?? ''}
             onChange={(e) => onChange({ ...action, notificationTitle: e.target.value })}
-            className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
           />
           <textarea
             placeholder={t.common.notes}
             value={action.notificationMessage ?? ''}
             onChange={(e) => onChange({ ...action, notificationMessage: e.target.value })}
             rows={2}
-            className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none"
+            className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50 resize-none"
           />
         </>
       )}
@@ -158,7 +158,7 @@ function ActionEditor({
           onChange={(e) => onChange({ ...action, newStage: e.target.value as DealStage })}
           aria-label={t.deals.stage}
           title={t.deals.stage}
-          className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+          className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
         >
           {STAGE_OPTIONS.map((s) => (
             <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>
@@ -203,7 +203,7 @@ function RuleModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-lg border border-white/10 rounded-2xl shadow-float overflow-hidden flex flex-col max-h-[90vh] bg-[#0d0f1e]"
+        className="relative w-full max-w-lg border border-white/10 rounded-2xl shadow-float overflow-hidden flex flex-col max-h-[90vh] bg-surface-2"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -225,14 +225,14 @@ function RuleModal({
               placeholder={`${t.common.name} *`}
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+              className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
             />
             <input
               type="text"
               placeholder={t.common.description}
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              className="w-full bg-[#0d0e1a] border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
+              className="w-full bg-surface-2 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-brand-500/50"
             />
           </div>
 
@@ -245,7 +245,7 @@ function RuleModal({
                 onChange={(e) => setTrigger({ type: e.target.value as AutomationTriggerType })}
                 aria-label={t.automations.trigger}
                 title={t.automations.trigger}
-                className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+                className="w-full bg-surface-2 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
               >
                 {(Object.keys(triggerLabels) as AutomationTriggerType[]).map((k) => (
                   <option key={k} value={k}>{triggerLabels[k]}</option>
@@ -261,7 +261,7 @@ function RuleModal({
                       onChange={(e) => setTrigger({ ...form.trigger, fromStage: (e.target.value as DealStage) || undefined })}
                       aria-label={t.common.from}
                       title={t.common.from}
-                      className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+                      className="w-full bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
                     >
                       <option value="">{t.common.all}</option>
                       {STAGE_OPTIONS.map((s) => <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>)}
@@ -274,7 +274,7 @@ function RuleModal({
                       onChange={(e) => setTrigger({ ...form.trigger, toStage: (e.target.value as DealStage) || undefined })}
                       aria-label={t.common.to}
                       title={t.common.to}
-                      className="w-full bg-[#0d0e1a] border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
+                      className="w-full bg-surface-2 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500/50"
                     >
                       <option value="">{t.common.all}</option>
                       {STAGE_OPTIONS.map((s) => <option key={s} value={s}>{t.deals.stageLabels[s as keyof typeof t.deals.stageLabels] ?? s}</option>)}
@@ -372,7 +372,7 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${triggerColor(rule.trigger.type)}`}>
                   {triggerLabels[rule.trigger.type]}
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#0d0e1a] border border-white/8 text-slate-400">
+                <span className="px-2 py-0.5 rounded-full text-[10px] bg-surface-2 border border-white/8 text-slate-400">
                   {rule.actions.length} {t.automations.action.toLowerCase()}
                 </span>
               </div>

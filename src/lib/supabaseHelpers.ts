@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabase'
+import { devConsole } from './devConsole'
 import { useAuthStore } from '../store/authStore'
 
 /** Get current org ID from authStore -- used for all inserts */
@@ -66,11 +67,11 @@ export function runSupabaseWrite(
     .then(({ error }) => {
       if (!error) return
       const message = getErrorMessage(error)
-      console.error(`[${context}]`, message)
+      devConsole.error(`[${context}]`, message)
       onError?.(message)
     }, (error: unknown) => {
       const message = getErrorMessage(error)
-      console.error(`[${context}]`, message)
+      devConsole.error(`[${context}]`, message)
       onError?.(message)
     })
 }
