@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CircleHelp, Clock3, Flame, Plus, RefreshCw, Trash2, UserPlus } from 'lucide-react'
+import { CircleHelp, Clock3, Flame, FunnelPlus, Plus, RefreshCw, Trash2, UserPlus } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { useLeadsStore } from '../store/leadsStore'
 import { useAuthStore } from '../store/authStore'
@@ -11,6 +11,8 @@ import { PageHeader } from '../components/ui/PageHeader'
 import { Toolbar } from '../components/ui/Toolbar'
 import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
+import { EmptyState } from '../components/ui/EmptyState'
+import { Skeleton } from '../components/ui/Skeleton'
 
 const STAGES: LeadLifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'opportunity', 'customer']
 
@@ -73,7 +75,7 @@ function HintPopover({ text }: { text: string }) {
       </button>
       {open && position && createPortal(
         <div
-          className="fixed z-[80] w-64 rounded-lg border border-fg/10 bg-surface-1 p-2 text-[11px] leading-4 text-fg-muted shadow-xl"
+          className="fixed z-[80] w-64 rounded-lg border border-fg/10 bg-surface-1 p-2 text-xs leading-4 text-fg-muted shadow-xl"
           style={{ top: position.top, left: position.left }}
         >
           {text}
@@ -86,28 +88,26 @@ function HintPopover({ text }: { text: string }) {
 
 export function Leads() {
   const t = useTranslations()
-  const {
-    leads,
-    isLoading,
-    error,
-    search,
-    stageFilter,
-    scoreFilter,
-    fetchLeads,
-    addLead,
-    deleteLead,
-    setSearch,
-    setStageFilter,
-    setScoreFilter,
-    getFilteredLeads,
-    leadEventsByLeadId,
-    scoreInsightsByLeadId,
-    scoreHistoryByLeadId,
-    fetchLeadEvents,
-    fetchScoreInsight,
-    fetchScoreHistory,
-    convertLeadToContact,
-  } = useLeadsStore()
+  const leads = useLeadsStore((s) => s.leads)
+  const isLoading = useLeadsStore((s) => s.isLoading)
+  const error = useLeadsStore((s) => s.error)
+  const search = useLeadsStore((s) => s.search)
+  const stageFilter = useLeadsStore((s) => s.stageFilter)
+  const scoreFilter = useLeadsStore((s) => s.scoreFilter)
+  const fetchLeads = useLeadsStore((s) => s.fetchLeads)
+  const addLead = useLeadsStore((s) => s.addLead)
+  const deleteLead = useLeadsStore((s) => s.deleteLead)
+  const setSearch = useLeadsStore((s) => s.setSearch)
+  const setStageFilter = useLeadsStore((s) => s.setStageFilter)
+  const setScoreFilter = useLeadsStore((s) => s.setScoreFilter)
+  const getFilteredLeads = useLeadsStore((s) => s.getFilteredLeads)
+  const leadEventsByLeadId = useLeadsStore((s) => s.leadEventsByLeadId)
+  const scoreInsightsByLeadId = useLeadsStore((s) => s.scoreInsightsByLeadId)
+  const scoreHistoryByLeadId = useLeadsStore((s) => s.scoreHistoryByLeadId)
+  const fetchLeadEvents = useLeadsStore((s) => s.fetchLeadEvents)
+  const fetchScoreInsight = useLeadsStore((s) => s.fetchScoreInsight)
+  const fetchScoreHistory = useLeadsStore((s) => s.fetchScoreHistory)
+  const convertLeadToContact = useLeadsStore((s) => s.convertLeadToContact)
   const orgUsers = useAuthStore((s) => s.users)
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [firstName, setFirstName] = useState('')
@@ -182,7 +182,7 @@ export function Leads() {
         </div>
       )}
 
-      <Toolbar>
+      <Toolbar panel>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-2 w-full">
         <input
           value={search}
@@ -217,10 +217,27 @@ export function Leads() {
 
       <div className="glass rounded-2xl border-fg/8 overflow-hidden">
         <div className="px-4 py-3 border-b border-fg/6 text-xs text-fg-muted uppercase tracking-wider">{t.leads.leadInbox}</div>
-        {isLoading && <div className="px-4 py-5 text-sm text-fg-subtle">{t.leads.loadingLeads}</div>}
+        {isLoading && (
+          <div className="px-4 py-4 space-y-4" aria-busy="true" aria-label={t.leads.loadingLeads}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="w-9 h-9 rounded-full flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-3 w-3/4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {error && <div className="px-4 py-5 text-sm text-danger">{error}</div>}
         {!isLoading && !error && filtered.length === 0 && (
-          <div className="px-4 py-6 text-sm text-fg-subtle">{t.leads.noLeads}</div>
+          <EmptyState
+            icon={<FunnelPlus size={28} strokeWidth={1.75} />}
+            title={t.leads.noLeads}
+            description={t.leads.emptyInboxHint}
+            density="compact"
+          />
         )}
         <div className="divide-y divide-border-subtle">
           {filtered.map((lead) => (

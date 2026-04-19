@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Bell, Check, CheckCheck, Trash2, Filter, X,
+  Check, CheckCheck, Trash2, Filter, X,
   Trophy, XCircle, ArrowRightLeft, Clock, UserPlus,
   Target, AlertTriangle, MessageSquare, Settings, BellOff,
 } from 'lucide-react'
 import { useNotificationsStore } from '../store/notificationsStore'
 import { Button } from '../components/ui/Button'
+import { Toolbar } from '../components/ui/Toolbar'
+import { PageHeader } from '../components/ui/PageHeader'
+import { EmptyState } from '../components/ui/EmptyState'
 import { formatRelativeDate } from '../utils/formatters'
 import type { CRMNotification, NotificationType } from '../types'
 import { useTranslations } from '../i18n'
@@ -149,30 +152,25 @@ export function Notifications() {
 
   return (
     <div className="crm-page space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-fg flex items-center gap-2">
-            <Bell size={22} className="text-accent-400" />
-            {t.nav.notifications}
-          </h2>
-          <p className="text-sm text-fg-subtle mt-1">
-            {unreadCount > 0 ? `${unreadCount} ${t.common.selected}` : t.common.ok} · {notifications.length} {t.common.total}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" leftIcon={<CheckCheck size={14} />} onClick={markAllAsRead}>
-              {t.common.selectAll}
-            </Button>
-          )}
-          {notifications.length > 0 && (
-            <Button variant="ghost" size="sm" leftIcon={<Trash2 size={14} />} onClick={clearAll} className="text-danger hover:text-danger">
-              {t.common.bulkDelete}
-            </Button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        showTitle={false}
+        title={t.nav.notifications}
+        subtitle={`${unreadCount > 0 ? `${unreadCount} ${t.notifications.unread} · ` : ''}${notifications.length} ${t.common.total}`}
+        actions={
+          <>
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" leftIcon={<CheckCheck size={14} />} onClick={markAllAsRead}>
+                {t.common.selectAll}
+              </Button>
+            )}
+            {notifications.length > 0 && (
+              <Button variant="ghost" size="sm" leftIcon={<Trash2 size={14} />} onClick={clearAll} className="text-danger hover:text-danger">
+                {t.common.bulkDelete}
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {/* Stats cards */}
       <div className="grid grid-cols-4 gap-3">
@@ -210,8 +208,8 @@ export function Notifications() {
         </button>
       </div>
 
-      {/* Filter bar */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <Toolbar panel>
+      <div className="flex items-center gap-2 flex-wrap w-full">
         <Filter size={14} className="text-fg-subtle" />
         {(['all', 'unread', 'deal_won', 'deal_lost', 'deal_stage_changed', 'activity_overdue', 'follow_up_due', 'goal_achieved', 'system'] as FilterType[]).map((f) => {
           const cfg = f !== 'all' && f !== 'unread' ? NOTIFICATION_CONFIG[f as NotificationType] : null
@@ -237,17 +235,16 @@ export function Notifications() {
           </button>
         )}
       </div>
+      </Toolbar>
 
       {/* Notification list */}
       {filtered.length === 0 ? (
-        <div className="glass rounded-2xl p-12 text-center">
-          <BellOff size={40} className="mx-auto text-fg-subtle mb-3" />
-          <p className="text-fg-muted font-medium">
-            {t.common.noResults}
-          </p>
-          <p className="text-xs text-fg-subtle mt-1">
-            {t.common.filters}
-          </p>
+        <div className="glass rounded-2xl border border-border-subtle">
+          <EmptyState
+            icon={<BellOff size={36} strokeWidth={1.5} />}
+            title={t.common.noResults}
+            description={t.notifications.emptyHint}
+          />
         </div>
       ) : (
         <div className="space-y-4">

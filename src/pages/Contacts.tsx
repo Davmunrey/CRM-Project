@@ -32,6 +32,8 @@ import { PermissionGate } from '../components/auth/PermissionGate'
 import { useAuthStore } from '../store/authStore'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Toolbar } from '../components/ui/Toolbar'
+import { SkeletonRow, SkeletonCard } from '../components/ui/SkeletonRow'
+import { rowActivationKeyDown } from '../utils/a11y'
 
 const CONTACT_SOURCE_LABELS_IMPORT = CONTACT_SOURCE_LABELS
 
@@ -46,7 +48,13 @@ export function Contacts() {
   const orgUsers = useLocalizedOrgUsers(orgUsersRaw)
   const isSalesRep = currentUser?.role === 'sales_rep'
 
-  const { contacts, addContact, updateContact, deleteContact, bulkDelete } = useContactsStore()
+  const contacts = useContactsStore((s) => s.contacts)
+  const addContact = useContactsStore((s) => s.addContact)
+  const updateContact = useContactsStore((s) => s.updateContact)
+  const deleteContact = useContactsStore((s) => s.deleteContact)
+  const bulkDelete = useContactsStore((s) => s.bulkDelete)
+  const isLoading = useContactsStore((s) => s.isLoading)
+  const listError = useContactsStore((s) => s.error)
   const localizedContacts = useLocalizedContacts(contacts)
   const companies = useCompaniesStore((s) => s.companies)
   const localizedCompanies = useLocalizedCompanies(companies)
@@ -202,7 +210,12 @@ export function Contacts() {
   return (
     <div className="crm-page space-y-4">
       <PageHeader showTitle={false} title={t.nav.contacts} />
-      <Toolbar>
+      {listError && (
+        <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger" role="alert">
+          {listError}
+        </div>
+      )}
+      <Toolbar panel>
       <div className="flex items-center gap-3 flex-wrap w-full">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-72" />
 
@@ -334,7 +347,7 @@ export function Contacts() {
           >
             {t.contacts.duplicates}
           </Button>
-          <div className="flex rounded-lg border border-fg/12 overflow-hidden">
+          <div className="flex rounded-xl border border-fg/10 bg-fg/[0.05] overflow-hidden">
             <button
               type="button"
               onClick={() => setViewMode('table')}
@@ -432,7 +445,7 @@ export function Contacts() {
       </div>
 
       {/* Empty state */}
-      {filtered.length === 0 && (
+      {!isLoading && filtered.length === 0 && (
         <EmptyState
           icon={<Users size={28} />}
           title={t.contacts.emptyTitle}
@@ -442,12 +455,14 @@ export function Contacts() {
       )}
 
       {/* Table view */}
-      {viewMode === 'table' && filtered.length > 0 && (
+      {viewMode === 'table' && (isLoading || filtered.length > 0) && (
         <div className="glass overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <caption className="sr-only">{t.nav.contacts}</caption>
             <thead>
               <tr className="contacts-table-head border-b border-fg/8">
-                <th className="px-4 py-3 text-left w-10">
+                <th scope="col" className="px-4 py-3 text-left w-10">
                   <input
                     type="checkbox"
                     checked={selectedIds.size === filteredContacts.length && filteredContacts.length > 0}
@@ -457,85 +472,96 @@ export function Contacts() {
                     className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.nav.contacts}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.company}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.status}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.score}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.source}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.lastContacted}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.actions}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.nav.contacts}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.company}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.status}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.score}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.source}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.contacts.lastContacted}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {filtered.map(({ contact }) => (
-                <tr
-                  key={contact.id}
-                  className="hover:bg-fg/4 cursor-pointer transition-colors"
-                  onClick={() => navigate(`/contacts/${contact.id}`)}
-                >
-                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(contact.id)}
-                      onChange={() => toggleSelect(contact.id)}
-                      aria-label={t.common.selectAll}
-                      title={t.common.selectAll}
-                      className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar name={`${contact.firstName} ${contact.lastName}`} size="sm" />
-                      <div>
-                        <p className="font-medium text-fg">{contact.firstName} {contact.lastName}</p>
-                        <p className="text-xs text-fg-subtle">{contact.email}</p>
+              {isLoading ? (
+                <SkeletonRow cols={8} rows={8} />
+              ) : (
+                filtered.map(({ contact }) => (
+                  <tr
+                    key={contact.id}
+                    tabIndex={0}
+                    className="hover:bg-fg/4 cursor-pointer transition-colors"
+                    onClick={() => navigate(`/contacts/${contact.id}`)}
+                    onKeyDown={(e) =>
+                      rowActivationKeyDown(e, () => navigate(`/contacts/${contact.id}`))
+                    }
+                  >
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(contact.id)}
+                        onChange={() => toggleSelect(contact.id)}
+                        aria-label={`${t.common.select} ${contact.firstName} ${contact.lastName}`}
+                        title={`${t.common.select} ${contact.firstName} ${contact.lastName}`}
+                        className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar name={`${contact.firstName} ${contact.lastName}`} size="sm" />
+                        <div>
+                          <p className="font-medium text-fg">{contact.firstName} {contact.lastName}</p>
+                          <p className="text-xs text-fg-subtle">{contact.email}</p>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-fg-muted text-xs">{getCompanyName(contact.companyId)}</td>
-                  <td className="px-4 py-3"><ContactStatusBadge status={contact.status} /></td>
-                  <td className="px-4 py-3 text-fg-muted text-xs font-medium">
-                    {getContactScore(contact.id)}
-                  </td>
-                  <td className="px-4 py-3 text-fg-muted text-xs">
-                    {CONTACT_SOURCE_LABELS_IMPORT[contact.source]}
-                  </td>
-                  <td className="px-4 py-3 text-fg-subtle text-xs">{formatRelativeDate(contact.lastContactedAt)}</td>
-                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex gap-1">
-                      <PermissionGate permission="contacts:update">
-                        <Button
-                          variant="secondary"
-                          size="xs"
-                          onClick={() => { setEditContact(contacts.find((c) => c.id === contact.id) ?? contact); setIsFormOpen(true) }}
-                          leftIcon={<Edit2 size={12} />}
-                        >
-                          {t.common.edit}
-                        </Button>
-                      </PermissionGate>
-                      <PermissionGate permission="contacts:delete">
-                        <Button
-                          variant="danger"
-                          size="xs"
-                          onClick={() => setDeleteId(contact.id)}
-                          leftIcon={<Trash2 size={12} />}
-                        >
-                          {t.common.delete}
-                        </Button>
-                      </PermissionGate>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">{getCompanyName(contact.companyId)}</td>
+                    <td className="px-4 py-3"><ContactStatusBadge status={contact.status} /></td>
+                    <td className="px-4 py-3 text-fg-muted text-xs font-medium">
+                      {getContactScore(contact.id)}
+                    </td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">
+                      {CONTACT_SOURCE_LABELS_IMPORT[contact.source]}
+                    </td>
+                    <td className="px-4 py-3 text-fg-subtle text-xs">{formatRelativeDate(contact.lastContactedAt)}</td>
+                    <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex gap-1">
+                        <PermissionGate permission="contacts:update">
+                          <Button
+                            variant="secondary"
+                            size="xs"
+                            onClick={() => { setEditContact(contacts.find((c) => c.id === contact.id) ?? contact); setIsFormOpen(true) }}
+                            leftIcon={<Edit2 size={12} />}
+                          >
+                            {t.common.edit}
+                          </Button>
+                        </PermissionGate>
+                        <PermissionGate permission="contacts:delete">
+                          <Button
+                            variant="danger"
+                            size="xs"
+                            onClick={() => setDeleteId(contact.id)}
+                            leftIcon={<Trash2 size={12} />}
+                          >
+                            {t.common.delete}
+                          </Button>
+                        </PermissionGate>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
       {/* Grid view */}
-      {viewMode === 'grid' && filtered.length > 0 && (
+      {viewMode === 'grid' && (isLoading || filtered.length > 0) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filtered.map(({ contact }) => (
+          {isLoading
+            ? Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+            : filtered.map(({ contact }) => (
             <div
               key={contact.id}
               className="glass p-4 hover:border-fg/12 cursor-pointer transition-all relative"

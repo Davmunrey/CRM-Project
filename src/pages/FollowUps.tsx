@@ -9,6 +9,9 @@ import { useCompaniesStore } from '../store/companiesStore'
 import { getFollowUpReminders } from '../utils/followUpEngine'
 import { EmailComposer } from '../components/email/EmailComposer'
 import { Avatar } from '../components/ui/Avatar'
+import { Toolbar } from '../components/ui/Toolbar'
+import { PageHeader } from '../components/ui/PageHeader'
+import { StatCard } from '../components/ui/StatCard'
 import { toast } from '../store/toastStore'
 import { formatDate } from '../utils/formatters'
 import type { FollowUpReminder, ActivityType } from '../types'
@@ -110,66 +113,32 @@ export function FollowUps() {
 
   return (
     <div className="crm-page space-y-4">
-      {/* Toolbar row */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-fg-subtle">
-          {stats.total} {t.contacts.title} — {t.followUps.title}
-        </p>
-        <button
-          type="button"
-          onClick={() => setRefreshKey((k) => k + 1)}
-          className="p-2 rounded-xl text-fg-subtle hover:text-fg hover:bg-fg/5 border border-fg/8 transition-colors"
-          title={t.common.reset}
-        >
-          <RefreshCw size={15} />
-        </button>
-      </div>
+      <PageHeader
+        showTitle={false}
+        title={t.followUps.title}
+        subtitle={`${stats.total} ${t.contacts.title} — ${t.followUps.title}`}
+        actions={
+          <button
+            type="button"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            className="p-2 rounded-xl text-fg-subtle hover:text-fg hover:bg-fg/5 border border-fg/8 transition-colors"
+            title={t.common.reset}
+          >
+            <RefreshCw size={16} />
+          </button>
+        }
+      />
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-accent-500/15">
-              <User size={14} className="text-accent-400" />
-            </div>
-            <span className="text-xs text-fg-subtle">{t.followUps.title}</span>
-          </div>
-          <p className="text-2xl font-bold text-fg">{stats.total}</p>
-        </div>
-
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-danger/15">
-              <AlertTriangle size={14} className="text-danger" />
-            </div>
-            <span className="text-xs text-fg-subtle">{t.followUps.critical}</span>
-          </div>
-          <p className="text-2xl font-bold text-danger">{stats.critical}</p>
-        </div>
-
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-warning/15">
-              <Clock size={14} className="text-warning" />
-            </div>
-            <span className="text-xs text-fg-subtle">{t.followUps.high}</span>
-          </div>
-          <p className="text-2xl font-bold text-warning">{stats.high}</p>
-        </div>
-
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="p-1.5 rounded-lg bg-warning/15">
-              <Clock size={14} className="text-warning" />
-            </div>
-            <span className="text-xs text-fg-subtle">{t.followUps.medium}</span>
-          </div>
-          <p className="text-2xl font-bold text-warning">{stats.medium}</p>
-        </div>
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard title={t.followUps.title} value={stats.total} icon={<User size={18} />} accent="accent" />
+        <StatCard title={t.followUps.critical} value={stats.critical} icon={<AlertTriangle size={18} />} accent="danger" />
+        <StatCard title={t.followUps.high} value={stats.high} icon={<Clock size={18} />} accent="warning" />
+        <StatCard title={t.followUps.medium} value={stats.medium} icon={<Clock size={18} />} accent="warning" />
       </div>
 
-      {/* Filter row — inline, no glass wrapper */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <Toolbar panel>
+      <div className="flex items-center gap-2 flex-wrap w-full">
         <Filter size={13} className="text-fg-subtle" />
         {filterButtons.map((btn) => (
           <button
@@ -193,6 +162,7 @@ export function FollowUps() {
           </button>
         ))}
       </div>
+      </Toolbar>
 
       {/* List */}
       <div className="space-y-2">
@@ -207,7 +177,7 @@ export function FollowUps() {
             <div
               key={reminder.contactId}
               onClick={() => navigate(`/contacts/${reminder.contactId}`)}
-              className="glass rounded-xl px-4 py-3 border border-fg/6 hover:bg-fg/[0.04] transition-colors cursor-pointer"
+              className="rounded-xl border border-fg/8 bg-fg/[0.02] px-4 py-3 hover:bg-fg/[0.05] transition-colors cursor-pointer"
             >
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -275,6 +245,7 @@ export function FollowUps() {
         onClose={() => setEmailComposerOpen(false)}
         contactId={emailContactId}
         defaultTo={emailDefaultTo}
+        onRequestGmailConnect={() => navigate('/settings?tab=email')}
       />
     </div>
   )

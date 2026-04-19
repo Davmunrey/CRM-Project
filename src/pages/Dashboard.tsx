@@ -21,9 +21,10 @@ import { useNotificationsStore } from '../store/notificationsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import type { DealStage, CRMNotification } from '../types'
 import { subMonths, subWeeks, format, startOfMonth, endOfMonth, parseISO, isWithinInterval, differenceInDays, getDay, startOfWeek, endOfWeek, isAfter, isBefore } from 'date-fns'
-import { es, enUS, ptBR, fr, de, it } from 'date-fns/locale'
-import { useTranslations, useI18nStore } from '../i18n'
+import { useTranslations } from '../i18n'
+import { useDateLocale } from '../hooks/useDateLocale'
 import { trackUxAction } from '../lib/uxMetrics'
+import { useChartTheme } from '../lib/chartTheme'
 
 const STAGE_BADGE_MAP: Record<DealStage, BadgeVariant> = {
   lead: 'info',
@@ -36,13 +37,6 @@ const STAGE_BADGE_MAP: Record<DealStage, BadgeVariant> = {
 
 const MONTHLY_QUOTA = 50000
 
-const TOOLTIP_STYLE = {
-  backgroundColor: '#0d1025',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '12px',
-  color: '#e2e8f0',
-}
-
 const HEATMAP_LEVEL_CLASSES = [
   'crm-heat-0',
   'crm-heat-1',
@@ -53,10 +47,9 @@ const HEATMAP_LEVEL_CLASSES = [
 
 export function Dashboard() {
   const navigate = useNavigate()
+  const chart = useChartTheme()
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
-  const dateLocaleByLanguage = { en: enUS, es, pt: ptBR, fr, de, it } as const
-  const dateLocale = dateLocaleByLanguage[language]
+  const dateLocale = useDateLocale()
   const DAY_LABELS = t.dashboard.dayLabels
   const contacts = useContactsStore((s) => s.contacts)
   const deals = useDealsStore((s) => s.deals)
@@ -304,23 +297,23 @@ export function Dashboard() {
           <h2 className="text-sm font-semibold text-fg-muted mb-4">{t.dashboard.revenueByMonth}</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={revenueData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1a1d35" vertical={false} />
-              <XAxis dataKey="month" tick={{ fill: '#64748b', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: chart.axisTickFill, fontSize: 12 }} axisLine={false} tickLine={false} />
               <YAxis
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                tick={{ fill: chart.axisTickFill, fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
               />
               <Tooltip
-                contentStyle={TOOLTIP_STYLE}
+                contentStyle={chart.tooltipStyle}
                 formatter={(value: unknown) => [formatCurrency(Number(value)), t.dashboard.closed]}
               />
               <Bar dataKey="value" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
               <defs>
                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366f1" />
-                  <stop offset="100%" stopColor="#4f46e5" />
+                  <stop offset="0%" stopColor={chart.barGradientTop} />
+                  <stop offset="100%" stopColor={chart.barGradientBottom} />
                 </linearGradient>
               </defs>
             </BarChart>
@@ -350,10 +343,10 @@ export function Dashboard() {
             </div>
             <div className="w-full h-3 bg-surface-2/90 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-700"
+                className="h-full rounded-full transition-all duration-slow"
                 style={{
                   width: `${quotaProgress.percentage}%`,
-                  background: 'linear-gradient(90deg, #6366f1, #8b5cf6, #a78bfa)',
+                  background: `linear-gradient(90deg, ${chart.seriesPalette[0]}, ${chart.seriesPalette[1]}, ${chart.seriesPalette[2]})`,
                 }}
               />
             </div>

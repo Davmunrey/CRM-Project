@@ -1,6 +1,5 @@
-import { Bell, Search, LogOut, User, ChevronDown, Check } from 'lucide-react'
+import { Bell, Search, LogOut, User, ChevronDown, Check, Menu } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
-import { DropdownMenuItem } from '../ui/DropdownMenu'
 import { ThemeSwitcher } from '../ui/ThemeSwitcher'
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -20,6 +19,7 @@ import type { FollowUpReminder } from '../../types'
 interface TopbarProps {
   title: string
   onOpenCommandPalette?: () => void
+  onOpenMobileNav?: () => void
 }
 
 /**
@@ -27,7 +27,7 @@ interface TopbarProps {
  * Zustand v5 `useSyncExternalStore` + React StrictMode `getSnapshot` error
  * that occurs when persist middleware rehydrates between StrictMode passes.
  */
-export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
+export function Topbar({ title, onOpenCommandPalette, onOpenMobileNav }: TopbarProps) {
   const t = useTranslations()
   const [showNotifs, setShowNotifs] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -100,21 +100,41 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
 
   return (
     <header className="topbar-surface h-16 flex items-center gap-4 px-6 border-b border-fg/6 bg-surface-1 flex-shrink-0 relative z-30">
-      <h1 className="text-base font-semibold text-fg mr-auto tracking-tight">
-        <span className="text-fg-subtle mr-1">{branding.appName} ·</span> {title}
-      </h1>
+      <div className="flex items-center gap-2 min-w-0 mr-auto flex-1">
+        {onOpenMobileNav && (
+          <button
+            type="button"
+            onClick={onOpenMobileNav}
+            className="md:hidden min-h-11 min-w-11 flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+            aria-label={t.nav.expandSidebar}
+          >
+            <Menu size={20} aria-hidden />
+          </button>
+        )}
+        <h1 className="text-base font-semibold text-fg tracking-tight truncate min-w-0">
+          <span className="text-fg-subtle mr-1">{branding.appName} ·</span> {title}
+        </h1>
+      </div>
 
       <ThemeSwitcher variant="inline" />
 
-      {/* Command palette trigger */}
+      {/* Command palette trigger — icon-only on small screens */}
       <button
         type="button"
         onClick={onOpenCommandPalette}
-        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-2/90 border border-fg/8 hover:bg-fg/6 hover:border-fg/12 transition-all duration-150 text-fg-subtle hover:text-fg-muted text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+        className="sm:hidden min-h-11 min-w-11 flex items-center justify-center rounded-xl bg-surface-2/90 border border-fg/8 hover:bg-fg/6 text-fg-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+        aria-label={`${t.common.search} (⌘K)`}
       >
-        <Search size={13} />
+        <Search size={18} aria-hidden />
+      </button>
+      <button
+        type="button"
+        onClick={onOpenCommandPalette}
+        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-2/90 border border-fg/8 hover:bg-fg/6 hover:border-fg/12 transition-all duration-fast text-fg-subtle hover:text-fg-muted text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+      >
+        <Search size={14} />
         <span>{t.common.search}...</span>
-        <kbd className="ml-2 px-1.5 py-0.5 rounded-md bg-fg/8 text-[10px] font-medium text-fg-subtle">⌘K</kbd>
+        <kbd className="ml-2 px-1.5 py-0.5 rounded-md bg-fg/8 text-2xs font-medium text-fg-subtle">⌘K</kbd>
       </button>
 
       {/* Notification bell */}
@@ -124,12 +144,12 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
           aria-label={t.nav.notifications}
           aria-expanded={showNotifs}
           onClick={() => setShowNotifs((v) => !v)}
-          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition-all duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition-all duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
         >
-          <Bell size={17} />
+          <Bell size={18} />
           {(overdueActivities.length > 0 || urgentFollowUps.length > 0 || unreadNotifCount > 0) && (
             <span className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full bg-accent-500 shadow-brand-sm flex items-center justify-center">
-              <span className="text-[9px] font-bold text-fg px-1">
+              <span className="text-2xs font-bold text-fg px-1 leading-none">
                 {Math.min(unreadNotifCount + overdueActivities.length, 99)}
               </span>
             </span>
@@ -173,7 +193,7 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
                     {!n.isRead && <span className="w-2 h-2 rounded-full bg-accent-500 flex-shrink-0" />}
                   </div>
                   <p className="text-xs text-fg-subtle mt-0.5 truncate">{n.message}</p>
-                  <p className="text-[10px] text-fg-subtle mt-0.5">{formatRelativeDate(n.createdAt)}</p>
+                  <p className="text-2xs text-fg-subtle mt-0.5">{formatRelativeDate(n.createdAt)}</p>
                 </div>
               ))}
 
@@ -248,15 +268,20 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
           type="button"
           aria-haspopup="menu"
           aria-expanded={showUserMenu}
+          aria-label={
+            currentUser?.name
+              ? `${t.auth.profile}: ${currentUser.name}`
+              : t.auth.profile
+          }
           onClick={() => setShowUserMenu((v) => !v)}
           className="flex items-center gap-2.5 pl-4 border-l border-fg/8 hover:bg-fg/4 -ml-2 px-3 py-1.5 rounded-xl transition-colors min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
         >
           <Avatar name={currentUser?.name || ''} size="sm" />
           <div className="hidden sm:block text-left">
             <p className="text-xs font-semibold text-fg">{currentUser?.name || ''}</p>
-            <p className="text-[10px] text-fg-subtle">{currentUser ? t.team.roleLabels[currentUser.role] : ''}</p>
+            <p className="text-2xs text-fg-subtle">{currentUser ? t.team.roleLabels[currentUser.role] : ''}</p>
           </div>
-          <ChevronDown size={12} className="text-fg-subtle hidden sm:block" />
+          <ChevronDown size={14} className="text-fg-subtle hidden sm:block" />
         </button>
 
         {showUserMenu && (
@@ -265,20 +290,20 @@ export function Topbar({ title, onOpenCommandPalette }: TopbarProps) {
             <div className="popover-surface absolute right-0 top-full mt-2 w-56 border border-fg/10 rounded-xl shadow-float z-50 py-1 animate-scale-in bg-surface-1">
               <div className="px-3 py-2 border-b border-fg/6">
                 <p className="text-xs font-semibold text-fg">{currentUser?.name}</p>
-                <p className="text-[10px] text-fg-subtle">{currentUser?.email}</p>
+                <p className="text-2xs text-fg-subtle">{currentUser?.email}</p>
               </div>
               <button type="button"
                 onClick={() => { setShowUserMenu(false); navigate('/profile') }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
               >
-                <User size={13} /> {t.auth.profile}
+                <User size={14} /> {t.auth.profile}
               </button>
               <div className="border-t border-fg/6 my-1" />
               <button type="button"
                 onClick={() => { void useAuthStore.getState().logout().then(() => navigate('/login')) }}
                 className="w-full flex items-center gap-2 px-3 py-2 text-xs text-danger hover:bg-danger/10 transition-colors"
               >
-                <LogOut size={13} /> {t.auth.logout}
+                <LogOut size={14} /> {t.auth.logout}
               </button>
             </div>
           </>

@@ -672,7 +672,7 @@ export function Settings() {
 
   return (
     <div className="crm-page space-y-8">
-      <section className="bg-surface-2/90 border border-fg/8 rounded-2xl p-3">
+      <section className="crm-surface-section p-3">
         <div className="flex gap-2 flex-wrap">
           {SETTINGS_TABS.map((tab) => (
             <button
@@ -691,7 +691,7 @@ export function Settings() {
         </div>
       </section>
 
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('onboarding') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('onboarding') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-1">{t.settings.onboardingTitle}</h2>
         <p className="text-xs text-fg-subtle mb-4">{t.settings.onboardingIntro}</p>
         <ul className="space-y-4">
@@ -772,7 +772,7 @@ export function Settings() {
       </section>
 
       {/* ── Language Selector ──────────────────────────────────────────── */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 h-7 rounded-lg bg-info/20 flex items-center justify-center">
             <Globe size={14} className="text-info" />
@@ -852,7 +852,7 @@ export function Settings() {
         </div>
       </section>
 
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-3">{t.settings.emailProviderHealth}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="p-3 rounded-xl bg-fg/4 border border-fg/8">
@@ -871,7 +871,7 @@ export function Settings() {
       </section>
 
       {/* ── Gmail Configuration ──────────────────────────────────────────── */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
         <div className="flex items-center gap-2 mb-4">
           <div className="w-7 h-7 rounded-lg bg-danger/20 flex items-center justify-center">
             <Mail size={14} className="text-danger" />
@@ -926,7 +926,7 @@ export function Settings() {
         )}
       </section>
 
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-3">{t.settings.emailSignatures}</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -1011,7 +1011,7 @@ export function Settings() {
       </section>
 
       {/* ── Custom Fields ────────────────────────────────────────────────────── */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('data') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('data') ? '' : 'hidden'}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-accent-500/20 flex items-center justify-center">
@@ -1216,7 +1216,7 @@ export function Settings() {
       </section>
 
       {/* Currency */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-4">{t.settings.currency}</h2>
         <Select
           label={t.settings.currency}
@@ -1232,7 +1232,7 @@ export function Settings() {
       </section>
 
       {/* Branding */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('branding') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('branding') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-4">{t.settings.branding}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <Input
@@ -1323,7 +1323,7 @@ export function Settings() {
       </section>
 
       {/* Pipeline Stages */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('pipeline') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('pipeline') ? '' : 'hidden'}`}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-base font-semibold text-fg">{t.settings.pipeline}</h2>
           <Button size="sm" leftIcon={<Plus size={13} />} onClick={handleAddPipelineStage}>
@@ -1433,7 +1433,7 @@ export function Settings() {
       </section>
 
       {/* Tags */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('general') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-4">{t.settings.tags}</h2>
         <div className="flex gap-2 mb-4">
           <Input
@@ -1465,7 +1465,7 @@ export function Settings() {
       </section>
 
       {/* Users */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-4">{t.settings.users}</h2>
         <div className="space-y-3">
           {usersForSettings.map((user) => (
@@ -1483,7 +1483,7 @@ export function Settings() {
       </section>
 
       {/* Permission Profiles */}
-      <section className={`bg-surface-1 border border-border-subtle rounded-2xl p-6 shadow-sm ${tabVisible('permissions') ? '' : 'hidden'}`}>
+      <section className={`glass p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-2">{t.settings.permissionProfiles}</h2>
         <p className="text-xs text-fg-subtle mb-4">{t.settings.permissionProfilesHint}</p>
         <div className="max-w-xs mb-4">
@@ -1534,7 +1534,7 @@ export function Settings() {
       </section>
 
       {/* Data Management */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('data') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('data') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-2">{t.settings.importExport}</h2>
         <p className="text-xs text-fg-subtle mb-4">{t.settings.exportData} / {t.settings.importData}</p>
         <div className="flex flex-wrap gap-3">
@@ -1562,7 +1562,7 @@ export function Settings() {
       </section>
 
       {/* Notification Preferences */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-1">{t.settings.notifications}</h2>
         <p className="text-xs text-fg-subtle mb-4">{t.common.enabled} / {t.common.disabled}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1590,7 +1590,7 @@ export function Settings() {
         </div>
       </section>
 
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('navigation') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('navigation') ? '' : 'hidden'}`}>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-base font-semibold text-fg">{t.settings.navEditorTitle}</h2>
@@ -1802,7 +1802,7 @@ export function Settings() {
       </section>
 
       {/* Lead Maintenance Ops */}
-      <section className={`bg-surface-2/90 border border-fg/8 rounded-2xl p-6 ${tabVisible('advanced') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('advanced') ? '' : 'hidden'}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${isSlaBreached ? 'bg-warning/20' : 'bg-success/20'}`}>

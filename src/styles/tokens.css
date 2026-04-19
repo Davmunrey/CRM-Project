@@ -117,10 +117,16 @@
 
   /* Z-index scale */
   --z-base: 0;
+  /** Main scroll region for priority work surfaces (below topbar --z-sticky) */
+  --z-page-lift: 29;
+  /** Content column above sidebar plane (whole app) */
+  --z-shell-content: 8;
   --z-dropdown: 40;
   --z-sticky: 30;
   --z-overlay: 40;
   --z-modal: 50;
+  /** Full-screen overlays from Calendar (above modal/toast/tooltip; 4 steps up from --z-modal) */
+  --z-calendar: 90;
   --z-toast: 60;
   --z-tooltip: 70;
   --z-skip: 200;
@@ -150,7 +156,8 @@ html.light {
 
   --color-fg: 15 23 42;
   --color-fg-muted: 71 85 105;
-  --color-fg-subtle: 100 116 139;
+  /* Slightly darker for small text AA on white surfaces */
+  --color-fg-subtle: 82 100 130;
 
   --color-border-subtle: 15 23 42;
   --opacity-border-subtle: 0.12;

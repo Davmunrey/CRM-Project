@@ -1,9 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useLocalizedCompanies, useLocalizedContacts, useLocalizedOrgUsers, useTranslations, useI18nStore, getTranslations } from '../i18n'
 import { localizedActivity, localizedDeal, localizedProduct } from '../i18n/localizeSeed'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
 import { DragDropContext } from '@hello-pangea/dnd'
 import type { DropResult } from '@hello-pangea/dnd'
 import {
@@ -40,6 +38,7 @@ import { useAuthStore } from '../store/authStore'
 import { useProductsStore } from '../store/productsStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { CustomFieldsForm } from '../components/shared/CustomFieldRenderer'
+import { rowActivationKeyDown } from '../utils/a11y'
 
 const STAGE_BADGE_MAP: Record<string, BadgeVariant> = {
   lead: 'info',
@@ -206,7 +205,11 @@ function QuoteBuilder({
   }
 
   const generateQuotePdfAttachment = async () => {
-    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
+    const [{ default: JsPDF }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ])
+    const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     const accent = branding.primaryColor || '#7c3aed'
@@ -282,7 +285,7 @@ function QuoteBuilder({
       [t.deals.quotePdfWithholdingRow.replace('{percent}', String(withholdingPercent)), `-${fmt(withholdingAmount)}`],
       [t.deals.quotePdfTotalLabel, fmt(grandTotal)],
     ]
-    const finalY = (doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 120
+    const finalY = (doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 120
     let totalsY = finalY + 8
     if (totalsY > pageHeight - 80) {
       doc.addPage()
@@ -296,7 +299,7 @@ function QuoteBuilder({
       columnStyles: { 0: { cellWidth: 46, fontStyle: 'bold' }, 1: { cellWidth: 44, halign: 'right' } },
       margin: { left: pageWidth - 104, right: 14 },
     })
-    let termsY = ((doc as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? totalsY) + 8
+    let termsY = ((doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? totalsY) + 8
     if (termsY > pageHeight - 70) {
       doc.addPage()
       termsY = 20
@@ -446,14 +449,15 @@ function QuoteBuilder({
       {items.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
+            <caption className="sr-only">{t.deals.quote}</caption>
             <thead>
               <tr className="text-fg-subtle border-b border-fg/6">
-                <th className="text-left pb-2 font-medium">{t.common.description}</th>
-                <th className="text-right pb-2 font-medium w-14">{t.common.total}</th>
-                <th className="text-right pb-2 font-medium w-24">{t.common.value}</th>
-                <th className="text-right pb-2 font-medium w-16">{t.deals.discount}%</th>
-                <th className="text-right pb-2 font-medium w-24">{t.common.total}</th>
-                <th className="w-6" />
+                <th scope="col" className="text-left pb-2 font-medium">{t.common.description}</th>
+                <th scope="col" className="text-right pb-2 font-medium w-14">{t.common.total}</th>
+                <th scope="col" className="text-right pb-2 font-medium w-24">{t.common.value}</th>
+                <th scope="col" className="text-right pb-2 font-medium w-16">{t.deals.discount}%</th>
+                <th scope="col" className="text-right pb-2 font-medium w-24">{t.common.total}</th>
+                <th scope="col" className="w-6" />
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
@@ -740,12 +744,20 @@ export function Deals() {
   const t = useTranslations()
   const language = useI18nStore((s) => s.language)
   const [searchParams, setSearchParams] = useSearchParams()
-  const { deals, addDeal, updateDeal, deleteDeal, moveDeal } = useDealsStore()
+  const navigate = useNavigate()
+  const deals = useDealsStore((s) => s.deals)
+  const addDeal = useDealsStore((s) => s.addDeal)
+  const updateDeal = useDealsStore((s) => s.updateDeal)
+  const deleteDeal = useDealsStore((s) => s.deleteDeal)
+  const moveDeal = useDealsStore((s) => s.moveDeal)
   const contacts = useContactsStore((s) => s.contacts)
   const localizedContacts = useLocalizedContacts(contacts)
   const companies = useCompaniesStore((s) => s.companies)
   const localizedCompanies = useLocalizedCompanies(companies)
-  const { activities, addActivity, completeActivity, deleteActivity } = useActivitiesStore()
+  const activities = useActivitiesStore((s) => s.activities)
+  const addActivity = useActivitiesStore((s) => s.addActivity)
+  const completeActivity = useActivitiesStore((s) => s.completeActivity)
+  const deleteActivity = useActivitiesStore((s) => s.deleteActivity)
   const pipelineStages = useSettingsStore((s) => s.settings.pipelineStages)
 
   const currentUser = useAuthStore((s) => s.currentUser)
@@ -966,7 +978,11 @@ export function Deals() {
           }
         />
       </div>
-      <Toolbar className="!flex-row flex-wrap items-center gap-3 py-3 shrink-0 border-b border-fg/6 px-4 sm:px-6">
+      <div className="shrink-0 flex flex-col gap-4">
+      <Toolbar
+        panel
+        className="!flex-row flex-wrap items-center gap-3 py-3 shrink-0"
+      >
         <div className="flex w-full flex-wrap items-center gap-3">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-64" />
         <Button
@@ -990,7 +1006,7 @@ export function Deals() {
           {myDataOnly ? t.deals.title : t.common.all}
         </button>
         <div className="ml-auto flex items-center gap-2">
-          <div className="flex rounded-lg border border-fg/8 overflow-hidden">
+          <div className="flex rounded-xl border border-fg/10 bg-fg/[0.05] overflow-hidden">
             <button
               type="button"
               onClick={() => setViewMode('kanban')}
@@ -1012,14 +1028,10 @@ export function Deals() {
         </div>
       </Toolbar>
 
-      {/* Smart Views bar */}
-      <div className="py-2 border-b border-fg/6">
-        <SmartViewBar entityType="deal" onFiltersChange={setViewFilters} />
-      </div>
+      <SmartViewBar entityType="deal" onFiltersChange={setViewFilters} />
 
-      {/* Filters */}
       {showFilters && (
-        <div className="flex gap-3 flex-wrap items-center py-3 border-b border-fg/6 bg-surface-2/30">
+        <div className="flex gap-3 flex-wrap items-center glass p-4">
           <Select
             options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
             placeholder={t.common.assignedTo}
@@ -1042,20 +1054,25 @@ export function Deals() {
           )}
         </div>
       )}
+      </div>
 
       {/* Kanban */}
       {viewMode === 'kanban' && (
-        <div className="flex-1 min-h-0 overflow-x-auto py-2">
+        <div className="flex-1 min-h-0 overflow-x-auto py-2 snap-x snap-mandatory md:snap-none">
           <DragDropContext onDragEnd={onDragEnd}>
-            <div className="flex gap-4 h-full min-h-[500px]" style={{ minWidth: `${sortedPipelineStages.length * 296}px` }}>
+            <div
+              className="flex gap-4 h-full min-h-[500px] px-1 sm:px-0"
+              style={{ minWidth: `${sortedPipelineStages.length * 296}px` }}
+            >
               {sortedPipelineStages.map((pipelineStage) => (
-                <KanbanColumn
-                  key={pipelineStage.id}
-                  stage={pipelineStage.id}
-                  deals={filtered.filter((d) => d.stage === pipelineStage.id)}
-                  onDealClick={handleDealClick}
-                  color={pipelineStage.color}
-                />
+                <div key={pipelineStage.id} className="snap-center shrink-0">
+                  <KanbanColumn
+                    stage={pipelineStage.id}
+                    deals={filtered.filter((d) => d.stage === pipelineStage.id)}
+                    onDealClick={handleDealClick}
+                    color={pipelineStage.color}
+                  />
+                </div>
               ))}
             </div>
           </DragDropContext>
@@ -1067,7 +1084,7 @@ export function Deals() {
         <div className="flex-1 min-h-0 overflow-y-auto py-3 space-y-3">
           {/* Bulk actions bar */}
           {selectedDealIds.size > 0 && (
-            <div className="glass border border-fg/8 rounded-xl px-4 py-3 flex items-center gap-3 flex-wrap">
+            <div className="glass px-4 py-3 flex items-center gap-3 flex-wrap">
               <span className="text-sm font-medium text-fg-muted">
                 {selectedDealIds.size} {t.deals.title} {t.common.selected}
               </span>
@@ -1107,11 +1124,13 @@ export function Deals() {
               action={{ label: t.deals.newDeal, onClick: () => setIsFormOpen(true) }}
             />
           ) : (
-            <div className="bg-surface-1 border border-fg/8 rounded-2xl overflow-hidden">
+            <div className="glass overflow-hidden">
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
+                <caption className="sr-only">{t.nav.deals}</caption>
                 <thead>
-                  <tr className="border-b border-fg/6 bg-surface-2/30">
-                    <th className="px-4 py-3 text-left w-10">
+                  <tr className="contacts-table-head border-b border-fg/8">
+                    <th scope="col" className="px-4 py-3 text-left w-10">
                       <input
                         type="checkbox"
                         checked={selectedDealIds.size === filtered.length && filtered.length > 0}
@@ -1121,14 +1140,14 @@ export function Deals() {
                         className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                       />
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.title}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.company}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.value}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.stage}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.priority}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.expectedClose}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.assignedTo}</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.actions}</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.title}</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.company}</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.value}</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.stage}</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.priority}</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.deals.expectedClose}</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.assignedTo}</th>
+                    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase">{t.common.actions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-subtle">
@@ -1144,8 +1163,10 @@ export function Deals() {
                     return (
                       <tr
                         key={deal.id}
+                        tabIndex={0}
                         className="hover:bg-fg/4 cursor-pointer transition-colors"
                         onClick={() => handleDealClick(deal)}
+                        onKeyDown={(e) => rowActivationKeyDown(e, () => handleDealClick(deal))}
                       >
                         <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                           <input
@@ -1195,6 +1216,7 @@ export function Deals() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>
@@ -1360,6 +1382,7 @@ export function Deals() {
             defaultAttachments={emailDraft?.attachments ?? []}
             dealId={selectedDeal.id}
             contactId={selectedDeal.contactId}
+            onRequestGmailConnect={() => navigate('/settings?tab=email')}
           />
         )}
       </SlideOver>

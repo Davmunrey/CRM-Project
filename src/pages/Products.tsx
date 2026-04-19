@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Package, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Search } from 'lucide-react'
+import { Package, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Search, Boxes, Euro } from 'lucide-react'
 import { useProductsStore } from '../store/productsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { toast } from '../store/toastStore'
@@ -10,6 +10,10 @@ import { Input } from '../components/ui/Input'
 import { Select } from '../components/ui/Select'
 import { Modal } from '../components/ui/Modal'
 import { SearchBar } from '../components/shared/SearchBar'
+import { Toolbar } from '../components/ui/Toolbar'
+import { PageHeader } from '../components/ui/PageHeader'
+import { EmptyState } from '../components/ui/EmptyState'
+import { StatCard } from '../components/ui/StatCard'
 import type { Product, ProductCategory, DealCurrency } from '../types'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -164,16 +168,16 @@ function ProductCard({ product }: { product: Product }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-semibold text-fg truncate">{displayProduct.name}</span>
-              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono border ${product.isActive ? 'border-fg/10 text-fg-subtle' : 'border-fg/6 text-fg-subtle'}`}>
+              <span className={`px-1.5 py-0.5 rounded text-2xs font-mono border ${product.isActive ? 'border-fg/10 text-fg-subtle' : 'border-fg/6 text-fg-subtle'}`}>
                 {product.sku}
               </span>
             </div>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${CATEGORY_COLORS[product.category]}`}>
+              <span className={`px-2 py-0.5 rounded-full text-2xs font-semibold border ${CATEGORY_COLORS[product.category]}`}>
                 {categoryLabels[product.category]}
               </span>
               {!product.isActive && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-surface-2 border border-fg/8 text-fg-subtle">{t.common.inactive}</span>
+                <span className="px-2 py-0.5 rounded-full text-2xs bg-surface-2 border border-fg/8 text-fg-subtle">{t.common.inactive}</span>
               )}
             </div>
           </div>
@@ -265,8 +269,14 @@ export function Products() {
         <ProductModal initial={blankProduct()} onSave={handleSave} onClose={() => setShowNew(false)} />
       )}
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <PageHeader
+        showTitle={false}
+        title={t.products.title}
+        subtitle={`${active} ${t.common.active.toLowerCase()} · ${products.length} ${t.common.total.toLowerCase()}`}
+      />
+
+      <Toolbar panel>
+      <div className="flex items-center gap-3 flex-wrap w-full">
         <SearchBar
           value={search}
           onChange={setSearch}
@@ -285,41 +295,39 @@ export function Products() {
           <Button
             onClick={() => setShowNew(true)}
             size="sm"
-            leftIcon={<Plus size={13} />}
+            leftIcon={<Plus size={14} />}
           >
             {t.products.newProduct}
           </Button>
         </PermissionGate>
       </div>
+      </Toolbar>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <p className="text-xs text-fg-subtle mb-1">{t.common.total} {t.products.title.toLowerCase()}</p>
-          <p className="text-2xl font-bold text-fg">{products.length}</p>
-        </div>
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <p className="text-xs text-fg-subtle mb-1">{t.common.active}</p>
-          <p className="text-2xl font-bold text-success">{active}</p>
-        </div>
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <p className="text-xs text-fg-subtle mb-1">{t.products.price}</p>
-          <p className="text-lg font-bold text-accent-400">
-            {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(totalValue)}
-          </p>
-        </div>
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard
+          title={`${t.common.total} ${t.products.title}`}
+          value={products.length}
+          icon={<Boxes size={18} />}
+          accent="accent"
+        />
+        <StatCard title={t.common.active} value={active} icon={<Package size={18} />} accent="success" />
+        <StatCard
+          title={t.products.price}
+          value={new Intl.NumberFormat(undefined, { style: 'currency', currency: 'EUR' }).format(totalValue)}
+          icon={<Euro size={18} />}
+          accent="info"
+        />
       </div>
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="glass rounded-xl p-12 border border-fg/6 text-center">
-          <Package size={32} className="text-fg-subtle mx-auto mb-3" />
-          <p className="text-sm font-medium text-fg-muted">
-            {products.length === 0 ? t.products.title : t.common.noResults}
-          </p>
-          <p className="text-xs text-fg-subtle mt-1">
-            {products.length === 0 ? t.products.newProduct : t.common.reset}
-          </p>
+        <div className="glass rounded-xl border border-fg/6">
+          <EmptyState
+            icon={<Package size={28} strokeWidth={1.75} />}
+            title={products.length === 0 ? t.products.title : t.common.noResults}
+            description={products.length === 0 ? t.products.emptyNoProducts : t.products.emptyFiltered}
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

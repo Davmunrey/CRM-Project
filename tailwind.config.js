@@ -142,18 +142,22 @@ export default {
       },
       zIndex: {
         base: 'var(--z-base)',
+        'page-lift': 'var(--z-page-lift)',
+        'shell-content': 'var(--z-shell-content)',
         dropdown: 'var(--z-dropdown)',
         sticky: 'var(--z-sticky)',
         overlay: 'var(--z-overlay)',
         modal: 'var(--z-modal)',
+        calendar: 'var(--z-calendar)',
         toast: 'var(--z-toast)',
         tooltip: 'var(--z-tooltip)',
         skip: 'var(--z-skip)',
       },
       transitionDuration: {
-        fast: '120ms',
-        base: '180ms',
-        slow: '240ms',
+        /** Align UI transitions to three buckets (see plan: fast/base/slow). */
+        fast: '150ms',
+        base: '200ms',
+        slow: '500ms',
       },
       width: {
         'icon-sm': 'var(--icon-size-sm)',

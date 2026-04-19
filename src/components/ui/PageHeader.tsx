@@ -20,7 +20,7 @@ export function PageHeader({ showTitle = true, title, subtitle, actions, classNa
         ) : (
           <h1 className="sr-only">{title}</h1>
         )}
-        {subtitle && <p className="text-sm text-fg-muted mt-0.5">{subtitle}</p>}
+        {subtitle && <p className="text-sm text-fg-subtle mt-0.5">{subtitle}</p>}
       </div>
       {actions && (
         <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>

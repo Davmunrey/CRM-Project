@@ -7,11 +7,9 @@ import {
   format, isToday,
 } from 'date-fns'
 import type { Locale } from 'date-fns'
-import { es, enUS, ptBR, fr, de, it } from 'date-fns/locale'
-import { useTranslations, useI18nStore } from '../i18n'
+import { useTranslations } from '../i18n'
+import { useDateLocale } from '../hooks/useDateLocale'
 import { useActivitiesStore } from '../store/activitiesStore'
-import { useContactsStore } from '../store/contactsStore'
-import { useDealsStore } from '../store/dealsStore'
 import { useAuthStore } from '../store/authStore'
 import { Button } from '../components/ui/Button'
 import { SearchBar } from '../components/shared/SearchBar'
@@ -24,6 +22,8 @@ import { toast } from '../store/toastStore'
 import type { Activity, ActivityType } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { PageHeader } from '../components/ui/PageHeader'
+import { StatCard } from '../components/ui/StatCard'
+import { Skeleton } from '../components/ui/Skeleton'
 import { Toolbar } from '../components/ui/Toolbar'
 import { hasPermission } from '../utils/permissions'
 import { trackUxAction } from '../lib/uxMetrics'
@@ -210,13 +210,15 @@ function CalendarView({
 export function Activities() {
   const [searchParams, setSearchParams] = useSearchParams()
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
-  const dateLocaleByLanguage = { en: enUS, es, pt: ptBR, fr, de, it } as const
-  const dateLocale = dateLocaleByLanguage[language]
+  const dateLocale = useDateLocale()
 
-  const { activities, addActivity, updateActivity, deleteActivity, completeActivity } = useActivitiesStore()
-  const contacts = useContactsStore((s) => s.contacts)
-  const deals = useDealsStore((s) => s.deals)
+  const activities = useActivitiesStore((s) => s.activities)
+  const addActivity = useActivitiesStore((s) => s.addActivity)
+  const updateActivity = useActivitiesStore((s) => s.updateActivity)
+  const deleteActivity = useActivitiesStore((s) => s.deleteActivity)
+  const completeActivity = useActivitiesStore((s) => s.completeActivity)
+  const isLoading = useActivitiesStore((s) => s.isLoading)
+  const listError = useActivitiesStore((s) => s.error)
   const currentUser = useAuthStore((s) => s.currentUser)
   const canUpdateActivities = !!currentUser && hasPermission(currentUser.role, 'activities:update')
   const canDeleteActivities = !!currentUser && hasPermission(currentUser.role, 'activities:delete')
@@ -322,21 +324,17 @@ export function Activities() {
           </PermissionGate>
         }
       />
+      {listError && (
+        <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger" role="alert">
+          {listError}
+        </div>
+      )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="glass p-4">
-          <p className="text-xs text-fg-subtle mb-1">{t.activities.title}</p>
-          <p className="text-2xl font-bold text-fg">{activities.length}</p>
-        </div>
-        <div className="glass p-4">
-          <p className="text-xs text-fg-subtle mb-1">{t.activities.statusLabels.pending}</p>
-          <p className="text-2xl font-bold text-warning">{pending.length}</p>
-        </div>
-        <div className="glass p-4">
-          <p className="text-xs text-fg-subtle mb-1">{t.activities.overdue}</p>
-          <p className="text-2xl font-bold text-danger">{overdue.length}</p>
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <StatCard title={t.activities.title} value={activities.length} icon={<ActivityIcon size={18} />} accent="accent" />
+        <StatCard title={t.activities.statusLabels.pending} value={pending.length} icon={<Clock size={18} />} accent="warning" />
+        <StatCard title={t.activities.overdue} value={overdue.length} icon={<Calendar size={18} />} accent="danger" />
       </div>
 
       {/* Overdue section */}
@@ -361,7 +359,7 @@ export function Activities() {
         </div>
       )}
 
-      <Toolbar>
+      <Toolbar panel>
       <div className="flex items-center gap-3 flex-wrap w-full">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-72" />
         <Button
@@ -374,7 +372,7 @@ export function Activities() {
         </Button>
 
         {/* View mode toggle */}
-        <div className="flex items-center gap-0.5 glass rounded-lg p-0.5">
+        <div className="flex items-center gap-0.5 rounded-xl border border-fg/10 bg-fg/[0.05] p-0.5">
           <button
             type="button"
             onClick={() => setViewMode('list')}
@@ -454,7 +452,16 @@ export function Activities() {
       {/* Activities list */}
       {viewMode === 'list' && (
         <>
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="glass p-4 space-y-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="border-b border-border-subtle pb-4 last:border-0 last:pb-0">
+                  <Skeleton className="h-4 w-2/3 mb-2" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
             <EmptyState
               icon={<ActivityIcon size={28} />}
               title={t.activities.emptyTitle}
@@ -480,6 +487,7 @@ export function Activities() {
 
       {/* Create / edit form */}
       <SlideOver
+        layer={viewMode === 'calendar' ? 'calendar' : 'modal'}
         isOpen={isFormOpen}
         onClose={() => { setIsFormOpen(false); setEditActivity(undefined) }}
         title={editActivity ? t.activities.editActivity : t.activities.newActivity}

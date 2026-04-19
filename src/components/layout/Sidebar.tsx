@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Building2, KanbanSquare,
   Activity, BarChart3, Settings, ChevronLeft, ChevronRight,
-  Zap, Mail, Sparkles, UserCheck, FileText, ScrollText, Target, UsersRound, BellRing, GanttChart,
+  Zap, Mail, UserCheck, FileText, ScrollText, Target, UsersRound, BellRing, GanttChart,
   LineChart, ListOrdered, Workflow, Package, FunnelPlus,
   Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays, LayoutGrid,
 } from 'lucide-react'
@@ -36,75 +36,75 @@ interface NavItem {
 
 function buildMainItems(t: Translations): NavItem[] {
   return [
-    { id: 'dashboard', to: '/', icon: <LayoutDashboard size={17} />, label: t.nav.dashboard },
-    { id: 'leads', to: '/leads', icon: <FunnelPlus size={17} />, label: t.nav.leads },
-    { id: 'contacts', to: '/contacts', icon: <Users size={17} />, label: t.nav.contacts },
-    { id: 'companies', to: '/companies', icon: <Building2 size={17} />, label: t.nav.companies },
-    { id: 'deals', to: '/deals', icon: <KanbanSquare size={17} />, label: t.nav.deals },
-    { id: 'timeline', to: '/timeline', icon: <GanttChart size={17} />, label: t.nav.timeline },
+    { id: 'dashboard', to: '/', icon: <LayoutDashboard size={18} />, label: t.nav.dashboard },
+    { id: 'leads', to: '/leads', icon: <FunnelPlus size={18} />, label: t.nav.leads },
+    { id: 'contacts', to: '/contacts', icon: <Users size={18} />, label: t.nav.contacts },
+    { id: 'companies', to: '/companies', icon: <Building2 size={18} />, label: t.nav.companies },
+    { id: 'deals', to: '/deals', icon: <KanbanSquare size={18} />, label: t.nav.deals },
+    { id: 'timeline', to: '/timeline', icon: <GanttChart size={18} />, label: t.nav.timeline },
   ]
 }
 
 function buildSalesItems(t: Translations): NavItem[] {
   return [
-    { id: 'calendar', to: '/calendar', icon: <CalendarDays size={17} />, label: t.nav.calendar },
-    { id: 'activities', to: '/activities', icon: <Activity size={17} />, label: t.nav.activities },
-    { id: 'followUps', to: '/follow-ups', icon: <UserCheck size={17} />, label: t.nav.followUps },
-    { id: 'goals', to: '/goals', icon: <Target size={17} />, label: t.nav.goals },
-    { id: 'managerDashboard', to: '/manager', icon: <LayoutGrid size={17} />, label: t.nav.managerDashboard },
-    { id: 'notifications', to: '/notifications', icon: <BellRing size={17} />, label: t.nav.notifications },
-    { id: 'inbox', to: '/inbox', icon: <Mail size={17} />, label: t.nav.inbox },
-    { id: 'reports', to: '/reports', icon: <BarChart3 size={17} />, label: t.nav.reports },
-    { id: 'forecast', to: '/forecast', icon: <LineChart size={17} />, label: t.nav.forecast },
+    { id: 'calendar', to: '/calendar', icon: <CalendarDays size={18} />, label: t.nav.calendar },
+    { id: 'activities', to: '/activities', icon: <Activity size={18} />, label: t.nav.activities },
+    { id: 'followUps', to: '/follow-ups', icon: <UserCheck size={18} />, label: t.nav.followUps },
+    { id: 'goals', to: '/goals', icon: <Target size={18} />, label: t.nav.goals },
+    { id: 'managerDashboard', to: '/manager', icon: <LayoutGrid size={18} />, label: t.nav.managerDashboard },
+    { id: 'notifications', to: '/notifications', icon: <BellRing size={18} />, label: t.nav.notifications },
+    { id: 'inbox', to: '/inbox', icon: <Mail size={18} />, label: t.nav.inbox },
+    { id: 'reports', to: '/reports', icon: <BarChart3 size={18} />, label: t.nav.reports },
+    { id: 'forecast', to: '/forecast', icon: <LineChart size={18} />, label: t.nav.forecast },
   ]
 }
 
 function buildCommsItems(t: Translations): NavItem[] {
   return [
-    { id: 'templates', to: '/templates', icon: <FileText size={17} />, label: t.nav.templates },
-    { id: 'sequences', to: '/sequences', icon: <ListOrdered size={17} />, label: t.nav.sequences },
+    { id: 'templates', to: '/templates', icon: <FileText size={18} />, label: t.nav.templates },
+    { id: 'sequences', to: '/sequences', icon: <ListOrdered size={18} />, label: t.nav.sequences },
   ]
 }
 
 function buildConfigItems(t: Translations): NavItem[] {
   return [
-    { id: 'team', to: '/team', icon: <UsersRound size={17} />, label: t.nav.team },
-    { id: 'products', to: '/products', icon: <Package size={17} />, label: t.nav.products },
-    { id: 'automations', to: '/automations', icon: <Workflow size={17} />, label: t.nav.automations },
-    { id: 'settings', to: '/settings', icon: <Settings size={17} />, label: t.nav.settings },
-    { id: 'audit', to: '/audit', icon: <ScrollText size={17} />, label: t.nav.audit },
+    { id: 'team', to: '/team', icon: <UsersRound size={18} />, label: t.nav.team },
+    { id: 'products', to: '/products', icon: <Package size={18} />, label: t.nav.products },
+    { id: 'automations', to: '/automations', icon: <Workflow size={18} />, label: t.nav.automations },
+    { id: 'settings', to: '/settings', icon: <Settings size={18} />, label: t.nav.settings },
+    { id: 'audit', to: '/audit', icon: <ScrollText size={18} />, label: t.nav.audit },
   ]
 }
 
 function iconForKey(iconKey?: SidebarIconKey): React.ReactNode {
   switch (iconKey) {
-    case 'layout-dashboard': return <LayoutDashboard size={17} />
-    case 'funnel-plus': return <FunnelPlus size={17} />
-    case 'users': return <Users size={17} />
-    case 'building-2': return <Building2 size={17} />
-    case 'kanban-square': return <KanbanSquare size={17} />
-    case 'gantt-chart': return <GanttChart size={17} />
-    case 'calendar-days': return <CalendarDays size={17} />
-    case 'activity': return <Activity size={17} />
-    case 'user-check': return <UserCheck size={17} />
-    case 'target': return <Target size={17} />
-    case 'bell-ring': return <BellRing size={17} />
-    case 'mail': return <Mail size={17} />
-    case 'bar-chart-3': return <BarChart3 size={17} />
-    case 'line-chart': return <LineChart size={17} />
-    case 'file-text': return <FileText size={17} />
-    case 'list-ordered': return <ListOrdered size={17} />
-    case 'users-round': return <UsersRound size={17} />
-    case 'package': return <Package size={17} />
-    case 'workflow': return <Workflow size={17} />
-    case 'settings': return <Settings size={17} />
-    case 'scroll-text': return <ScrollText size={17} />
-    case 'flame': return <Flame size={17} />
-    case 'handshake': return <Handshake size={17} />
-    case 'cloud': return <Cloud size={17} />
-    case 'trending-up': return <TrendingUp size={17} />
-    case 'layout-grid': return <LayoutGrid size={17} />
-    default: return <Bookmark size={17} />
+    case 'layout-dashboard': return <LayoutDashboard size={18} />
+    case 'funnel-plus': return <FunnelPlus size={18} />
+    case 'users': return <Users size={18} />
+    case 'building-2': return <Building2 size={18} />
+    case 'kanban-square': return <KanbanSquare size={18} />
+    case 'gantt-chart': return <GanttChart size={18} />
+    case 'calendar-days': return <CalendarDays size={18} />
+    case 'activity': return <Activity size={18} />
+    case 'user-check': return <UserCheck size={18} />
+    case 'target': return <Target size={18} />
+    case 'bell-ring': return <BellRing size={18} />
+    case 'mail': return <Mail size={18} />
+    case 'bar-chart-3': return <BarChart3 size={18} />
+    case 'line-chart': return <LineChart size={18} />
+    case 'file-text': return <FileText size={18} />
+    case 'list-ordered': return <ListOrdered size={18} />
+    case 'users-round': return <UsersRound size={18} />
+    case 'package': return <Package size={18} />
+    case 'workflow': return <Workflow size={18} />
+    case 'settings': return <Settings size={18} />
+    case 'scroll-text': return <ScrollText size={18} />
+    case 'flame': return <Flame size={18} />
+    case 'handshake': return <Handshake size={18} />
+    case 'cloud': return <Cloud size={18} />
+    case 'trending-up': return <TrendingUp size={18} />
+    case 'layout-grid': return <LayoutGrid size={18} />
+    default: return <Bookmark size={18} />
   }
 }
 
@@ -124,7 +124,7 @@ function SidebarNavItem({ item, collapsed, nested = false }: SidebarNavItemProps
         title={collapsed ? item.label : undefined}
         className={({ isActive }) => `
           flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium
-          transition-all duration-150 group relative
+          transition-all duration-fast group relative
           ${isActive
             ? 'nav-active sidebar-active text-fg'
             : 'sidebar-inactive text-fg-subtle hover:text-fg hover:bg-fg/5 border-l-2 border-transparent'
@@ -136,7 +136,7 @@ function SidebarNavItem({ item, collapsed, nested = false }: SidebarNavItemProps
         <span className="flex-shrink-0">{item.icon}</span>
         {!collapsed && <span className="truncate flex-1">{item.label}</span>}
         {!collapsed && item.badge != null && item.badge > 0 && (
-          <span className="ml-auto text-[10px] font-bold bg-danger/20 text-danger rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+          <span className="ml-auto text-2xs font-bold bg-danger/20 text-danger rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
             {item.badge > 99 ? '99+' : item.badge}
           </span>
         )}
@@ -168,7 +168,7 @@ function SidebarSection({ label, items, collapsed, icon }: SidebarSectionProps) 
   return (
     <div className="space-y-0.5">
       {!collapsed && (
-        <div className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-fg-subtle flex items-center gap-1.5">
+        <div className="px-3 mb-2 text-2xs font-semibold uppercase tracking-widest text-fg-subtle flex items-center gap-1.5">
           {icon && <span className="text-fg-subtle">{icon}</span>}
           <p>{label}</p>
         </div>
@@ -212,18 +212,18 @@ export function Sidebar() {
   // Pinned views subscription — re-runs when language (t) changes
   useEffect(() => {
     const VIEW_ICON_MAP: Record<string, React.ReactNode> = {
-      flame: <Flame size={17} />,
-      users: <Users size={17} />,
-      handshake: <Handshake size={17} />,
-      'trending-up': <TrendingUp size={17} />,
-      cloud: <Cloud size={17} />,
+      flame: <Flame size={18} />,
+      users: <Users size={18} />,
+      handshake: <Handshake size={18} />,
+      'trending-up': <TrendingUp size={18} />,
+      cloud: <Cloud size={18} />,
     }
     const compute = () => {
       const pinnedViews = useViewsStore.getState().views.filter((v) => v.isPinned)
       const items: NavItem[] = pinnedViews.map((v) => ({
         id: `pinned-${v.id}`,
         to: `/${v.entityType === 'contact' ? 'contacts' : v.entityType === 'company' ? 'companies' : 'deals'}?view=${v.id}`,
-        icon: VIEW_ICON_MAP[v.icon ?? ''] ?? <Bookmark size={17} />,
+        icon: VIEW_ICON_MAP[v.icon ?? ''] ?? <Bookmark size={18} />,
         label: (() => {
           const key = v.nameKey ?? (v.id.startsWith('sv-') ? v.id.replace('sv-', 'sv').replace('-', '') : null)
           return key ? (t.views as Record<string, string>)[key] ?? v.name : v.name
@@ -351,7 +351,7 @@ export function Sidebar() {
     <aside
       className={`
         app-sidebar flex flex-col h-screen bg-surface-1 border-r border-fg/6
-        transition-all duration-200 ease-out flex-shrink-0
+        transition-all duration-base ease-out flex-shrink-0
         ${collapsed ? 'w-[60px]' : 'w-[220px]'}
       `}
     >
@@ -389,7 +389,7 @@ export function Sidebar() {
           aria-label={collapsed ? t.nav.expandSidebar : t.nav.collapseSidebar}
           className={`
             w-full flex items-center gap-2 px-2 py-2 rounded-xl text-fg-subtle
-            hover:text-fg-muted hover:bg-fg/5 transition-all duration-150 text-xs font-medium
+            hover:text-fg-muted hover:bg-fg/5 transition-all duration-fast text-xs font-medium
             ${collapsed ? 'justify-center' : ''}
           `}
         >

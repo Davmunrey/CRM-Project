@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
-import { useTranslations, useI18nStore } from '../i18n'
+import { useTranslations } from '../i18n'
+import { useDateLocale } from '../hooks/useDateLocale'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Line, ComposedChart, Area,
@@ -14,18 +15,10 @@ import {
   isWithinInterval, addMonths,
 } from 'date-fns'
 import type { Locale } from 'date-fns'
-import { es, enUS, ptBR, fr, de, it } from 'date-fns/locale'
 import { TrendingUp, TrendingDown, DollarSign, Target, Zap, Star } from 'lucide-react'
 import type { Deal } from '../types'
-
-// ─── Tooltip style (shared with Reports) ────────────────────────────────────
-
-const TOOLTIP_STYLE = {
-  backgroundColor: '#0d1025',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '12px',
-  color: '#e2e8f0',
-}
+import { useChartTheme } from '../lib/chartTheme'
+import { PageHeader } from '../components/ui/PageHeader'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -159,9 +152,10 @@ function healthLabelForTier(tier: HealthTier, t: ReturnType<typeof useTranslatio
 interface GaugeProps {
   value: number   // 0-100
   color: string   // tailwind text class
+  valueTextColor?: string
 }
 
-function HealthGauge({ value, color }: GaugeProps) {
+function HealthGauge({ value, color, valueTextColor }: GaugeProps) {
   const radius = 54
   const circumference = Math.PI * radius   // half-circle
   const offset = circumference * (1 - value / 100)
@@ -197,7 +191,7 @@ function HealthGauge({ value, color }: GaugeProps) {
         style={{ transition: 'stroke-dashoffset 0.6s ease' }}
       />
       {/* Value text */}
-      <text x="60" y="62" textAnchor="middle" fill="#f1f5f9" fontSize="18" fontWeight="700">
+      <text x="60" y="62" textAnchor="middle" fill={valueTextColor ?? 'currentColor'} fontSize="18" fontWeight="700">
         {value}
       </text>
     </svg>
@@ -245,9 +239,8 @@ function KPICard({ label, value, sub, icon, trend, trendLabel }: KPICardProps) {
 
 export function Forecast() {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
-  const localeMap = { en: enUS, es, pt: ptBR, fr, de, it } as const
-  const dateLocale = localeMap[language]
+  const chart = useChartTheme()
+  const dateLocale = useDateLocale()
   // Manual Zustand subscriptions to avoid getSnapshot issues with persist middleware
   const [deals, setDeals] = useState<Deal[]>(() => useDealsStore.getState().deals)
   const [activities, setActivities] = useState(
@@ -442,12 +435,13 @@ export function Forecast() {
 
   const growthLabel = kpi.hasGrowthData
     ? `${kpi.growthRateMoM >= 0 ? '+' : ''}${kpi.growthRateMoM.toFixed(1)}%`
-    : t.common.noResults
+    : t.forecast.growthUnavailable
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <div className="crm-page space-y-6">
+      <PageHeader showTitle={false} title={t.forecast.title} subtitle={t.reports.salesOverview} />
 
       {/* ── KPI Cards ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
@@ -504,19 +498,19 @@ export function Forecast() {
           <ComposedChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id="projectionGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                <stop offset="5%" stopColor={chart.success} stopOpacity={0.25} />
+                <stop offset="95%" stopColor={chart.success} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1a1d35" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} vertical={false} />
             <XAxis
               dataKey="month"
-              tick={{ fill: '#64748b', fontSize: 11 }}
+              tick={{ fill: chart.axisTickFill, fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: '#64748b', fontSize: 11 }}
+              tick={{ fill: chart.axisTickFill, fontSize: 11 }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(v: number) =>
@@ -524,7 +518,7 @@ export function Forecast() {
               }
             />
             <Tooltip
-              contentStyle={TOOLTIP_STYLE}
+              contentStyle={chart.tooltipStyle}
               formatter={(value: number | string | ReadonlyArray<number | string> | undefined, name: string | number | undefined) => [
                 formatCurrency(Number(Array.isArray(value) ? (value as ReadonlyArray<number | string>)[0] : (value ?? 0))),
                 name === 'revenue' ? t.forecast.committed : t.forecast.weighted,
@@ -532,7 +526,7 @@ export function Forecast() {
             />
             <Bar
               dataKey="revenue"
-              fill="#6366f1"
+              fill={chart.barPrimary}
               radius={[4, 4, 0, 0]}
               name="revenue"
               maxBarSize={36}
@@ -540,18 +534,18 @@ export function Forecast() {
             <Area
               type="monotone"
               dataKey="weighted"
-              stroke="#10b981"
+              stroke={chart.success}
               strokeWidth={2}
               fill="url(#projectionGradient)"
               strokeDasharray="5 3"
               name="weighted"
               connectNulls
-              dot={{ fill: '#10b981', r: 3, strokeWidth: 0 }}
+              dot={{ fill: chart.success, r: 3, strokeWidth: 0 }}
             />
             <Line
               type="monotone"
               dataKey="weighted"
-              stroke="#10b981"
+              stroke={chart.success}
               strokeWidth={0}
               dot={false}
             />
@@ -569,7 +563,7 @@ export function Forecast() {
             <p className="text-xs text-fg-subtle mt-0.5">{t.forecast.healthScoreSubtitle}</p>
           </div>
 
-          <HealthGauge value={health.score} color={health.color} />
+          <HealthGauge value={health.score} color={health.color} valueTextColor={chart.fg} />
 
           <p className={`text-lg font-bold ${health.color}`}>{health.label}</p>
 
@@ -585,7 +579,7 @@ export function Forecast() {
                 <p className="text-[11px] text-fg-subtle w-36 flex-shrink-0">{label}</p>
                 <div className="flex-1 h-1.5 bg-fg/6 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-accent-500 rounded-full transition-all duration-500"
+                    className="h-full bg-accent-500 rounded-full transition-all duration-slow"
                     style={{ width: `${(value / max) * 100}%` }}
                   />
                 </div>
@@ -621,15 +615,15 @@ export function Forecast() {
               data={forecastMonths}
               margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#1a1d35" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} vertical={false} />
               <XAxis
                 dataKey="month"
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                tick={{ fill: chart.axisTickFill, fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: '#64748b', fontSize: 11 }}
+                tick={{ fill: chart.axisTickFill, fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(v: number) =>
@@ -637,7 +631,7 @@ export function Forecast() {
                 }
               />
               <Tooltip
-                contentStyle={TOOLTIP_STYLE}
+                contentStyle={chart.tooltipStyle}
                 formatter={(v: number | string | ReadonlyArray<number | string> | undefined) => [
                   formatCurrency(Number(Array.isArray(v) ? (v as ReadonlyArray<number | string>)[0] : (v ?? 0))),
                   t.forecast.weighted,
@@ -645,7 +639,7 @@ export function Forecast() {
               />
               <Bar
                 dataKey="weighted"
-                fill="#10b981"
+                fill={chart.success}
                 radius={[6, 6, 0, 0]}
                 name="weighted"
                 maxBarSize={60}
@@ -668,14 +662,17 @@ export function Forecast() {
             {t.deals.emptyTitle}
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-hidden rounded-xl border border-fg/8">
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
+              <caption className="sr-only">{t.forecast.bestCase}</caption>
               <thead>
                 <tr className="border-b border-fg/8">
                   {[t.deals.title, t.common.value, t.deals.stage, t.deals.expectedClose, t.deals.probability, t.forecast.weighted].map(
                     (h) => (
                       <th
                         key={h}
+                        scope="col"
                         className="text-left text-xs font-semibold text-fg-subtle py-2 pr-4 last:pr-0"
                       >
                         {h}
@@ -727,7 +724,7 @@ export function Forecast() {
                       <div className="flex items-center gap-2">
                         <div className="w-20 h-1.5 bg-fg/8 rounded-full overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-accent-500 transition-all duration-500"
+                            className="h-full rounded-full bg-accent-500 transition-all duration-slow"
                             style={{ width: `${bet.probability}%` }}
                           />
                         </div>
@@ -745,6 +742,7 @@ export function Forecast() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

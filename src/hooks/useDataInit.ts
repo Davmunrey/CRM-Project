@@ -36,9 +36,11 @@ export function useDataInit() {
 
     didInit.current = true
 
+    let gmailRefreshCancelled = false
     // Silent Gmail token refresh (D-11): restore in-memory access token if user was connected
     if (gmailAddress && isSupabaseConfigured) {
-      supabase!.functions.invoke('gmail-refresh-token').then(({ data, error }) => {
+      void supabase!.functions.invoke('gmail-refresh-token').then(({ data, error }) => {
+        if (gmailRefreshCancelled) return
         if (!error && data?.access_token) {
           const expiresAt = Date.now() + (data.expires_in ?? 3600) * 1000
           setGmailToken(data.access_token, expiresAt)
@@ -79,6 +81,7 @@ export function useDataInit() {
       runServerMaintenance()
     }, 30 * 60 * 1000)
     const dealsSyncInterval = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return
       useDealsStore.getState().fetchDeals({ silent: true })
     }, 20 * 1000)
     const handleBackOnline = () => {
@@ -90,6 +93,7 @@ export function useDataInit() {
       runServerMaintenance()
     }, 15000)
     return () => {
+      gmailRefreshCancelled = true
       cleanup()
       window.clearInterval(maintenanceInterval)
       window.clearInterval(dealsSyncInterval)

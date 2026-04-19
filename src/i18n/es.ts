@@ -180,6 +180,7 @@ export const es: Translations = {
     warm: 'Templado',
     cold: 'Frio',
     noLeads: 'Todavia no hay leads.',
+    emptyInboxHint: 'Importa o crea leads, o ajusta filtros y búsqueda.',
     loadingLeads: 'Cargando leads...',
     scoreAction: 'Scoring',
     scoreActionHint: 'Recalcula el score con señales actuales. No suma puntos por clic.',
@@ -778,6 +779,7 @@ export const es: Translations = {
     healthFair: 'Regular',
     healthLow: 'Bajo',
     closingDealsSuffix: 'oportunidades',
+    growthUnavailable: 'Historial insuficiente',
   },
 
   // ─── Leaderboard ─────────────────────────────────────────────────────────────
@@ -850,6 +852,8 @@ export const es: Translations = {
     sku: 'SKU',
     price: 'Precio',
     category: 'Categoría',
+    emptyNoProducts: 'Aún no hay productos. Crea el primero para empezar.',
+    emptyFiltered: 'Ningún producto coincide con la búsqueda o filtros. Prueba a ajustarlos.',
     categoryLabels: {
       software: 'Software',
       hardware: 'Hardware',
@@ -1026,6 +1030,16 @@ export const es: Translations = {
     trackingDemoSimulate: 'Simular (solo demo)',
     trackingServerMetricsHint:
       'Con Supabase, los contadores se actualizan cuando el destinatario abre el correo con tracking o pulsa enlaces rastreados. Actualiza métricas desde el buzón.',
+    backToMailbox: 'Volver a la lista',
+    messageCount: '{n} mensajes',
+    foldersNavLabel: 'Carpetas de correo',
+    threadListLabel: 'Conversaciones',
+    readingPaneLabel: 'Mensaje',
+    searchSyntaxHelp: 'Ayuda de búsqueda',
+    readingPaneSelectTitle: 'Nada seleccionado',
+    readingPaneSelectHint: 'Elige una conversación o un mensaje en la lista para leerlo aquí.',
+    snoozedFolderEmptyHint: 'Los correos que pospongas aparecerán aquí hasta la hora del recordatorio.',
+    reply: 'Responder',
   },
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -1272,6 +1286,20 @@ export const es: Translations = {
     subjectPresetFollowUp: 'Seguimiento: {firstName} {lastName}',
     subjectPresetNextSteps: '{companyName} — Próximos pasos',
     subjectPresetProposal: '{dealTitle} — Seguimiento de propuesta',
+    sendDisabledHint: 'Añade al menos un destinatario y un asunto para enviar.',
+    scheduleSendDisabledHint: 'Elige fecha y hora para el envío programado.',
+    connectGmailToSend: 'Conecta Gmail para enviar correo desde la aplicación.',
+    openEmailTracking: 'Seguimiento de aperturas',
+    composerFrom: 'De',
+    composerInsertField: 'Insertar campo',
+    composerTemplatesToolbar: 'Plantillas',
+    crmLinkTitle: 'Enlazar al CRM',
+    crmLinkHint: 'Asocia este correo a un contacto, negocio o empresa para el seguimiento.',
+    formatBold: 'Negrita',
+    formatItalic: 'Cursiva',
+    formatBulletList: 'Lista',
+    send: 'Enviar',
+    discardComposer: 'Descartar',
   },
 
   // ─── Notifications page ──────────────────────────────────────────────────────
@@ -1281,6 +1309,7 @@ export const es: Translations = {
     clearAll: 'Limpiar todo',
     emptyTitle: 'Sin notificaciones',
     emptyDescription: 'Estás al día. Las notificaciones aparecerán aquí.',
+    emptyHint: 'Prueba a limpiar filtros o cambiar el tipo de notificación.',
     today: 'Hoy',
     older: 'Anteriores',
     markRead: 'Marcar como leída',

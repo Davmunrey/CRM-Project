@@ -74,6 +74,7 @@
 
 ## Frontend layout and styling
 
+- **Lucide icon sizes:** use a small fixed grid so navigation and controls stay visually aligned: **13 · 14 · 16 · 18 · 22** (`size={…}`). Prefer `14` / `16` / `18` for UI chrome; avoid one-off values like `9`, `11`, or `17` unless there is a strong layout constraint.
 - **Canonical product doc:** `docs/master-design-ui.md` (page shells `crm-page` / `crm-page-full`, `PanelEmpty`, auth patterns, modal padding).
 - **Theme variables and light mode:** same master (Theme system section).
 - New screens inside `Layout` should use the documented shells rather than one-off `p-6` wrappers.

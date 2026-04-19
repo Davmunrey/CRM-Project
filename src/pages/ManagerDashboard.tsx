@@ -15,6 +15,9 @@ import {
 import type { PipelineStage } from '../types'
 import { Table, TableHead, TableBody, TableRow, TableCell } from '../components/ui/Table'
 import { ListRow } from '../components/ui/ListRow'
+import { PageHeader } from '../components/ui/PageHeader'
+import { StatCard } from '../components/ui/StatCard'
+import { Users, Target, Percent } from 'lucide-react'
 
 const HEAT_CLASSES = ['crm-heat-0', 'crm-heat-1', 'crm-heat-2', 'crm-heat-3', 'crm-heat-4'] as const
 
@@ -91,28 +94,23 @@ export function ManagerDashboard() {
 
   return (
     <div className="crm-page space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-fg tracking-tight">{t.managerDashboard.title}</h1>
-        <p className="text-sm text-fg-muted mt-1 max-w-3xl">{t.managerDashboard.subtitle}</p>
-        <p className="text-xs text-fg-subtle mt-2 max-w-3xl">{t.managerDashboard.methodologyHint}</p>
-      </div>
+      <PageHeader
+        showTitle={false}
+        title={t.managerDashboard.title}
+        subtitle={t.managerDashboard.subtitle}
+      />
+      <p className="text-xs text-fg-subtle -mt-4 max-w-3xl">{t.managerDashboard.methodologyHint}</p>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div className="glass rounded-2xl border border-fg/8 p-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{t.managerDashboard.mqlCount}</p>
-          <p className="text-3xl font-bold text-fg mt-1">{mqlSql.mqlCount}</p>
-        </div>
-        <div className="glass rounded-2xl border border-fg/8 p-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{t.managerDashboard.sqlCount}</p>
-          <p className="text-3xl font-bold text-fg mt-1">{mqlSql.sqlCount}</p>
-        </div>
-        <div className="glass rounded-2xl border border-fg/8 p-5">
-          <p className="text-xs font-medium uppercase tracking-wider text-fg-subtle">{t.managerDashboard.sqlShare}</p>
-          <p className="text-3xl font-bold text-success mt-1">
-            {mqlSql.sqlSharePct != null ? `${mqlSql.sqlSharePct}%` : t.common.notAvailable}
-          </p>
-          <p className="text-[11px] text-fg-subtle mt-2">{t.managerDashboard.sqlShareHint}</p>
-        </div>
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard title={t.managerDashboard.mqlCount} value={mqlSql.mqlCount} icon={<Users size={18} />} accent="info" />
+        <StatCard title={t.managerDashboard.sqlCount} value={mqlSql.sqlCount} icon={<Target size={18} />} accent="accent" />
+        <StatCard
+          title={t.managerDashboard.sqlShare}
+          value={mqlSql.sqlSharePct != null ? `${mqlSql.sqlSharePct}%` : t.common.notAvailable}
+          subtitle={t.managerDashboard.sqlShareHint}
+          icon={<Percent size={18} />}
+          accent="success"
+        />
       </div>
 
       <section className="glass rounded-2xl border border-fg/8 p-6 overflow-x-auto">

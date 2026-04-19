@@ -1,8 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { addMonths, subMonths, format, startOfMonth, endOfMonth, differenceInDays, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns'
-import { es, enUS, ptBR, fr, de, it } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight, Calendar, DollarSign, Filter, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, DollarSign, Filter, X, Layers, Percent } from 'lucide-react'
 import { useDealsStore } from '../store/dealsStore'
 import { useContactsStore } from '../store/contactsStore'
 import { useCompaniesStore } from '../store/companiesStore'
@@ -10,8 +9,12 @@ import { formatCurrency } from '../utils/formatters'
 import { DEAL_STAGE_COLORS } from '../utils/constants'
 import { useAuthStore } from '../store/authStore'
 import type { Deal, DealStage } from '../types'
-import { useTranslations, useI18nStore } from '../i18n'
+import { useTranslations } from '../i18n'
+import { useDateLocale } from '../hooks/useDateLocale'
 import { Select } from '../components/ui/Select'
+import { Toolbar } from '../components/ui/Toolbar'
+import { PageHeader } from '../components/ui/PageHeader'
+import { StatCard } from '../components/ui/StatCard'
 
 const STAGE_HEX: Record<DealStage, string> = {
   lead: '#3b82f6',
@@ -26,9 +29,7 @@ const MONTHS_VISIBLE = 3
 
 export function PipelineTimeline() {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
-  const dateLocaleByLanguage = { en: enUS, es, pt: ptBR, fr, de, it } as const
-  const dateLocale = dateLocaleByLanguage[language]
+  const dateLocale = useDateLocale()
 
   const navigate = useNavigate()
   const [currentMonth, setCurrentMonth] = useState(() => new Date())
@@ -126,66 +127,62 @@ export function PipelineTimeline() {
 
   return (
     <div className="crm-page space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-fg flex items-center gap-2">
-            <Calendar size={20} className="text-accent-400" />
-            {t.nav.timeline}
-          </h2>
-          <p className="text-sm text-fg-subtle mt-1">
-            {filteredDeals.length} {t.nav.deals} · {formatCurrency(totalPipeline)} {t.deals.pipeline}
-          </p>
-        </div>
-
-        {/* Nav */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
-            className="p-2 rounded-xl glass border-fg/8 text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <span className="text-sm font-medium text-fg px-2 capitalize">
-            {format(currentMonth, 'MMM yyyy', { locale: dateLocale })} — {format(addMonths(currentMonth, MONTHS_VISIBLE - 1), 'MMM yyyy', { locale: dateLocale })}
-          </span>
-          <button
-            type="button"
-            onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
-            className="p-2 rounded-xl glass border-fg/8 text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        showTitle={false}
+        title={t.timeline.title}
+        subtitle={`${filteredDeals.length} ${t.nav.deals} · ${formatCurrency(totalPipeline)} ${t.deals.pipeline}`}
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentMonth((m) => subMonths(m, 1))}
+              className="p-2 rounded-xl glass border-fg/8 text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <span className="text-sm font-medium text-fg px-2 capitalize">
+              {format(currentMonth, 'MMM yyyy', { locale: dateLocale })} — {format(addMonths(currentMonth, MONTHS_VISIBLE - 1), 'MMM yyyy', { locale: dateLocale })}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentMonth((m) => addMonths(m, 1))}
+              className="p-2 rounded-xl glass border-fg/8 text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        }
+      />
 
       {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="glass p-4 rounded-xl">
-          <p className="text-xs text-fg-subtle mb-1">{t.deals.title}</p>
-          <p className="text-2xl font-bold text-fg">{filteredDeals.length}</p>
-        </div>
-        <div className="glass p-4 rounded-xl">
-          <p className="text-xs text-fg-subtle mb-1">{t.dashboard.pipelineValue}</p>
-          <p className="text-2xl font-bold text-accent-400">{formatCurrency(totalPipeline)}</p>
-        </div>
-        <div className="glass p-4 rounded-xl">
-          <p className="text-xs text-fg-subtle mb-1">{t.forecast.weighted}</p>
-          <p className="text-2xl font-bold text-success">{formatCurrency(expectedThisQuarter)}</p>
-        </div>
-        <div className="glass p-4 rounded-xl">
-          <p className="text-xs text-fg-subtle mb-1">{t.reports.conversionRate}</p>
-          <p className="text-2xl font-bold text-warning">
-            {filteredDeals.length > 0
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard title={t.deals.title} value={filteredDeals.length} icon={<Layers size={18} />} accent="accent" />
+        <StatCard
+          title={t.dashboard.pipelineValue}
+          value={formatCurrency(totalPipeline)}
+          icon={<DollarSign size={18} />}
+          accent="info"
+        />
+        <StatCard
+          title={t.forecast.weighted}
+          value={formatCurrency(expectedThisQuarter)}
+          icon={<DollarSign size={18} />}
+          accent="success"
+        />
+        <StatCard
+          title={t.reports.conversionRate}
+          value={
+            filteredDeals.length > 0
               ? `${Math.round(filteredDeals.reduce((s, d) => s + d.probability, 0) / filteredDeals.length)}%`
-              : '—'}
-          </p>
-        </div>
+              : '—'
+          }
+          icon={<Percent size={18} />}
+          accent="warning"
+        />
       </div>
 
-      {/* Filters */}
-      <div className="flex items-center gap-2 flex-wrap glass rounded-xl p-3">
+      <Toolbar panel>
+      <div className="flex items-center gap-2 flex-wrap w-full">
         <Filter size={14} className="text-fg-subtle" />
         <div className="min-w-[10rem] max-w-[14rem]">
           <Select
@@ -224,6 +221,7 @@ export function PipelineTimeline() {
           </button>
         )}
       </div>
+      </Toolbar>
 
       {/* Timeline */}
       <div className="glass rounded-2xl overflow-hidden">
@@ -300,7 +298,7 @@ export function PipelineTimeline() {
                     {/* Deal bar */}
                     {!bar.outOfRange && (
                       <div
-                        className="absolute top-1/2 -translate-y-1/2 h-6 rounded-full flex items-center px-2 gap-1.5 cursor-pointer transition-all duration-200 overflow-hidden"
+                        className="absolute top-1/2 -translate-y-1/2 h-6 rounded-full flex items-center px-2 gap-1.5 cursor-pointer transition-all duration-base overflow-hidden"
                         style={{
                           left: `${bar.left}%`,
                           width: `${bar.width}%`,

@@ -49,6 +49,8 @@ export default defineConfig(({ command, mode }) => {
             if (id.includes('node_modules/react') || id.includes('react-router-dom')) return 'react'
             if (id.includes('lucide-react') || id.includes('@hello-pangea/dnd')) return 'ui'
             if (id.includes('@supabase/supabase-js')) return 'supabase'
+            if (id.includes('node_modules/recharts')) return 'recharts'
+            if (id.includes('node_modules/date-fns')) return 'date-fns'
             return undefined
           },
         },

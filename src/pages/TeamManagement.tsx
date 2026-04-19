@@ -25,19 +25,17 @@ const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
 
 export function TeamManagement() {
   const t = useTranslations()
-  const {
-    currentUser,
-    users: usersRaw,
-    invitations,
-    organization,
-    addUser,
-    changeUserRole,
-    deactivateUser,
-    reactivateUser,
-    resetPassword,
-    createInvitation,
-    cancelInvitation,
-  } = useAuthStore()
+  const currentUser = useAuthStore((s) => s.currentUser)
+  const usersRaw = useAuthStore((s) => s.users)
+  const invitations = useAuthStore((s) => s.invitations)
+  const organization = useAuthStore((s) => s.organization)
+  const addUser = useAuthStore((s) => s.addUser)
+  const changeUserRole = useAuthStore((s) => s.changeUserRole)
+  const deactivateUser = useAuthStore((s) => s.deactivateUser)
+  const reactivateUser = useAuthStore((s) => s.reactivateUser)
+  const resetPassword = useAuthStore((s) => s.resetPassword)
+  const createInvitation = useAuthStore((s) => s.createInvitation)
+  const cancelInvitation = useAuthStore((s) => s.cancelInvitation)
   const language = useI18nStore((s) => s.language)
   const users = useLocalizedOrgUsers(usersRaw)
   const displayOrganization = useMemo(

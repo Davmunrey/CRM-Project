@@ -50,7 +50,7 @@ export function ThemeSwitcher({ variant = 'inline', className = '', align = 'end
             aria-label={t.settings.theme}
             title={t.settings.theme}
             onClick={() => setOpen((v) => !v)}
-            className="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl border border-fg/12 bg-surface-1/80 backdrop-blur-md px-2.5 py-2 text-fg-muted hover:text-fg hover:border-fg/20 hover:bg-surface-1 transition-colors duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+            className="inline-flex min-h-[40px] min-w-[40px] items-center justify-center rounded-xl border border-fg/12 bg-surface-1/80 backdrop-blur-md px-2.5 py-2 text-fg-muted hover:text-fg hover:border-fg/20 hover:bg-surface-1 transition-colors duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
           >
             {themePreference === 'light' ? (
               <Sun size={18} aria-hidden />

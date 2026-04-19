@@ -13,6 +13,9 @@ import { EmptyState } from '../components/shared/EmptyState'
 import { SlideOver, ConfirmDialog } from '../components/ui/Modal'
 import { CompanyForm } from '../components/companies/CompanyForm'
 import { Select } from '../components/ui/Select'
+import { Toolbar } from '../components/ui/Toolbar'
+import { PageHeader } from '../components/ui/PageHeader'
+import { SkeletonRow } from '../components/ui/SkeletonRow'
 import { toast } from '../store/toastStore'
 import { formatCurrency } from '../utils/formatters'
 import { COMPANY_SIZE_OPTIONS } from '../utils/constants'
@@ -20,6 +23,7 @@ import type { Company, CompanyStatus, SmartViewFilter } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { useLocalizedCompanies, useTranslations, useUiLanguage } from '../i18n'
 import { getIndustryLabel, getIndustryOptions } from '../lib/industries'
+import { rowActivationKeyDown } from '../utils/a11y'
 
 const STATUS_COLORS: Record<string, BadgeVariant> = {
   prospect: 'warning',
@@ -32,7 +36,12 @@ export function Companies() {
   const t = useTranslations()
   const uiLang = useUiLanguage()
   const navigate = useNavigate()
-  const { companies, addCompany, updateCompany, deleteCompany } = useCompaniesStore()
+  const companies = useCompaniesStore((s) => s.companies)
+  const addCompany = useCompaniesStore((s) => s.addCompany)
+  const updateCompany = useCompaniesStore((s) => s.updateCompany)
+  const deleteCompany = useCompaniesStore((s) => s.deleteCompany)
+  const isLoading = useCompaniesStore((s) => s.isLoading)
+  const listError = useCompaniesStore((s) => s.error)
   const localizedCompanies = useLocalizedCompanies(companies)
   const contacts = useContactsStore((s) => s.contacts)
   const deals = useDealsStore((s) => s.deals)
@@ -116,8 +125,19 @@ export function Companies() {
 
   return (
     <div className="crm-page space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <PageHeader
+        showTitle={false}
+        title={t.companies.title}
+        subtitle={t.companies.emptyDescription}
+      />
+      {listError && (
+        <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger" role="alert">
+          {listError}
+        </div>
+      )}
+
+      <Toolbar panel>
+      <div className="flex items-center gap-3 flex-wrap w-full">
         <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-72" />
         <Button
           variant={showFilters ? 'secondary' : 'ghost'}
@@ -171,6 +191,7 @@ export function Companies() {
           </PermissionGate>
         </div>
       </div>
+      </Toolbar>
 
       {/* Smart Views bar */}
       <SmartViewBar entityType="company" onFiltersChange={setViewFilters} />
@@ -215,51 +236,56 @@ export function Companies() {
 
       <p className="text-xs text-fg-subtle">{filtered.length} {t.nav.companies.toLowerCase()}</p>
 
-      {filtered.length === 0 ? (
-        <EmptyState
-          icon={<Building2 size={28} />}
-          title={t.companies.emptyTitle}
-          description={t.companies.emptyDescription}
-          action={{ label: t.companies.newCompany, onClick: () => setIsFormOpen(true) }}
-        />
-      ) : (
+      {isLoading || filtered.length > 0 ? (
         <div className="glass overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <caption className="sr-only">{t.nav.companies}</caption>
             <thead>
               <tr className="contacts-table-head border-b border-fg/8">
-                <th className="px-4 py-3 text-left w-10">
+                <th scope="col" className="px-4 py-3 text-left w-10">
                   <input
                     type="checkbox"
                     checked={selectedIds.size === filtered.length && filtered.length > 0}
                     onChange={toggleAll}
+                    aria-label={t.common.selectAll}
+                    title={t.common.selectAll}
                     className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                   />
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.title}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.industry}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.size}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.country}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.nav.contacts}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.nav.deals}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.status}</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.actions}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.title}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.industry}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.size}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.companies.country}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.nav.contacts}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.nav.deals}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.status}</th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-fg-subtle uppercase tracking-wider">{t.common.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border-subtle">
-              {filtered.map((company) => {
+              {isLoading ? (
+                <SkeletonRow cols={9} rows={8} />
+              ) : filtered.map((company) => {
                 const contactCount = contacts.filter((c) => c.companyId === company.id).length
                 const dealCount = deals.filter((d) => d.companyId === company.id).length
                 return (
                   <tr
                     key={company.id}
+                    tabIndex={0}
                     className="hover:bg-fg/4 cursor-pointer transition-colors"
                     onClick={() => navigate(`/companies/${company.id}`)}
+                    onKeyDown={(e) =>
+                      rowActivationKeyDown(e, () => navigate(`/companies/${company.id}`))
+                    }
                   >
                     <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedIds.has(company.id)}
                         onChange={() => toggleSelect(company.id)}
+                        aria-label={`${t.common.select} ${company.name}`}
+                        title={`${t.common.select} ${company.name}`}
                         className="rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500"
                       />
                     </td>
@@ -309,7 +335,15 @@ export function Companies() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
+      ) : (
+        <EmptyState
+          icon={<Building2 size={28} />}
+          title={t.companies.emptyTitle}
+          description={t.companies.emptyDescription}
+          action={{ label: t.companies.newCompany, onClick: () => setIsFormOpen(true) }}
+        />
       )}
 
       <SlideOver

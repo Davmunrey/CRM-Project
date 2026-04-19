@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Mail, Send, Inbox as InboxIcon, Loader2, RefreshCw, Wifi, WifiOff, User, Clock, Reply, Plus, Eye, MousePointerClick, Paperclip, Download, Search } from 'lucide-react'
+import { Mail, Send, Inbox as InboxIcon, Loader2, RefreshCw, Wifi, WifiOff, User, Clock, Reply, Plus, Eye, MousePointerClick, Paperclip, Download, Search, ChevronLeft } from 'lucide-react'
 import { Spinner } from '../components/ui/Spinner'
 import { Link } from 'react-router-dom'
 import { useEmailStore } from '../store/emailStore'
@@ -24,6 +24,7 @@ import { trackUxAction } from '../lib/uxMetrics'
 import { buildInboxQueryMatcher } from '../utils/inboxQuery'
 import { toGmailThreadsListQuery } from '../utils/inboxGmailQuery'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
+import { Skeleton } from '../components/ui/Skeleton'
 import { Select } from '../components/ui/Select'
 import {
   extractEmail,
@@ -59,11 +60,11 @@ function ThreadItem({
   return (
     <div
       onClick={onClick}
-      className={`group px-4 py-3 border-b border-fg/4 cursor-pointer transition-colors ${
-        selected ? 'bg-accent-600/10 border-l-2 border-l-accent-500' : 'hover:bg-fg/4'
+      className={`group px-3 py-2.5 border-b border-fg/[0.06] cursor-pointer transition-colors motion-reduce:transition-none ${
+        selected ? 'bg-accent-600/[0.12] border-l-[3px] border-l-accent-500 shadow-[inset_0_0_0_1px_rgba(99,102,241,0.12)]' : 'hover:bg-fg/[0.04]'
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2.5">
         <input
           type="checkbox"
           checked={bulkSelected}
@@ -78,27 +79,27 @@ function ThreadItem({
           aria-label={t.inbox.selectThread}
           title={t.inbox.selectThread}
         />
-        <div className="w-8 h-8 rounded-full bg-accent-600/20 flex items-center justify-center flex-shrink-0 text-xs font-bold text-accent-400">
+        <div className="w-9 h-9 rounded-full bg-accent-600/18 flex items-center justify-center flex-shrink-0 text-sm font-semibold text-accent-400">
           {(lastMsg?.from?.charAt(0) ?? '?').toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-0.5">
-            <p className={`text-sm truncate ${isUnread ? 'font-semibold text-fg' : 'text-fg-muted'}`}>
+          <div className="flex items-baseline justify-between gap-2 mb-0.5">
+            <p className={`text-sm leading-tight truncate ${isUnread ? 'font-semibold text-fg' : 'font-medium text-fg-muted'}`}>
               {lastMsg?.from?.replace(/<.*>/, '').trim() || t.inbox.unknownSender}
             </p>
-            <span className="text-[10px] text-fg-subtle flex-shrink-0">
+            <span className="text-xs text-fg-subtle tabular-nums flex-shrink-0">
               {lastMsg?.date ? formatRelativeDate(lastMsg.date) : ''}
             </span>
           </div>
-          <p className={`text-xs truncate ${isUnread ? 'text-fg' : 'text-fg-muted'}`}>{lastMsg?.subject ?? ''}</p>
-          <p className="text-[10px] text-fg-subtle truncate mt-0.5">{thread.snippet}</p>
+          <p className={`text-sm truncate leading-snug ${isUnread ? 'text-fg font-medium' : 'text-fg-muted'}`}>{lastMsg?.subject ?? ''}</p>
+          <p className="text-xs text-fg-subtle truncate mt-0.5 leading-snug">{thread.snippet}</p>
           {matchedContact && (
             <Link
               to={`/contacts/${matchedContact.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-600/20 text-accent-300 border border-accent-500/30 hover:bg-accent-600/30 transition-colors mt-1"
+              className="inline-flex items-center gap-1 text-2xs px-2 py-0.5 rounded-full bg-accent-600/20 text-accent-300 border border-accent-500/30 hover:bg-accent-600/30 transition-colors mt-1"
             >
-              <User size={9} />
+              <User size={12} />
               {matchedContact.name}
             </Link>
           )}
@@ -178,11 +179,11 @@ function LocalEmailItem({
   return (
     <div
       onClick={onClick}
-      className={`group px-4 py-3 border-b border-fg/4 cursor-pointer transition-colors ${
-        selected ? 'bg-accent-600/10 border-l-2 border-l-accent-500' : 'hover:bg-fg/4'
+      className={`group px-3 py-2.5 border-b border-fg/[0.06] cursor-pointer transition-colors motion-reduce:transition-none ${
+        selected ? 'bg-accent-600/[0.12] border-l-[3px] border-l-accent-500 shadow-[inset_0_0_0_1px_rgba(99,102,241,0.12)]' : 'hover:bg-fg/[0.04]'
       }`}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2.5">
         <input
           type="checkbox"
           checked={bulkSelected}
@@ -197,20 +198,20 @@ function LocalEmailItem({
           aria-label={t.inbox.selectMessage}
           title={t.inbox.selectMessage}
         />
-        <div className="w-8 h-8 rounded-full bg-fg/8 flex items-center justify-center flex-shrink-0">
+        <div className="w-9 h-9 rounded-full bg-fg/8 flex items-center justify-center flex-shrink-0">
           <User size={14} className="text-fg-muted" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2 mb-0.5">
-            <p className={`text-sm truncate ${unread ? 'text-fg font-semibold' : 'text-fg-muted'}`}>
+          <div className="flex items-baseline justify-between gap-2 mb-0.5">
+            <p className={`text-sm leading-tight truncate ${unread ? 'text-fg font-semibold' : 'font-medium text-fg-muted'}`}>
               {contact ? `${contact.firstName} ${contact.lastName}` : email.to.join(', ')}
             </p>
-            <span className="text-[10px] text-fg-subtle flex-shrink-0">
+            <span className="text-xs text-fg-subtle tabular-nums flex-shrink-0">
               {formatRelativeDate(email.sentAt ?? email.createdAt)}
             </span>
           </div>
-          <p className={`text-xs truncate ${unread ? 'text-fg font-semibold' : 'text-fg'}`}>{email.subject || ''}</p>
-          <p className="text-[10px] text-fg-subtle truncate mt-0.5">{email.body.slice(0, 80)}</p>
+          <p className={`text-sm truncate leading-snug ${unread ? 'text-fg font-semibold' : 'text-fg'}`}>{email.subject || ''}</p>
+          <p className="text-xs text-fg-subtle truncate mt-0.5 leading-snug">{email.body.slice(0, 80)}</p>
           {email.status === 'scheduled' && (
             <span className="inline-flex items-center gap-1 mt-1 text-[10px] px-2 py-0.5 rounded-full bg-accent-500/15 text-accent-300 border border-accent-500/25">
               <Clock size={9} />
@@ -320,16 +321,21 @@ function ThreadView({
   }, [match?.contact?.id, match?.dealId])
 
   if (!thread) return (
-    <div className="flex items-center justify-center h-full text-fg-subtle text-sm">
-      {t.inbox.noMessages}
+    <div className="flex flex-1 min-h-0 items-center justify-center p-4 bg-gradient-to-b from-surface-1/40 to-surface-0/20">
+      <PanelEmpty
+        icon={<Mail size={32} className="text-fg-muted opacity-80" />}
+        title={t.inbox.readingPaneSelectTitle}
+        primary={t.inbox.readingPaneSelectHint}
+        density="compact"
+      />
     </div>
   )
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <div className="px-4 py-3 border-b border-fg/6 flex-shrink-0">
-        <h2 className="text-base font-semibold text-fg">{thread.messages[0]?.subject ?? ''}</h2>
-        <p className="text-xs text-fg-subtle mt-0.5">{thread.messages.length} {t.common.notes.toLowerCase()}</p>
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-surface-1/20">
+      <div className="px-4 py-3 border-b border-fg/8 flex-shrink-0 bg-surface-1/40">
+        <h2 className="text-[15px] font-semibold text-fg leading-snug">{thread.messages[0]?.subject ?? ''}</h2>
+        <p className="text-xs text-fg-subtle mt-1">{t.inbox.messageCount.replace('{n}', String(thread.messages.length))}</p>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
           {match?.contact && (
             <Link
@@ -564,18 +570,23 @@ function LocalEmailView({
   }, [t, canDeleteEmails])
 
   if (!email) return (
-    <div className="flex items-center justify-center h-full text-fg-subtle text-sm">
-      {t.inbox.noMessages}
+    <div className="flex flex-1 min-h-0 items-center justify-center p-4 bg-gradient-to-b from-surface-1/40 to-surface-0/20">
+      <PanelEmpty
+        icon={<Mail size={32} className="text-fg-muted opacity-80" />}
+        title={t.inbox.readingPaneSelectTitle}
+        primary={t.inbox.readingPaneSelectHint}
+        density="compact"
+      />
     </div>
   )
 
   const contact = email.contactId ? contacts.find((c) => c.id === email.contactId) : undefined
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-4 py-3 border-b border-fg/6 flex-shrink-0 flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-semibold text-fg">{email.subject || ''}</h2>
+    <div className="flex flex-col flex-1 min-h-0 h-full w-full">
+      <div className="px-4 py-3 border-b border-fg/8 flex-shrink-0 flex items-center justify-between bg-surface-1/40">
+        <div className="min-w-0">
+          <h2 className="text-[15px] font-semibold text-fg truncate">{email.subject || ''}</h2>
           <p className="text-xs text-fg-subtle mt-0.5">
             {t.common.to}: {contact ? `${contact.firstName} ${contact.lastName}` : email.to.join(', ')}
           </p>
@@ -587,7 +598,7 @@ function LocalEmailView({
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-fg/6 hover:bg-accent-600/15 hover:text-accent-400 text-fg-muted transition-colors"
           >
             <Reply size={12} />
-            {t.common.back}
+            {t.inbox.reply}
           </button>
           <div className="min-w-[7.5rem] max-w-[14rem]">
             <Select
@@ -689,6 +700,16 @@ export function Inbox() {
   })
   const [selectedInboxViewId, setSelectedInboxViewId] = useState('')
   const [newInboxViewName, setNewInboxViewName] = useState('')
+
+  const [isWideViewport, setIsWideViewport] = useState(
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : true,
+  )
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const update = () => setIsWideViewport(mq.matches)
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
 
   const canCreateActivities = !!currentUser && hasPermission(currentUser.role, 'activities:create')
   const canLinkEmails = !!currentUser && hasPermission(currentUser.role, 'email:link')
@@ -872,6 +893,11 @@ export function Inbox() {
     { id: 'drafts', label: t.inbox.drafts, icon: <Mail size={15} />, count: countNeedsAttention(draftEmails) },
     { id: 'snoozed', label: t.inbox.snoozed, icon: <Clock size={15} />, count: countNeedsAttention(snoozedEmails) },
   ]
+
+  const hasReadingSelection =
+    (folder === 'inbox' && selectedThreadId !== null) ||
+    (folder !== 'inbox' && selectedEmailId !== null)
+
   /** CRM emails linked by gmailThreadId supply is:tracked / opened / clicked for Gmail threads (client filter). */
   const threadCrmTrackingById = useMemo(() => {
     const map = new Map<string, { tracked: boolean; opened: boolean; clicked: boolean }>()
@@ -1296,10 +1322,14 @@ export function Inbox() {
   }
 
   return (
-    <div className="crm-page-full flex flex-col lg:flex-row h-full min-h-0 overflow-hidden gap-3 py-3 sm:py-4">
-      {/* ── Left: Folders ────────────────────────────────────────────────── */}
-      <div className="w-full min-h-0 lg:w-52 lg:flex-shrink-0 border border-fg/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/50">
-        <div className="p-3 border-b border-fg/6">
+    <div className="crm-page-full flex flex-col h-full min-h-0 overflow-hidden py-2 sm:py-3 lg:py-4 gap-2 lg:gap-3">
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0 gap-2 lg:gap-3">
+      {/* ── Left: Folders (Gmail-style rail) ─────────────────────────────── */}
+      <nav
+        className="w-full min-h-0 lg:w-[228px] lg:flex-shrink-0 border border-fg/10 rounded-xl lg:rounded-2xl overflow-hidden flex flex-col bg-surface-2/55 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]"
+        aria-label={t.inbox.foldersNavLabel}
+      >
+        <div className="p-3 border-b border-fg/10 bg-surface-1/30">
           <PermissionGate permission="email:send">
             <button type="button"
               onClick={() => {
@@ -1317,7 +1347,7 @@ export function Inbox() {
         </div>
 
         {/* Connection status */}
-        <div className="px-3 py-2 border-b border-fg/6">
+        <div className="px-3 py-2 border-b border-fg/10">
           {connected ? (
             <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-success/10 border border-success/20">
               <Wifi size={11} className="text-success" />
@@ -1346,7 +1376,7 @@ export function Inbox() {
           )}
         </div>
 
-        <nav className="flex-1 p-2 space-y-0.5">
+        <div className="flex-1 p-2 space-y-0.5 min-h-0 overflow-y-auto">
           {FOLDERS.map((f) => (
             <button type="button"
               key={f.id}
@@ -1357,10 +1387,10 @@ export function Inbox() {
                 setSelectedThreadIds(new Set())
                 setSelectedLocalEmailIds(new Set())
               }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                 folder === f.id
-                  ? 'nav-active text-fg'
-                  : 'text-fg-subtle hover:text-fg hover:bg-fg/4'
+                  ? 'nav-active text-fg font-semibold shadow-sm bg-fg/[0.06]'
+                  : 'text-fg-muted hover:text-fg hover:bg-fg/[0.05] font-medium'
               }`}
             >
               {f.icon}
@@ -1372,30 +1402,40 @@ export function Inbox() {
               )}
             </button>
           ))}
-        </nav>
-      </div>
+        </div>
+      </nav>
 
-      {/* ── Center: Email list ───────────────────────────────────────────── */}
-      <div className="w-full min-h-[220px] lg:min-h-0 lg:w-80 lg:flex-shrink-0 border border-fg/8 rounded-2xl overflow-hidden flex flex-col bg-surface-1/35">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-fg/6 flex-shrink-0">
-          <div>
-            <span className="text-sm font-semibold text-fg capitalize">{FOLDERS.find((f) => f.id === folder)?.label}</span>
+      {/* ── Center: thread / message list ───────────────────────────────── */}
+      <section
+        className={`w-full min-h-[200px] lg:min-h-0 lg:w-[min(100%,460px)] lg:max-w-lg lg:flex-shrink-0 border border-fg/10 rounded-xl lg:rounded-2xl overflow-hidden flex flex-col bg-surface-1/80 shadow-md ${
+          !isWideViewport && hasReadingSelection ? 'hidden' : ''
+        } lg:flex`}
+        aria-label={t.inbox.threadListLabel}
+      >
+        <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-fg/10 flex-shrink-0 bg-gradient-to-b from-surface-2/90 to-surface-1/95">
+          <div className="min-w-0">
+            <h2 className="text-[15px] font-semibold text-fg tracking-tight truncate">
+              {FOLDERS.find((f) => f.id === folder)?.label}
+            </h2>
             {folder === 'inbox' && threadsLastSyncedAt && (
-              <p className="text-[10px] text-fg-subtle mt-0.5">
+              <p className="text-xs text-fg-subtle mt-0.5 truncate">
                 {t.common.updatedAt}: {formatDateTime(threadsLastSyncedAt)}
                 {threadsHistoryId ? ` · h:${threadsHistoryId}` : ''}
               </p>
+            )}
+            {folder !== 'inbox' && (
+              <p className="text-xs text-fg-subtle mt-0.5">{t.inbox.threadListLabel}</p>
             )}
           </div>
           {connected && folder === 'inbox' && (
             <button type="button"
               onClick={() => handleLoadThreads()}
               disabled={threadsLoading}
-              className="p-1.5 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/6 transition-colors"
+              className="p-2 rounded-lg text-fg-muted hover:text-fg hover:bg-fg/10 border border-transparent hover:border-fg/10 transition-colors shrink-0"
               title={t.inbox.refreshInbox}
               aria-label={t.inbox.refreshInbox}
             >
-              <RefreshCw size={13} className={threadsLoading ? 'animate-spin' : ''} />
+              <RefreshCw size={15} className={threadsLoading ? 'animate-spin' : ''} />
             </button>
           )}
         </div>
@@ -1492,17 +1532,22 @@ export function Inbox() {
             </button>
           </div>
         )}
-        <div className="px-3 py-2 border-b border-fg/6">
+        <div className="px-3 py-2 border-b border-fg/10 bg-surface-1/50">
           <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-subtle" />
+            <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-subtle pointer-events-none" />
             <input
               value={listQuery}
               onChange={(e) => setListQuery(e.target.value)}
               placeholder={t.inbox.searchPlaceholder}
-              className="w-full bg-surface-2 border border-fg/8 rounded-lg pl-7 pr-2.5 py-1.5 text-xs text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/40"
+              className="w-full bg-surface-0/80 border border-fg/12 rounded-lg pl-8 pr-3 py-2 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/45 focus:ring-1 focus:ring-accent-500/20 shadow-sm"
             />
           </div>
-          <p className="mt-1 text-[10px] text-fg-subtle">{t.inbox.searchOperatorsHint}</p>
+          <details className="mt-2 group">
+            <summary className="text-xs text-fg-muted cursor-pointer list-none flex items-center gap-1 select-none hover:text-accent-400 [&::-webkit-details-marker]:hidden">
+              <span className="border-b border-dotted border-fg-subtle/50 group-open:border-transparent">{t.inbox.searchSyntaxHelp}</span>
+            </summary>
+            <p className="mt-2 text-[10px] text-fg-subtle leading-relaxed border-l-2 border-accent-500/35 pl-2.5 py-0.5">{t.inbox.searchOperatorsHint}</p>
+          </details>
         </div>
         {folder === 'inbox' && (
           <div className="px-3 py-2 border-b border-fg/6 flex flex-wrap gap-1.5">
@@ -1613,7 +1658,16 @@ export function Inbox() {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {folder === 'inbox' && connected && inboxThreadsVisible.length > 0 && (
+            <div className="sticky top-0 z-10 hidden sm:flex items-center gap-2 px-3 py-1.5 border-b border-fg/10 text-[10px] font-semibold uppercase tracking-wider text-fg-subtle bg-surface-2/95 backdrop-blur-sm shadow-sm">
+              <span className="w-7 flex-shrink-0" aria-hidden />
+              <span className="w-9 flex-shrink-0" aria-hidden />
+              <span className="flex-1 min-w-0 truncate">{t.common.from}</span>
+              <span className="flex-[1.2] min-w-0 truncate">{t.activities.subject}</span>
+              <span className="w-16 text-right flex-shrink-0 tabular-nums">{t.common.date}</span>
+            </div>
+          )}
           {/* Inbox: Gmail threads */}
           {folder === 'inbox' && (
             <>
@@ -1626,15 +1680,24 @@ export function Inbox() {
                 />
               )}
               {connected && threadsLoading && (
-                <div className="flex items-center justify-center py-8">
-                  <Spinner size={20} className="text-accent-400" label={t.common.loading} />
+                <div className="py-1" aria-busy="true" aria-label={t.common.loading}>
+                  {Array.from({ length: 7 }).map((_, i) => (
+                    <div key={i} className="px-3 py-2.5 border-b border-fg/[0.06] flex gap-2.5">
+                      <Skeleton className="w-9 h-9 rounded-full flex-shrink-0" />
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <Skeleton className="h-3 w-3/5" />
+                        <Skeleton className="h-3 w-full max-w-md" />
+                        <Skeleton className="h-2.5 w-4/5 max-w-lg" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
               {connected && !threadsLoading && inboxThreadsVisible.length === 0 && (
                 <PanelEmpty primary={t.inbox.noMessages} density="compact" />
               )}
               {connected && (
-                <div className="mx-3 mt-3 p-2 rounded-lg border border-fg/8 bg-fg/4 text-[11px] text-fg-muted">
+                <div className="mx-3 mt-3 p-2 rounded-lg border border-fg/8 bg-fg/4 text-xs text-fg-muted">
                   <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full mr-2 ${
                     syncVisualState === 'healthy'
                       ? 'bg-success/15 text-success'
@@ -1651,7 +1714,7 @@ export function Inbox() {
                 </div>
               )}
               {connected && threadsError && !threadsLoading && (
-                <div className="mx-3 my-3 p-2 rounded-lg border border-danger/20 bg-danger/10 text-[11px] text-danger">
+                <div className="mx-3 my-3 p-2 rounded-lg border border-danger/20 bg-danger/10 text-xs text-danger">
                   {threadsError}
                 </div>
               )}
@@ -1758,7 +1821,13 @@ export function Inbox() {
           {folder === 'snoozed' && (
             <>
               {snoozedEmailsVisible.length === 0 && (
-                <PanelEmpty icon={<Clock size={28} />} primary={t.inbox.noMessages} density="compact" />
+                <PanelEmpty
+                  icon={<Clock size={28} />}
+                  title={t.inbox.snoozed}
+                  primary={t.inbox.noMessages}
+                  secondary={t.inbox.snoozedFolderEmptyHint}
+                  density="compact"
+                />
               )}
               {snoozedEmailsVisible.map((email) => (
                 <LocalEmailItem
@@ -1781,10 +1850,30 @@ export function Inbox() {
             </>
           )}
         </div>
-      </div>
+      </section>
 
-      {/* ── Right: Email/Thread view ─────────────────────────────────────── */}
-      <div className="flex-1 min-w-0 overflow-hidden border border-fg/8 rounded-2xl bg-surface-1/25">
+      {/* ── Right: reading pane ─────────────────────────────────────────── */}
+      <section
+        className={`flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col border border-fg/10 rounded-xl lg:rounded-2xl bg-gradient-to-br from-surface-1/95 via-surface-1/80 to-surface-2/40 shadow-md ${
+          !isWideViewport && !hasReadingSelection ? 'hidden' : ''
+        } lg:flex`}
+        aria-label={t.inbox.readingPaneLabel}
+      >
+        {!isWideViewport && hasReadingSelection && (
+          <div className="lg:hidden flex items-center gap-2 px-3 py-2 border-b border-fg/8 bg-surface-1/50 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedThreadId(null)
+                setSelectedEmailId(null)
+              }}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-400 hover:text-accent-300"
+            >
+              <ChevronLeft size={18} aria-hidden />
+              {t.inbox.backToMailbox}
+            </button>
+          </div>
+        )}
         {folder === 'inbox' && selectedThread && (
           <div className="px-3 py-2 border-b border-fg/6 flex items-center gap-2 flex-wrap">
             <div className="min-w-[10rem] max-w-[14rem]">
@@ -1809,27 +1898,29 @@ export function Inbox() {
           </div>
         )}
         {folder === 'inbox' ? (
-          <ThreadView
-            thread={selectedThread}
-            match={selectedThreadMatch}
-            linkSource={selectedThreadLink?.source ?? (selectedThreadMatch ? 'auto' : null)}
-            hasPersistedLink={!!selectedThreadLink}
-            linkedEmails={selectedThreadLinkedEmails}
-            onReply={openReply}
-            onReplyAll={openReplyAll}
-            onCreateFollowUp={createFollowUpFromThread}
-            onThreadAction={runThreadAction}
-            onPinLink={pinThreadLink}
-            onUnpinLink={unpinThreadLink}
-            onManualLinkSave={saveManualThreadLink}
-            onDownloadAttachment={handleDownloadAttachment}
-            allContacts={contacts}
-            allDeals={deals.map((d) => ({ id: d.id, title: d.title }))}
-            canEditLinks={canLinkEmails}
-            canCreateFollowUp={canCreateActivities}
-          />
+          <div className="flex flex-1 flex-col min-h-0 w-full">
+            <ThreadView
+              thread={selectedThread}
+              match={selectedThreadMatch}
+              linkSource={selectedThreadLink?.source ?? (selectedThreadMatch ? 'auto' : null)}
+              hasPersistedLink={!!selectedThreadLink}
+              linkedEmails={selectedThreadLinkedEmails}
+              onReply={openReply}
+              onReplyAll={openReplyAll}
+              onCreateFollowUp={createFollowUpFromThread}
+              onThreadAction={runThreadAction}
+              onPinLink={pinThreadLink}
+              onUnpinLink={unpinThreadLink}
+              onManualLinkSave={saveManualThreadLink}
+              onDownloadAttachment={handleDownloadAttachment}
+              allContacts={contacts}
+              allDeals={deals.map((d) => ({ id: d.id, title: d.title }))}
+              canEditLinks={canLinkEmails}
+              canCreateFollowUp={canCreateActivities}
+            />
+          </div>
         ) : (
-          <>
+          <div className="flex flex-1 flex-col min-h-0 w-full">
             <LocalEmailView
               email={selectedEmail}
               contacts={contacts}
@@ -1865,11 +1956,11 @@ export function Inbox() {
                 </button>
               </div>
             )}
-          </>
+          </div>
         )}
+      </section>
       </div>
 
-      {/* Composer */}
       <EmailComposer
         isOpen={composerOpen}
         onClose={() => { setComposerOpen(false); setReplyTo(null) }}
@@ -1877,6 +1968,7 @@ export function Inbox() {
         defaultSubject={replyTo?.subject ?? ''}
         draftId={folder === 'drafts' ? selectedEmail?.id : undefined}
         defaultBody={folder === 'drafts' ? selectedEmail?.body ?? '' : ''}
+        onRequestGmailConnect={handleConnectGmail}
       />
     </div>
   )

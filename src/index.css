@@ -101,7 +101,8 @@
 @layer components {
   /*
    * App shell: consistent horizontal rhythm + max width.
-   * Use .crm-page for scrollable content; .crm-page-full for h-full split views
+   * Use .crm-page for scrollable content; .crm-page-full for h-full split views.
+   * Main column background: .app-main-surface on <main> (Layout).
    * (inbox, kanban, calendar) where children manage vertical spacing.
    */
   .crm-page {
@@ -113,19 +114,109 @@
     @apply w-full max-w-[1800px] mx-auto min-h-0 h-full px-4 sm:px-6 lg:px-8;
   }
 
-  /* ── Glass card ──────────────────────────────────────── */
+  /**
+   * App shell: workspace column (topbar + main) — strong lift vs sidebar.
+   */
+  .app-workspace-column {
+    position: relative;
+    z-index: var(--z-shell-content);
+    border-left: 1px solid rgba(var(--color-border-subtle) / calc(var(--opacity-border-subtle) * 1.35));
+    box-shadow:
+      -28px 0 72px -18px rgba(0, 0, 0, 0.62),
+      -12px 0 36px -10px rgba(0, 0, 0, 0.45),
+      inset 1px 0 0 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .light .app-workspace-column {
+    border-left-color: rgba(var(--color-border-subtle) / 0.18);
+    box-shadow:
+      -16px 0 48px -12px rgba(15, 23, 42, 0.14),
+      -6px 0 20px -6px rgba(15, 23, 42, 0.08),
+      inset 1px 0 0 0 rgba(255, 255, 255, 0.85);
+  }
+
+  /**
+   * Main scroll region — single canvas for every route (dark + light).
+   * Subtle brand wash + stacked surfaces so Contacts, Timeline, etc. match.
+   */
+  .app-main-surface {
+    position: relative;
+    z-index: var(--z-page-lift);
+    isolation: isolate;
+    background:
+      radial-gradient(
+        ellipse 130% 90% at 50% -35%,
+        rgb(var(--color-accent-500) / 0.26) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 80% 55% at 100% 0%,
+        rgb(var(--color-accent-600) / 0.12) 0%,
+        transparent 50%
+      ),
+      linear-gradient(
+        180deg,
+        rgb(var(--color-surface-0) / 0.78) 0%,
+        rgb(var(--color-surface-1) / 0.55) 32%,
+        rgb(var(--color-surface-1) / 0.2) 62%,
+        transparent 92%
+      );
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+      inset 0 -2px 0 0 rgba(0, 0, 0, 0.2),
+      0 0 80px -24px rgb(var(--color-accent-600) / 0.15);
+  }
+
+  .light .app-main-surface {
+    background:
+      radial-gradient(
+        ellipse 120% 85% at 50% -30%,
+        rgb(var(--color-accent-500) / 0.2) 0%,
+        transparent 55%
+      ),
+      linear-gradient(
+        180deg,
+        rgb(var(--color-surface-1) / 0.98) 0%,
+        rgb(var(--color-surface-2) / 0.65) 40%,
+        transparent 88%
+      );
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 0 rgba(15, 23, 42, 0.08),
+      0 0 64px -20px rgb(var(--color-accent-500) / 0.18);
+  }
+
+  /* ── Glass card — default elevation (theme-aware shadow from tokens.css) ─ */
   .glass {
     background: var(--bg-panel);
     border: 1px solid var(--border-soft);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-sm);
+    transition:
+      box-shadow 180ms var(--ease-default),
+      border-color 180ms var(--ease-default),
+      background 180ms var(--ease-default);
+  }
+
+  /**
+   * Secondary / grouped blocks (e.g. Settings) — recessed tint vs main panel, same lift as glass.
+   * Prefer this over ad-hoc `bg-surface-2/90 border …` so shadow + border stay consistent.
+   */
+  .crm-surface-section {
+    background: rgb(var(--color-surface-2) / 0.94);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-sm);
   }
 
   .glass-hover {
-    @apply transition-all duration-200;
+    @apply transition-all duration-base;
   }
 
   .glass-hover:hover {
-    background: color-mix(in srgb, var(--bg-panel) 90%, #000 10%);
-    border-color: color-mix(in srgb, var(--border-soft) 85%, #000 15%);
+    background: color-mix(in srgb, var(--bg-panel) 90%, var(--text-main) 10%);
+    border-color: color-mix(in srgb, var(--border-soft) 85%, var(--text-main) 15%);
+    box-shadow: var(--shadow-md);
   }
 
   /* Auth shell: gradient over semantic base (pair with `bg-surface-0` for min surface). */
@@ -136,14 +227,22 @@
 
   /* ── Gradient text ───────────────────────────────────── */
   .text-gradient {
-    background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+    background: linear-gradient(
+      135deg,
+      rgb(var(--color-accent-400)) 0%,
+      rgb(var(--color-accent-300)) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .text-gradient-brand {
-    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    background: linear-gradient(
+      135deg,
+      rgb(var(--color-accent-600)) 0%,
+      rgb(var(--color-accent-800)) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -195,7 +294,7 @@
 
   /* ── Table row ───────────────────────────────────────── */
   .table-row-hover {
-    @apply transition-all duration-150 cursor-pointer;
+    @apply transition-all duration-fast cursor-pointer;
   }
 
   .table-row-hover:hover {
@@ -203,9 +302,9 @@
   }
 
   /* ── Priority dot ────────────────────────────────────── */
-  .priority-high   { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.5); }
-  .priority-medium { background: #f59e0b; box-shadow: 0 0 6px rgba(245,158,11,0.4); }
-  .priority-low    { background: #6b7280; }
+  .priority-high   { background: rgb(var(--color-danger)); box-shadow: 0 0 6px rgb(var(--color-danger) / 0.5); }
+  .priority-medium { background: rgb(var(--color-warning)); box-shadow: 0 0 6px rgb(var(--color-warning) / 0.4); }
+  .priority-low    { background: rgb(var(--color-fg-subtle)); }
 
   /* Dashboard heatmap levels */
   .crm-heat-0 { background: rgba(148, 163, 184, 0.14); border: 1px solid rgba(148, 163, 184, 0.22); }
@@ -262,8 +361,8 @@
   }
 
   .crm-themed-input:focus {
-    border-color: rgba(124, 58, 237, 0.45);
-    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.22);
+    border-color: rgb(var(--color-ring) / 0.45);
+    box-shadow: 0 0 0 2px rgb(var(--color-ring) / 0.22);
   }
 
   .crm-form-label {
@@ -304,9 +403,9 @@
   .skeleton {
     background: linear-gradient(
       90deg,
-      rgba(255,255,255,0.03) 25%,
-      rgba(255,255,255,0.06) 50%,
-      rgba(255,255,255,0.03) 75%
+      rgb(var(--color-fg) / 0.04) 25%,
+      rgb(var(--color-fg) / 0.09) 50%,
+      rgb(var(--color-fg) / 0.04) 75%
     );
     background-size: 1000px 100%;
     animation: shimmer 2s linear infinite;
@@ -314,14 +413,16 @@
 
   /* ── Glow border ─────────────────────────────────────── */
   .border-brand-glow {
-    border-color: rgba(37,99,235,0.5);
-    box-shadow: 0 0 0 1px rgba(37,99,235,0.2), 0 0 20px rgba(37,99,235,0.1);
+    border-color: rgb(var(--color-accent-600) / 0.5);
+    box-shadow:
+      0 0 0 1px rgb(var(--color-accent-600) / 0.2),
+      0 0 20px rgb(var(--color-accent-600) / 0.1);
   }
 
   /* ── Blur backdrop ───────────────────────────────────── */
   .backdrop-dark {
     backdrop-filter: blur(16px);
-    background: rgba(6,7,15,0.8);
+    background: rgb(var(--color-surface-0) / 0.8);
   }
 }
 
@@ -437,5 +538,27 @@
     background-color: #ffffff !important;
     border-color: rgba(15, 23, 42, 0.12) !important;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .light .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--color-border-subtle) / 0.06) 25%,
+      rgb(var(--color-border-subtle) / 0.12) 50%,
+      rgb(var(--color-border-subtle) / 0.06) 75%
+    );
+    background-size: 1000px 100%;
+  }
+
+  .light .backdrop-dark {
+    background: rgb(var(--color-surface-0) / 0.72);
+  }
+}
+
+@layer utilities {
+  /** Micro type for badges / kbd — prefer over arbitrary `text-[10px]` */
+  .text-2xs {
+    font-size: 0.625rem;
+    line-height: 1rem;
   }
 }

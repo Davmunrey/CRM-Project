@@ -13,24 +13,19 @@ import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { Avatar } from '../components/ui/Avatar'
 import { PermissionGate } from '../components/auth/PermissionGate'
-import { Download } from 'lucide-react'
+import { Download, BarChart3, CheckCircle2, Layers, Percent } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import type { DealStage, ActivityType } from '../types'
 import { subMonths, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns'
 import { useTranslations } from '../i18n'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
-
-const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6']
-
-const TOOLTIP_STYLE = {
-  backgroundColor: '#0d1025',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '12px',
-  color: '#e2e8f0',
-}
+import { useChartTheme } from '../lib/chartTheme'
+import { PageHeader } from '../components/ui/PageHeader'
+import { StatCard } from '../components/ui/StatCard'
 
 export function Reports() {
   const t = useTranslations()
+  const chart = useChartTheme()
   const deals = useDealsStore((s) => s.deals)
   const contacts = useContactsStore((s) => s.contacts)
   const activities = useActivitiesStore((s) => s.activities)
@@ -130,20 +125,21 @@ export function Reports() {
     const won = filteredDeals.filter((d) => d.stage === 'closed_won').length
     const lost = filteredDeals.filter((d) => d.stage === 'closed_lost').length
     return [
-      { name: t.deals.won, value: won, color: '#10b981' },
-      { name: t.deals.lost, value: lost, color: '#ef4444' },
+      { name: t.deals.won, value: won, color: chart.success },
+      { name: t.deals.lost, value: lost, color: chart.danger },
     ].filter((d) => d.value > 0)
-  }, [filteredDeals])
+  }, [filteredDeals, chart, t])
 
   // Activities by type
   const activityTypeData = useMemo(() => {
     const types = Object.keys(t.activities.typeLabels) as ActivityType[]
+    const palette = chart.seriesPalette
     return types.map((type, i) => ({
       name: t.activities.typeLabels[type],
       value: activities.filter((a) => a.type === type).length,
-      fill: COLORS[i % COLORS.length],
+      fill: palette[i % palette.length],
     })).filter((d) => d.value > 0)
-  }, [activities])
+  }, [activities, chart, t])
 
   // Contacts by source
   const contactsBySource = useMemo(() => {
@@ -151,21 +147,22 @@ export function Reports() {
     contacts.forEach((c) => {
       sources[c.source] = (sources[c.source] ?? 0) + 1
     })
+    const palette = chart.seriesPalette
     return Object.entries(sources).map(([source, count], i) => ({
       name: source,
       value: count,
-      color: COLORS[i % COLORS.length],
+      color: palette[i % palette.length],
     }))
-  }, [contacts])
+  }, [contacts, chart.seriesPalette])
 
   // Funnel conversion
   const funnelData = useMemo(() => {
     return DEAL_STAGES_ORDER.filter((s) => s !== 'closed_lost').map((stage) => ({
       name: t.deals.stageLabels[stage as keyof typeof t.deals.stageLabels] ?? stage,
       value: filteredDeals.filter((d) => d.stage === stage).length,
-      fill: '#6366f1',
+      fill: chart.barPrimary,
     })).filter((d) => d.value > 0)
-  }, [filteredDeals])
+  }, [filteredDeals, chart.barPrimary, t])
 
   const totalPipeline = filteredDeals
     .filter((d) => !['closed_won', 'closed_lost'].includes(d.stage))
@@ -211,8 +208,10 @@ export function Reports() {
 
   return (
     <div className="crm-page space-y-6">
+      <PageHeader showTitle={false} title={t.reports.title} subtitle={t.reports.performance} />
+
       {/* Date filter */}
-      <div className="flex items-center gap-4 flex-wrap">
+      <div className="glass p-4 flex items-center gap-4 flex-wrap">
         <p className="text-sm font-medium text-fg-muted">{t.reports.periodLabel}:</p>
         <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
         <span className="text-fg-subtle">→</span>
@@ -228,21 +227,34 @@ export function Reports() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        {[
-          { label: t.reports.pipeline, value: formatCurrency(totalPipeline), color: 'text-accent-400' },
-          { label: t.deals.stageLabels.closed_won, value: formatCurrency(totalWon), color: 'text-success' },
-          { label: t.dashboard.activeDealsLabel, value: filteredDeals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length, color: 'text-info' },
-          { label: t.reports.conversionRate, value: (() => {
+        <StatCard
+          title={t.reports.pipeline}
+          value={formatCurrency(totalPipeline)}
+          icon={<BarChart3 size={18} />}
+          accent="info"
+        />
+        <StatCard
+          title={t.deals.stageLabels.closed_won}
+          value={formatCurrency(totalWon)}
+          icon={<CheckCircle2 size={18} />}
+          accent="success"
+        />
+        <StatCard
+          title={t.dashboard.activeDealsLabel}
+          value={filteredDeals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length}
+          icon={<Layers size={18} />}
+          accent="accent"
+        />
+        <StatCard
+          title={t.reports.conversionRate}
+          value={(() => {
             const closed = filteredDeals.filter((d) => ['closed_won', 'closed_lost'].includes(d.stage)).length
             const won = filteredDeals.filter((d) => d.stage === 'closed_won').length
             return closed > 0 ? `${Math.round((won / closed) * 100)}%` : '—'
-          })(), color: 'text-warning' },
-        ].map(({ label, value, color }) => (
-          <div key={label} className="glass p-4">
-            <p className="text-xs text-fg-subtle mb-1">{label}</p>
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
-          </div>
-        ))}
+          })()}
+          icon={<Percent size={18} />}
+          accent="warning"
+        />
       </div>
 
       {/* Server-tracked outbound email (RLS: current user’s sends) */}
@@ -294,14 +306,14 @@ export function Reports() {
           <p className="text-xs text-fg-subtle mb-4">{t.forecast.weighted}</p>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={forecastData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1a1d35" vertical={false} />
-              <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false}
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: chart.axisTickFill, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: chart.axisTickFill, fontSize: 11 }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip contentStyle={TOOLTIP_STYLE}
+              <Tooltip contentStyle={chart.tooltipStyle}
                 formatter={(v: unknown, name: unknown) => [formatCurrency(Number(v)), name === 'value' ? t.common.total : t.forecast.weighted]} />
-              <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} name="value" />
-              <Bar dataKey="weighted" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="weighted" />
+              <Bar dataKey="value" fill={chart.barPrimary} radius={[4, 4, 0, 0]} name="value" />
+              <Bar dataKey="weighted" fill={chart.barSecondary} radius={[4, 4, 0, 0]} name="weighted" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -318,7 +330,7 @@ export function Reports() {
                     <Cell key={index} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Tooltip contentStyle={chart.tooltipStyle} />
               </PieChart>
             </ResponsiveContainer>
           ) : (
@@ -334,9 +346,9 @@ export function Reports() {
           <h3 className="text-sm font-semibold text-fg-muted mb-4">{t.reports.activityReport}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={activityTypeData} layout="vertical" margin={{ left: 20 }}>
-              <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <XAxis type="number" tick={{ fill: chart.axisTickFill, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fill: chart.axisTickFill, fontSize: 11 }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={chart.tooltipStyle} />
               <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                 {activityTypeData.map((entry, i) => (
                   <Cell key={i} fill={entry.fill} />
@@ -356,7 +368,7 @@ export function Reports() {
                   <Cell key={index} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Tooltip contentStyle={chart.tooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -367,9 +379,9 @@ export function Reports() {
           {funnelData.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
               <FunnelChart>
-                <Tooltip contentStyle={TOOLTIP_STYLE} />
+                <Tooltip contentStyle={chart.tooltipStyle} />
                 <Funnel dataKey="value" data={funnelData} isAnimationActive>
-                  <LabelList position="right" fill="#94a3b8" stroke="none" dataKey="name" fontSize={10} />
+                  <LabelList position="right" fill={chart.labelMutedFill} stroke="none" dataKey="name" fontSize={10} />
                 </Funnel>
               </FunnelChart>
             </ResponsiveContainer>
@@ -382,12 +394,14 @@ export function Reports() {
       {/* Salesperson breakdown */}
       <div className="glass p-5">
         <h3 className="text-sm font-semibold text-fg-muted mb-4">{t.reports.performance}</h3>
-        <div className="overflow-x-auto">
+        <div className="overflow-hidden rounded-xl border border-fg/8">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <caption className="sr-only">{t.reports.performance}</caption>
             <thead>
               <tr className="border-b border-fg/8">
                 {[t.common.name, t.leaderboard.dealsWon, t.leaderboard.revenue, t.reports.pipeline, t.dashboard.activeDealsLabel, t.reports.conversionRate, t.activities.title].map((h) => (
-                  <th key={h} className="text-left text-xs font-semibold text-fg-subtle py-2 pr-4 last:pr-0">{h}</th>
+                  <th key={h} scope="col" className="text-left text-xs font-semibold text-fg-subtle py-2 pr-4 last:pr-0">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -431,6 +445,7 @@ export function Reports() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>

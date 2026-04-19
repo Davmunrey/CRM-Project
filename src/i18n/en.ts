@@ -180,6 +180,7 @@ export const en: Translations = {
     warm: 'Warm',
     cold: 'Cold',
     noLeads: 'No leads yet.',
+    emptyInboxHint: 'Import or create leads, or adjust filters and search.',
     loadingLeads: 'Loading leads...',
     scoreAction: 'Score',
     scoreActionHint: 'Recomputes score from current signals. It does not add points per click.',
@@ -775,6 +776,7 @@ export const en: Translations = {
     healthFair: 'Fair',
     healthLow: 'Low',
     closingDealsSuffix: 'deals',
+    growthUnavailable: 'Not enough history',
   },
 
   leaderboard: {
@@ -843,6 +845,8 @@ export const en: Translations = {
     sku: 'SKU',
     price: 'Price',
     category: 'Category',
+    emptyNoProducts: 'No products yet. Create your first product to get started.',
+    emptyFiltered: 'No products match your search or filters. Try adjusting filters.',
     categoryLabels: {
       software: 'Software',
       hardware: 'Hardware',
@@ -1014,6 +1018,16 @@ export const en: Translations = {
     trackingDemoSimulate: 'Simulate (demo only)',
     trackingServerMetricsHint:
       'With Supabase, counts update when recipients open tracked mail or click tracked links. Refresh metrics from Inbox.',
+    backToMailbox: 'Back to list',
+    messageCount: '{n} messages',
+    foldersNavLabel: 'Mail folders',
+    threadListLabel: 'Conversations',
+    readingPaneLabel: 'Message',
+    searchSyntaxHelp: 'Search syntax help',
+    readingPaneSelectTitle: 'Nothing selected',
+    readingPaneSelectHint: 'Choose a conversation or message in the list to read it here.',
+    snoozedFolderEmptyHint: 'Emails you snooze will show up here until their reminder time.',
+    reply: 'Reply',
   },
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -1260,6 +1274,20 @@ export const en: Translations = {
     subjectPresetFollowUp: 'Follow-up: {firstName} {lastName}',
     subjectPresetNextSteps: '{companyName} — Next steps',
     subjectPresetProposal: '{dealTitle} — Proposal follow-up',
+    sendDisabledHint: 'Add at least one recipient and a subject to send.',
+    scheduleSendDisabledHint: 'Choose a date and time for scheduled send.',
+    connectGmailToSend: 'Connect Gmail to send mail from this app.',
+    openEmailTracking: 'Open tracking',
+    composerFrom: 'From',
+    composerInsertField: 'Insert field',
+    composerTemplatesToolbar: 'Templates',
+    crmLinkTitle: 'Link to CRM',
+    crmLinkHint: 'Associate this email with a contact, deal, or company for activity tracking.',
+    formatBold: 'Bold',
+    formatItalic: 'Italic',
+    formatBulletList: 'Bulleted list',
+    send: 'Send',
+    discardComposer: 'Discard',
   },
 
   // ─── Notifications page ──────────────────────────────────────────────────────
@@ -1269,6 +1297,7 @@ export const en: Translations = {
     clearAll: 'Clear all',
     emptyTitle: 'No notifications',
     emptyDescription: "You're all caught up. Notifications will appear here.",
+    emptyHint: 'Try clearing filters or switching notification type.',
     today: 'Today',
     older: 'Earlier',
     markRead: 'Mark as read',

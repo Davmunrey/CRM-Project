@@ -965,7 +965,8 @@ export const useEmailStore = create<EmailStore>()(
         return s as unknown as EmailStore
       },
       partialize: (s) => ({
-        emails: s.emails,
+        /** Persist metadata only — large bodies are re-fetched from provider when needed. */
+        emails: s.emails.map((e) => ({ ...e, body: '', htmlBody: undefined })),
         gmailAddress: s.gmailAddress,
         threadLinks: s.threadLinks,
         threadWorkspace: s.threadWorkspace,

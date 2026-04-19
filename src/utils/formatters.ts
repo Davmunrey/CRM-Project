@@ -1,17 +1,8 @@
 import { formatDistanceToNow, isToday, isYesterday, parseISO } from 'date-fns'
-import { enUS, es, ptBR, fr, de, it } from 'date-fns/locale'
 import { useI18nStore, getTranslations } from '../i18n'
 import { useSettingsStore } from '../store/settingsStore'
 import type { Language } from '../i18n'
-
-const DATE_FNS_LOCALE_BY_LANGUAGE = {
-  en: enUS,
-  es,
-  pt: ptBR,
-  fr,
-  de,
-  it,
-} as const
+import { getLoadedDateFnsLocale } from '../lib/dateFnsLocale'
 
 const BCP47_BY_LANGUAGE: Record<Language, string> = {
   en: 'en-GB',
@@ -27,7 +18,7 @@ function getActiveLocale() {
   return {
     language,
     bcp47: BCP47_BY_LANGUAGE[language],
-    dateFnsLocale: DATE_FNS_LOCALE_BY_LANGUAGE[language],
+    dateFnsLocale: getLoadedDateFnsLocale(),
   }
 }
 

@@ -2,10 +2,9 @@ import { useState, useMemo } from 'react'
 import { Users, Briefcase, Activity, Mail, Building2, Filter, Calendar, Flame, Shield, UserCog } from 'lucide-react'
 import { useAuditStore } from '../store/auditStore'
 import { format, parseISO, isToday } from 'date-fns'
-import { es, enUS, ptBR, fr, de, it } from 'date-fns/locale'
 import type { AuditEntry, AuditAction } from '../types'
 import { useTranslations } from '../i18n'
-import { useI18nStore } from '../i18n'
+import { useDateLocale } from '../hooks/useDateLocale'
 
 type EntityFilter = 'all' | 'contact' | 'deal' | 'activity' | 'email' | 'company' | 'lead'
 
@@ -41,9 +40,7 @@ const ACTION_COLORS: Record<ActionCategory, { bg: string; text: string; dot: str
 
 export function AuditLog() {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
-  const dateLocaleByLanguage = { en: enUS, es, pt: ptBR, fr, de, it } as const
-  const dateLocale = dateLocaleByLanguage[language]
+  const dateLocale = useDateLocale()
 
   const ENTITY_LABELS: Record<AuditEntry['entityType'], string> = {
     contact: t.contacts.title,

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslations, useUiLanguage } from '../i18n'
 import {
   ArrowLeft, Edit2, Plus, Globe, Phone, Users, TrendingUp,
-  DollarSign, Activity as ActivityIcon, Building2, Mail, Calendar,
+  DollarSign, Activity as ActivityIcon, Building2, Mail, Calendar, Percent,
 } from 'lucide-react'
 import { useCompaniesStore } from '../store/companiesStore'
 import { useContactsStore } from '../store/contactsStore'
@@ -26,6 +26,7 @@ import { getIndustryLabel } from '../lib/industries'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import type { Company, Deal, Contact, Activity, CRMEmail, DealStage } from '../types'
 import { CustomFieldsDisplay } from '../components/shared/CustomFieldRenderer'
+import { StatCard } from '../components/ui/StatCard'
 
 type TabId = 'overview' | 'contacts' | 'deals' | 'activities' | 'emails'
 
@@ -193,22 +194,12 @@ export function CompanyDetail() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {[
-          { label: t.companies.contactCount, value: kpis.contactCount, icon: <Users size={15} />, color: 'text-accent-400' },
-          { label: t.dashboard.openDeals, value: kpis.openDeals, icon: <TrendingUp size={15} />, color: 'text-warning' },
-          { label: t.deals.pipeline, value: formatCurrency(kpis.totalPipeline), icon: <DollarSign size={15} />, color: 'text-success' },
-          { label: t.deals.won, value: formatCurrency(kpis.totalWon), icon: <DollarSign size={15} />, color: 'text-success' },
-          { label: 'Tasa de conversión', value: `${kpis.winRate}%`, icon: <TrendingUp size={15} />, color: 'text-accent-400' },
-        ].map((kpi) => (
-          <div key={kpi.label} className="glass rounded-xl border-fg/8 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <span className={kpi.color}>{kpi.icon}</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-fg-subtle">{kpi.label}</span>
-            </div>
-            <p className="text-lg font-bold text-fg">{kpi.value}</p>
-          </div>
-        ))}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard title={t.companies.contactCount} value={kpis.contactCount} icon={<Users size={18} />} accent="accent" />
+        <StatCard title={t.dashboard.openDeals} value={kpis.openDeals} icon={<TrendingUp size={18} />} accent="warning" />
+        <StatCard title={t.deals.pipeline} value={formatCurrency(kpis.totalPipeline)} icon={<DollarSign size={18} />} accent="success" />
+        <StatCard title={t.deals.won} value={formatCurrency(kpis.totalWon)} icon={<DollarSign size={18} />} accent="success" />
+        <StatCard title={t.reports.conversionRate} value={`${kpis.winRate}%`} icon={<Percent size={18} />} accent="info" />
       </div>
 
       {/* Tabs */}
@@ -440,6 +431,7 @@ export function CompanyDetail() {
         isOpen={isEmailOpen}
         onClose={() => setIsEmailOpen(false)}
         companyId={id}
+        onRequestGmailConnect={() => navigate('/settings?tab=email')}
       />
     </div>
   )

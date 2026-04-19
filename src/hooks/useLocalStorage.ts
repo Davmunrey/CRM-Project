@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 
-// TODO: Swap this hook for Supabase real-time subscriptions when migrating
-// to a backend. Each setter call would become a supabase.from(...).upsert(...)
-
+/** Client-side mirror only; app data sync uses Zustand stores and Supabase when configured. */
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {

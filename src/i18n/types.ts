@@ -269,6 +269,8 @@ export interface Translations {
     warm: string
     cold: string
     noLeads: string
+    /** Extra line under empty inbox */
+    emptyInboxHint: string
     loadingLeads: string
     scoreAction: string
     scoreActionHint: string
@@ -869,6 +871,8 @@ export interface Translations {
     healthLow: string
     /** After a count: "3 deals" / "3 oportunidades" */
     closingDealsSuffix: string
+    /** Shown when month-over-month growth cannot be computed (insufficient history) */
+    growthUnavailable: string
   }
 
   leaderboard: {
@@ -940,6 +944,10 @@ export interface Translations {
     sku: string
     price: string
     category: string
+    /** No products in catalog */
+    emptyNoProducts: string
+    /** Search/filter returned nothing */
+    emptyFiltered: string
     categoryLabels: {
       software: string
       hardware: string
@@ -1113,6 +1121,25 @@ export interface Translations {
     snoozeOneWeek: string
     trackingDemoSimulate: string
     trackingServerMetricsHint: string
+    /** Mobile: return from message to list */
+    backToMailbox: string
+    /** Thread header: message count */
+    messageCount: string
+    /** a11y: folder navigation landmark */
+    foldersNavLabel: string
+    /** a11y: thread list region */
+    threadListLabel: string
+    /** a11y: reading pane region */
+    readingPaneLabel: string
+    /** Collapsible search help summary */
+    searchSyntaxHelp: string
+    /** Reading pane when nothing selected */
+    readingPaneSelectTitle: string
+    readingPaneSelectHint: string
+    /** Snoozed folder empty secondary line */
+    snoozedFolderEmptyHint: string
+    /** Reply action (short) */
+    reply: string
   }
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -1369,6 +1396,24 @@ export interface Translations {
     subjectPresetFollowUp: string
     subjectPresetNextSteps: string
     subjectPresetProposal: string
+    /** Composer: explain why Send is disabled */
+    sendDisabledHint: string
+    scheduleSendDisabledHint: string
+    /** Must connect Gmail before sending (Gmail provider) */
+    connectGmailToSend: string
+    /** Toggle: track opens/clicks (not CRM follow-up tasks) */
+    openEmailTracking: string
+    /** Composer — Pipedrive-style layout */
+    composerFrom: string
+    composerInsertField: string
+    composerTemplatesToolbar: string
+    crmLinkTitle: string
+    crmLinkHint: string
+    formatBold: string
+    formatItalic: string
+    formatBulletList: string
+    send: string
+    discardComposer: string
   }
 
   // ─── Notifications page ──────────────────────────────────────────────────────
@@ -1378,6 +1423,8 @@ export interface Translations {
     clearAll: string
     emptyTitle: string
     emptyDescription: string
+    /** Shown when filters yield no notifications */
+    emptyHint: string
     today: string
     older: string
     markRead: string

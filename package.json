@@ -24,7 +24,7 @@
     "docs:fix-phase-headers": "node scripts/fix-phase-note-headers.mjs",
     "lint": "eslint src tests e2e vite.config.ts playwright.config.ts --cache --cache-location node_modules/.cache/eslint/",
     "lint:fix": "eslint src tests e2e vite.config.ts playwright.config.ts --cache --cache-location node_modules/.cache/eslint/ --fix",
-    "lint:ci": "eslint src --cache --cache-location node_modules/.cache/eslint/ --max-warnings 250",
+    "lint:ci": "eslint src --cache --cache-location node_modules/.cache/eslint/ --max-warnings 200",
     "ui:lint": "node scripts/ui-lint.mjs",
     "i18n:lint": "node scripts/i18n-lint.mjs",
     "audit:unused": "npx -y knip --no-progress --exclude exports,nsExports,types,nsTypes,enumMembers,namespaceMembers,duplicates --no-config-hints"

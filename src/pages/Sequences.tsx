@@ -12,6 +12,7 @@ import { getTranslations, useI18nStore, useTranslations } from '../i18n'
 import { localizedEmailSequence } from '../i18n/localizeSeed'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
 import { Select } from '../components/ui/Select'
+import { Skeleton } from '../components/ui/Skeleton'
 import { formatDateShort } from '../utils/formatters'
 import type {
   EmailSequence,
@@ -680,6 +681,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
 export function Sequences() {
   const t = useTranslations()
   const language = useI18nStore((s) => s.language)
+  const sequencesLoading = useSequencesStore((s) => s.isLoading)
   const [sequences, setSequences] = useState<EmailSequence[]>([])
   const [enrollments, setEnrollments] = useState<SequenceEnrollment[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -745,7 +747,16 @@ export function Sequences() {
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {sequences.length === 0 ? (
+            {sequencesLoading ? (
+              <div className="p-3 space-y-3" aria-busy="true" aria-label={t.common.loading}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="border-b border-fg/4 pb-3">
+                    <Skeleton className="h-4 w-3/4 mb-2" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                ))}
+              </div>
+            ) : sequences.length === 0 ? (
               <div className="flex flex-col items-center gap-1 pb-2">
                 <PanelEmpty icon={<ListOrdered size={28} />} primary={t.common.noResults} density="compact" />
                 <PermissionGate permission="sequences:create">

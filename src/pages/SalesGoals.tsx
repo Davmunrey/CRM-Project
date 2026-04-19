@@ -14,6 +14,7 @@ import { toast } from '../store/toastStore'
 import type { SalesGoal } from '../types'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { Select } from '../components/ui/Select'
+import { PageHeader } from '../components/ui/PageHeader'
 
 // GOAL_TYPE_CONFIG and PERIOD_LABELS are built inside the component using translations
 
@@ -65,7 +66,10 @@ export function SalesGoals() {
     yearly: t.goals.yearly,
   }
 
-  const { goals, addGoal, updateGoal, deleteGoal } = useGoalsStore()
+  const goals = useGoalsStore((s) => s.goals)
+  const addGoal = useGoalsStore((s) => s.addGoal)
+  const updateGoal = useGoalsStore((s) => s.updateGoal)
+  const deleteGoal = useGoalsStore((s) => s.deleteGoal)
   const currentUser = useAuthStore((s) => s.currentUser)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -154,26 +158,23 @@ export function SalesGoals() {
 
   return (
     <div className="crm-page space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-fg flex items-center gap-2">
-            <Target size={22} className="text-accent-400" />
-            {t.goals.title}
-          </h2>
-          <p className="text-sm text-fg-subtle mt-1">{t.goals.progress}</p>
-        </div>
-        <PermissionGate permission="goals:create">
-          <button
-            type="button"
-            onClick={() => { setShowForm(true); setEditingId(null); setForm({ type: 'revenue', target: 0, period: 'monthly', startDate: new Date().toISOString().slice(0, 10), endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0, 10) }) }}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold"
-          >
-            <Plus size={15} />
-            {t.goals.title}
-          </button>
-        </PermissionGate>
-      </div>
+      <PageHeader
+        showTitle={false}
+        title={t.goals.title}
+        subtitle={t.goals.progress}
+        actions={
+          <PermissionGate permission="goals:create">
+            <button
+              type="button"
+              onClick={() => { setShowForm(true); setEditingId(null); setForm({ type: 'revenue', target: 0, period: 'monthly', startDate: new Date().toISOString().slice(0, 10), endDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().slice(0, 10) }) }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl btn-gradient text-fg text-sm font-semibold"
+            >
+              <Plus size={16} />
+              {t.goals.title}
+            </button>
+          </PermissionGate>
+        }
+      />
 
       {/* Overall progress card */}
       <div className="glass rounded-2xl shadow-float border-fg/10 p-6">
@@ -191,7 +192,7 @@ export function SalesGoals() {
         </div>
         <div className="h-3 rounded-full bg-fg/6 overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-700 ${overallProgress >= 75 ? 'bg-success' : overallProgress >= 50 ? 'bg-warning' : 'bg-danger'}`}
+            className={`h-full rounded-full transition-all duration-slow ${overallProgress >= 75 ? 'bg-success' : overallProgress >= 50 ? 'bg-warning' : 'bg-danger'}`}
             style={{ width: `${Math.min(overallProgress, 100)}%` }}
           />
         </div>
@@ -334,7 +335,7 @@ export function SalesGoals() {
 
               <div className="h-2.5 rounded-full bg-fg/6 overflow-hidden mb-2">
                 <div
-                  className={`h-full rounded-full transition-all duration-700 ${isCompleted ? 'bg-success' : pct >= 50 ? 'bg-accent-500' : 'bg-danger'}`}
+                  className={`h-full rounded-full transition-all duration-slow ${isCompleted ? 'bg-success' : pct >= 50 ? 'bg-accent-500' : 'bg-danger'}`}
                   style={{ width: `${pct}%` }}
                 />
               </div>

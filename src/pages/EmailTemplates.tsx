@@ -8,6 +8,7 @@ import { getTranslations, useI18nStore, useTranslations } from '../i18n'
 import { localizedEmailTemplate } from '../i18n/localizeSeed'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
 import { Select } from '../components/ui/Select'
+import { Skeleton } from '../components/ui/Skeleton'
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -76,17 +77,16 @@ export function EmailTemplates() {
   const language = useI18nStore((s) => s.language)
   const categoryLabels = getCategoryLabels(t)
   const tabs = getTabs(t)
-  const {
-    templates,
-    quickReplies,
-    addTemplate,
-    updateTemplate,
-    deleteTemplate,
-    incrementUsage,
-    addQuickReply,
-    updateQuickReply,
-    deleteQuickReply,
-  } = useTemplateStore()
+  const templates = useTemplateStore((s) => s.templates)
+  const quickReplies = useTemplateStore((s) => s.quickReplies)
+  const addTemplate = useTemplateStore((s) => s.addTemplate)
+  const updateTemplate = useTemplateStore((s) => s.updateTemplate)
+  const deleteTemplate = useTemplateStore((s) => s.deleteTemplate)
+  const incrementUsage = useTemplateStore((s) => s.incrementUsage)
+  const addQuickReply = useTemplateStore((s) => s.addQuickReply)
+  const updateQuickReply = useTemplateStore((s) => s.updateQuickReply)
+  const deleteQuickReply = useTemplateStore((s) => s.deleteQuickReply)
+  const templatesLoading = useTemplateStore((s) => s.isLoading)
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [categoryFilter, setCategoryFilter] = useState<CategoryKey>('all')
@@ -327,7 +327,16 @@ export function EmailTemplates() {
 
           {/* Template list */}
           <div className="flex-1 overflow-y-auto">
-            {filtered.length === 0 ? (
+            {templatesLoading ? (
+              <div className="p-3 space-y-3" aria-busy="true" aria-label={t.common.loading}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="border-b border-fg/4 pb-3">
+                    <Skeleton className="h-4 w-2/3 mb-2" />
+                    <Skeleton className="h-3 w-full" />
+                  </div>
+                ))}
+              </div>
+            ) : filtered.length === 0 ? (
               <PanelEmpty icon={<FileText size={32} />} primary={t.common.noResults} density="compact" />
             ) : (
               filtered.map((tpl: EmailTemplate) => (

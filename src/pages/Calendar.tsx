@@ -885,7 +885,12 @@ export function Calendar() {
         )}
       </div>
 
-      <SlideOver isOpen={isActivityOpen} onClose={() => setIsActivityOpen(false)} title={t.activities.newActivity}>
+      <SlideOver
+        layer="calendar"
+        isOpen={isActivityOpen}
+        onClose={() => setIsActivityOpen(false)}
+        title={t.activities.newActivity}
+      >
         <ActivityForm
           onSubmit={(data) => {
             useActivitiesStore.getState().addActivity(data)

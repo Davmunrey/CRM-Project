@@ -1,11 +1,14 @@
 import { useEffect, useState, useMemo } from 'react'
 import {
   Workflow, Plus, Trash2, ToggleLeft, ToggleRight, Zap, Bell,
-  ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X,
+  ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X, Play,
 } from 'lucide-react'
 import { useAutomationsStore } from '../store/automationsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { Select } from '../components/ui/Select'
+import { PageHeader } from '../components/ui/PageHeader'
+import { StatCard } from '../components/ui/StatCard'
+import { EmptyState } from '../components/ui/EmptyState'
 import { toast } from '../store/toastStore'
 import { formatRelativeDate } from '../utils/formatters'
 import { getTranslations, useI18nStore, useTranslations } from '../i18n'
@@ -499,44 +502,48 @@ export function Automations() {
         <RuleModal initial={blankRule()} onSave={handleSave} onClose={() => setShowNew(false)} />
       )}
 
-      {/* Toolbar */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-fg-subtle">
-          {active} {t.sequences.active.toLowerCase()} · {totalExecutions} {t.automations.executionCount.toLowerCase()}
-        </p>
-        <PermissionGate permission="automations:create">
-          <button type="button"
-            onClick={() => setShowNew(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent-500 hover:bg-accent-600 text-xs text-fg font-medium transition-colors"
-          >
-            <Plus size={13} />
-            {t.automations.newRule}
-          </button>
-        </PermissionGate>
-      </div>
+      <PageHeader
+        showTitle={false}
+        title={t.automations.title}
+        subtitle={`${active} ${t.sequences.active.toLowerCase()} · ${totalExecutions} ${t.automations.executionCount.toLowerCase()}`}
+        actions={
+          <PermissionGate permission="automations:create">
+            <button type="button"
+              onClick={() => setShowNew(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent-500 hover:bg-accent-600 text-xs text-fg font-medium transition-colors"
+            >
+              <Plus size={14} />
+              {t.automations.newRule}
+            </button>
+          </PermissionGate>
+        }
+      />
 
       {/* KPI strip */}
-      <div className="grid grid-cols-3 gap-3">
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <p className="text-xs text-fg-subtle mb-1">{t.common.total} {t.automations.title.toLowerCase()}</p>
-          <p className="text-2xl font-bold text-fg">{rules.length}</p>
-        </div>
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <p className="text-xs text-fg-subtle mb-1">{t.sequences.active}</p>
-          <p className="text-2xl font-bold text-accent-400">{active}</p>
-        </div>
-        <div className="glass rounded-xl p-4 border border-fg/6">
-          <p className="text-xs text-fg-subtle mb-1">{t.automations.executionCount}</p>
-          <p className="text-2xl font-bold text-success">{totalExecutions}</p>
-        </div>
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard
+          title={`${t.common.total} ${t.automations.title}`}
+          value={rules.length}
+          icon={<Workflow size={18} />}
+          accent="accent"
+        />
+        <StatCard title={t.sequences.active} value={active} icon={<Zap size={18} />} accent="warning" />
+        <StatCard
+          title={t.automations.executionCount}
+          value={totalExecutions}
+          icon={<Play size={18} />}
+          accent="success"
+        />
       </div>
 
       {/* Rules list */}
       {rules.length === 0 ? (
-        <div className="glass rounded-xl p-12 border border-fg/6 text-center">
-          <Workflow size={32} className="text-fg-subtle mx-auto mb-3" />
-          <p className="text-sm font-medium text-fg-muted">{t.automations.title}</p>
-          <p className="text-xs text-fg-subtle mt-1">{t.common.noResults}</p>
+        <div className="glass rounded-xl border border-fg/6">
+          <EmptyState
+            icon={<Workflow size={28} strokeWidth={1.75} />}
+            title={t.automations.title}
+            description={t.common.noResults}
+          />
         </div>
       ) : (
         <div className="space-y-2">

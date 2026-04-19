@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useId } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Users, Building2, KanbanSquare, Activity, LayoutDashboard, BarChart3, Settings, ArrowRight } from 'lucide-react'
 import { useContactsStore } from '../../store/contactsStore'
@@ -24,6 +24,8 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   const t = useTranslations()
+  const titleId = useId()
+  const panelRef = useRef<HTMLDivElement | null>(null)
   const uiLang = useUiLanguage()
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
@@ -91,7 +93,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     ? staticItems
     : staticItems.filter((i) => i.label.toLowerCase().includes(query.toLowerCase()))
 
-  const allItems = [...dynamicItems, ...filteredStatic]
+  const allItems = useMemo(() => [...dynamicItems, ...filteredStatic], [dynamicItems, filteredStatic])
 
   useEffect(() => {
     setSelected(0)
@@ -117,6 +119,28 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     return () => document.removeEventListener('keydown', handleKey)
   }, [isOpen, allItems, selected, onClose])
 
+  useEffect(() => {
+    if (!isOpen) return
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || !panelRef.current) return
+      const focusables = panelRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusables.length < 2) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', handleTab)
+    return () => document.removeEventListener('keydown', handleTab)
+  }, [isOpen])
+
   if (!isOpen) return null
 
   // Group by category
@@ -129,20 +153,32 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
   let itemIndex = 0
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh]" aria-modal="true" role="presentation">
       <div className="absolute inset-0 bg-surface-0/80 backdrop-blur-md" onClick={onClose} />
-      <div className="relative w-full max-w-lg mx-4 glass rounded-2xl shadow-float border-fg/12 overflow-hidden animate-scale-in">
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative w-full max-w-lg mx-4 glass rounded-2xl shadow-float border-fg/12 overflow-hidden animate-scale-in"
+      >
+        <h2 id={titleId} className="sr-only">
+          {t.common.search}
+        </h2>
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-fg/8">
-          <Search size={16} className="text-fg-subtle flex-shrink-0" />
+          <Search size={16} className="text-fg-subtle flex-shrink-0" aria-hidden />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.common.searchPlaceholder}
             className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
+            aria-label={t.common.searchPlaceholder}
           />
-          <kbd className="px-1.5 py-0.5 rounded-md bg-fg/8 text-[10px] font-medium text-fg-subtle flex-shrink-0">{t.common.close.toUpperCase()}</kbd>
+          <kbd className="px-1.5 py-0.5 rounded-md bg-fg/8 text-2xs font-medium text-fg-subtle flex-shrink-0" aria-hidden>
+            Esc
+          </kbd>
         </div>
 
         {/* Results */}
@@ -153,7 +189,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
 
           {Object.entries(groups).map(([category, items]) => (
             <div key={category}>
-              <p className="px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-fg-subtle">{category}</p>
+              <p className="px-4 py-1.5 text-2xs font-semibold uppercase tracking-widest text-fg-subtle">{category}</p>
               {items.map((item) => {
                 const idx = itemIndex++
                 return (
@@ -183,7 +219,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-4 py-2 border-t border-fg/6 flex items-center gap-4 text-[10px] text-fg-subtle">
+        <div className="px-4 py-2 border-t border-fg/6 flex items-center gap-4 text-2xs text-fg-subtle">
           <span><kbd className="font-semibold">↑↓</kbd> {t.commandPalette.navigateHint}</span>
           <span><kbd className="font-semibold">↵</kbd> {t.commandPalette.openHint}</span>
           <span><kbd className="font-semibold">ESC</kbd> {t.commandPalette.closeHint}</span>
