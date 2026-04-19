@@ -1,6 +1,6 @@
 # Design system & UI (master)
 
-> Consolidated **2026-04-15**. Layout shells, theme, navigation/settings sidebar, and profile display names.
+> Consolidated **2026-04-18**. Layout shells, theme, navigation/settings sidebar, profile display names, and responsive app shell.
 
 **Companion (tokens, Tailwind, scripts, guardrails):** [`design-system-reference.md`](./design-system-reference.md).
 
@@ -9,6 +9,7 @@
 ## Table of contents
 
 - [Design system and layout](#design-system-and-layout)
+- [Main canvas and responsive shell](#main-canvas-and-responsive-shell)
 - [Theme system](#theme-system)
 - [Navigation (Settings + Sidebar) runbook](#navigation-settings-sidebar-runbook)
 - [User profile display names](#user-profile-display-names)
@@ -25,7 +26,7 @@ This document is the **canonical reference** for page layout, shared empty state
 
 - Status: Active
 - Owner: Frontend
-- Last updated: 2026-04-15
+- Last updated: 2026-04-18
 - Canonical: Yes
 
 ## Goals
@@ -52,6 +53,15 @@ Defined in `src/index.css` (`@layer components`):
 - `src/components/layout/Layout.tsx`: main landmark is `id="main-content"` with `min-h-0` and `scroll-smooth` for predictable scrolling inside the flex shell.
 - **Skip link**: first focusable control skips to `#main-content`; copy is `common.skipToMain` (en/es/pt; de/fr/it inherit via `en` where applicable).
 - `Topbar` shows the route title; secondary page titles inside content should use **`h2`** / **`h3`** as appropriate so heading order remains logical.
+
+<a id="main-canvas-and-responsive-shell"></a>
+## Main canvas and responsive shell
+
+- **Main background:** `<main>` uses a single utility class **`.app-main-surface`** (defined in `src/index.css`) so every route shares the same brand wash and gradients in dark and light mode. Do not reintroduce route-specific “priority” backdrops on the main region.
+- **Mobile navigation:** Below the `md` breakpoint the primary sidebar behaves as a **drawer** (backdrop, body scroll lock, close on route change, Escape, and when the viewport crosses back to `md+`). A **hamburger** control in `Topbar` opens it.
+- **Search on small screens:** From `sm` and up the full search control is visible; on narrower viewports an **icon-only** control opens the **command palette** so search stays discoverable without crowding the bar.
+- **Command palette:** Implemented as a dialog with focus management and Escape handling (see `src/components/layout/CommandPalette.tsx`).
+- **Companion:** Token-level motion, chart theming, and build-time chunking notes live in [`design-system-reference.md`](./design-system-reference.md#motion) and [`design-system-reference.md`](./design-system-reference.md#charts-and-locale-loading).
 
 ## Empty and placeholder content
 
@@ -87,7 +97,7 @@ Defined in `src/index.css` (`@layer components`):
 
 - Theme behavior: [#theme-system](#theme-system)
 - Navigation and settings UI: [#navigation-settings-sidebar-runbook](#navigation-settings-sidebar-runbook)
-- Implementation changelog: [`master-implementation-history`](./master-implementation-history.md#implementation-history) Part B (section 18)
+- Implementation changelog: [`master-implementation-history`](./master-implementation-history.md#implementation-history) Part B — UI shell (§18), cross-cutting UI quality pass (§24)
 
 ---
 
@@ -101,7 +111,7 @@ This CRM now supports three theme preferences:
 
 - Status: Active
 - Owner: Frontend
-- Last updated: 2026-04-15
+- Last updated: 2026-04-18
 - Canonical: Yes
 
 - `system` (default): follows OS/browser preference.
@@ -162,7 +172,7 @@ Legacy filename `navigation-i18n-release-handoff.md` was removed (Apr 2026); poi
 
 - Status: Active
 - Owner: Frontend
-- Last updated: 2026-04-15
+- Last updated: 2026-04-18
 - Canonical: Yes
 
 ## Scope delivered
@@ -344,7 +354,7 @@ Team register: what was implemented, how it works technically, what is covered f
 
 - Status: Active
 - Owner: Auth/Frontend
-- Last updated: 2026-04-15
+- Last updated: 2026-04-18
 - Canonical: Yes
 
 ---

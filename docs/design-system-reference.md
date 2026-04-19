@@ -18,6 +18,10 @@ For product-facing layout narrative and navigation runbooks, keep using [`master
 | Theme class on `<html>` | `src/lib/theme.ts` (`applyTheme`, `resolveTheme`) |
 | UI density `data-density` on `<html>` | `src/lib/theme.ts` (`applyUiDensity`, `normalizeUiDensity`) |
 | Persisted settings (includes `themePreference`, `uiDensity`) | `src/store/settingsStore.ts` |
+| Chart colors from CSS variables (Recharts) | `src/lib/chartTheme.ts` |
+| `date-fns` locale bundles (dynamic import) | `src/lib/dateFnsLocale.ts` |
+| Hook: load active locale for `date-fns` | `src/hooks/useDateLocale.ts` |
+| Focus trap / modal a11y helpers | `src/utils/a11y.ts` |
 
 ---
 
@@ -95,9 +99,26 @@ CSS variables (milliseconds, unitless numbers consumed where needed):
 - `--duration-fast` (120), `--duration-base` (180), `--duration-slow` (240)
 - `--ease-default`
 
+**Tailwind transition buckets:** `tailwind.config.js` maps `duration-fast` → **150ms**, `duration-base` → **200ms**, `duration-slow` → **500ms** (replacing scattered `duration-150|200|500|700`). Prefer these three classes for UI transitions. The `--duration-*` tokens above remain for non-Tailwind contexts (e.g. raw CSS); keep new work aligned to the **fast / base / slow** naming, not one-off millisecond values.
+
 Tailwind: `duration-fast`, `duration-base`, `duration-slow`, and animations `animate-fade-in`, `animate-slide-in`, `animate-scale-in` (aligned to ~180ms).
 
 **Reduced motion:** `src/index.css` includes a `@media (prefers-reduced-motion: reduce)` rule that collapses transitions, animations, and smooth scrolling system-wide, so respecting OS motion preferences does not require opt-in per component.
+
+---
+
+## App shell (main canvas)
+
+- **`.app-main-surface`** on `<main>` (`src/index.css`, applied in `Layout.tsx`) gives a single brand-tinted background for **all** authenticated routes. Do not add alternate main-region backdrops per route.
+- **Responsive shell:** Below `md`, the sidebar is a drawer; `Topbar` exposes a hamburger and a compact search entry that opens the command palette on the narrowest breakpoints. Product narrative: [`master-design-ui.md` — Main canvas and responsive shell](./master-design-ui.md#main-canvas-and-responsive-shell).
+
+---
+
+<a id="charts-and-locale-loading"></a>
+## Charts and locale loading
+
+- **Charts:** `useChartTheme()` in `src/lib/chartTheme.ts` reads semantic colors from CSS variables for Recharts (Dashboard, Reports, Forecast). Avoid hardcoded hex in chart configs.
+- **`date-fns`:** Locales are loaded **on demand** via `loadDateFnsLocale` (`src/lib/dateFnsLocale.ts`) and `useDateLocale` so inactive locale packs are not bundled with the main chunk. Vite `manualChunks` in `vite.config.ts` also splits **`recharts`** and **`date-fns`** into separate async chunks.
 
 ---
 
@@ -211,4 +232,4 @@ Persistent hints for agents: `.cursor/rules/ui-consistency.mdc` (tokens, primiti
 
 - **Status:** Active  
 - **Owner:** Frontend  
-- **Last updated:** 2026-04-17  
+- **Last updated:** 2026-04-18  

@@ -9,7 +9,7 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 | v1.0 phase completion, next phase gate, session notes | [`.planning/STATE.md`](../.planning/STATE.md), [`.planning/ROADMAP.md`](../.planning/ROADMAP.md) | Engineering milestone view (Phases 1–10). |
 | Checked requirements IDs (`AUTH-*`, `DEPLOY-*`, …) | [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) | Single checklist for v1 scope. |
 | **Pro** roadmap (30/60/90), execution backlog, GTM matrix | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Product horizon beyond the v1 phase list. |
-| What shipped, in narrative form (Parts A + B) | [`master-implementation-history.md`](./master-implementation-history.md) | Archive-stable Part A; active Part B (sections 13–23). |
+| What shipped, in narrative form (Parts A + B) | [`master-implementation-history.md`](./master-implementation-history.md) | Archive-stable Part A; active Part B (sections 13–24). |
 | Go-live, QA matrices, production handoff | [`master-release-qa.md`](./master-release-qa.md) | Especially [Production handoff checklist](master-release-qa.md#production-handoff-checklist). |
 | Auth/SSO contracts, evidence index, Supabase external checklist | [`master-security-compliance.md`](./master-security-compliance.md) | Includes OAuth redirect / CORS reminders. |
 | Lead maintenance jobs, retention, ops | [`master-lead-management.md`](./master-lead-management.md) | Edge function `lead-score-maintenance`, runbooks. |
@@ -51,13 +51,18 @@ Track these explicitly until each is either implemented or moved into the right 
 
 ## Codebase map (for doc authors)
 
-- App entry and data bootstrap: `src/App.tsx`, `src/hooks/useDataInit.ts`, `src/lib/realtimeSubscriptions.ts`.
+- App entry, lazy routes, and Suspense: `src/App.tsx`.
+- Data bootstrap, visibility-aware polling, and realtime: `src/hooks/useDataInit.ts`, `src/lib/realtimeSubscriptions.ts`.
+- `date-fns` locale loading: `src/lib/dateFnsLocale.ts`, `src/hooks/useDateLocale.ts`.
+- Chart theming (CSS variables → Recharts): `src/lib/chartTheme.ts`.
 - Deploy channel + Supabase client gate: `src/lib/envChannel.ts`, `src/lib/supabase.ts`.
+- Build splitting: `vite.config.ts` (`manualChunks` for heavy chart/date libraries).
 - Planning artifacts: `.planning/PROJECT.md`, `.planning/codebase/STRUCTURE.md`, `.planning/codebase/CONVENTIONS.md` (UI canon points at `master-design-ui`).
 
 ---
 
-*Last updated: 2026-04-16 — Ola A shipped (Manager `/manager` + onboarding); Ola B1 Gmail kickoff table + redirect matrix in `google-gmail-oauth-verification.md`; B2 inventory anchor in `master-email-operations.md#email-openclick-analytics-inventory`; B3 `DEPLOY-*` still evidence-gated in `REQUIREMENTS.md`; Ola C waves + translation QA + deploy-testing neutrality unchanged in substance.*
+*Last updated: 2026-04-18 — Cross-cutting UI quality pass (tokens, responsive shell, a11y, performance, i18n hygiene) documented in [`master-implementation-history.md`](./master-implementation-history.md#implementation-history-section-24) and [`master-design-ui.md`](./master-design-ui.md#main-canvas-and-responsive-shell). Prior Ola A/B/C notes unchanged in substance.*
+
 ---
 
-*Last updated (git): **2026-04-16***
+*Last updated (git): **2026-04-18***
