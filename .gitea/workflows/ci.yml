@@ -28,7 +28,12 @@ jobs:
       - name: Unit tests
         run: npx vitest run
 
-      - name: Production build
+      # vite build runs in production mode; without secrets the repo rejects
+      # production/staging channels (see vite.config.ts). Demo channel matches
+      # an offline CI smoke build — real deploys set channel + Supabase on the host.
+      - name: Vite build (CI)
+        env:
+          VITE_APP_CHANNEL: demo
         run: npm run build
 
   security:
