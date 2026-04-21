@@ -20,7 +20,7 @@ Use this after a production deploy (or before marking **`DEPLOY-04`** done). Rec
 5. **Log activity** — Attach activity to contact or deal; visible after navigation away and back.
 6. **Team directory** — Open team / users UI; peer emails and names appear (backed by `list_organization_members_with_identity` RPC after migration `20260415120000_*`).
 7. **Optional — Gmail** — Connect Gmail on production domain only if OAuth verification allows your test user.
-8. **Manager dashboard** — As a user with **Reports read** (e.g. Manager preset), open `/manager` cold load; widgets render without console errors. Definitions, permissions, i18n keys, and tests: [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md).
+8. **Manager dashboard** — As a user with **Reports read** (e.g. Manager preset), open `/manager` cold load; widgets render without console errors. Definitions, permissions, i18n keys, and tests: [`master-implementation-history` — Manager dashboard data contract](./master-implementation-history.md#manager-dashboard-data-contract).
 9. **Onboarding** — Open `/settings?tab=onboarding`; toggle a checklist step, reload; state persists for the org. Optional: Dashboard banner appears when steps incomplete and banner not dismissed.
 
 ## Automated smoke (local / CI)

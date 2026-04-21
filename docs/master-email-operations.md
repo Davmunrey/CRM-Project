@@ -2,11 +2,12 @@
 
 > Consolidated **2026-04-15**. Deliverability, mailbox privacy, release gates, and smoke testing for email features.
 
-**Replaces:** email-deliverability-resend, email-mailbox-privacy-runbook, email-release-checklist, email-smoke-test-15min.
+**Replaces:** email-deliverability-resend, email-mailbox-privacy-runbook, email-release-checklist, email-smoke-test-15min. Standalone `docs/email-deliverability.md` (Gmail / in-app outbound) is merged into [In-app outbound and Gmail](#in-app-outbound-and-gmail).
 
 ## Table of contents
 
 - [Email deliverability (Resend)](#email-deliverability-resend)
+- [In-app outbound and Gmail](#in-app-outbound-and-gmail)
 - [Email mailbox privacy runbook](#email-mailbox-privacy-runbook)
 - [Email release checklist](#email-release-checklist)
 - [Email 15-minute smoke test](#email-smoke-test-15min)
@@ -55,6 +56,28 @@ References: [Resend: email authentication for developers](https://resend.com/blo
 | Role | Name | Date |
 |------|------|------|
 | Ops  |      |      |
+
+---
+
+<a id="in-app-outbound-and-gmail"></a>
+## In-app outbound and Gmail
+
+CRM-specific outbound and inbox behavior (complements the Resend DNS checklist above). Gmail OAuth users still need **SPF, DKIM, and DMARC** on the sending domain (see [Email deliverability (Resend)](#email-deliverability-resend)).
+
+### What the app does
+
+- **Gmail API sends** build MIME with `multipart/alternative` (plain + HTML) when HTML is present, which improves compatibility with spam filters compared with HTML-only payloads.
+- **Hybrid inbox search:** Gmail `threads.list` receives a stripped query (CRM-only operators removed). Filters such as `is:tracked`, `is:opened`, `is:clicked`, and `in:mine` (thread owner in CRM) run client-side using CRM emails linked by `gmailThreadId`.
+
+### What you must configure (domain and product)
+
+- **SPF, DKIM, DMARC** on the domain you send from (Google Workspace for Gmail OAuth users, or your DNS when using Resend or another ESP).
+- **Reputation:** avoid sudden high volume from a single mailbox; use the **communication_jobs** queue with spacing for bulk sends.
+- **Marketing:** only queue contacts with `marketing_opt_in`; provide a real unsubscribe URL before adding `List-Unsubscribe` headers (future hardening).
+
+### Limits
+
+- Inbox placement is decided by recipients and providers; no client change guarantees avoiding spam or Promotions.
 
 ---
 

@@ -37,7 +37,7 @@ Improve sales execution quality and manager visibility with measurable weekly im
 1. ~~**Workflow Automations v1**~~ **Shipped** — see `docs/master-implementation-history.md#implementation-history` (Part B, section 21).
 2. ~~**Lead Scoring v2**~~ **Shipped** — same section.
 
-3. ~~**Manager Dashboard Pack**~~ **Shipped** — route `/manager`, definitions in [`docs/manager-dashboard-metrics.md`](./manager-dashboard-metrics.md), narrative in [`master-implementation-history` — section 23](./master-implementation-history.md#implementation-history-section-23).
+3. ~~**Manager Dashboard Pack**~~ **Shipped** — route `/manager`, definitions in [`master-implementation-history` — Manager dashboard data contract](./master-implementation-history.md#manager-dashboard-data-contract), narrative in [`master-implementation-history` — section 23](./master-implementation-history.md#implementation-history-section-23).
    - MQL/SQL snapshot, stage aging heatmap, owner first-touch KPI (see metrics doc).
 
 4. ~~**Onboarding + Activation**~~ **Shipped** — Settings `?tab=onboarding`, Dashboard banner, persisted checklist per org (`onboardingStore`); same section **23** link.
@@ -130,7 +130,7 @@ Move from “feature parity” toward differentiation through intelligence and v
 
 ## Immediate sprint start (next coding block)
 
-~~**Manager Dashboard Pack**~~ and ~~**Onboarding + Activation**~~ **(done)** — see [`master-implementation-history` — section 23](./master-implementation-history.md#implementation-history-section-23) and [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md).
+~~**Manager Dashboard Pack**~~ and ~~**Onboarding + Activation**~~ **(done)** — see [`master-implementation-history` — section 23](./master-implementation-history.md#implementation-history-section-23) and [Manager dashboard data contract](./master-implementation-history.md#manager-dashboard-data-contract).
 
 1. ~~Define KPI queries and empty/loading states per dashboard widget.~~
 2. ~~Ship MQL→SQL + stage aging + response-time views with role-aware visibility.~~
@@ -230,7 +230,7 @@ Use this matrix as release gates before onboarding broader customer segments.
 |---|---|---|---|
 | Multi-industry adaptability | Pipeline MVP (rename stages/probabilities) + custom fields; **industry templates** not shipped | Tenant-configurable pipelines + naming + templates | P0 |
 | Language/locale quality | EN/ES/PT + formatter baseline + sell-ready QA; FR/DE/IT partial; **residual hardcoded strings** possible in edge screens | 100% UI i18n + locale-aware formatting | P0 |
-| Manager / activation | **Shipped:** `/manager` KPI pack ([`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md)) + onboarding checklist/banner ([section 23](./master-implementation-history.md#implementation-history-section-23)) | Org-wide analytics (e.g. cross-rep email rollups), deeper cohort MQL→SQL | P0 |
+| Manager / activation | **Shipped:** `/manager` KPI pack ([data contract](./master-implementation-history.md#manager-dashboard-data-contract)) + onboarding checklist/banner ([section 23](./master-implementation-history.md#implementation-history-section-23)) | Org-wide analytics (e.g. cross-rep email rollups), deeper cohort MQL→SQL | P0 |
 | Enterprise permissions | Preset matrix + audit shipped; custom role builder open | Dynamic RBAC with profile presets + auditability | P0 |
 | Branding/white-label | Baseline shipped (logo, color, domain, legal links) | Deeper white-label + partner flows | P1 |
 | Integrations | Partial (email-focused) | Connector abstraction + webhooks + import mapping | P1 |

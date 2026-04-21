@@ -1,6 +1,6 @@
 # CRM documentation
 
-**Canonical product and engineering narrative** for CRM Pro: eight consolidated **master** documents plus a **project bridge** that ties this folder to `.planning/`.
+**Canonical product and engineering narrative** for CRM Pro: nine consolidated **`master-*.md`** documents plus a **project bridge** that ties this folder to `.planning/`.
 
 ## Start here
 
@@ -8,7 +8,7 @@
 |--------|------|
 | Need **v1 phases**, deploy checklist IDs, or latest milestone note | [`.planning/STATE.md`](../.planning/STATE.md) · [`.planning/ROADMAP.md`](../.planning/ROADMAP.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) |
 | Want **one map** of “docs vs `.planning`”, hosting intent, and **known gaps** | [**`project-state.md`**](./project-state.md) |
-| Need **who closes which `[ ]`** (code vs ops vs legal vs evidence) | [`checkbox-ownership-matrix.md`](./checkbox-ownership-matrix.md) |
+| Need **who closes which `[ ]`** (code vs ops vs legal vs evidence) | [`project-state.md` — Checkbox ownership](./project-state.md#checkbox-ownership) |
 | Ship **static hosting** (SPA rewrites, `VITE_APP_CHANNEL`, `VITE_*` per env, preview vs prod) | [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) |
 | Start **Google Gmail** restricted-scope verification | [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md) |
 | Run **production smoke** after deploy | [`smoke-checklist-production.md`](./smoke-checklist-production.md) |
@@ -16,7 +16,7 @@
 | Compare **Pipedrive vs CRM Pro**, webhooks parity, group priorities | [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) |
 | Need **what shipped** (chronological handoff) | [`master-implementation-history.md`](./master-implementation-history.md) |
 
-Verify consolidated `docs/` layout (no legacy split sources; masters present): `npm run docs:verify-consolidation`. Normalize phase snapshot headers: `npm run docs:fix-phase-headers`.
+Verify consolidated `docs/` layout (no legacy split sources; masters present; **only allowlisted** `docs/*.md`): `npm run docs:verify-consolidation`. Normalize phase snapshot headers: `npm run docs:fix-phase-headers`.
 
 ---
 
@@ -32,7 +32,7 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present): `
 | Implementation history (full handoff) | [`master-implementation-history.md`](./master-implementation-history.md) | Part A §1–12 · Part B §13–24 |
 | Roadmap 30/60/90 + execution backlog | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Horizon roadmap · Pro backlog board |
 | Competitive / integration parity (Pipedrive, webhooks, API) | [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) | Benchmark tables · Webhooks v1 spec · Top gaps · Executive summary |
-| Manager `/manager` KPI definitions (MQL/SQL, aging, first-touch) | [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md) | Data contract + i18n key map (narrative in implementation history §23) |
+| Manager `/manager` KPI definitions (MQL/SQL, aging, first-touch) | [`master-implementation-history.md` §23 + data contract](./master-implementation-history.md#manager-dashboard-data-contract) | Section 23 narrative; [subsection](./master-implementation-history.md#manager-dashboard-data-contract) for tables, i18n keys, tests |
 
 ---
 
@@ -74,6 +74,14 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present): `
 - Prefer editing **`master-*.md`** for narrative and runbooks; use **`.planning/`** for phase status and requirement checkboxes.
 - Cross-links inside masters use relative paths: `./master-….md#anchor-id`.
 - Avoid duplicating long “done” narratives in the roadmap master; point to [`master-implementation-history.md`](./master-implementation-history.md) instead.
+
+---
+
+## Adding documentation
+
+- **Language:** write new prose in **English** (same as the rest of `docs/`).
+- **Do not** add a new `docs/*.md` file unless you **extend** [`scripts/verify-docs-consolidation.mjs`](../scripts/verify-docs-consolidation.mjs) (`DOCS_MD_ALLOWLIST`) and update this README index. CI fails on unexpected Markdown files under `docs/`.
+- Prefer extending the relevant **`master-*.md`** or a section in [`project-state.md`](./project-state.md). Stable narrative lives here; phase checklists stay under [`.planning/`](../.planning/).
 
 ---
 

@@ -6,7 +6,7 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 
 | Need | Primary source | Notes |
 |------|----------------|--------|
-| **Who owns each open `[ ]` cluster** (code vs ops vs legal vs evidence) | [`checkbox-ownership-matrix.md`](./checkbox-ownership-matrix.md) | Matrix for masters, REQUIREMENTS, and phase validations. |
+| **Who owns each open `[ ]` cluster** (code vs ops vs legal vs evidence) | [Checkbox ownership matrix](#checkbox-ownership) (this file) | Matrix for masters, REQUIREMENTS, and phase validations. |
 | v1.0 phase completion, next phase gate, session notes | [`.planning/STATE.md`](../.planning/STATE.md), [`.planning/ROADMAP.md`](../.planning/ROADMAP.md) | Engineering milestone view (Phases 1–10). |
 | Checked requirements IDs (`AUTH-*`, `DEPLOY-*`, …) | [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) | Single checklist for v1 scope. |
 | **Pro** roadmap (30/60/90), execution backlog, GTM matrix | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Product horizon beyond the v1 phase list. |
@@ -38,6 +38,7 @@ Operational detail for env vars and schedulers overlaps [`master-release-qa.md` 
 
 ---
 
+<a id="gaps-not-fully-owned-by-a-single-master-today"></a>
 ## Gaps (not fully owned by a single master today)
 
 Track these explicitly until each is either implemented or moved into the right master.
@@ -49,7 +50,35 @@ Track these explicitly until each is either implemented or moved into the right 
 | **Email open/click “truth” for analytics** | Server path: Edge `track-open` / `track-click` → `email_tracking_events` (RLS per sender). **Reports** surfaces server counts for the signed-in user; org-wide manager rollups still future work. | [`.planning/codebase/CONCERNS.md`](../.planning/codebase/CONCERNS.md); [`master-implementation-history.md`](./master-implementation-history.md) Part A §6 + Part B §15–17; Reports UI + [`master-email-operations.md`](./master-email-operations.md). |
 | **Residual research docs naming one host** | Older notes used a single vendor while `DEPLOY-*` intent is neutral | `.planning/research/deploy-testing.md` was **neutralized** (2026-04-16) and points to [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md). Canonical DEPLOY wording remains `.planning/REQUIREMENTS.md` + Phase 10 in `ROADMAP.md`. |
 | **Pipedrive / group integration parity** (outbound webhooks, public API) | Blocks ERP, RevOps, and iPaaS expectations when the group compares CRM Pro to Pipedrive | **Spec + matrix:** [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) · **Execution:** [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) (API + Webhooks) · **Audit:** [`.planning/codebase/INTEGRATIONS.md`](../.planning/codebase/INTEGRATIONS.md). Remove or shrink this gap row when product webhooks ship and the master is updated. |
-| **Open checklists without a clear owner** | Same `[ ]` interpreted as “dev debt” when it is ops or legal | **Matrix:** [`checkbox-ownership-matrix.md`](./checkbox-ownership-matrix.md) |
+| **Open checklists without a clear owner** | Same `[ ]` interpreted as “dev debt” when it is ops or legal | **Matrix:** [Checkbox ownership](#checkbox-ownership) (below) |
+
+---
+
+<a id="checkbox-ownership"></a>
+## Checkbox ownership matrix
+
+This section maps **unchecked `- [ ]` clusters** across `docs/master-*.md`, `.planning/phases/*`, and `.planning/REQUIREMENTS.md` to **who closes them** and **what kind of work** is required (code, dashboard, evidence, or legal). Use it so engineering does not chase ops-only rows, and ops does not wait on code for human evidence.
+
+| Cluster / document | Typical IDs or rows | Owner | Close requires |
+|--------------------|---------------------|-------|----------------|
+| `.planning/REQUIREMENTS.md` — `AUTH-*`, `SEC-*`, product features | Auth flows, RLS, UI gates | Engineering | Code + tests; some rows need **Supabase dashboard** (Auth settings, URLs) |
+| `.planning/REQUIREMENTS.md` — `DEPLOY-01`–`DEPLOY-05` | Static host, SPA rewrites, TLS, preview vs prod | Ops + Engineering | **Evidence** (host, channel, Supabase project, smoke result, commit) pasted per REQUIREMENTS template; not `[x]` without human sign-off |
+| `docs/smoke-checklist-production.md` | Post-deploy smoke | Ops / release | **Manual run** + note in STATE or release ticket |
+| `docs/master-release-qa.md` — Production handoff | Go/no-go matrices | PM + Ops + Eng | Mixed: code fixes vs **human QA** sign-off |
+| `docs/master-security-compliance.md` | DSAR, SOC mapping, buyer checklist | Security / Legal + Ops | **Runbooks + evidence**; many rows are not repo code |
+| `docs/master-email-operations.md` | DNS, Resend, deliverability | Ops | **Dashboard + DNS**; link evidence in masters when done |
+| `docs/google-gmail-oauth-verification.md` | Google Cloud verification | Product + Ops + Eng | **Google Cloud / OAuth** console work + app updates |
+| `.planning/phases/*-VALIDATION.md` | “Done when” SQL, `nyquist_compliant` | Engineering + DBA | One-time **verify** then tick or mark **archived / not blocking** |
+| `docs/master-roadmap-backlog.md` | SSO, webhooks v1, DSR, enterprise | Product | **Roadmap slices**; do not flatten into one sprint |
+
+### FR / DE / IT locales
+
+The app ships **EN** (source), **ES**, and **PT** with full catalogs. **FR, DE, IT** (when present) intentionally **spread English** keys until native strings are added: parity is enforced by `npm run i18n:lint` on changed files; do not block releases on FR/DE/IT native copy unless product prioritizes those locales.
+
+### Related links
+
+- Deploy intent (vendor-neutral): [`deployment-spa-and-env.md`](./deployment-spa-and-env.md)
+- Milestones: [`.planning/ROADMAP.md`](../.planning/ROADMAP.md) · [`.planning/STATE.md`](../.planning/STATE.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md)
 
 ---
 

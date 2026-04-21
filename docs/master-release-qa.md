@@ -166,7 +166,7 @@ Use after changes to **Dashboard**, **Settings → Getting started**, or [`onboa
 | Create/move deal | [x] | [x] | [x] | Dynamic stage labels + localized deal UI copy. |
 | Create/complete activity | [x] | [x] | [x] | Activity forms and timeline labels localized. |
 | Dashboard/reports formatting | [x] | [x] | [x] | Formatter utilities + tests validate locale behavior. |
-| Manager dashboard (`/manager`) | [x] | [x] | [x] | `managerDashboard.*` + `common.unassigned` / `notAvailable`; FR/DE/IT have explicit `managerDashboard` bundles (see [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md)). |
+| Manager dashboard (`/manager`) | [x] | [x] | [x] | `managerDashboard.*` + `common.unassigned` / `notAvailable`; FR/DE/IT have explicit `managerDashboard` bundles (see [`master-implementation-history` — Manager dashboard data contract](./master-implementation-history.md#manager-dashboard-data-contract)). |
 
 ## Role Matrix
 

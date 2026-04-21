@@ -126,7 +126,7 @@ Aligned to [`../README.md`](../README.md) feature table and [`.planning/codebase
 | Email | Gmail OAuth, inbox, thread pin/link to CRM | `docs/master-email-operations.md`, `src/store/emailStore.ts` |
 | Automations | Rule engine + triggers from deal flow | `src/store/automationsStore.ts` |
 | Sequences | Enrollments, templates | `src/store/sequencesStore.ts`, `templateStore` |
-| Reports / dashboard | Charts, KPIs, manager metrics | `src/pages/Reports.tsx`, `docs/manager-dashboard-metrics.md` |
+| Reports / dashboard | Charts, KPIs, manager metrics | `src/pages/Reports.tsx`, [`master-implementation-history` — Manager dashboard data contract](./master-implementation-history.md#manager-dashboard-data-contract) |
 | Products / quotes | Catalog, quote line items | `src/store/productsStore.ts` |
 | Custom fields | Definitions + renderer | `src/store/customFieldsStore.ts` |
 | Multi-tenancy | `organization_id`, RLS | `supabase/migrations/`, `docs/master-security-compliance.md` |
