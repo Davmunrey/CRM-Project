@@ -28,7 +28,7 @@ function patchContent(src) {
     out += src.slice(i, start)
     const afterWord = start + 7
     if (afterWord < src.length && /[a-zA-Z0-9_-]/.test(src[afterWord])) {
-      // e.g. <buttonGroup — not a button tag
+      // e.g. <buttonGroup - not a button tag
       out += src.slice(start, start + 7)
       i = start + 7
       continue

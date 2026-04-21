@@ -153,8 +153,8 @@ export function UserProfile() {
             {[
               { icon: <User size={14} />, label: t.common.name, value: currentUser.name },
               { icon: <Mail size={14} />, label: t.auth.email, value: currentUser.email },
-              { icon: <Briefcase size={14} />, label: t.contacts.jobTitle, value: currentUser.jobTitle || '—' },
-              { icon: <Phone size={14} />, label: t.common.phone, value: currentUser.phone || '—' },
+              { icon: <Briefcase size={14} />, label: t.contacts.jobTitle, value: currentUser.jobTitle || '-' },
+              { icon: <Phone size={14} />, label: t.common.phone, value: currentUser.phone || '-' },
               { icon: <Shield size={14} />, label: t.team.role, value: t.team.roleLabels[currentUser.role] },
             ].map(({ icon, label, value }) => (
               <div key={label} className="flex items-center gap-3">

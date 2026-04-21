@@ -16,7 +16,7 @@ export const seedSequences: EmailSequence[] = [
     description: 'Secuencia de prospección para nuevos leads.',
     steps: [
       { id: 'step-001-1', order: 0, type: 'email', delayDays: 0, subject: 'Encantado de conectar, {{firstName}}', bodyTemplate: 'Hola {{firstName}},\n\nMe gustaría explorar si podemos colaborar.\n\nUn saludo,\nDavid' },
-      { id: 'step-001-2', order: 1, type: 'email', delayDays: 3, subject: 'Seguimiento — {{firstName}}', bodyTemplate: 'Hola {{firstName}},\n\nSolo quería hacer seguimiento.\n\nUn saludo,\nDavid' },
+      { id: 'step-001-2', order: 1, type: 'email', delayDays: 3, subject: 'Seguimiento - {{firstName}}', bodyTemplate: 'Hola {{firstName}},\n\nSolo quería hacer seguimiento.\n\nUn saludo,\nDavid' },
       { id: 'step-001-3', order: 2, type: 'call_task', delayDays: 7, taskDescription: 'Llamar al contacto para agendar una demo.' },
     ],
     createdBy: 'u1', createdAt: '2025-01-10T09:00:00Z', isActive: true, enrolledCount: 0,
@@ -41,7 +41,7 @@ export const seedSequences: EmailSequence[] = [
         order: 0,
         type: 'email',
         delayDays: 0,
-        subject: 'Thanks for the demo — {{firstName}}',
+        subject: 'Thanks for the demo - {{firstName}}',
         bodyTemplate:
           'Hi {{firstName}},\n\nThanks for the walkthrough. Here is a short recap of what we covered and the timeline we discussed.\n\nBest,\nDavid',
       },
@@ -51,7 +51,7 @@ export const seedSequences: EmailSequence[] = [
         order: 2,
         type: 'email',
         delayDays: 0,
-        subject: 'Materials you asked for — {{company}}',
+        subject: 'Materials you asked for - {{company}}',
         bodyTemplate:
           'Hi {{firstName}},\n\nSharing the references and security overview we promised. Happy to go deeper on any section.\n\nBest,\nDavid',
       },
@@ -94,7 +94,7 @@ export const seedSequences: EmailSequence[] = [
         order: 2,
         type: 'email',
         delayDays: 7,
-        subject: 'Expansion options — {{firstName}}',
+        subject: 'Expansion options - {{firstName}}',
         bodyTemplate:
           'Hi {{firstName}},\n\nIf you are open to more seats or add-on modules, I can share options aligned to your renewal window.\n\nBest,\nDavid',
       },
@@ -114,16 +114,16 @@ export const seedSequences: EmailSequence[] = [
         order: 0,
         type: 'email',
         delayDays: 0,
-        subject: 'Missed you today — want to reschedule?',
+        subject: 'Missed you today - want to reschedule?',
         bodyTemplate:
-          'Hi {{firstName}},\n\nWe had time blocked and I did not see you join. Here is my calendar link — pick anything that works.\n\nBest,\nDavid',
+          'Hi {{firstName}},\n\nWe had time blocked and I did not see you join. Here is my calendar link - pick anything that works.\n\nBest,\nDavid',
       },
       {
         id: 'step-005-2',
         order: 1,
         type: 'email',
         delayDays: 2,
-        subject: 'One metric worth 5 minutes — {{firstName}}',
+        subject: 'One metric worth 5 minutes - {{firstName}}',
         bodyTemplate:
           'Hi {{firstName}},\n\nQuick note with one benchmark peers in your space track closely. Happy to unpack it live.\n\nBest,\nDavid',
       },

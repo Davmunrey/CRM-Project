@@ -40,7 +40,7 @@ export function GmailCallback() {
         return
       }
 
-      // Clear sessionStorage — verifier + state are single-use
+      // Clear sessionStorage - verifier + state are single-use
       sessionStorage.removeItem('gmail_oauth_state')
       sessionStorage.removeItem('gmail_oauth_verifier')
 

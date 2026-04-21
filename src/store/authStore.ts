@@ -43,7 +43,7 @@ export interface AuthState {
   supabaseSession: unknown | null
   isLoadingAuth: boolean
 
-  // Derived from currentUser.organizationId (not persisted — re-derived from JWT on load)
+  // Derived from currentUser.organizationId (not persisted - re-derived from JWT on load)
   organizationId: string | null
   tenantResolutionStatus: 'idle' | 'resolving' | 'ready' | 'needs_invitation' | 'error'
   tenantResolutionMessage: string | null
@@ -653,10 +653,10 @@ export const useAuthStore = create<AuthState>()(
           organization: state.organization,
           invitations: state.invitations,
         }
-        // supabaseSession intentionally excluded — Supabase SDK manages its own storage
+        // supabaseSession intentionally excluded - Supabase SDK manages its own storage
         // under localStorage key sb-<ref>-auth-token. Including it here causes stale
         // copies to survive after supabase.auth.signOut().
-        // organizationId intentionally excluded — derived state, always re-computed from JWT on load.
+        // organizationId intentionally excluded - derived state, always re-computed from JWT on load.
         if (isSupabaseConfigured) {
           return shared
         }
@@ -689,7 +689,7 @@ export const useAuthStore = create<AuthState>()(
 
 /**
  * Maps raw JWT role strings to the canonical UserRole type.
- * 'owner' is an alias emitted by some org creation flows — treated as 'admin'.
+ * 'owner' is an alias emitted by some org creation flows - treated as 'admin'.
  * Any unrecognized string falls back to 'sales_rep' (least-privilege default).
  */
 function normalizeRole(raw: string | undefined): UserRole {
@@ -714,7 +714,7 @@ export function initSupabaseAuth(): (() => void) | undefined {
 
     if (event === 'PASSWORD_RECOVERY') {
       // Redirect to reset-password page. window.location used because this runs
-      // outside React component tree — React Router navigate is not available here.
+      // outside React component tree - React Router navigate is not available here.
       window.location.replace('/reset-password')
       return
     }

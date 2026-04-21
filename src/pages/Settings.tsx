@@ -97,7 +97,7 @@ export function Settings() {
     setSearchParams(next, { replace: true })
   }
 
-  // ── Custom Fields state (manual subscription — persisted store) ────────────
+  // ── Custom Fields state (manual subscription - persisted store) ────────────
   const [cfDefinitions, setCfDefinitions] = useState(() => useCustomFieldsStore.getState().definitions)
   useEffect(() => useCustomFieldsStore.subscribe((s) => setCfDefinitions(s.definitions)), [])
 
@@ -558,7 +558,7 @@ export function Settings() {
     setConnectingGmail(true)
     try {
       await initiateGmailOAuth(googleClientId.trim())
-      // Browser will redirect — no further action needed here
+      // Browser will redirect - no further action needed here
     } catch (err) {
       setConnectingGmail(false)
       toast.error(err instanceof Error ? err.message : t.errors.gmailConnectionError)
@@ -699,7 +699,7 @@ export function Settings() {
   }
 
   const activeTabLabel = SETTINGS_TABS.find((tab) => tab.id === activeTab)?.label ?? t.settings.title
-  /** Inner cards / rows — same surface as permission groups & list pages */
+  /** Inner cards / rows - same surface as permission groups & list pages */
   const innerSurface = 'rounded-xl border border-border-subtle bg-surface-1'
 
   return (
@@ -1080,7 +1080,7 @@ export function Settings() {
         {cfShowForm && (
           <div className="mb-4 p-4 rounded-xl border border-border-subtle bg-surface-2 space-y-3">
             <p className="text-xs font-semibold text-fg-muted uppercase tracking-wide">
-              {cfEditingId ? `${t.common.edit}` : `${t.common.add} — ${t.settings.entityLabels[cfActiveEntity]}`}
+              {cfEditingId ? `${t.common.edit}` : `${t.common.add} - ${t.settings.entityLabels[cfActiveEntity]}`}
             </p>
 
             {/* Label + type row */}
@@ -1104,7 +1104,7 @@ export function Settings() {
               </div>
             </div>
 
-            {/* Options — only for select / multiselect */}
+            {/* Options - only for select / multiselect */}
             {['select', 'multiselect'].includes(cfFieldType) && (
               <Textarea
                 label={t.settings.options}
@@ -1162,7 +1162,7 @@ export function Settings() {
         {/* Field list */}
         {cfEntityDefs.length === 0 ? (
           <p className="text-sm text-fg-subtle text-center py-6">
-            {t.settings.customFields} — {t.settings.entityLabels[cfActiveEntity]}
+            {t.settings.customFields} - {t.settings.entityLabels[cfActiveEntity]}
           </p>
         ) : (
           <div className="space-y-2">
@@ -1189,7 +1189,7 @@ export function Settings() {
                       : 'bg-fg/5 border-fg/8 text-fg-subtle hover:text-fg-muted'
                   }`}
                 >
-                  {def.required ? t.settings.required : '—'}
+                  {def.required ? t.settings.required : '-'}
                 </button>
 
                 {/* Active toggle */}
@@ -1205,7 +1205,7 @@ export function Settings() {
                   {def.isActive ? t.common.active : t.common.inactive}
                 </button>
 
-                {/* Edit / Delete — gated */}
+                {/* Edit / Delete - gated */}
                 <PermissionGate permission="custom_fields:update">
                   <Button
                     type="button"

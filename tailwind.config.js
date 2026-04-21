@@ -45,7 +45,7 @@ export default {
         warning: 'rgb(var(--color-warning) / <alpha-value>)',
         danger: 'rgb(var(--color-danger) / <alpha-value>)',
         info: 'rgb(var(--color-info) / <alpha-value>)',
-        /** Semantic borders — use border-border-subtle / border-border-strong */
+        /** Semantic borders - use border-border-subtle / border-border-strong */
         'border-subtle': 'rgb(var(--color-border-subtle) / var(--opacity-border-subtle))',
         'border-strong': 'rgb(var(--color-border-strong) / var(--opacity-border-strong))',
         brand: {

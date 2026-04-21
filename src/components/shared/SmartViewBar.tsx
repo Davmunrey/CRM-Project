@@ -30,7 +30,7 @@ interface SmartViewBarProps {
 
 export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps) {
   const t = useTranslations()
-  // Manual subscriptions for persisted store — never use useStore selector here
+  // Manual subscriptions for persisted store - never use useStore selector here
   const [views, setViews] = useState(() => useViewsStore.getState().views)
   const [activeViewId, setActiveViewId] = useState(() => useViewsStore.getState().activeViewId)
 
@@ -103,7 +103,7 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
         )
       })}
 
-      {/* More views dropdown — shown only when there are unpinned views */}
+      {/* More views dropdown - shown only when there are unpinned views */}
       {unpinnedViews.length > 0 && (
         <div className="relative">
           <button type="button"

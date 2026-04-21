@@ -78,7 +78,7 @@ Deno.serve(async (req: Request) => {
 
     if (!tokens.refresh_token) {
       return new Response(
-        JSON.stringify({ error: 'No refresh_token returned — user must re-authorize with prompt=consent' }),
+        JSON.stringify({ error: 'No refresh_token returned - user must re-authorize with prompt=consent' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -89,7 +89,7 @@ Deno.serve(async (req: Request) => {
     })
     const profile = await profileRes.json() as { emailAddress: string }
 
-    // Store refresh token in gmail_tokens (admin client — service role)
+    // Store refresh token in gmail_tokens (admin client - service role)
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -116,7 +116,7 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    // Return ONLY the short-lived access token and email address — refresh token stays server-side
+    // Return ONLY the short-lived access token and email address - refresh token stays server-side
     return new Response(
       JSON.stringify({
         access_token: tokens.access_token,

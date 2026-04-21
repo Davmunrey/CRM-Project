@@ -6,7 +6,7 @@ export interface ResolvedSendContext {
   contactId?: string
   companyId?: string
   dealId?: string
-  /** Same email matched multiple contacts — UI may ask user to pick */
+  /** Same email matched multiple contacts - UI may ask user to pick */
   ambiguousContactIds?: string[]
 }
 

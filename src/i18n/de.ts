@@ -265,9 +265,9 @@ export const de: Translations = {
     heatmapTitle: 'Alterung offener Deals nach Phase',
     heatmapHint: 'Zellen zählen offene Deals; Spalten sind Tage seit dem letzten Update am Deal.',
     stage: 'Phase',
-    bucket0_7: '0–7d',
-    bucket8_14: '8–14d',
-    bucket15_30: '15–30d',
+    bucket0_7: '0-7d',
+    bucket8_14: '8-14d',
+    bucket15_30: '15-30d',
     bucket31p: '31d+',
     responseTitle: 'Median erste Interaktion (Stunden)',
     responseHint:

@@ -6,7 +6,7 @@ import { appChannel } from './envChannel'
 /**
  * Resolved data/auth backend for this bundle:
  * - `supabase`: real project (VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY).
- * - `offline_demo`: mock auth + seeds — local with `VITE_ALLOW_DEMO_MODE`, or hosted bundle with `VITE_APP_CHANNEL=demo`.
+ * - `offline_demo`: mock auth + seeds - local with `VITE_ALLOW_DEMO_MODE`, or hosted bundle with `VITE_APP_CHANNEL=demo`.
  * - `unconfigured`: no backend; dev shows a console hint; production shows the bootstrap fatal screen.
  */
 export type DataRuntime = 'supabase' | 'offline_demo' | 'unconfigured'
@@ -21,7 +21,7 @@ export const isSupabaseConfigured =
   supabaseAnonKey.length > 10
 
 /**
- * Local `VITE_ALLOW_DEMO_MODE` — ignored on production/staging bundles so a stray env cannot enable mock auth.
+ * Local `VITE_ALLOW_DEMO_MODE` - ignored on production/staging bundles so a stray env cannot enable mock auth.
  * Hosted **demo** channel uses `appChannel === 'demo'` instead (see `isOfflineDemoMode`).
  */
 function readDemoModeFlag(): boolean {

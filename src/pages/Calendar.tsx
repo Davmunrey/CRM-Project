@@ -36,7 +36,7 @@ const TYPE_COLORS: Record<ActivityType, { bg: string; text: string; dot: string 
 
 // TYPE_LABELS and DAY_HEADERS are now derived from translations inside each component
 
-const WEEK_HOURS = Array.from({ length: 13 }, (_, i) => i + 8) // 8–20
+const WEEK_HOURS = Array.from({ length: 13 }, (_, i) => i + 8) // 8-20
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

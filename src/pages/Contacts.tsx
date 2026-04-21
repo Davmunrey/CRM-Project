@@ -86,7 +86,7 @@ export function Contacts() {
   const [bulkEmailSubmitting, setBulkEmailSubmitting] = useState(false)
 
   const getCompanyName = useCallback(
-    (id: string) => localizedCompanies.find((c) => c.id === id)?.name ?? '—',
+    (id: string) => localizedCompanies.find((c) => c.id === id)?.name ?? '-',
     [localizedCompanies]
   )
 

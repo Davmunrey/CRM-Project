@@ -148,7 +148,7 @@ export function SearchableSelect({
                 className={`overflow-y-auto py-1 ${listMaxHeightClass}`}
               >
                 {filtered.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-fg-muted">{emptyLabel || '—'}</div>
+                  <div className="px-3 py-2 text-sm text-fg-muted">{emptyLabel || '-'}</div>
                 ) : (
                   filtered.map((opt) => {
                     const selected = opt.value === value

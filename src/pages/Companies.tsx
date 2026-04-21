@@ -300,8 +300,8 @@ export function Companies() {
                     <td className="px-4 py-3 text-fg-muted text-xs">
                       {getIndustryLabel(company.industry, uiLang)}
                     </td>
-                    <td className="px-4 py-3 text-fg-muted text-xs">{company.size || '—'}</td>
-                    <td className="px-4 py-3 text-fg-muted text-xs">{company.country || '—'}</td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">{company.size || '-'}</td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">{company.country || '-'}</td>
                     <td className="px-4 py-3 text-fg-muted text-xs">{contactCount}</td>
                     <td className="px-4 py-3 text-fg-muted text-xs">{dealCount}</td>
                     <td className="px-4 py-3">

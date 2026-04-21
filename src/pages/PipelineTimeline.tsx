@@ -141,7 +141,7 @@ export function PipelineTimeline() {
               <ChevronLeft size={16} />
             </button>
             <span className="text-sm font-medium text-fg px-2 capitalize">
-              {format(currentMonth, 'MMM yyyy', { locale: dateLocale })} — {format(addMonths(currentMonth, MONTHS_VISIBLE - 1), 'MMM yyyy', { locale: dateLocale })}
+              {format(currentMonth, 'MMM yyyy', { locale: dateLocale })} - {format(addMonths(currentMonth, MONTHS_VISIBLE - 1), 'MMM yyyy', { locale: dateLocale })}
             </span>
             <button
               type="button"
@@ -174,7 +174,7 @@ export function PipelineTimeline() {
           value={
             filteredDeals.length > 0
               ? `${Math.round(filteredDeals.reduce((s, d) => s + d.probability, 0) / filteredDeals.length)}%`
-              : '—'
+              : '-'
           }
           icon={<Percent size={18} />}
           accent="warning"
@@ -275,7 +275,7 @@ export function PipelineTimeline() {
                   >
                     <p className="text-xs font-medium text-fg truncate">{deal.title}</p>
                     <p className="text-[10px] text-fg-subtle truncate">
-                      {company?.name || contact ? `${contact?.firstName} ${contact?.lastName}` : '—'}
+                      {company?.name || contact ? `${contact?.firstName} ${contact?.lastName}` : '-'}
                     </p>
                     <div className="flex items-center gap-1 mt-1">
                       <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full" style={{ backgroundColor: stageColor + '25', color: stageColor }}>

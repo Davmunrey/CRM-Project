@@ -401,7 +401,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                         value={mapping[field.key] || ''}
                         onChange={(e) => setMapping({ ...mapping, [field.key]: e.target.value })}
                         options={[
-                          { value: '', label: `— ${t.csvImport.doNotMap} —` },
+                          { value: '', label: `(${t.csvImport.doNotMap})` },
                           ...csvHeaders.map((h) => ({ value: h, label: h })),
                         ]}
                         listMaxHeightClass="max-h-48"
@@ -453,7 +453,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                           const colIdx = csvHeaders.indexOf(mapping[f.key])
                           return (
                             <td key={f.key} className="py-2 px-2 text-fg-muted truncate max-w-[150px]">
-                              {colIdx >= 0 ? row[colIdx] || '—' : '—'}
+                              {colIdx >= 0 ? row[colIdx] || '-' : '-'}
                             </td>
                           )
                         })}

@@ -8,7 +8,7 @@ export type BadgeVariant =
   | 'info'
   | 'neutral'
   | 'accent'
-  /** Decorative — still uses accent scale */
+  /** Decorative - still uses accent scale */
   | 'violet'
   | 'orange'
 

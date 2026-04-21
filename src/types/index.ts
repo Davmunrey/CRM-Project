@@ -672,7 +672,7 @@ export interface SmartViewFilter {
 export interface SmartView {
   id: string
   name: string
-  nameKey?: string          // optional i18n key — overrides `name` when present
+  nameKey?: string          // optional i18n key - overrides `name` when present
   entityType: CustomFieldEntityType
   filters: SmartViewFilter[]
   sortField?: string
@@ -694,7 +694,7 @@ export interface Attachment {
   fileName: string
   fileSize: number       // bytes
   mimeType: string
-  data: string           // base64 encoded (demo — in prod would be S3 URL)
+  data: string           // base64 encoded (demo - in prod would be S3 URL)
   uploadedBy: string
   uploadedAt: string
   notes?: string

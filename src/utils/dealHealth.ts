@@ -4,7 +4,7 @@ import type { Deal, Activity, DealStage } from '../types'
 export type DealHealthStatus = 'strong' | 'on_track' | 'needs_attention' | 'at_risk'
 
 export interface DealHealth {
-  score: number           // 0–100
+  score: number           // 0-100
   status: DealHealthStatus
   primaryReason: string   // first issue, or '' if healthy
   reasons: string[]

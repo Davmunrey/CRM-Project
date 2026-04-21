@@ -107,7 +107,7 @@ export function getFollowUpReminders(
       )
       lastActivityDate = mostRecent.createdAt
     } else {
-      // Never contacted — use createdAt as reference
+      // Never contacted - use createdAt as reference
       const createdDate = new Date(contact.createdAt)
       daysSinceContact = Math.floor(
         (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24)

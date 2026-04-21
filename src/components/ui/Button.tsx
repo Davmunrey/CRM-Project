@@ -22,7 +22,7 @@ const variantClasses: Record<ButtonVariant, string> = {
     'hover:bg-fg/6 text-fg-muted hover:text-fg',
   danger:
     'bg-danger/15 hover:bg-danger/25 border border-danger/30 hover:border-danger/50 text-danger hover:text-danger',
-  /** @deprecated Use secondary — kept for API compatibility */
+  /** @deprecated Use secondary - kept for API compatibility */
   outline:
     'border border-border-strong hover:border-accent-500/50 hover:bg-accent-500/10 text-fg-muted hover:text-fg',
   link:

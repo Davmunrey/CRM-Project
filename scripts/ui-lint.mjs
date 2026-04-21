@@ -27,7 +27,7 @@ const RULES = [
   { id: 'no-arbitrary-hex-gradient', re: /\b(?:from|to|via)-\[#/, msg: 'Avoid arbitrary hex gradients; use accent / surface tokens.' },
 ]
 
-/** Outside `components/ui` only — enforce semantic Tailwind in feature code. */
+/** Outside `components/ui` only - enforce semantic Tailwind in feature code. */
 const STRICT_RULES = [
   { id: 'no-text-slate', re: /\btext-slate-/, msg: 'Use text-fg / text-fg-muted / text-fg-subtle instead of text-slate-*.' },
   { id: 'no-bg-slate', re: /\bbg-slate-/, msg: 'Use bg-surface-* instead of bg-slate-*.' },

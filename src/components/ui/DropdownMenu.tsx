@@ -13,7 +13,7 @@ interface DropdownMenuProps {
 }
 
 /**
- * Dropdown anchored below trigger — backdrop closes on outside click / Escape.
+ * Dropdown anchored below trigger - backdrop closes on outside click / Escape.
  */
 export function DropdownMenu({
   open,

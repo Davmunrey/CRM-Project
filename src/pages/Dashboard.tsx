@@ -442,7 +442,7 @@ export function Dashboard() {
                   {contact && <Avatar name={`${contact.firstName} ${contact.lastName}`} size="xs" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-fg truncate">{deal.title}</p>
-                    <p className="text-xs text-fg-subtle truncate">{company?.name ?? '—'}</p>
+                    <p className="text-xs text-fg-subtle truncate">{company?.name ?? '-'}</p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
                     <span className="text-xs font-semibold text-success">

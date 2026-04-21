@@ -92,7 +92,7 @@ Deno.serve(async (req: Request) => {
       .eq('user_id', user.id)
       .eq('organization_id', orgId)
 
-    // Return ONLY the new short-lived access token — refresh token stays in the DB
+    // Return ONLY the new short-lived access token - refresh token stays in the DB
     return new Response(
       JSON.stringify({
         access_token: refreshed.access_token,

@@ -8,7 +8,7 @@ interface EmptyStateProps {
   title?: string
   /** Main page empty pattern */
   description?: string
-  /** Panel / sidebar pattern — shown when `description` omitted */
+  /** Panel / sidebar pattern - shown when `description` omitted */
   primary?: string
   secondary?: string
   density?: EmptyStateDensity

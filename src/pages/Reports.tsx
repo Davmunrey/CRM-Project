@@ -250,7 +250,7 @@ export function Reports() {
           value={(() => {
             const closed = filteredDeals.filter((d) => ['closed_won', 'closed_lost'].includes(d.stage)).length
             const won = filteredDeals.filter((d) => d.stage === 'closed_won').length
-            return closed > 0 ? `${Math.round((won / closed) * 100)}%` : '—'
+            return closed > 0 ? `${Math.round((won / closed) * 100)}%` : '-'
           })()}
           icon={<Percent size={18} />}
           accent="warning"
@@ -279,11 +279,11 @@ export function Reports() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
               <div>
                 <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p>
-                <p className="text-2xl font-bold text-success">—</p>
+                <p className="text-2xl font-bold text-success">-</p>
               </div>
               <div>
                 <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p>
-                <p className="text-2xl font-bold text-info">—</p>
+                <p className="text-2xl font-bold text-info">-</p>
               </div>
             </div>
             <p className="text-sm text-fg-subtle pt-2">{t.reports.emailTrackingNotConfigured}</p>

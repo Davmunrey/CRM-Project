@@ -36,12 +36,12 @@ export const seedDemo: SeedDemoCatalog = {
     },
     'tpl-002': {
       name: 'Acompanhamento pós-reunião',
-      subject: 'Resumo da nossa reunião — {{dealTitle}}',
+      subject: 'Resumo da nossa reunião - {{dealTitle}}',
       body: 'Olá {{firstName}},\n\nObrigado pelo seu tempo. Enviarei a proposta nos próximos dias.\n\nAtenciosamente,\n{{senderName}}',
     },
     'tpl-003': {
       name: 'Envio de proposta',
-      subject: 'Proposta comercial — {{dealTitle}}',
+      subject: 'Proposta comercial - {{dealTitle}}',
       body: 'Olá {{firstName}},\n\nSegue em anexo a proposta comercial para {{dealTitle}}.\n\nAtenciosamente,\n{{senderName}}',
     },
     'tpl-004': {
@@ -50,7 +50,7 @@ export const seedDemo: SeedDemoCatalog = {
       body: 'Olá {{firstName}},\n\nQueria retomar o contato sobre a proposta de {{dealTitle}}.\n\nAtenciosamente,\n{{senderName}}',
     },
     'tpl-005': {
-      name: 'Nutrição — conteúdo de valor',
+      name: 'Nutrição - conteúdo de valor',
       subject: '{{firstName}}, um recurso que pode interessar',
       body: 'Olá {{firstName}},\n\nPublicámos um estudo relevante para {{company}}.\n\nAtenciosamente,\n{{senderName}}',
     },
@@ -85,7 +85,7 @@ export const seedDemo: SeedDemoCatalog = {
     'auto-seed-4': {
       name: 'Qualificar após a primeira etapa',
       description: 'Quando um negócio passa de Lead para Qualificado, agenda uma chamada de descoberta para validar BANT.',
-      createActivitySubject: 'Chamada de descoberta — validar BANT',
+      createActivitySubject: 'Chamada de descoberta - validar BANT',
     },
     'auto-seed-5': {
       name: 'Alinhamento executivo (atalho)',
@@ -96,13 +96,13 @@ export const seedDemo: SeedDemoCatalog = {
     'auto-seed-6': {
       name: 'Debrief de negócio perdido',
       description: 'Quando um negócio é perdido, cria uma tarefa para registar motivos e atualizar o pipeline.',
-      createActivitySubject: 'Debrief win/loss — atualizar CRM',
+      createActivitySubject: 'Debrief win/loss - atualizar CRM',
     },
     'auto-seed-7': {
-      name: 'Alerta ao gestor — negócio perdido',
+      name: 'Alerta ao gestor - negócio perdido',
       description: 'Notifica a equipa quando um negócio é marcado como perdido para rever o impacto no pipeline.',
       notificationTitle: 'Negócio perdido',
-      notificationMessage: 'Um negócio foi perdido — rever o impacto no pipeline e próximos passos para {dealTitle}.',
+      notificationMessage: 'Um negócio foi perdido - rever o impacto no pipeline e próximos passos para {dealTitle}.',
     },
     'auto-seed-8': {
       name: 'Kickoff após vitória',
@@ -115,7 +115,7 @@ export const seedDemo: SeedDemoCatalog = {
       createActivitySubject: 'Re-qualificar âmbito após retrocesso',
     },
     'auto-seed-10': {
-      name: 'Pausa na negociação — renovar proposta',
+      name: 'Pausa na negociação - renovar proposta',
       description: 'Quando um negócio volta de Negociação para Proposta, atualiza preços e anexos legais.',
       createActivitySubject: 'Renovar pacote de proposta',
     },
@@ -130,7 +130,7 @@ export const seedDemo: SeedDemoCatalog = {
           bodyTemplate: 'Olá {{firstName}},\n\nGostaria de explorar se podemos colaborar.\n\nAtenciosamente,\n{{senderName}}',
         },
         'step-001-2': {
-          subject: 'Acompanhamento — {{firstName}}',
+          subject: 'Acompanhamento - {{firstName}}',
           bodyTemplate: 'Olá {{firstName}},\n\nSó queria fazer um acompanhamento.\n\nAtenciosamente,\n{{senderName}}',
         },
         'step-001-3': {
@@ -157,13 +157,13 @@ export const seedDemo: SeedDemoCatalog = {
       description: 'Nutrição multitoque após uma demo: resumo, prova e chamada agendada.',
       steps: {
         'step-003-1': {
-          subject: 'Obrigado pela demo — {{firstName}}',
+          subject: 'Obrigado pela demo - {{firstName}}',
           bodyTemplate:
             'Olá {{firstName}},\n\nObrigado pela sessão. Segue um resumo curto do que vimos e o calendário que combinámos.\n\nAtenciosamente,\n{{senderName}}',
         },
         'step-003-2': {},
         'step-003-3': {
-          subject: 'Materiais que pediu — {{company}}',
+          subject: 'Materiais que pediu - {{company}}',
           bodyTemplate:
             'Olá {{firstName}},\n\nEnvio as referências e a visão de segurança prometidas. Disponível para aprofundar qualquer ponto.\n\nAtenciosamente,\n{{senderName}}',
         },
@@ -185,7 +185,7 @@ export const seedDemo: SeedDemoCatalog = {
           taskDescription: 'Engagement leve no LinkedIn com o champion (comentário ou DM).',
         },
         'step-004-3': {
-          subject: 'Opções de expansão — {{firstName}}',
+          subject: 'Opções de expansão - {{firstName}}',
           bodyTemplate:
             'Olá {{firstName}},\n\nSe fizer sentido mais licenças ou módulos, posso enviar opções alinhadas à renovação.\n\nAtenciosamente,\n{{senderName}}',
         },
@@ -196,12 +196,12 @@ export const seedDemo: SeedDemoCatalog = {
       description: 'Recuperação educada após falta à reunião: reagendar, valor e chamada.',
       steps: {
         'step-005-1': {
-          subject: 'Não nos cruzámos hoje — reagendar?',
+          subject: 'Não nos cruzámos hoje - reagendar?',
           bodyTemplate:
             'Olá {{firstName}},\n\nTínhamos horário marcado e não vi a ligação. Segue o link da minha agenda para escolher slot.\n\nAtenciosamente,\n{{senderName}}',
         },
         'step-005-2': {
-          subject: 'Uma métrica em 5 minutos — {{firstName}}',
+          subject: 'Uma métrica em 5 minutos - {{firstName}}',
           bodyTemplate:
             'Olá {{firstName}},\n\nUma referência que equipas do vosso setor acompanham de perto. Posso explicar ao vivo.\n\nAtenciosamente,\n{{senderName}}',
         },

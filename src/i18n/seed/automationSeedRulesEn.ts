@@ -84,7 +84,7 @@ export function createAutomationSeedRules(isoNow: string): AutomationRule[] {
         {
           type: 'create_activity',
           activityType: 'task',
-          activitySubject: 'Discovery call — validate BANT',
+          activitySubject: 'Discovery call - validate BANT',
           activityDaysFromNow: 1,
         },
       ],
@@ -121,7 +121,7 @@ export function createAutomationSeedRules(isoNow: string): AutomationRule[] {
         {
           type: 'create_activity',
           activityType: 'task',
-          activitySubject: 'Win/loss debrief — update CRM',
+          activitySubject: 'Win/loss debrief - update CRM',
           activityDaysFromNow: 1,
         },
       ],
@@ -131,7 +131,7 @@ export function createAutomationSeedRules(isoNow: string): AutomationRule[] {
     },
     {
       id: 'auto-seed-7',
-      name: 'Manager alert — lost deal',
+      name: 'Manager alert - lost deal',
       description: 'Notifies the team when a deal is marked lost so pipeline impact can be reviewed.',
       isActive: true,
       trigger: { type: 'deal_closed_lost' },
@@ -140,7 +140,7 @@ export function createAutomationSeedRules(isoNow: string): AutomationRule[] {
           type: 'send_notification',
           notificationTitle: 'Deal lost',
           notificationMessage:
-            'A deal was lost — review pipeline impact and next actions for {dealTitle}.',
+            'A deal was lost - review pipeline impact and next actions for {dealTitle}.',
         },
       ],
       executionCount: 0,
@@ -185,7 +185,7 @@ export function createAutomationSeedRules(isoNow: string): AutomationRule[] {
     },
     {
       id: 'auto-seed-10',
-      name: 'Pause negotiation — refresh proposal',
+      name: 'Pause negotiation - refresh proposal',
       description: 'When a deal moves from Negotiation back to Proposal, refresh pricing and legal attachments.',
       isActive: true,
       trigger: { type: 'deal_stage_changed', fromStage: 'negotiation', toStage: 'proposal' },

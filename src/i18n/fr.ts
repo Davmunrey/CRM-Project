@@ -266,9 +266,9 @@ export const fr: Translations = {
     heatmapHint:
       'Les cellules comptent les deals ouverts ; les colonnes indiquent les jours depuis la dernière mise à jour.',
     stage: 'Étape',
-    bucket0_7: '0–7j',
-    bucket8_14: '8–14j',
-    bucket15_30: '15–30j',
+    bucket0_7: '0-7j',
+    bucket8_14: '8-14j',
+    bucket15_30: '15-30j',
     bucket31p: '31j+',
     responseTitle: 'Médiane première interaction (heures)',
     responseHint:

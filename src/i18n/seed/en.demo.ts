@@ -40,12 +40,12 @@ export const seedDemo: SeedDemoCatalog = {
     },
     'tpl-002': {
       name: 'Meeting follow-up',
-      subject: 'Summary of our meeting — {{dealTitle}}',
+      subject: 'Summary of our meeting - {{dealTitle}}',
       body: 'Hi {{firstName}},\n\nThanks for your time. I will send the proposal in the next few days.\n\nBest regards,\n{{senderName}}',
     },
     'tpl-003': {
       name: 'Proposal send',
-      subject: 'Commercial proposal — {{dealTitle}}',
+      subject: 'Commercial proposal - {{dealTitle}}',
       body: 'Hi {{firstName}},\n\nPlease find attached the commercial proposal for {{dealTitle}}.\n\nBest regards,\n{{senderName}}',
     },
     'tpl-004': {
@@ -54,7 +54,7 @@ export const seedDemo: SeedDemoCatalog = {
       body: 'Hi {{firstName}},\n\nI wanted to follow up on the proposal for {{dealTitle}}.\n\nBest regards,\n{{senderName}}',
     },
     'tpl-005': {
-      name: 'Nurture — value content',
+      name: 'Nurture - value content',
       subject: '{{firstName}}, a resource you may find useful',
       body: 'Hi {{firstName}},\n\nWe published a study that may be relevant for {{company}}.\n\nBest regards,\n{{senderName}}',
     },
@@ -80,7 +80,7 @@ export const seedDemo: SeedDemoCatalog = {
           bodyTemplate: 'Hi {{firstName}},\n\nI would like to explore how we can collaborate.\n\nBest,\n{{senderName}}',
         },
         'step-001-2': {
-          subject: 'Follow-up — {{firstName}}',
+          subject: 'Follow-up - {{firstName}}',
           bodyTemplate: 'Hi {{firstName}},\n\nJust wanted to follow up.\n\nBest,\n{{senderName}}',
         },
         'step-001-3': {
@@ -107,13 +107,13 @@ export const seedDemo: SeedDemoCatalog = {
       description: 'Multi-touch nurture after a demo: recap, proof, then a scheduled call.',
       steps: {
         'step-003-1': {
-          subject: 'Thanks for the demo — {{firstName}}',
+          subject: 'Thanks for the demo - {{firstName}}',
           bodyTemplate:
             'Hi {{firstName}},\n\nThanks for the walkthrough. Here is a short recap of what we covered and the timeline we discussed.\n\nBest,\n{{senderName}}',
         },
         'step-003-2': {},
         'step-003-3': {
-          subject: 'Materials you asked for — {{company}}',
+          subject: 'Materials you asked for - {{company}}',
           bodyTemplate:
             'Hi {{firstName}},\n\nSharing the references and security overview we promised. Happy to go deeper on any section.\n\nBest,\n{{senderName}}',
         },
@@ -135,7 +135,7 @@ export const seedDemo: SeedDemoCatalog = {
           taskDescription: 'Light-touch LinkedIn engagement with your champion (comment or DM).',
         },
         'step-004-3': {
-          subject: 'Expansion options — {{firstName}}',
+          subject: 'Expansion options - {{firstName}}',
           bodyTemplate:
             'Hi {{firstName}},\n\nIf you are open to more seats or add-on modules, I can share options aligned to your renewal window.\n\nBest,\n{{senderName}}',
         },
@@ -146,12 +146,12 @@ export const seedDemo: SeedDemoCatalog = {
       description: 'Polite recovery after a missed meeting: reschedule, a value ping, then phone outreach.',
       steps: {
         'step-005-1': {
-          subject: 'Missed you today — want to reschedule?',
+          subject: 'Missed you today - want to reschedule?',
           bodyTemplate:
-            'Hi {{firstName}},\n\nWe had time blocked and I did not see you join. Here is my calendar link — pick anything that works.\n\nBest,\n{{senderName}}',
+            'Hi {{firstName}},\n\nWe had time blocked and I did not see you join. Here is my calendar link - pick anything that works.\n\nBest,\n{{senderName}}',
         },
         'step-005-2': {
-          subject: 'One metric worth 5 minutes — {{firstName}}',
+          subject: 'One metric worth 5 minutes - {{firstName}}',
           bodyTemplate:
             'Hi {{firstName}},\n\nQuick note with one benchmark peers in your space track closely. Happy to unpack it live.\n\nBest,\n{{senderName}}',
         },

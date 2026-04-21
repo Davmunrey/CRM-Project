@@ -1,9 +1,9 @@
 /**
  * Deployment channel (set `VITE_APP_CHANNEL` in CI per environment).
- * - `production` — live customers; requires Supabase at build time.
- * - `staging` — pre-prod / preview; requires Supabase (staging project); never mock auth.
- * - `demo` — hosted static demo: offline seed/mock allowed without Supabase.
- * - `development` — local `npm run dev` when channel unset (default).
+ * - `production` - live customers; requires Supabase at build time.
+ * - `staging` - pre-prod / preview; requires Supabase (staging project); never mock auth.
+ * - `demo` - hosted static demo: offline seed/mock allowed without Supabase.
+ * - `development` - local `npm run dev` when channel unset (default).
  */
 export type AppChannel = 'production' | 'staging' | 'demo' | 'development'
 

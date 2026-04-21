@@ -1,6 +1,6 @@
 /**
  * Markdown date inventory and optional git-date footers.
- * Uses `git ls-files` (tracked + untracked markdown) — avoids full-tree walks.
+ * Uses `git ls-files` (tracked + untracked markdown) - avoids full-tree walks.
  *
  * Usage:
  *   node scripts/md-chronology.mjs inventory

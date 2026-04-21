@@ -335,7 +335,7 @@ export const demoEntityOverlaysEn: Pick<
       outcome: 'Excellent feedback. NPS 9/10.',
     },
     a29: {
-      subject: 'LinkedIn connection — Sofía Moreno',
+      subject: 'LinkedIn connection - Sofía Moreno',
       description: 'Initial LinkedIn outreach about enterprise license.',
       outcome: 'Accepted meeting. Very receptive.',
     },
@@ -347,19 +347,19 @@ export const demoEntityOverlaysEn: Pick<
   },
   demoEmails: {
     em1: {
-      subject: 'Bankia — Compliance module proposal',
+      subject: 'Bankia - Compliance module proposal',
       body: 'Sharing the proposal with scope, timeline, and pricing for the Compliance module. If it works for you, let’s review tomorrow at 11:00.',
     },
     em2: {
-      subject: 'Re: Bankia — Compliance module proposal',
+      subject: 'Re: Bankia - Compliance module proposal',
       body: 'Thanks David. We’re reviewing with legal today and I’ll share comments. So far it looks good.',
     },
     em3: {
-      subject: 'Enterprise renewal 2026 — final proposal',
+      subject: 'Enterprise renewal 2026 - final proposal',
       body: 'Attached final renewal proposal with improved SLA and Q3/Q4 roadmap. Let me know to close this week.',
     },
     em4: {
-      subject: 'International payments contract — next steps',
+      subject: 'International payments contract - next steps',
       body: 'Great Cristina. Let’s review legal clauses on Thursday and aim to close next week.',
     },
   },

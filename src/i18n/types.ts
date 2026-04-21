@@ -433,7 +433,7 @@ export interface Translations {
       medium: string
       high: string
     }
-    /** Plain-text quote email draft (Gmail compose) — use `{dealTitle}` where needed */
+    /** Plain-text quote email draft (Gmail compose) - use `{dealTitle}` where needed */
     quoteEmailGreeting: string
     quoteEmailBodyIntro: string
     quoteEmailSignOff: string
@@ -448,7 +448,7 @@ export interface Translations {
     quotePdfWebPrefix: string
     quotePdfContactEmailPrefix: string
     quotePdfTotalLabel: string
-    /** e.g. VAT ({percent}%) — `{percent}` replaced at runtime */
+    /** e.g. VAT ({percent}%) - `{percent}` replaced at runtime */
     quotePdfVatRow: string
     quotePdfWithholdingRow: string
   }
@@ -912,7 +912,7 @@ export interface Translations {
     bestCase: string
     committed: string
     expected: string
-    /** Pipeline health composite (0–100), subtitle under section title */
+    /** Pipeline health composite (0-100), subtitle under section title */
     healthScoreSubtitle: string
     /** Tier labels for pipeline health score bands */
     healthExcellent: string
@@ -1530,7 +1530,7 @@ export interface Translations {
     connectGmailToSend: string
     /** Toggle: track opens/clicks (not CRM follow-up tasks) */
     openEmailTracking: string
-    /** Composer — Pipedrive-style layout */
+    /** Composer - Pipedrive-style layout */
     composerFrom: string
     composerInsertField: string
     composerTemplatesToolbar: string

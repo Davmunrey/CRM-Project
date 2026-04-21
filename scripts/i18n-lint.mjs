@@ -19,7 +19,7 @@ const RULES = [
     id: 'no-long-setError-string-literal',
     re: /setError\(\s*['"`]([^'"`]{22,})['"`]\s*\)/g,
     msg:
-      'Use `t.*`, `getTranslations().*`, or a variable — do not pass a long hardcoded string to setError (add a key under src/i18n).',
+      'Use `t.*`, `getTranslations().*`, or a variable - do not pass a long hardcoded string to setError (add a key under src/i18n).',
   },
 ]
 

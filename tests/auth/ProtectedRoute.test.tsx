@@ -48,7 +48,7 @@ describe('ProtectedRoute', () => {
       session: null,
     })
     renderProtectedRoute()
-    // MemoryRouter renders Navigate — the route changes, content is not shown
+    // MemoryRouter renders Navigate - the route changes, content is not shown
     expect(screen.queryByText('Protected Content')).not.toBeInTheDocument()
   })
 

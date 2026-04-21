@@ -6,7 +6,7 @@ import {
 } from '../../src/lib/theme'
 import { useSettingsStore } from '../../src/store/settingsStore'
 
-describe('lib/theme — ui density', () => {
+describe('lib/theme - ui density', () => {
   beforeEach(() => {
     document.documentElement.removeAttribute('data-density')
   })
@@ -43,7 +43,7 @@ describe('lib/theme — ui density', () => {
   })
 })
 
-describe('settingsStore — updateUiDensity', () => {
+describe('settingsStore - updateUiDensity', () => {
   it('persists density value in settings state', () => {
     const initial = useSettingsStore.getState().settings.uiDensity
     useSettingsStore.getState().updateUiDensity('compact')

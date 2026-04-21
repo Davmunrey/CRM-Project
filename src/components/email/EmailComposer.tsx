@@ -108,7 +108,7 @@ interface EmailComposerProps {
   presentation?: 'modal' | 'inline'
 }
 
-/** Stable default — a fresh `[]` each render was in the seed effect deps and reset the body on every keystroke. */
+/** Stable default - a fresh `[]` each render was in the seed effect deps and reset the body on every keystroke. */
 const EMPTY_EMAIL_ATTACHMENTS: NonNullable<EmailComposerProps['defaultAttachments']> = []
 
 export function EmailComposer({
@@ -731,7 +731,7 @@ export function EmailComposer({
 
   const crmContactOptions = useMemo(
     () => [
-      { value: '', label: '—' },
+      { value: '', label: '-' },
       ...contacts.map((c) => ({
         value: c.id,
         label: [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.email || c.id,
@@ -741,14 +741,14 @@ export function EmailComposer({
   )
   const crmDealOptions = useMemo(
     () => [
-      { value: '', label: '—' },
+      { value: '', label: '-' },
       ...deals.map((d) => ({ value: d.id, label: d.title })),
     ],
     [deals],
   )
   const crmCompanyOptions = useMemo(
     () => [
-      { value: '', label: '—' },
+      { value: '', label: '-' },
       ...companies.map((c) => ({ value: c.id, label: c.name })),
     ],
     [companies],
@@ -785,7 +785,7 @@ export function EmailComposer({
     setBody(bod)
     incrementUsage(template.id)
     setShowTemplates(false)
-    toast.success(`${t.emailTemplates.title} — "${template.name}"`)
+    toast.success(`${t.emailTemplates.title} - "${template.name}"`)
   }
 
   const CATEGORY_LABELS: Record<string, string> = {
@@ -839,7 +839,7 @@ export function EmailComposer({
             : 'relative z-10 w-full max-w-6xl max-h-[min(92vh,920px)] mx-0 sm:mx-4 mb-0 sm:mb-0 glass rounded-t-2xl sm:rounded-2xl shadow-float border-fg/10 overflow-hidden animate-slide-up flex flex-col min-h-0'
         }
       >
-        {/* Header — product-style back + title + status */}
+        {/* Header - product-style back + title + status */}
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-fg/8 flex-shrink-0 bg-surface-1/60">
           <button
             type="button"
@@ -919,7 +919,7 @@ export function EmailComposer({
               : 'flex flex-1 min-h-0 flex-col lg:flex-row overflow-hidden'
           }
         >
-          {/* Main column — single scroll in inline mode; CRM sits below so footer stays visible */}
+          {/* Main column - single scroll in inline mode; CRM sits below so footer stays visible */}
           <div
             className={
               isInline
@@ -1205,7 +1205,7 @@ export function EmailComposer({
           </div>
           </div>
 
-          {/* CRM link — modal: fixed sidebar; inline: collapsible so the compose area stays calm */}
+          {/* CRM link - modal: fixed sidebar; inline: collapsible so the compose area stays calm */}
           {isInline ? (
             <details className="group shrink-0 border-t border-fg/8 bg-surface-1/40">
               <summary className="cursor-pointer list-none flex items-center justify-between gap-2 px-3 py-2.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-fg/5 [&::-webkit-details-marker]:hidden">
@@ -1289,7 +1289,7 @@ export function EmailComposer({
           )}
         </div>
 
-        {/* Footer — icon row + primary actions */}
+        {/* Footer - icon row + primary actions */}
         <div className="px-4 py-2.5 border-t border-fg/8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between flex-shrink-0 bg-surface-1/90">
           <div className="flex items-center gap-1 flex-wrap">
             <button

@@ -10,7 +10,7 @@ import { useNotificationsStore } from '../../store/notificationsStore'
 import { getFollowUpReminders } from '../../utils/followUpEngine'
 import { useAuthStore } from '../../store/authStore'
 import { useSettingsStore } from '../../store/settingsStore'
-// ROLE_LABELS removed — using t.team.roleLabels instead
+// ROLE_LABELS removed - using t.team.roleLabels instead
 import { formatRelativeDate } from '../../utils/formatters'
 import { useTranslations } from '../../i18n'
 import type { Activity, CRMNotification } from '../../types'
@@ -34,7 +34,7 @@ export function Topbar({ title, onOpenCommandPalette, onOpenMobileNav }: TopbarP
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
   const navigate = useNavigate()
 
-  // Auth – manual getState to avoid getSnapshot issues
+  // Auth - manual getState to avoid getSnapshot issues
   const [currentUser, setCurrentUser] = useState(useAuthStore.getState().currentUser)
   useEffect(() => {
     const unsub = useAuthStore.subscribe((s) => setCurrentUser(s.currentUser))
@@ -118,7 +118,7 @@ export function Topbar({ title, onOpenCommandPalette, onOpenMobileNav }: TopbarP
 
       <ThemeSwitcher variant="inline" />
 
-      {/* Command palette trigger — icon-only on small screens */}
+      {/* Command palette trigger - icon-only on small screens */}
       <button
         type="button"
         onClick={onOpenCommandPalette}

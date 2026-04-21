@@ -32,7 +32,7 @@ function walk(dir) {
 function migrate(text) {
   let s = text
   if (SKIP_FILES.test(s) && s.includes('src')) {
-    // Still migrate pages importing from ui — only skip path check on file path not content
+    // Still migrate pages importing from ui - only skip path check on file path not content
   }
 
   const reps = [

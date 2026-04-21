@@ -9,7 +9,7 @@ export interface PanelEmptyProps {
   density?: 'default' | 'compact'
 }
 
-/** Panel empty state — delegates to unified `ui/EmptyState`. */
+/** Panel empty state - delegates to unified `ui/EmptyState`. */
 export function PanelEmpty({ icon, title, primary, secondary, density = 'default' }: PanelEmptyProps) {
   return (
     <EmptyState

@@ -68,13 +68,13 @@ export function FollowUps() {
   const handleCall = (reminder: FollowUpReminder) => {
     addActivity({
       type: 'call',
-      subject: `${t.nav.followUps} — ${reminder.contactName}`,
-      description: `${t.activities.typeLabels.call} — ${t.nav.followUps}`,
+      subject: `${t.nav.followUps} - ${reminder.contactName}`,
+      description: `${t.activities.typeLabels.call} - ${t.nav.followUps}`,
       status: 'pending',
       contactId: reminder.contactId,
       createdBy: currentUserName || t.common.notAvailable,
     })
-    toast.success(`${t.activities.typeLabels.call} — ${reminder.contactName}`)
+    toast.success(`${t.activities.typeLabels.call} - ${reminder.contactName}`)
   }
 
   const handleEmail = (reminder: FollowUpReminder) => {
@@ -87,13 +87,13 @@ export function FollowUps() {
   const handleTask = (reminder: FollowUpReminder) => {
     addActivity({
       type: 'task',
-      subject: `${t.nav.followUps} — ${reminder.contactName}`,
-      description: `${t.activities.typeLabels.task} — ${t.nav.followUps}`,
+      subject: `${t.nav.followUps} - ${reminder.contactName}`,
+      description: `${t.activities.typeLabels.task} - ${t.nav.followUps}`,
       status: 'pending',
       contactId: reminder.contactId,
       createdBy: currentUserName || t.common.notAvailable,
     })
-    toast.success(`${t.activities.typeLabels.task} — ${reminder.contactName}`)
+    toast.success(`${t.activities.typeLabels.task} - ${reminder.contactName}`)
   }
 
   const URGENCY_LABELS: Record<FollowUpReminder['urgency'], string> = {
@@ -116,7 +116,7 @@ export function FollowUps() {
       <PageHeader
         showTitle={false}
         title={t.followUps.title}
-        subtitle={`${stats.total} ${t.contacts.title} — ${t.followUps.title}`}
+        subtitle={`${stats.total} ${t.contacts.title} - ${t.followUps.title}`}
         actions={
           <button
             type="button"

@@ -115,7 +115,7 @@
   }
 
   /**
-   * App shell: workspace column (topbar + main) — strong lift vs sidebar.
+   * App shell: workspace column (topbar + main) - strong lift vs sidebar.
    */
   .app-workspace-column {
     position: relative;
@@ -136,7 +136,7 @@
   }
 
   /**
-   * Main scroll region — single canvas for every route (dark + light).
+   * Main scroll region - single canvas for every route (dark + light).
    * Subtle brand wash + stacked surfaces so Contacts, Timeline, etc. match.
    */
   .app-main-surface {
@@ -186,7 +186,7 @@
       0 0 64px -20px rgb(var(--color-accent-500) / 0.18);
   }
 
-  /* ── Glass card — default elevation (theme-aware shadow from tokens.css) ─ */
+  /* ── Glass card - default elevation (theme-aware shadow from tokens.css) ─ */
   .glass {
     background: var(--bg-panel);
     border: 1px solid var(--border-soft);
@@ -199,7 +199,7 @@
   }
 
   /**
-   * Secondary / grouped blocks (e.g. Settings) — recessed tint vs main panel, same lift as glass.
+   * Secondary / grouped blocks (e.g. Settings) - recessed tint vs main panel, same lift as glass.
    * Prefer this over ad-hoc `bg-surface-2/90 border …` so shadow + border stay consistent.
    */
   .crm-surface-section {
@@ -387,7 +387,7 @@
 }
 
 @layer utilities {
-  /** Keyboard focus — use with `outline-none` on interactive elements. */
+  /** Keyboard focus - use with `outline-none` on interactive elements. */
   .focus-ring:focus-visible {
     outline: none;
     box-shadow:
@@ -449,7 +449,7 @@
     background: rgba(15, 23, 42, 0.28) !important;
   }
 
-  /* Legacy Tailwind palette overrides removed — components use semantic tokens (text-fg*, accent-*, border-fg/*). */
+  /* Legacy Tailwind palette overrides removed - components use semantic tokens (text-fg*, accent-*, border-fg/*). */
 
   .light .sidebar-active {
     color: #ffffff !important;
@@ -556,7 +556,7 @@
 }
 
 @layer utilities {
-  /** Micro type for badges / kbd — prefer over arbitrary `text-[10px]` */
+  /** Micro type for badges / kbd - prefer over arbitrary `text-[10px]` */
   .text-2xs {
     font-size: 0.625rem;
     line-height: 1rem;

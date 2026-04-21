@@ -430,7 +430,7 @@ function QuoteBuilder({
               { value: '', label: `+ ${t.deals.addItem}...` },
               ...products.map((p) => {
                 const lp = localizedProduct(p, t)
-                return { value: p.id, label: `${lp.name} — ${fmt(lp.price)}` }
+                return { value: p.id, label: `${lp.name} - ${fmt(lp.price)}` }
               }),
             ]}
             listMaxHeightClass="max-h-56"
@@ -1193,7 +1193,7 @@ export function Deals() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-fg-muted text-xs">{company?.name ?? '—'}</td>
+                        <td className="px-4 py-3 text-fg-muted text-xs">{company?.name ?? '-'}</td>
                         <td className="px-4 py-3 text-success font-semibold text-sm">
                           {formatCurrency(deal.value, deal.currency)}
                         </td>
@@ -1283,8 +1283,8 @@ export function Deals() {
                   { label: t.common.priority, value: t.deals.priorityLabels[selectedDeal.priority] },
                   { label: t.deals.expectedClose, value: formatDate(selectedDeal.expectedCloseDate) },
                   { label: t.common.assignedTo, value: selectedDeal.assignedTo },
-                  { label: t.deals.company, value: getCompany(selectedDeal.companyId)?.name || '—' },
-                  { label: t.deals.contact, value: (() => { const c = getContact(selectedDeal.contactId); return c ? `${c.firstName} ${c.lastName}` : '—' })() },
+                  { label: t.deals.company, value: getCompany(selectedDeal.companyId)?.name || '-' },
+                  { label: t.deals.contact, value: (() => { const c = getContact(selectedDeal.contactId); return c ? `${c.firstName} ${c.lastName}` : '-' })() },
                   { label: t.deals.daysInStage, value: `${getStageDurationDays(selectedDeal.updatedAt)} ${t.deals.aging} ${getStageLabel(selectedDeal.stage)}` },
                 ].map(({ label, value }) => (
                   <div key={label}>

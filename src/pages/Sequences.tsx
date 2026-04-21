@@ -123,7 +123,7 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
               value={selectedContactId}
               onChange={(e) => setSelectedContactId(e.target.value)}
               options={[
-                { value: '', label: `— ${t.common.selectAll} —` },
+                { value: '', label: `(${t.common.selectAll})` },
                 ...contacts.map((c) => ({
                   value: c.id,
                   label: `${c.firstName} ${c.lastName}${c.email ? ` (${c.email})` : ''}`,
@@ -444,7 +444,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
   const { pauseEnrollment, resumeEnrollment, completeEnrollment, unenrollContact } = useSequencesStore.getState()
 
   function formatDate(iso?: string) {
-    if (!iso) return '—'
+    if (!iso) return '-'
     return formatDateShort(iso)
   }
 
@@ -533,7 +533,7 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
                     <div className={`flex-1 pb-6 ${idx === viewSequence.steps.length - 1 ? '' : ''}`}>
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-xs font-semibold text-fg">
-                          {t.sequences.steps} {idx + 1} — {stepTypeLabels[step.type]}
+                          {t.sequences.steps} {idx + 1}: {stepTypeLabels[step.type]}
                         </span>
                         {step.delayDays > 0 && (
                           <span className="text-[10px] bg-fg/6 text-fg-muted px-2 py-0.5 rounded-full">

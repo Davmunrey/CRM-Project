@@ -265,9 +265,9 @@ export const it: Translations = {
     heatmapTitle: 'Invecchiamento deal aperti per fase',
     heatmapHint: 'Le celle contano i deal aperti; le colonne sono i giorni dall’ultimo aggiornamento sul deal.',
     stage: 'Fase',
-    bucket0_7: '0–7g',
-    bucket8_14: '8–14g',
-    bucket15_30: '15–30g',
+    bucket0_7: '0-7g',
+    bucket8_14: '8-14g',
+    bucket15_30: '15-30g',
     bucket31p: '31g+',
     responseTitle: 'Mediana primo contatto (ore)',
     responseHint:

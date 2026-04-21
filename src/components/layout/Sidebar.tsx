@@ -209,7 +209,7 @@ export function Sidebar() {
     return unsub
   }, [])
 
-  // Pinned views subscription — re-runs when language (t) changes
+  // Pinned views subscription - re-runs when language (t) changes
   useEffect(() => {
     const VIEW_ICON_MAP: Record<string, React.ReactNode> = {
       flame: <Flame size={18} />,

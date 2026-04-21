@@ -58,7 +58,7 @@ function FieldValueDisplay({
   yesLabel: string
   noLabel: string
 }) {
-  if (value === null || value === '') return <span className="text-fg-subtle">—</span>
+  if (value === null || value === '') return <span className="text-fg-subtle">-</span>
 
   switch (def.fieldType) {
     case 'checkbox':

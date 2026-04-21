@@ -130,75 +130,75 @@ export const demoEntityOverlaysPt: Pick<
   },
   demoDeals: {
     d1: {
-      title: 'Bankia — Plataforma de analytics',
+      title: 'Bankia - Plataforma de analytics',
       notes: 'Projeto fechado com sucesso. Inclui formação.',
     },
     d2: {
-      title: 'Bankia — Módulo de compliance',
+      title: 'Bankia - Módulo de compliance',
       notes: 'Expansão após o sucesso da plataforma de analytics.',
     },
     d3: {
-      title: 'Factorial — Integração API RH',
+      title: 'Factorial - Integração API RH',
       notes: 'A negociar termos de SLA. Rever cláusula de exclusividade.',
     },
     d4: {
-      title: 'Mapfre — Suite de reporting',
+      title: 'Mapfre - Suite de reporting',
       notes: 'Proposta enviada. À espera de feedback jurídico.',
     },
     d5: {
-      title: 'Mapfre — Consultoria de transformação',
+      title: 'Mapfre - Consultoria de transformação',
       notes: 'Oportunidade detetada no hackathon. Ainda em exploração.',
     },
     d6: {
-      title: 'Holaluz — SaaS Starter',
+      title: 'Holaluz - SaaS Starter',
       notes: 'Veio do trial. Demo realizada.',
     },
     d7: {
-      title: 'Inditex — Plataforma global',
+      title: 'Inditex - Plataforma global',
       notes: 'Mega negócio. Contrato de 3 anos.',
     },
     d8: {
-      title: 'Inditex — Renovação enterprise',
+      title: 'Inditex - Renovação enterprise',
       notes: 'Renovação global. Desconto de fidelização em negociação.',
     },
     d9: {
-      title: 'Cabify — POC da plataforma',
+      title: 'Cabify - POC da plataforma',
       notes: 'POC técnica em curso. Resultados esperados em abril.',
     },
     d10: {
-      title: 'Deloitte — Acordo de parceria',
+      title: 'Deloitte - Acordo de parceria',
       notes: 'Acordo de canal indireto. Comissão de 15% sobre vendas geradas.',
     },
     d11: {
-      title: 'Flywire — Módulo de pagamentos internacionais',
+      title: 'Flywire - Módulo de pagamentos internacionais',
       notes: 'Upsell de pagamentos. Contrato-quadro já assinado.',
     },
     d12: {
-      title: 'Flywire — Integração API',
+      title: 'Flywire - Integração API',
       notes: 'Integração personalizada. Requer desenvolvimento adicional.',
     },
     d13: {
-      title: 'Sanitas — Digitalização da saúde',
+      title: 'Sanitas - Digitalização da saúde',
       notes: 'Grande oportunidade. Ciclo de vendas estimado em 6 meses.',
     },
     d14: {
-      title: 'Glovo — Plataforma logística',
+      title: 'Glovo - Plataforma logística',
       notes: 'Perdido para concorrente. Preço e suporte foram os motivos.',
     },
     d15: {
-      title: 'Inditex — Módulo Analytics Plus',
+      title: 'Inditex - Módulo Analytics Plus',
       notes: 'Identificado na reunião trimestral. Aprovação de orçamento pendente.',
     },
     d16: {
-      title: 'Bankia — Formação de equipas',
+      title: 'Bankia - Formação de equipas',
       notes: 'Workshop de 2 dias para 30 pessoas.',
     },
     d17: {
-      title: 'Factorial — Módulo de salários',
+      title: 'Factorial - Módulo de salários',
       notes: 'Detetado na reunião de acompanhamento. Interesse ainda não confirmado.',
     },
     d18: {
-      title: 'Cabify — Licença enterprise',
+      title: 'Cabify - Licença enterprise',
       notes: 'Se a POC for bem-sucedida, converte em licença enterprise.',
     },
   },
@@ -335,7 +335,7 @@ export const demoEntityOverlaysPt: Pick<
       outcome: 'Excelente avaliação. NPS 9/10.',
     },
     a29: {
-      subject: 'Ligação LinkedIn — Sofía Moreno',
+      subject: 'Ligação LinkedIn - Sofía Moreno',
       description: 'Contacto inicial no LinkedIn sobre licença enterprise.',
       outcome: 'Aceitou reunião. Muito receptiva.',
     },
@@ -347,19 +347,19 @@ export const demoEntityOverlaysPt: Pick<
   },
   demoEmails: {
     em1: {
-      subject: 'Bankia — proposta módulo Compliance',
+      subject: 'Bankia - proposta módulo Compliance',
       body: 'Partilho a proposta com âmbito, cronograma e preços do módulo Compliance. Se fizer sentido, revemos amanhã às 11:00.',
     },
     em2: {
-      subject: 'Re: Bankia — proposta módulo Compliance',
+      subject: 'Re: Bankia - proposta módulo Compliance',
       body: 'Obrigada David. Vamos rever com jurídico hoje e confirmo comentários. Por agora encaixa bem.',
     },
     em3: {
-      subject: 'Renovação Enterprise 2026 — proposta final',
+      subject: 'Renovação Enterprise 2026 - proposta final',
       body: 'Segue em anexo a proposta final de renovação com melhoria de SLA e roadmap Q3/Q4. Fico atento para fechar esta semana.',
     },
     em4: {
-      subject: 'Contrato pagamentos internacionais — próximos passos',
+      subject: 'Contrato pagamentos internacionais - próximos passos',
       body: 'Perfeito Cristina. Sugiro rever cláusulas jurídicas na quinta-feira e fechar na próxima semana.',
     },
   },

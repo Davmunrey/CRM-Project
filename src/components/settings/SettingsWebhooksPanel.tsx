@@ -278,8 +278,8 @@ export function SettingsWebhooksPanel() {
                     </p>
                     <p className="text-xs text-fg-subtle">
                       {t.settings.webhooksLastStatus}:{' '}
-                      {row.last_http_status != null ? String(row.last_http_status) : '—'}
-                      {row.last_delivery_error ? ` — ${row.last_delivery_error.slice(0, 120)}` : ''}
+                      {row.last_http_status != null ? String(row.last_http_status) : '-'}
+                      {row.last_delivery_error ? ` - ${row.last_delivery_error.slice(0, 120)}` : ''}
                     </p>
                   </div>
                   {canManage && (

@@ -2,7 +2,7 @@ import { differenceInCalendarDays, parseISO } from 'date-fns'
 import type { Activity, Deal, Lead } from '../types'
 
 /** Bucket label for deals with no `assignedTo` (translate in UI via `common.unassigned`). */
-export const MANAGER_DASHBOARD_UNASSIGNED_OWNER_KEY = '—'
+export const MANAGER_DASHBOARD_UNASSIGNED_OWNER_KEY = '__unassigned__'
 
 /**
  * Snapshot KPIs from `lifecycle_stage` on leads (no historical cohort).

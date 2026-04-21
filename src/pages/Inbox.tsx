@@ -766,7 +766,7 @@ export function Inbox() {
   async function refreshAccessToken(): Promise<string> {
     const { data, error } = await supabase!.functions.invoke('gmail-refresh-token')
     if (error || !data?.access_token) {
-      throw new Error('Token refresh failed — please reconnect Gmail')
+      throw new Error('Token refresh failed - please reconnect Gmail')
     }
     const newExpiry = Date.now() + (data.expires_in ?? 3600) * 1000
     setGmailToken(data.access_token, newExpiry)
@@ -843,7 +843,7 @@ export function Inbox() {
     setConnecting(true)
     try {
       await initiateGmailOAuth(clientId)
-      // Browser will redirect — no further action needed here
+      // Browser will redirect - no further action needed here
     } catch (err) {
       setConnecting(false)
       toast.error(err instanceof Error ? err.message : t.errors.gmailConnectionError)

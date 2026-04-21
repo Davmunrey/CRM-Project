@@ -45,7 +45,7 @@ export function useDataInit() {
           const expiresAt = Date.now() + (data.expires_in ?? 3600) * 1000
           setGmailToken(data.access_token, expiresAt)
         }
-        // If refresh fails (e.g. token revoked), stay silent — user will see "Connect Gmail" in Inbox
+        // If refresh fails (e.g. token revoked), stay silent - user will see "Connect Gmail" in Inbox
       })
     }
 
