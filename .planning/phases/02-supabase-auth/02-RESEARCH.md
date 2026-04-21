@@ -547,15 +547,11 @@ The recommended approach: mock `@supabase/supabase-js` at the module level, test
 
 ### Wave 0 Gaps
 
-- [ ] `vitest` and `@testing-library/react`, `@testing-library/user-event`, `jsdom` not installed — install command: `npm install -D vitest @testing-library/react @testing-library/user-event jsdom`
-- [ ] `vite.config.ts` needs `test` block added for jsdom environment
-- [ ] `tests/auth/ProtectedRoute.test.tsx` — covers AUTH-04 (most critical — race condition guard)
-- [ ] `tests/auth/authStore.test.ts` — covers AUTH-05 (logout signOut call)
-- [ ] `tests/auth/Register.test.tsx` — covers AUTH-01, AUTH-02
-- [ ] `tests/auth/ForgotPassword.test.tsx` — covers AUTH-03 (step 1)
-- [ ] `tests/auth/ResetPassword.test.tsx` — covers AUTH-03 (step 2)
-- [ ] `tests/lib/supabase.test.ts` — covers SEC-06 (console.warn)
-- [ ] `tests/setup.ts` — vitest setup file (import @testing-library/jest-dom matchers)
+> **Superseded (2026-04-21):** The items below were Phase 2 planning gaps. The current repository **already includes** Vitest, `vite.config.ts` test configuration, `tests/setup.ts`, the listed auth tests, `.github/workflows/ci.yml`, and a growing `tests/` tree. Treat this subsection as **historical**; use `npm run test:run` / CI as the source of truth.
+
+- [x] `vitest`, `@testing-library/react`, `@testing-library/user-event`, `jsdom` — **present** in `package.json`
+- [x] `vite.config.ts` — **includes** `test` block for jsdom
+- [x] `tests/auth/ProtectedRoute.test.tsx`, `tests/auth/authStore.test.ts`, `tests/auth/Register.test.tsx`, `tests/auth/ForgotPassword.test.tsx`, `tests/auth/ResetPassword.test.tsx`, `tests/lib/supabase.test.ts`, `tests/setup.ts` — **present**
 
 ---
 

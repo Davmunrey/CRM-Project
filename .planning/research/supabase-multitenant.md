@@ -5,6 +5,8 @@
 **Scope:** Migration from localStorage/Zustand persist to Supabase with full multi-tenancy
 **Confidence:** HIGH (Supabase JS SDK v2.x, Zustand v5, React 18 — all well within knowledge)
 
+> **Archive / drift notice (2026-04-21):** This document captures a **2026-03-31 pre-migration** baseline (localStorage-first, tenant-blind RLS, legacy client AI). The shipped product now uses **organization-scoped RLS**, Supabase Auth, Gmail PKCE + Edge token exchange, and **no in-browser AI store**. Keep this file for migration rationale; for “what exists today”, read `supabase/schema.sql`, [`docs/project-state.md`](../../docs/project-state.md), and [`.planning/codebase/STRUCTURE.md`](../codebase/STRUCTURE.md).
+
 ---
 
 ## Project Baseline (What Already Exists)
@@ -1112,4 +1114,4 @@ The `schema.sql` needs these additions in dependency order:
 | REPLICA IDENTITY FULL behavior | HIGH | Standard PostgreSQL feature, works with Supabase |
 ---
 
-*Last updated (git): **2026-04-13***
+*Last updated (git): **2026-04-21** — archive notice added; body remains March 2026 research.*

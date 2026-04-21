@@ -509,14 +509,13 @@ Spanish month names ('ene', 'feb', etc.) — assert against those or use ISO dat
 | 9.5 | CI runs tsc + vitest on push/PR | CI | `.github/workflows/ci.yml` |
 
 ### Wave 0 Gaps
-- [ ] `tests/stores/` directory — does not exist
-- [ ] `tests/schemas/` directory — does not exist
-- [ ] `tests/utils/` directory — does not exist
-- [ ] `src/lib/schemas/contact.ts` — schema not yet extracted
-- [ ] `src/lib/schemas/deal.ts` — schema not yet extracted
-- [ ] `src/lib/schemas/activity.ts` — schema not yet extracted
-- [ ] `@vitest/coverage-v8` — not installed (`npm install -D @vitest/coverage-v8`)
-- [ ] `.github/workflows/` directory — does not exist
+
+> **Superseded (2026-04-21):** The checklist below was written before the current test tree landed. **`tests/stores/`**, **`tests/schemas/`**, **`tests/utils/`**, Zod-backed schemas under `src/` (see `tests/schemas/*.test.ts`), **`@vitest/coverage-v8`**, and **`.github/workflows/ci.yml`** all exist in the repository now.
+
+- [x] `tests/stores/`, `tests/schemas/`, `tests/utils/` — **present**
+- [x] Contact / deal / activity schema tests — **present** under `tests/schemas/`
+- [x] `@vitest/coverage-v8` — **listed in** `package.json`
+- [x] `.github/workflows/` — **contains** CI workflow(s)
 
 ---
 
@@ -526,12 +525,11 @@ Spanish month names ('ene', 'feb', etc.) — assert against those or use ISO dat
 |------------|------------|-----------|---------|
 | Node.js | All | ✓ | 22.20.0 |
 | npm | Install step | ✓ | (bundled with Node) |
-| vitest | Test runner | ✓ | 4.1.2 |
-| @vitest/coverage-v8 | Coverage reports | ✗ | — |
-| GitHub Actions | CI (9.5) | N/A — remote | — |
+| vitest | Test runner | ✓ | see `package.json` |
+| @vitest/coverage-v8 | Coverage reports | ✓ | see `package.json` |
+| GitHub Actions | CI (9.5) | ✓ | `.github/workflows/ci.yml` |
 
-**Missing dependencies:**
-- `@vitest/coverage-v8` — blocks `vitest run --coverage`. Install with `npm install -D @vitest/coverage-v8`.
+**Coverage:** run `npm run test:coverage` (or project equivalent) when you need a coverage report; `@vitest/coverage-v8` is installed.
 
 ---
 

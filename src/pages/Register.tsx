@@ -77,14 +77,21 @@ export function Register() {
         <>
           <h1 className="text-2xl font-bold text-fg">{t.auth.registerButton}</h1>
           <p className="text-sm text-fg-muted mt-1">{branding.appName}</p>
-          {isSupabaseConfigured && (
+          {isSupabaseConfigured ? (
             <Tooltip content={t.auth.realAuthEnabled} side="bottom">
               <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-success/10 border border-success/20 cursor-default">
                 <ShieldCheck size={11} className="text-success" aria-hidden />
                 <span className="text-[10px] font-medium text-success">{t.auth.realAuthEnabled}</span>
               </div>
             </Tooltip>
-          )}
+          ) : isOfflineDemoMode ? (
+            <Tooltip content={t.auth.demoModeBadge} side="bottom">
+              <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-warning/10 border border-warning/20 cursor-default">
+                <ShieldCheck size={11} className="text-warning" aria-hidden />
+                <span className="text-[10px] font-medium text-warning">{t.auth.demoModeBadge}</span>
+              </div>
+            </Tooltip>
+          ) : null}
         </>
       )}
     >

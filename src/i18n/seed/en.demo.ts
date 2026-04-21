@@ -1,5 +1,9 @@
 import type { SeedDemoCatalog } from '../types'
+import { automationSeedRulesToDemoCatalog, createAutomationSeedRules } from './automationSeedRulesEn'
 import { demoEntityOverlaysEn } from './entityOverlaysEn'
+
+/** Fixed timestamp so seed demo catalog stays stable across builds. */
+const AUTOMATION_SEED_DEMO_TS = '2020-01-01T00:00:00.000Z'
 
 export const seedDemo: SeedDemoCatalog = {
   products: {
@@ -65,24 +69,7 @@ export const seedDemo: SeedDemoCatalog = {
       body: 'Thanks for your time today.\n\nAs discussed, here are the next steps:\n1) \n2) \n3) \n\nBest,',
     },
   },
-  automations: {
-    'auto-seed-1': {
-      name: 'Send follow-up email',
-      description: 'When a deal moves to Proposal, create an email task to send the formal proposal.',
-      createActivitySubject: 'Send formal proposal',
-    },
-    'auto-seed-2': {
-      name: 'Notify deal won',
-      description: 'Send a notification when a deal is closed successfully.',
-      notificationTitle: 'Deal won',
-      notificationMessage: 'Congratulations! A deal has been closed successfully.',
-    },
-    'auto-seed-3': {
-      name: 'Post-negotiation task',
-      description: 'When a deal enters Negotiation, create a task to review contract terms.',
-      createActivitySubject: 'Review contract terms',
-    },
-  },
+  automations: automationSeedRulesToDemoCatalog(createAutomationSeedRules(AUTOMATION_SEED_DEMO_TS)),
   sequences: {
     'seq-001': {
       name: 'Initial outreach',

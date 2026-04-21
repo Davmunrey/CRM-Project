@@ -5,6 +5,8 @@
 **Scope:** Gmail OAuth2 PKCE, secure token storage, thread-to-CRM linking, Anthropic Claude AI features, Supabase Edge Function proxy, XSS prevention
 **Confidence:** HIGH (based on official API documentation knowledge; web tools unavailable in this session)
 
+> **Archive / drift notice (2026-04-21):** This note was written against a March 2026 snapshot. The product has since **removed** the client AI stack (`aiService.ts`, `aiStore.ts`, `components/ai/*`). Gmail has moved to **Auth Code + PKCE** with server-side refresh tokens. Use [`docs/project-state.md`](../../docs/project-state.md), [`docs/google-gmail-oauth-verification.md`](../../docs/google-gmail-oauth-verification.md), and [`.planning/codebase/STRUCTURE.md`](../codebase/STRUCTURE.md) as the live map; treat the “Current AI Implementation” section below as **historical research**, not current source layout.
+
 ---
 
 ## Codebase Audit: What Already Exists and What Is Broken
@@ -1018,4 +1020,4 @@ bundle, remove `dangerouslyAllowBrowser: true` and remove the direct SDK instant
 | Google OAuth verification timeline | MEDIUM | 4-6 weeks is historical average; current timeline may vary |
 ---
 
-*Last updated (git): **2026-04-13***
+*Last updated (git): **2026-04-21** — archive notice added; body remains March 2026 research.*

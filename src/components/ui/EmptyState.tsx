@@ -51,9 +51,11 @@ export function EmptyState({
       {title && (
         <h3 className={`font-semibold text-fg mb-1 ${isPanel ? 'text-sm' : 'text-base'}`}>{title}</h3>
       )}
-      <p className={`text-fg-muted max-w-sm leading-relaxed ${isPanel ? 'text-sm' : 'text-sm mb-6'}`}>
-        {mainText}
-      </p>
+      {mainText ? (
+        <p className={`text-fg-muted max-w-sm leading-relaxed ${isPanel ? 'text-sm' : 'text-sm mb-6'}`}>
+          {mainText}
+        </p>
+      ) : null}
       {secondary && <p className="text-xs text-fg-subtle mt-1.5 max-w-[220px]">{secondary}</p>}
       {action && description && (
         <Button type="button" onClick={action.onClick} className="mt-2">

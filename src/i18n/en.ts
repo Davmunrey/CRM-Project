@@ -232,7 +232,6 @@ export const en: Translations = {
     contactCount: 'Contacts',
     dealCount: 'Deals',
     emptyTitle: 'No companies yet',
-    emptyDescription: 'Add your first company to start organizing your accounts.',
     deleteConfirm: 'Are you sure you want to delete this company? This action cannot be undone.',
     created: 'Company created successfully',
     updated: 'Company updated successfully',
@@ -742,6 +741,7 @@ export const en: Translations = {
     emailTrackingSubtitle:
       'Opens and clicks recorded when recipients load the tracking pixel or follow a rewritten link. Edge Functions `track-open` and `track-click` write to `email_tracking_events`.',
     emailTrackingServerBadge: 'Server-based',
+    emailTrackingDemoBadge: 'Local demo',
     emailTrackingOpens: 'Opens',
     emailTrackingClicks: 'Clicks',
     emailTrackingPrivacyNote:
@@ -879,6 +879,14 @@ export const en: Translations = {
     action: 'Action',
     executionCount: 'Executions',
     lastExecuted: 'Last Executed',
+    libraryTitle: 'Starter templates',
+    librarySubtitle: 'Add a pre-built rule to your workspace. You can edit it after it is created.',
+    useTemplate: 'Use template',
+    runtimeActivityDescription: 'Created automatically by rule "{ruleName}".',
+    runtimeActivitySubjectFallback: 'Automated follow-up: {dealTitle}',
+    runtimeCreatedBy: 'Automation',
+    runtimeNotificationTitleFallback: 'Automation: {ruleName}',
+    runtimeNotificationMessageFallback: 'Deal "{dealTitle}" triggered rule "{ruleName}".',
   },
 
   products: {
@@ -1107,6 +1115,7 @@ export const en: Translations = {
     sendLink: 'Send link',
     backToLogin: 'Back to login',
     realAuthEnabled: 'Real authentication enabled',
+    demoModeBadge: 'Local demo — sample data only',
     emailPlaceholder: 'you@company.com',
     checkEmailConfirmation: 'We sent a confirmation link to',
     passwordsDoNotMatch: 'Passwords do not match',

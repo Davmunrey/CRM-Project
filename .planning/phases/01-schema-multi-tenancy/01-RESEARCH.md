@@ -552,9 +552,11 @@ ORDER BY tablename;
 
 ### Wave 0 Gaps
 
-- [ ] No test framework configured — install Vitest (`npm install -D vitest @testing-library/react jsdom`) is deferred to Phase 10 (TEST-01). SQL validation for this phase is done via Supabase SQL editor, not automated test runner.
+> **Superseded (2026-04-21):** Vitest and the broader `tests/` suite now exist (Phase 9 / CI). The original note below applied when TEST-01 was still pending. **Phase 1** remains SQL-first; automated tests complement but do not replace Supabase SQL validation.
 
-*(This phase is SQL-only; automated test infrastructure is not required to deliver SCHEMA-01 through SCHEMA-05.)*
+- [x] Test framework — **Vitest installed**; see `package.json`, `vite.config.ts`, and `.github/workflows/ci.yml`.
+
+*(This phase is SQL-first; automated test infrastructure is optional for SCHEMA-01 through SCHEMA-05 but is available in-repo.)*
 
 ---
 

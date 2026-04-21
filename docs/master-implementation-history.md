@@ -45,7 +45,7 @@ Foundation through operational notes (platform, tenancy, auth, tracking, leads, 
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-18  
+- **Last updated:** 2026-04-21  
 - **Canonical:** Yes (together with Part B)  
 
 This file is an **archive-stable** slice: it should change rarely. Prefer editing Part B for ongoing delivery narrative.
@@ -217,7 +217,7 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-18  
+- **Last updated:** 2026-04-21  
 - **Canonical:** Yes (Part A + Part B together)  
 
 ## Contents

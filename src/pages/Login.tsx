@@ -50,6 +50,26 @@ function LoginHero({ branding, t }: { branding: AppSettings['branding']; t: Retu
   )
 }
 
+function AuthChannelBadge({ t }: { t: ReturnType<typeof useTranslations> }) {
+  if (isSupabaseConfigured) {
+    return (
+      <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-success/10 border border-success/20">
+        <ShieldCheck size={11} className="text-success" aria-hidden />
+        <span className="text-[10px] font-medium text-success">{t.auth.realAuthEnabled}</span>
+      </div>
+    )
+  }
+  if (isOfflineDemoMode) {
+    return (
+      <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-warning/10 border border-warning/20">
+        <ShieldCheck size={11} className="text-warning" aria-hidden />
+        <span className="text-[10px] font-medium text-warning">{t.auth.demoModeBadge}</span>
+      </div>
+    )
+  }
+  return null
+}
+
 export function Login() {
   const t = useTranslations()
   const [email, setEmail] = useState('')
@@ -115,12 +135,7 @@ export function Login() {
     <Card className="p-8">
       <div className="text-center mb-6 lg:hidden">
         <p className="text-sm text-fg-muted">{t.auth.login}</p>
-        {isSupabaseConfigured && (
-          <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-success/10 border border-success/20">
-            <ShieldCheck size={11} className="text-success" aria-hidden />
-            <span className="text-[10px] font-medium text-success">{t.auth.realAuthEnabled}</span>
-          </div>
-        )}
+        <AuthChannelBadge t={t} />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -187,55 +202,48 @@ export function Login() {
           </Link>
         </p>
       </div>
+
+      {isOfflineDemoMode ? (
+        <details className="mt-6 glass rounded-xl border border-fg/8 p-4 group">
+          <summary className="text-xs font-semibold text-fg-muted cursor-pointer list-none flex items-center justify-between gap-2">
+            <span>{t.auth.demoCredentialsTitle}</span>
+            <span className="text-fg-subtle text-[10px] group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div className="mt-3 space-y-1.5 pt-1 border-t border-fg/8">
+            {[
+              { email: 'david@crmpro.es', role: t.acceptInvite.roleAdmin, color: 'text-danger' },
+              { email: 'sara@crmpro.es', role: t.acceptInvite.roleManager, color: 'text-accent-400' },
+              { email: 'carlos@crmpro.es', role: t.acceptInvite.roleSalesRep, color: 'text-success' },
+            ].map((demo) => (
+              <button
+                type="button"
+                key={demo.email}
+                onClick={() => {
+                  setEmail(demo.email)
+                  setPassword('demo123')
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-fg/5 transition-colors text-left"
+              >
+                <span className="text-xs text-fg-muted">{demo.email}</span>
+                <span className={`text-[10px] font-semibold ${demo.color}`}>{demo.role}</span>
+              </button>
+            ))}
+            <p className="text-[10px] text-fg-subtle pt-1">
+              {t.auth.password}: demo123
+            </p>
+          </div>
+        </details>
+      ) : null}
     </Card>
   )
-
-  const demoBlock =
-    isOfflineDemoMode ? (
-      <details className="mt-6 glass rounded-xl border-fg/8 p-4 group">
-        <summary className="text-xs font-semibold text-fg-muted cursor-pointer list-none flex items-center justify-between gap-2">
-          <span>{t.auth.demoCredentialsTitle}</span>
-          <span className="text-fg-subtle text-[10px] group-open:rotate-180 transition-transform">▼</span>
-        </summary>
-        <div className="mt-3 space-y-1.5 pt-1 border-t border-fg/8">
-          {[
-            { email: 'david@crmpro.es', role: t.acceptInvite.roleAdmin, color: 'text-danger' },
-            { email: 'sara@crmpro.es', role: t.acceptInvite.roleManager, color: 'text-accent-400' },
-            { email: 'carlos@crmpro.es', role: t.acceptInvite.roleSalesRep, color: 'text-success' },
-          ].map((demo) => (
-            <button
-              type="button"
-              key={demo.email}
-              onClick={() => {
-                setEmail(demo.email)
-                setPassword('demo123')
-              }}
-              className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-fg/5 transition-colors text-left"
-            >
-              <span className="text-xs text-fg-muted">{demo.email}</span>
-              <span className={`text-[10px] font-semibold ${demo.color}`}>{demo.role}</span>
-            </button>
-          ))}
-          <p className="text-[10px] text-fg-subtle pt-1">
-            {t.auth.password}: demo123
-          </p>
-        </div>
-      </details>
-    ) : null
 
   return (
     <AuthLayout variant="split" splitPanel={<LoginHero branding={branding} t={t} />} footer={footerLinks}>
       <div className="hidden lg:block text-center mb-6">
         <p className="text-sm text-fg-muted">{t.auth.login}</p>
-        {isSupabaseConfigured && (
-          <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-success/10 border border-success/20">
-            <ShieldCheck size={11} className="text-success" aria-hidden />
-            <span className="text-[10px] font-medium text-success">{t.auth.realAuthEnabled}</span>
-          </div>
-        )}
+        <AuthChannelBadge t={t} />
       </div>
       {formCard}
-      {demoBlock}
     </AuthLayout>
   )
 }

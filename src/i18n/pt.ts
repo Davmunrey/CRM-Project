@@ -234,7 +234,6 @@ export const pt: Translations = {
     contactCount: 'Contatos',
     dealCount: 'Negócios',
     emptyTitle: 'Nenhuma empresa cadastrada',
-    emptyDescription: 'Adicione empresas para organizar seus contatos e negócios por conta.',
     deleteConfirm: 'Tem certeza que deseja excluir esta empresa? Esta ação não pode ser desfeita.',
     created: 'Empresa criada com sucesso',
     updated: 'Empresa atualizada com sucesso',
@@ -744,6 +743,7 @@ export const pt: Translations = {
     emailTrackingSubtitle:
       'Aberturas e cliques registrados quando o destinatário carrega o pixel ou segue um link reescrito. As Edge Functions `track-open` e `track-click` gravam em `email_tracking_events`.',
     emailTrackingServerBadge: 'Baseado no servidor',
+    emailTrackingDemoBadge: 'Demo local',
     emailTrackingOpens: 'Aberturas',
     emailTrackingClicks: 'Cliques',
     emailTrackingPrivacyNote:
@@ -886,6 +886,14 @@ export const pt: Translations = {
     action: 'Ação',
     executionCount: 'Execuções',
     lastExecuted: 'Última Execução',
+    libraryTitle: 'Modelos iniciais',
+    librarySubtitle: 'Adicione uma regra pronta ao seu espaço de trabalho. Você pode editá-la depois de criá-la.',
+    useTemplate: 'Usar modelo',
+    runtimeActivityDescription: 'Criado automaticamente pela regra «{ruleName}».',
+    runtimeActivitySubjectFallback: 'Acompanhamento automático: {dealTitle}',
+    runtimeCreatedBy: 'Automação',
+    runtimeNotificationTitleFallback: 'Automação: {ruleName}',
+    runtimeNotificationMessageFallback: 'O negócio «{dealTitle}» acionou a regra «{ruleName}».',
   },
 
   // ─── Products ────────────────────────────────────────────────────────────────
@@ -1119,6 +1127,7 @@ export const pt: Translations = {
     sendLink: 'Enviar link',
     backToLogin: 'Voltar ao login',
     realAuthEnabled: 'Autenticação real ativada',
+    demoModeBadge: 'Demo local — apenas dados de exemplo',
     emailPlaceholder: 'voce@empresa.com',
     checkEmailConfirmation: 'Enviamos um link de confirmação para',
     passwordsDoNotMatch: 'As senhas não coincidem',

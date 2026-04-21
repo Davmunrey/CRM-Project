@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Analysis Date:** 2026-04-10
+**Analysis Date:** 2026-04-21
 
 ## Languages
 
@@ -28,12 +28,12 @@
 - React Router DOM 6.30 (`react-router-dom`) - Client-side routing with `<BrowserRouter>`
 
 **State Management:**
-- Zustand 5.0 (`zustand`) with `persist` middleware — all global state lives in `src/store/*.ts`
+- Zustand 5.0 (`zustand`) with `persist` middleware — all global state lives in `src/store/*.ts` (21 domain stores; see `.planning/codebase/STRUCTURE.md`)
   - `useAuthStore` — auth, users, sessions (`src/store/authStore.ts`)
-  - `useAIStore` — model selection, conversations, enrichments (`src/store/aiStore.ts`)
   - `useEmailStore` — sent emails, Gmail threads and persisted thread links (`src/store/emailStore.ts`)
   - `useSettingsStore` — pipeline stages, currency, tags (`src/store/settingsStore.ts`)
-  - 14 additional stores in `src/store/`
+  - `useAutomationsStore` — automation rules and triggers (`src/store/automationsStore.ts`)
+  - Additional CRM/inbox/sequences/goals/audit/etc. stores in `src/store/`
 
 **Forms:**
 - React Hook Form 7.71 (`react-hook-form`) with Zod 4.3 resolvers via `@hookform/resolvers`
@@ -57,7 +57,7 @@
 **Testing:**
 - Vitest 4 (`vitest`) + jsdom + Testing Library
 - Commands: `npm run test`, `npm run test:run`, `npm run test:coverage`
-- Current baseline: 105 tests passing
+- Baseline size changes over time — **`npm run test:run` is the source of truth** (last verified: **36** test files, **183** tests, 0 failures, exit 0 on 2026-04-21)
 
 **Build/Dev:**
 - Vite 8.0 (`vite`) — dev server and production bundler; config at `vite.config.ts`
@@ -107,7 +107,7 @@
 
 ---
 
-*Stack analysis: 2026-04-10*
+*Stack analysis: 2026-04-21*
 ---
 
-*Last updated (git): **2026-04-16***
+*Last updated (git): **2026-04-21***

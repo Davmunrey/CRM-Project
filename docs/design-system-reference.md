@@ -232,4 +232,4 @@ Persistent hints for agents: `.cursor/rules/ui-consistency.mdc` (tokens, primiti
 
 - **Status:** Active  
 - **Owner:** Frontend  
-- **Last updated:** 2026-04-18  
+- **Last updated:** 2026-04-21  

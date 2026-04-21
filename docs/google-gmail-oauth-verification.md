@@ -10,7 +10,7 @@ This repo’s Gmail flow uses **Auth Code + PKCE** and Edge Functions (e.g. [`su
 |-------|--------|
 | **Console submission** | Owned by humans on the Google Cloud + legal side — not automatable from this repo. |
 | **Repo readiness** | Redirect URI matrix + channel alignment documented below (B1); keep **Authorized redirect URIs** in sync with every deployed origin. |
-| **Last doc review** | 2026-04-16 — cross-check [`project-state.md`](./project-state.md) (Gaps) when submission state changes. |
+| **Last doc review** | 2026-04-21 — cross-check [`project-state.md`](./project-state.md) (Gaps) when submission state changes. |
 
 ## Checklist (Google Cloud Console)
 
@@ -46,4 +46,4 @@ The CRM Gmail flow uses **Auth Code + PKCE** with redirect URI `${window.locatio
 *Operational detail only; not legal advice. Keep privacy policy and in-product disclosures aligned with actual data processing.*
 ---
 
-*Last updated (git): **2026-04-16***
+*Last updated (git): **2026-04-21***

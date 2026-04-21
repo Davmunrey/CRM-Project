@@ -71,4 +71,4 @@ Run (from repo root):
 
 ---
 
-*Last updated: **2026-04-16** — metrics contract; i18n key map; sentinel `MANAGER_DASHBOARD_UNASSIGNED_OWNER_KEY`; explicit `managerDashboard` strings for EN/ES/PT/DE/FR/IT; closed-stage heuristics and test pointer.*
+*Last updated: **2026-04-21** — prior 2026-04-16: metrics contract; i18n key map; sentinel `MANAGER_DASHBOARD_UNASSIGNED_OWNER_KEY`; explicit `managerDashboard` strings for EN/ES/PT/DE/FR/IT; closed-stage heuristics and test pointer.*

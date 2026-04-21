@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import {
   Workflow, Plus, Trash2, ToggleLeft, ToggleRight, Zap, Bell,
-  ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X, Play,
+  ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X, Play, Library,
 } from 'lucide-react'
 import { useAutomationsStore } from '../store/automationsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
@@ -15,6 +15,12 @@ import { toast } from '../store/toastStore'
 import { formatRelativeDate } from '../utils/formatters'
 import { getTranslations, useI18nStore, useTranslations } from '../i18n'
 import { localizedAutomationRule } from '../i18n/localizeSeed'
+import type { SeedAutomationId } from '../i18n/types'
+import {
+  AUTOMATION_SEED_STRUCTURAL_RULES,
+  AUTOMATION_SEED_TEMPLATE_IDS,
+  getAutomationTemplateRulePayload,
+} from '../i18n/seed/automationSeedRulesEn'
 import type {
   AutomationRule, AutomationTriggerType, AutomationActionType,
   AutomationTrigger, AutomationAction, DealStage, ActivityType,
@@ -329,6 +335,63 @@ function RuleModal({
   )
 }
 
+// ─── Starter template library (same UI in demo / staging / production) ───────
+
+type AutomationRulePayload = Omit<AutomationRule, 'id' | 'executionCount' | 'createdAt' | 'updatedAt'>
+
+function AutomationStarterLibrary({ onUseTemplate }: { onUseTemplate: (payload: AutomationRulePayload) => void }) {
+  const t = useTranslations()
+  const triggerLabels = getTriggerLabels(t)
+  return (
+    <div className="glass rounded-xl border border-fg/6 p-4 space-y-3">
+      <div className="flex items-start gap-2">
+        <div className="p-2 rounded-lg bg-accent-500/15 flex-shrink-0">
+          <Library size={16} className="text-accent-400" aria-hidden />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-fg">{t.automations.libraryTitle}</p>
+          <p className="text-xs text-fg-subtle mt-0.5">{t.automations.librarySubtitle}</p>
+        </div>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        {(AUTOMATION_SEED_TEMPLATE_IDS as readonly SeedAutomationId[]).map((templateId) => {
+          const copy = t.seedDemo.automations[templateId]
+          const structural = AUTOMATION_SEED_STRUCTURAL_RULES.find((r) => r.id === templateId)
+          if (!structural) return null
+          return (
+            <div key={templateId} className="rounded-lg border border-fg/8 bg-fg/[0.02] p-3 space-y-2 flex flex-col">
+              <p className="text-xs font-semibold text-fg">{copy.name}</p>
+              <p className="text-[10px] text-fg-subtle line-clamp-3 flex-1">{copy.description}</p>
+              <div className="flex flex-wrap items-center gap-1 text-[10px] text-fg-muted">
+                <span className="px-1.5 py-0.5 rounded border border-fg/8">{triggerLabels[structural.trigger.type]}</span>
+                {structural.trigger.toStage && (
+                  <>
+                    <ArrowRight size={10} className="text-fg-subtle flex-shrink-0" aria-hidden />
+                    <span className="text-accent-400">
+                      {t.deals.stageLabels[structural.trigger.toStage as keyof typeof t.deals.stageLabels] ?? structural.trigger.toStage}
+                    </span>
+                  </>
+                )}
+              </div>
+              <PermissionGate permission="automations:create">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="w-full mt-auto"
+                  onClick={() => onUseTemplate(getAutomationTemplateRulePayload(templateId))}
+                >
+                  {t.automations.useTemplate}
+                </Button>
+              </PermissionGate>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ─── Rule card ────────────────────────────────────────────────────────────────
 
 function RuleCard({ rule }: { rule: AutomationRule }) {
@@ -351,7 +414,13 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
     <>
       {editing && (
         <RuleModal
-          initial={{ name: rule.name, description: rule.description, isActive: rule.isActive, trigger: rule.trigger, actions: rule.actions }}
+          initial={{
+            name: displayRule.name,
+            description: displayRule.description,
+            isActive: rule.isActive,
+            trigger: rule.trigger,
+            actions: displayRule.actions,
+          }}
           onSave={handleSave}
           onClose={() => setEditing(false)}
         />
@@ -486,9 +555,14 @@ export function Automations() {
   const active = rules.filter((r) => r.isActive).length
   const totalExecutions = rules.reduce((s, r) => s + r.executionCount, 0)
 
-  const handleSave = (data: Omit<AutomationRule, 'id' | 'executionCount' | 'createdAt' | 'updatedAt'>) => {
+  const handleSave = (data: AutomationRulePayload) => {
     addRule(data)
     setShowNew(false)
+    toast.success(t.automations.title)
+  }
+
+  const handleUseTemplate = (payload: AutomationRulePayload) => {
+    addRule(payload)
     toast.success(t.automations.title)
   }
 
@@ -530,6 +604,8 @@ export function Automations() {
           accent="success"
         />
       </div>
+
+      <AutomationStarterLibrary onUseTemplate={handleUseTemplate} />
 
       {/* Rules list */}
       {rules.length === 0 ? (

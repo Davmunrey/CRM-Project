@@ -1,5 +1,5 @@
 /** Escape text before inline HTML substitutions. */
-export function escapeHtmlForBody(value: string): string {
+function escapeHtmlForBody(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
 }
 
@@ -131,20 +131,6 @@ export function prefixLinesInSelection(
   const ins = prefix
   const next = body.slice(0, start) + ins + body.slice(end)
   const caret = start + ins.length
-  return { body: next, selectionStart: caret, selectionEnd: caret }
-}
-
-export function stripLinePrefixInSelection(
-  body: string,
-  start: number,
-  end: number,
-  pattern: RegExp,
-): BodyEditResult {
-  const chunk = body.slice(start, end)
-  const lines = chunk.split('\n').map((l) => l.replace(pattern, ''))
-  const rep = lines.join('\n')
-  const next = body.slice(0, start) + rep + body.slice(end)
-  const caret = start + rep.length
   return { body: next, selectionStart: caret, selectionEnd: caret }
 }
 

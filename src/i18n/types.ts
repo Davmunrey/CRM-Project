@@ -322,7 +322,6 @@ export interface Translations {
     contactCount: string
     dealCount: string
     emptyTitle: string
-    emptyDescription: string
     deleteConfirm: string
     created: string
     updated: string
@@ -831,6 +830,8 @@ export interface Translations {
     emailTrackingTitle: string
     emailTrackingSubtitle: string
     emailTrackingServerBadge: string
+    /** Same header slot as server badge when analytics run in local demo mode */
+    emailTrackingDemoBadge: string
     emailTrackingOpens: string
     emailTrackingClicks: string
     emailTrackingPrivacyNote: string
@@ -975,6 +976,18 @@ export interface Translations {
     action: string
     executionCount: string
     lastExecuted: string
+    libraryTitle: string
+    librarySubtitle: string
+    useTemplate: string
+    /** Interpolation: `{ruleName}` */
+    runtimeActivityDescription: string
+    /** Interpolation: `{dealTitle}` */
+    runtimeActivitySubjectFallback: string
+    runtimeCreatedBy: string
+    /** Interpolation: `{ruleName}` */
+    runtimeNotificationTitleFallback: string
+    /** Interpolation: `{dealTitle}`, `{ruleName}` */
+    runtimeNotificationMessageFallback: string
   }
 
   products: {
@@ -1216,6 +1229,8 @@ export interface Translations {
     sendLink: string
     backToLogin: string
     realAuthEnabled: string
+    /** Shown on login when offline demo channel (same pill slot as real auth). */
+    demoModeBadge: string
     emailPlaceholder: string
     checkEmailConfirmation: string
     passwordsDoNotMatch: string

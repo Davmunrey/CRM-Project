@@ -1,6 +1,6 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-04-10
+**Analysis Date:** 2026-04-21
 
 ---
 
@@ -41,7 +41,7 @@
 
 ---
 
-*Concerns audit: 2026-04-10; email tracking subsection refreshed 2026-04-16 (Ola B — server telemetry + Reports + RLS scope).*
+*Concerns audit: 2026-04-10; email tracking subsection refreshed 2026-04-16 (Ola B — server telemetry + Reports + RLS scope); document-control pass 2026-04-21.*
 ---
 
-*Last updated (git): **2026-04-16***
+*Last updated (git): **2026-04-21***

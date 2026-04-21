@@ -128,7 +128,6 @@ export function Companies() {
       <PageHeader
         showTitle={false}
         title={t.companies.title}
-        subtitle={t.companies.emptyDescription}
       />
       {listError && (
         <div className="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger" role="alert">
@@ -341,7 +340,6 @@ export function Companies() {
         <EmptyState
           icon={<Building2 size={28} />}
           title={t.companies.emptyTitle}
-          description={t.companies.emptyDescription}
           action={{ label: t.companies.newCompany, onClick: () => setIsFormOpen(true) }}
         />
       )}

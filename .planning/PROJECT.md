@@ -2,13 +2,15 @@
 
 ## What This Is
 
-CRM Pro is a full-featured B2B SaaS CRM for Sales teams, built to compete with HubSpot and Pipedrive. It covers the full sales lifecycle — contacts, companies, deals pipeline, activities, sequences, forecasting, AI-assisted selling, and Gmail integration — with multi-tenant organization isolation so any business can sign up and use it independently.
+CRM Pro is a full-featured B2B SaaS CRM for Sales teams, built to compete with HubSpot and Pipedrive. It covers the full sales lifecycle — contacts, companies, deals pipeline, activities, sequences, forecasting, rule-based lead scoring, and Gmail integration — with multi-tenant organization isolation so any business can sign up and use it independently.
 
-The product is now operating as a Supabase-backed SaaS app (auth, multi-tenant RLS, real-time stores, hardened Gmail OAuth/token flow, and 6-language i18n coverage). The next milestone is deployment hardening and production release on a **static host / CDN** (see `.planning/ROADMAP.md` Phase 10 and `docs/project-state.md`).
+The product is now operating as a Supabase-backed SaaS app (auth, multi-tenant RLS, real-time stores, hardened Gmail OAuth/token flow, and 6-language i18n coverage). The next milestone is deployment hardening and production release on **private static hosting** (reverse proxy or CDN serving `dist/` — see `.planning/ROADMAP.md` Phase 10 and `docs/project-state.md`).
+
+**Documentation language:** `.planning/` and engineering master documents under `docs/` are maintained in **English**.
 
 ## Core Value
 
-A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time from day one — with AI that drafts emails, scores leads, and surfaces insights automatically.
+A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time from day one — with lead scoring, reporting, and Gmail-backed workflows (no Anthropic/Claude product stack).
 
 ## Requirements
 
@@ -23,7 +25,7 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 - ✓ Calendar view for scheduled activities — existing
 - ✓ Email sequences builder (Sequences page) — existing
 - ✓ Automation rules engine (Automations page) — existing
-- ✓ AI Agent chat interface (placeholder; provider via OpenRouter path, no browser Anthropic SDK usage) — existing
+- ✓ No Anthropic/Claude Edge or in-app chat route shipped (see `.planning/REQUIREMENTS.md` **AI Features**); minor settings/i18n cleanup may remain
 - ✓ Gmail Inbox integrated view (PKCE OAuth + server refresh + persisted thread links) — existing
 - ✓ Forecast page with revenue projections — existing
 - ✓ Leaderboard and team performance metrics — existing
@@ -68,10 +70,10 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 ## Constraints
 
-- **Tech stack**: React + Supabase + static hosting — no dedicated Node app server; Supabase Edge Functions for sensitive operations (API key proxying, Gmail OAuth token exchange)
+- **Tech stack**: React + Supabase + **private** static hosting — no dedicated Node app server; Supabase Edge Functions for sensitive operations (Gmail OAuth token exchange; no Claude/Anthropic proxy)
 - **Auth**: Supabase Auth only — no custom auth, no third-party OAuth providers beyond Google (Gmail)
 - **Multi-tenancy**: RLS at database level — no application-layer tenant filtering
-- **Budget**: Free tier first — Supabase free tier + low-cost static hosting where applicable; Anthropic pay-per-use
+- **Budget**: Free tier first — Supabase free tier + self-operated static hosting where applicable
 - **Backwards compatibility**: Seed data reset on first Supabase migration — localStorage data is not migrated
 
 ## Key Decisions
@@ -104,7 +106,7 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-10 after Gmail hardening + inbox collaboration migration updates + post-phase UX/UI upgrade + build hardening*
+*Last updated: 2026-04-21 — documentation + codebase-map alignment (Automations, removed client AI stack, Knip, Vitest baseline). Prior narrative: 2026-04-10 after Gmail hardening + inbox collaboration migration updates + post-phase UX/UI upgrade + build hardening.*
 ---
 
-*Last updated (git): **2026-04-16***
+*Last updated (git): **2026-04-21***

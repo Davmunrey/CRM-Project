@@ -3,7 +3,7 @@ import rawIndustries from '../data/linkedin-industries-v2.json'
 
 export type LinkedInIndustryId = string
 
-export interface IndustryRecord {
+interface IndustryRecord {
   id: LinkedInIndustryId
   nameEn: string
   hierarchy: string
@@ -51,8 +51,4 @@ export function getIndustryOptions(language: Language): { value: string; label: 
   const opts = records.map((r) => ({ value: r.id, label: getIndustryLabel(r.id, language) }))
   opts.sort((a, b) => a.label.localeCompare(b.label, language === 'en' ? 'en' : undefined))
   return opts
-}
-
-export function getIndustryRecords(): readonly IndustryRecord[] {
-  return records
 }

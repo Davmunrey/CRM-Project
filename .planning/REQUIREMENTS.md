@@ -1,7 +1,7 @@
 # Requirements: CRM Pro
 
 **Defined:** 2026-03-31
-**Core Value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time — with AI that drafts emails, scores leads, and surfaces insights automatically.
+**Core Value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time — with lead scoring, reporting, and collaboration (no Anthropic/Claude LLM stack in product scope).
 
 ## Current Snapshot (2026-04-10)
 
@@ -73,19 +73,21 @@
 ### Security Fixes
 
 - [x] **SEC-01**: `authStore` weak djb2 hash replaced by Supabase Auth — passwords never stored locally
-- [x] **SEC-02**: Anthropic API key removed from localStorage — stored only in Supabase Edge Function env vars
+- [x] **SEC-02**: Third-party LLM API keys are not stored in the browser; sensitive credentials belong only in Edge Function env (if a future non-browser LLM integration is approved)
 - [x] **SEC-03**: `dangerouslySetInnerHTML` in `AIAgent.tsx` replaced with `react-markdown` + `rehype-sanitize`
-- [x] **SEC-04**: `dangerouslyAllowBrowser: true` removed from `aiService.ts` — all Claude calls go through Edge Function proxy
+- [x] **SEC-04**: Direct browser LLM SDKs and legacy client AI modules were removed (`aiService.ts`, `aiStore.ts`, `components/ai/*`). Any future assistive model, if approved, must use Edge-only proxies with secrets in function env — **not** Anthropic/Claude (see **AI Features** below).
 - [x] **SEC-05**: Gmail access token stored in memory only (not localStorage); refresh token stored in `gmail_tokens` Supabase table
 - [x] **SEC-06**: Dev-mode console warning when Supabase env vars are absent (currently silent no-op)
 
 ### AI Features
 
-- [ ] **AI-01**: Supabase Edge Function `claude-proxy` — proxies Claude API calls, injects Anthropic key from env, returns streaming responses
-- [ ] **AI-02**: Lead scoring recalculates automatically when activity is logged for a contact
-- [ ] **AI-03**: AI email drafting — user selects contact + optional deal, AI generates context-aware draft using contact history and prior emails
-- [ ] **AI-04**: Call summary — user pastes transcript, AI returns structured summary with key points and next steps
-- [ ] **AI-05**: AIAgent chat uses Edge Function proxy instead of direct browser SDK call
+**Product decision:** The CRM does **not** ship Claude, Anthropic, or a `claude-proxy` Edge Function. Generative chat, Anthropic-backed drafting, and related items are **out of scope** unless replanned with an explicit non-Anthropic provider and security review.
+
+- [x] **AI-01**: **Cancelled.** ~~Supabase Edge Function `claude-proxy` for Claude~~ — not pursued (no Anthropic integration).
+- [ ] **AI-02**: Lead scoring recalculates automatically when activity is logged for a contact *(still open — product backlog)*.
+- [x] **AI-03**: **Cancelled.** ~~AI email drafting via generative model~~ — not pursued under current scope.
+- [x] **AI-04**: **Cancelled.** ~~Call summary from pasted transcript~~ — not pursued under current scope.
+- [x] **AI-05**: **Cancelled.** ~~AIAgent chat via Edge proxy to Anthropic~~ — not pursued (no Claude stack).
 
 ### Gmail Integration
 
@@ -111,9 +113,9 @@
 
 ### Deployment
 
-- [ ] **DEPLOY-01**: Static SPA hosting configured so all client routes resolve to `index.html` on cold load (host-specific: e.g. `vercel.json` rewrites, Netlify `_redirects`, nginx `try_files`, CDN origin rules — critical for React Router)
+- [ ] **DEPLOY-01**: Static SPA hosting configured so all client routes resolve to `index.html` on cold load (**primary:** nginx `try_files`, Caddy `file_server` + `try_files`, or CDN/bucket rules on **private** infrastructure). Optional: checked-in `vercel.json` or Netlify `_redirects` for reference only — **not** the required production platform.
 - [ ] **DEPLOY-02**: Production and preview/staging environments define `VITE_APP_CHANNEL` plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the deployment pipeline or host dashboard (secrets never committed); `demo` channel builds may omit Supabase for offline mock only
-- [ ] **DEPLOY-03**: Preview builds (e.g. on each PR) set `VITE_APP_CHANNEL=staging` and use a **staging** Supabase project; production uses `VITE_APP_CHANNEL=production` and production-only credentials
+- [ ] **DEPLOY-03**: Staging builds (e.g. branch pipeline or manual staging host) set `VITE_APP_CHANNEL=staging` and use a **staging** Supabase project; production uses `VITE_APP_CHANNEL=production` and production-only credentials. Add every **staging and production origin** you use to Supabase Auth URL allowlists (not limited to any single SaaS preview domain).
 - [ ] **DEPLOY-04**: Production deployment on merge to `main` (or your protected release branch) with a recorded smoke pass
 - [ ] **DEPLOY-05**: Custom domain + HTTPS (DNS + TLS per your hosting provider)
 
@@ -131,11 +133,11 @@ Check **`DEPLOY-*`** only after the work exists on the **target** environment (n
 - **BILL-02**: Usage limits enforced per plan (contacts limit, users limit, AI calls/month)
 - **BILL-03**: Billing portal for plan upgrades, invoice downloads
 
-### Advanced AI
+### Advanced assistive features (v2 — not Anthropic-specific)
 
-- **AI-ADV-01**: Automated email sequences sent by AI based on contact stage
-- **AI-ADV-02**: Meeting prep brief generated from contact + company + deal data before calendar events
-- **AI-ADV-03**: Deal health score with churn risk alerts
+- **AI-ADV-01**: Automated email sequences with smart timing based on contact stage (rules/automation first; optional external model only if approved later)
+- **AI-ADV-02**: Meeting prep brief from contact + company + deal data before calendar events (optional external summarization only if approved later)
+- **AI-ADV-03**: Deal health score with churn risk alerts (rules/heuristics first)
 
 ### Integrations
 
@@ -155,7 +157,9 @@ Check **`DEPLOY-*`** only after the work exists on the **target** environment (n
 | Self-hosted / on-premise | Supabase cloud only; on-premise adds ops complexity |
 | Salesforce / HubSpot API sync | Bidirectional sync is high complexity; CSV import covers v1 |
 | Video call integration | Outside core sales workflow |
-| AI fine-tuning on own data | Prompt engineering covers v1 needs; fine-tuning is v3+ |
+| Anthropic/Claude LLM features | Product decision: not shipped; see **AI Features** |
+| Vercel as production SPA host | Product/ops decision: private static hosting (nginx/Caddy/CDN) |
+| AI fine-tuning on own data | Prompt engineering / rules cover v1 needs; fine-tuning is v3+ |
 | Schema-per-tenant multi-tenancy | organization_id + RLS is sufficient and simpler to operate |
 
 ## Traceability
@@ -170,7 +174,8 @@ Check **`DEPLOY-*`** only after the work exists on the **target** environment (n
 | REALTIME-01–04 | Phase 5 | Complete |
 | DATA-09–15 | Phase 6 | Complete |
 | USERS-01–03 | Phase 6 | Complete |
-| AI-01–05 | Post-v1 | Deferred |
+| AI-01, AI-03–AI-05 | — | **Cancelled** (no Anthropic/Claude stack) |
+| AI-02 | Post-v1 | Open |
 | GMAIL-01–06 | Phase 7 | Complete |
 | I18N-01–02 | Phase 8 | Complete |
 | TEST-01–05 | Phase 9 | Complete |
@@ -183,7 +188,7 @@ Check **`DEPLOY-*`** only after the work exists on the **target** environment (n
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-04-16 — Phase 10: added “Recording DEPLOY completion” gate so `DEPLOY-*` boxes stay evidence-backed; see `docs/smoke-checklist-production.md`.*
+*Last updated: 2026-04-21 — English doc pass: AI-01/03/04/05 cancelled (no Claude); DEPLOY-01/03 wording aligned to private static hosting (not Vercel); SEC-02/SEC-04 wording generalized. Prior 2026-04-16 — Phase 10 “Recording DEPLOY completion” gate; see `docs/smoke-checklist-production.md`.*
 ---
 
-*Last updated (git): **2026-04-16***
+*Last updated (git): **2026-04-21** — product constraints (no Claude; private static hosting narrative) and traceability table aligned.*

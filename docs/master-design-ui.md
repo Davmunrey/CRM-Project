@@ -1,6 +1,6 @@
 # Design system & UI (master)
 
-> Consolidated **2026-04-18**. Layout shells, theme, navigation/settings sidebar, profile display names, and responsive app shell.
+> Consolidated **2026-04-21**. Layout shells, theme, navigation/settings sidebar, profile display names, responsive app shell, and empty-state component paths aligned with the repo.
 
 **Companion (tokens, Tailwind, scripts, guardrails):** [`design-system-reference.md`](./design-system-reference.md).
 
@@ -26,7 +26,7 @@ This document is the **canonical reference** for page layout, shared empty state
 
 - Status: Active
 - Owner: Frontend
-- Last updated: 2026-04-18
+- Last updated: 2026-04-21
 - Canonical: Yes
 
 ## Goals
@@ -67,7 +67,7 @@ Defined in `src/index.css` (`@layer components`):
 
 | Component | Path | When to use |
 |-----------|------|-------------|
-| **`EmptyState`** | `src/components/shared/EmptyState.tsx` | Full-page or large content areas: icon, title, description, optional primary action. |
+| **`EmptyState`** | `src/components/ui/EmptyState.tsx` (re-exported from `src/components/shared/EmptyState.tsx` for backwards compatibility) | Full-page or large content areas: icon, optional title, optional body copy via `description` or panel copy via `primary` / `secondary`, optional `action`. The body `<p>` renders only when `description` or `primary` is non-empty — use title + CTA alone when extra copy is redundant. |
 | **`PanelEmpty`** | `src/components/shared/PanelEmpty.tsx` | Narrow columns and side panels (Inbox lists, Sequences list, Templates sidebar, etc.). Props: `icon?`, `title?`, `primary`, `secondary?`, `density?: 'default' \| 'compact'`. |
 
 ## Auth and public flows
@@ -111,7 +111,7 @@ This CRM now supports three theme preferences:
 
 - Status: Active
 - Owner: Frontend
-- Last updated: 2026-04-18
+- Last updated: 2026-04-21
 - Canonical: Yes
 
 - `system` (default): follows OS/browser preference.
@@ -172,7 +172,7 @@ Legacy filename `navigation-i18n-release-handoff.md` was removed (Apr 2026); poi
 
 - Status: Active
 - Owner: Frontend
-- Last updated: 2026-04-18
+- Last updated: 2026-04-21
 - Canonical: Yes
 
 ## Scope delivered
@@ -354,7 +354,7 @@ Team register: what was implemented, how it works technically, what is covered f
 
 - Status: Active
 - Owner: Auth/Frontend
-- Last updated: 2026-04-18
+- Last updated: 2026-04-21
 - Canonical: Yes
 
 ---
@@ -453,6 +453,7 @@ These items describe the gap until the product is fully consistent **everywhere*
 
 | Date | Change |
 |------|--------|
+| 2026-04-21 | EmptyState: canonical path `src/components/ui/EmptyState.tsx`, re-export note, body-copy guidance; document-control dates refreshed. |
 | 2026-04-13 | Initial register: profile persistence via `supabase.auth.updateUser`; scope and pending items documented. |
 | 2026-04-13 | Full document translated to English. |
 

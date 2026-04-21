@@ -1,6 +1,6 @@
 # Architecture
 
-**Analysis Date:** 2026-04-10
+**Analysis Date:** 2026-04-21
 
 ## Pattern Overview
 
@@ -29,7 +29,7 @@
 - Local or **demo-channel** mock mode remains supported when Supabase config is absent (`src/lib/envChannel.ts`, `src/lib/supabase.ts`); staging/production require Supabase.
 
 **Services (`src/services/*`):**
-- Stateless integration adapters (`gmailService`, `aiService`, etc.).
+- Stateless integration adapters (`gmailService`, `src/services/emailProviders/*`, etc.).
 - Security-sensitive OAuth/token steps are delegated to Supabase Edge Functions.
 
 **Data/Infra (`supabase/*`):**
@@ -63,7 +63,7 @@
 
 ---
 
-*Architecture analysis: 2026-04-10*
+*Architecture analysis: 2026-04-21*
 ---
 
-*Last updated (git): **2026-04-16***
+*Last updated (git): **2026-04-21***

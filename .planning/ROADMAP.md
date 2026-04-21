@@ -3,7 +3,7 @@
 **Milestone:** v1.0 — Full SaaS Upgrade
 **Status:** Phase 10 Pending Deploy
 **Phases:** 10
-**Last updated:** 2026-04-15
+**Last updated:** 2026-04-21
 
 ---
 
@@ -141,10 +141,10 @@ SEC-02, SEC-03, SEC-04, SEC-06
 
 ### Done When
 
-- [ ] `localStorage.getItem('crm_ai')` in browser DevTools no longer contains an Anthropic API key field
-- [ ] Pasting `<script>alert(1)</script>` as a simulated AI response into AIAgent renders it as escaped text, not an alert
-- [ ] `aiService.ts` has no reference to `dangerouslyAllowBrowser`
-- [ ] Starting the app locally without `.env.local` shows a console warning identifying the missing Supabase config
+- [x] **`crm_ai` / Anthropic in browser:** `aiStore` and related persist keys were removed with the client AI stack (Phase 06.5). Legacy `localStorage` keys may linger until a user clears site data — no active writer.
+- [x] **AIAgent XSS class:** `AIAgent` and hand-rolled markdown rendering were **removed** with the client AI feature set; any future rich AI UI must use `react-markdown` + `rehype-sanitize` (policy retained in SEC-03 narrative).
+- [x] **`dangerouslyAllowBrowser`:** `aiService.ts` deleted — no browser Anthropic SDK path remains.
+- [x] **Missing Supabase hint:** `src/lib/supabase.ts` emits `devConsole.warn` in dev when env is absent (`dataRuntime === 'unconfigured'`), including guidance for demo mode vs real keys.
 
 ---
 
@@ -291,9 +291,9 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 ### Plans
 
-- 10.1: SPA catch-all routing — configure the host (or reverse proxy) so unknown paths serve `index.html`; verify React Router deep links on direct load. *Example (one provider):* `vercel.json` with `{ "source": "/(.*)", "destination": "/index.html" }` at repo root; use your host’s equivalent (`_redirects`, nginx `try_files`, etc.).
-- 10.2: Connect the repository to your deploy pipeline and set build-time env vars — `VITE_APP_CHANNEL` (`production` vs `staging` vs `demo`) plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` per environment (production vs preview/staging; demo may omit Supabase for mock bundles)
-- 10.3: Verify preview deployments — push a feature branch; confirm the **preview** URL uses **staging** Supabase (not production), e.g. via DevTools / network base URL
+- 10.1: SPA catch-all routing — on **private** static hosting, configure the reverse proxy or CDN so unknown paths serve `index.html`; verify React Router deep links on direct load. *Primary examples:* nginx `try_files`, Caddy, or CDN error rules. A checked-in `vercel.json` is optional reference only, not the production requirement.
+- 10.2: Connect the repository to **your** deploy pipeline and set build-time env vars — `VITE_APP_CHANNEL` (`production` vs `staging` vs `demo`) plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` per environment (production vs staging; demo may omit Supabase for mock bundles)
+- 10.3: Verify **staging** deployments — build from a non-production branch or job; confirm the **staging** URL uses the **staging** Supabase project (not production), e.g. via DevTools / network base URL
 - 10.4: Production deploy — merge to `main`; confirm production URL serves the expected build; smoke test: signup, login, create contact, log activity
 - 10.5: Custom domain — add DNS records per your host; confirm HTTPS/TLS is valid
 
@@ -304,10 +304,10 @@ DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05
 ### Done When
 
 - [ ] Navigating directly to `/contacts` returns the Contacts page, not a 404
-- [ ] A PR branch gets an automatic preview URL (or equivalent staging URL)
-- [ ] The preview URL hits staging Supabase (verified in DevTools)
-- [ ] Merging to `main` triggers a production deployment that completes successfully
-- [ ] The custom domain serves the app over HTTPS with a valid TLS certificate
+- [ ] A **staging** build is reachable at its staging URL (CI artifact host, private preview hostname, or manual deploy — not tied to a specific SaaS preview product)
+- [ ] The staging URL hits staging Supabase (verified in DevTools)
+- [ ] Merging to `main` (or your protected branch) triggers a **production** deployment on your infrastructure that completes successfully
+- [ ] The production custom domain serves the app over HTTPS with a valid TLS certificate
 
 ---
 

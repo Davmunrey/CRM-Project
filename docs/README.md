@@ -80,5 +80,5 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present): `
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-20  
+- **Last updated:** 2026-04-21  
 - **Canonical:** Yes  

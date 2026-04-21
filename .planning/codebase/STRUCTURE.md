@@ -1,6 +1,6 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-04-15
+**Analysis Date:** 2026-04-21
 
 ## Directory Layout
 
@@ -13,7 +13,6 @@ CRM/
 │   ├── assets/                 # Static assets imported by components
 │   ├── components/
 │   │   ├── activities/         # Activity-domain components (forms, list items)
-│   │   ├── ai/                 # AI copilot widgets
 │   │   ├── auth/               # Route guard and permission gate components
 │   │   ├── companies/          # Company-domain components
 │   │   ├── contacts/           # Contact-domain components
@@ -21,9 +20,10 @@ CRM/
 │   │   ├── email/              # Email composer / inbox components
 │   │   ├── import/             # CSV/JSON import wizard components
 │   │   ├── layout/             # App shell (Sidebar, Topbar, Layout, ErrorBoundary, CommandPalette)
+│   │   ├── settings/           # Settings sub-panels (e.g. webhooks UI)
 │   │   ├── shared/             # Cross-domain reusable components
 │   │   └── ui/                 # Primitive design-system components
-│   ├── constants/              # AI model list (aiModels.ts)
+│   ├── constants/              # (empty — reserved for shared constants modules)
 │   ├── hooks/                  # Custom React hooks
 │   ├── i18n/                   # Translations and language store
 │   ├── lib/                    # External client setup (supabase.ts, database.types.ts)
@@ -48,7 +48,7 @@ CRM/
 
 **`src/pages/`:**
 - Purpose: One file per application route; these are route-level containers that orchestrate stores and domain components
-- Contains: 27 `.tsx` files — one per named route
+- Contains: 33 `.tsx` route modules under `src/pages/` (lazy routes still map one component per path)
 - Key files:
   - `src/pages/Dashboard.tsx` — KPI cards, charts, activity feed
   - `src/pages/Contacts.tsx` — contacts list with filters and smart views
@@ -60,26 +60,25 @@ CRM/
   - `src/pages/Inbox.tsx` — Gmail integration inbox
   - `src/pages/Reports.tsx` — charts and pipeline reports
   - `src/pages/Settings.tsx` — pipeline stage, tag, currency config
-  - `src/pages/Automations.tsx` — rule builder for automated actions
+  - `src/pages/Automations.tsx` — rule builder, starter template library, localized labels from `automationsStore` + `getTranslations()`; English seed rules in `src/i18n/seed/automationSeedRulesEn.ts`
   - `src/pages/Sequences.tsx` — email sequence builder
   - `src/pages/TeamManagement.tsx` — user CRUD, role management, invitations
   - `src/pages/Login.tsx`, `src/pages/Register.tsx` — public auth pages
 
 **`src/store/`:**
 - Purpose: All persistent application state; each file is one Zustand store
-- Contains: 19 store files
+- Contains: 21 store files
 - Key files:
   - `src/store/authStore.ts` — current user, session, org, all users, passwords, invitations; also exports `initSupabaseAuth()`
   - `src/store/contactsStore.ts` — contacts array, filter state, CRUD + bulk ops
   - `src/store/dealsStore.ts` — deals array, kanban/list view mode, stage-move logic with side effects
   - `src/store/activitiesStore.ts` — activities with contact/deal associations
   - `src/store/companiesStore.ts` — companies with linked contacts/deals
-  - `src/store/aiStore.ts` — model selection, conversations, enrichment cache
   - `src/store/settingsStore.ts` — pipeline stages, tags, currency
-- `src/store/auditStore.ts` — audit log entries with Supabase-backed persistence
+  - `src/store/auditStore.ts` — audit log entries with Supabase-backed persistence
   - `src/store/notificationsStore.ts` — in-app notifications with type-level mute preferences
   - `src/store/toastStore.ts` — ephemeral UI toasts (not persisted)
-  - `src/store/automationsStore.ts` — automation rules; `executeRulesForTrigger()` called by dealsStore
+  - `src/store/automationsStore.ts` — automation rules; `executeRulesForTrigger()` called by dealsStore; merges seed rules with i18n-backed labels
   - `src/store/sequencesStore.ts` — email sequences and enrollments
   - `src/store/emailStore.ts` — composed emails, Gmail threads, and persisted thread links
   - `src/store/templateStore.ts` — email template library
@@ -88,6 +87,9 @@ CRM/
   - `src/store/customFieldsStore.ts` — custom field definitions and values
   - `src/store/attachmentsStore.ts` — file attachments stored as base64 strings
   - `src/store/viewsStore.ts` — smart view (saved filter preset) definitions
+  - `src/store/leadsStore.ts` — lead records and scoring hooks
+  - `src/store/onboardingStore.ts` — org bootstrap / first-run wizard state
+  - `src/store/navigationPrefsStore.ts` — sidebar order and navigation preferences
 
 **`src/components/layout/`:**
 - Purpose: Persistent app chrome shown on every authenticated page
@@ -107,7 +109,7 @@ CRM/
 - Key files:
   - `src/components/shared/SearchBar.tsx` — text search input with debounce
   - `src/components/shared/SmartViewBar.tsx` — renders saved smart view filter tabs
-  - `src/components/shared/EmptyState.tsx` — empty list placeholder with icon and CTA
+  - `src/components/ui/EmptyState.tsx` — empty list placeholder with icon and CTA; `src/components/shared/EmptyState.tsx` re-exports for backwards compatibility
   - `src/components/shared/PanelEmpty.tsx` — compact empty/placeholder for side panels and split views
   - `src/components/shared/CustomFieldRenderer.tsx` — renders and edits custom field values
   - `src/components/shared/AttachmentsList.tsx` — file attachment viewer/uploader
@@ -128,8 +130,8 @@ CRM/
 **`src/services/`:**
 - Purpose: Functions that call external APIs; stateless (read config from stores via `getState()`, do not `set`)
 - Key files:
-  - `src/services/aiService.ts` — OpenRouter HTTP integration; exports `enrichContact()`, `enrichDeal()`, `streamChatMessage()`, etc.
   - `src/services/gmailService.ts` — PKCE helpers + Gmail REST API calls (threads/messages/attachments)
+  - `src/services/emailProviders/*` — outbound email abstractions (Gmail / Resend implementations)
 
 **`src/utils/`:**
 - Purpose: Pure functions with no side effects or store access
@@ -160,6 +162,7 @@ CRM/
 - Key files:
   - `src/i18n/index.ts` — `useI18nStore` (persisted Zustand), `useTranslations()` hook, `LANGUAGE_LABELS`, `LANGUAGE_FLAGS`
   - `src/i18n/en.ts`, `src/i18n/es.ts`, `src/i18n/pt.ts`, `src/i18n/fr.ts`, `src/i18n/de.ts`, `src/i18n/it.ts` — translation objects
+  - `src/i18n/seed/` — demo-only seed strings (e.g. `en.demo.ts`, `automationSeedRulesEn.ts`) consumed by stores at init
 
 **`src/hooks/`:**
 - Purpose: Generic React hooks not tied to a specific domain
@@ -167,11 +170,6 @@ CRM/
   - `src/hooks/useFilters.ts` — generic local filter state hook (`useState` wrapper with `setFilter`, `clearFilters`, `hasActiveFilters`)
   - `src/hooks/useSearch.ts` — search string state with debounce
   - `src/hooks/useLocalStorage.ts` — raw `localStorage` read/write hook
-
-**`src/constants/`:**
-- Purpose: Non-utility constants (currently AI model definitions)
-- Key files:
-  - `src/constants/aiModels.ts` — list of available AI model IDs and labels; `isOpenRouterModel()` helper
 
 **`supabase/`:**
 - Purpose: Active database schema, migrations, and Edge Functions for runtime Supabase integration
@@ -192,7 +190,7 @@ CRM/
 **Core Logic:**
 - `src/store/authStore.ts`: Authentication, session management, user/org CRUD
 - `src/store/dealsStore.ts`: Deal pipeline logic including cross-store side effects
-- `src/services/aiService.ts`: All AI API calls
+- `src/services/gmailService.ts`: Gmail REST + PKCE helpers
 - `src/utils/permissions.ts`: Role-based access control matrix
 
 **Type Definitions:**
@@ -280,7 +278,7 @@ CRM/
 
 ---
 
-*Structure analysis: 2026-04-10*
+*Structure analysis: 2026-04-21*
 ---
 
-*Last updated (git): **2026-04-15***
+*Last updated (git): **2026-04-21***

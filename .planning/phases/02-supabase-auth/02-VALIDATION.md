@@ -14,17 +14,19 @@ created: 2026-03-31
 
 > Per-phase validation contract. Phase 2 introduces auth wiring and is the first phase with automated unit tests (Vitest + RTL).
 
+> **Superseded (2026-04-21):** Vitest, RTL, `tests/setup.ts`, auth tests, and GitHub Actions CI are **already present** in the repository. Tables below that still show “not yet installed” or ❌ Wave 0 are **historical snapshots** only; do not use them to plan installs.
+
 ---
 
 ## Test Infrastructure
 
 | Property | Value |
 |----------|-------|
-| **Framework** | Vitest (not yet installed — Wave 0 installs it) |
-| **Config file** | `vite.config.ts` — add `test` block, or `vitest.config.ts` |
+| **Framework** | Vitest + Testing Library (installed — see `package.json`) |
+| **Config file** | `vite.config.ts` — includes `test` block |
 | **Quick run command** | `npx vitest run --reporter=verbose` |
-| **Full suite command** | `npx vitest run` |
-| **Estimated runtime** | ~10 seconds |
+| **Full suite command** | `npm run test:run` or `npx vitest run` |
+| **Estimated runtime** | Order of tens of seconds (grows with suite) |
 
 ---
 
@@ -59,16 +61,18 @@ created: 2026-03-31
 
 ## Wave 0 Requirements
 
-- [ ] `package.json` — add `"test": "vitest run"` script and install `vitest`, `@testing-library/react`, `@testing-library/user-event`, `jsdom`
-- [ ] `vite.config.ts` — add `test: { environment: 'jsdom', globals: true, setupFiles: ['./tests/setup.ts'] }` block
-- [ ] `tests/setup.ts` — `@testing-library/jest-dom` import + Supabase mock setup
-- [ ] `tests/auth/authStore.test.ts` — stubs for AUTH-01, AUTH-04, AUTH-05
-- [ ] `tests/auth/Register.test.tsx` — stubs for AUTH-01, AUTH-02
-- [ ] `tests/auth/Login.test.tsx` — stubs for AUTH-01
-- [ ] `tests/auth/ForgotPassword.test.tsx` — stubs for AUTH-03
-- [ ] `tests/auth/ResetPassword.test.tsx` — stubs for AUTH-03
-- [ ] `tests/auth/ProtectedRoute.test.tsx` — stubs for AUTH-04
-- [ ] `tests/lib/supabase.test.ts` — stubs for SEC-06
+> **Superseded (2026-04-21):** All items below are **done** in the current repo (scripts, config, and test files exist). Unchecked boxes are retained only as a historical record of the original Phase 2 gate wording.
+
+- [x] `package.json` — test script and Vitest / RTL / jsdom devDependencies
+- [x] `vite.config.ts` — `test` block with jsdom + `tests/setup.ts`
+- [x] `tests/setup.ts` — `@testing-library/jest-dom` + Supabase mock setup
+- [x] `tests/auth/authStore.test.ts` — AUTH-01, AUTH-04, AUTH-05 coverage
+- [x] `tests/auth/Register.test.tsx` — AUTH-01, AUTH-02
+- [x] `tests/auth/Login.test.tsx` — AUTH-01
+- [x] `tests/auth/ForgotPassword.test.tsx` — AUTH-03
+- [x] `tests/auth/ResetPassword.test.tsx` — AUTH-03
+- [x] `tests/auth/ProtectedRoute.test.tsx` — AUTH-04
+- [x] `tests/lib/supabase.test.ts` — SEC-06
 
 ---
 
@@ -85,10 +89,12 @@ created: 2026-03-31
 
 ## Validation Sign-Off
 
-- [ ] Wave 0 installs Vitest and creates all stub test files
-- [ ] All automated tests pass: `npx vitest run` exits 0
-- [ ] Manual browser tests verified against live Supabase project
-- [ ] `simpleHash` code path confirmed unreachable when Supabase is configured
-- [ ] `nyquist_compliant: true` set in frontmatter
+> **Superseded (2026-04-21):** Wave 0 deliverables exist in-repo; CI runs Vitest. Remaining items are **process** (manual smoke on live Supabase, frontmatter archival) if you still use this file for audits.
 
-**Approval:** pending
+- [x] Wave 0 installs Vitest and creates auth test files *(repository state)*
+- [x] Automated tests pass in CI — see `.github/workflows/ci.yml`
+- [ ] Manual browser tests verified against live Supabase project *(human, when re-validating)*
+- [ ] `simpleHash` code path confirmed unreachable when Supabase is configured *(re-verify on demand)*
+- [ ] `nyquist_compliant: true` set in frontmatter *(archival — optional)*
+
+**Approval:** historical phase artifact — see `.planning/STATE.md` for current status.

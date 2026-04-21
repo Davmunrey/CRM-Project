@@ -1,6 +1,6 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-04-15
+**Analysis Date:** 2026-04-21
 
 ## Test Framework
 
@@ -61,12 +61,14 @@
 - Required before merge/release:
   - `npm run test:run`
   - `npm run build`
+- Optional drift / hygiene:
+  - `npm run audit:unused` (Knip — files and dependencies per `knip.json`)
 - For changes to schemas/stores/auth flows:
   - Add/adjust targeted tests in `tests/**`.
 
 ---
 
-*Testing analysis: 2026-04-10*
+*Testing analysis: 2026-04-21*
 ---
 
-*Last updated (git): **2026-04-15***
+*Last updated (git): **2026-04-21***

@@ -60,11 +60,13 @@ Track these explicitly until each is either implemented or moved into the right 
 - Deploy channel + Supabase client gate: `src/lib/envChannel.ts`, `src/lib/supabase.ts`.
 - Build splitting: `vite.config.ts` (`manualChunks` for heavy chart/date libraries).
 - Planning artifacts: `.planning/PROJECT.md`, `.planning/codebase/STRUCTURE.md`, `.planning/codebase/CONVENTIONS.md` (UI canon points at `master-design-ui`).
+- Automations: `src/pages/Automations.tsx`, `src/store/automationsStore.ts`, canonical English seed rules `src/i18n/seed/automationSeedRulesEn.ts` (runtime labels via `getTranslations()`).
+- Dead-code drift: `npm run audit:unused` (Knip) — `knip.json`.
 
 ---
 
-*Last updated: 2026-04-20 — Pipedrive comparison master ([`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md)), new gap row for integration parity, and prior 2026-04-18 UI quality pass notes in [`master-implementation-history.md`](./master-implementation-history.md#implementation-history-section-24) / [`master-design-ui.md`](./master-design-ui.md#main-canvas-and-responsive-shell).*
+*Last updated: 2026-04-21 — Codebase map lines refreshed (Automations + Knip); prior 2026-04-20 note: Pipedrive comparison master ([`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md)), integration parity gap row, and 2026-04-18 UI quality pass in [`master-implementation-history.md`](./master-implementation-history.md#implementation-history-section-24) / [`master-design-ui.md`](./master-design-ui.md#main-canvas-and-responsive-shell).*
 
 ---
 
-*Last updated (git): **2026-04-20***
+*Last updated (git): **2026-04-21***

@@ -181,7 +181,8 @@ Use after changes to **Dashboard**, **Settings → Getting started**, or [`onboa
 ## Automated Verification Evidence
 
 - `npm run test:run -- tests/utils/permissions.test.ts tests/utils/formatters.test.ts`
-- Result: `2 files passed`, `52 tests passed`
+- Result: `2 files passed`, `52 tests passed` (scoped subset only — not the full suite)
+- Full regression: `npm run test:run` (Vitest — last verified **36** files / **183** tests, 0 failures, exit 0 on 2026-04-21)
 - Lint diagnostics on modified files: no errors
 
 ## Defects

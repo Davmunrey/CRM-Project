@@ -7,34 +7,14 @@ import { useDealsStore } from './dealsStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
 import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
+import { createAutomationSeedRules } from '../i18n/seed/automationSeedRulesEn'
+import { getTranslations } from '../i18n'
 
 // ─── Seed Data ────────────────────────────────────────────────────────────────
 
 const _now = new Date().toISOString()
 
-const SEED_RULES: AutomationRule[] = [
-  {
-    id: 'auto-seed-1', name: 'Enviar email de seguimiento',
-    description: 'Cuando un deal pasa a Propuesta, crea una tarea de email para enviar la propuesta formal.',
-    isActive: true, trigger: { type: 'deal_stage_changed', toStage: 'proposal' },
-    actions: [{ type: 'create_activity', activityType: 'email', activitySubject: 'Enviar propuesta formal', activityDaysFromNow: 2 }],
-    executionCount: 0, createdAt: _now, updatedAt: _now,
-  },
-  {
-    id: 'auto-seed-2', name: 'Notificar deal ganado',
-    description: 'Envía una notificación cuando se cierra un deal exitosamente.',
-    isActive: true, trigger: { type: 'deal_closed_won' },
-    actions: [{ type: 'send_notification', notificationTitle: 'Deal ganado', notificationMessage: '¡Felicidades! Se ha cerrado un deal exitosamente.' }],
-    executionCount: 0, createdAt: _now, updatedAt: _now,
-  },
-  {
-    id: 'auto-seed-3', name: 'Tarea post-negociación',
-    description: 'Cuando un deal entra en Negociación, crea una tarea para revisar los términos.',
-    isActive: true, trigger: { type: 'deal_stage_changed', toStage: 'negotiation' },
-    actions: [{ type: 'create_activity', activityType: 'task', activitySubject: 'Revisar términos del contrato', activityDaysFromNow: 1 }],
-    executionCount: 0, createdAt: _now, updatedAt: _now,
-  },
-]
+const SEED_RULES: AutomationRule[] = createAutomationSeedRules(_now)
 
 // ─── Store Interface ──────────────────────────────────────────────────────────
 
@@ -190,25 +170,31 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
       let errorMessage: string | undefined
       let executedActions = 0
       try {
+        const tAuto = getTranslations().automations
+        const ruleName = rule.name
         for (const action of rule.actions) {
           const deal = context.deal
           if (action.type === 'create_activity' && deal) {
             const dueDate = action.activityDaysFromNow
               ? new Date(Date.now() + action.activityDaysFromNow * 86_400_000).toISOString()
               : undefined
+            const dealTitle = deal.title
             useActivitiesStore.getState().addActivity({
               type: action.activityType ?? 'task',
-              subject: action.activitySubject ?? `Seguimiento automático: ${deal.title}`,
-              description: `Creado automáticamente por la regla "${rule.name}"`,
+              subject: action.activitySubject ?? tAuto.runtimeActivitySubjectFallback.replace(/\{dealTitle\}/g, dealTitle),
+              description: tAuto.runtimeActivityDescription.replace(/\{ruleName\}/g, ruleName),
               status: 'pending', dealId: deal.id,
-              contactId: deal.contactId || undefined, dueDate, createdBy: 'Automatización',
+              contactId: deal.contactId || undefined, dueDate, createdBy: tAuto.runtimeCreatedBy,
             })
             executedActions += 1
           } else if (action.type === 'send_notification' && deal) {
+            const dealTitle = deal.title
             useNotificationsStore.getState().notify(
               'system',
-              action.notificationTitle ?? `Automatización: ${rule.name}`,
-              action.notificationMessage ?? `Deal "${deal.title}" activó la regla "${rule.name}"`,
+              action.notificationTitle ?? tAuto.runtimeNotificationTitleFallback.replace(/\{ruleName\}/g, ruleName),
+              (action.notificationMessage ?? tAuto.runtimeNotificationMessageFallback)
+                .replace(/\{dealTitle\}/g, dealTitle)
+                .replace(/\{ruleName\}/g, ruleName),
               { entityType: 'deal', entityId: deal.id }
             )
             executedActions += 1

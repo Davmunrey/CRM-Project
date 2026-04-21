@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 10 Pending Deploy
-last_updated: "2026-04-16T12:00:00.000Z"
+last_updated: "2026-04-21T12:00:00.000Z"
 progress:
   total_phases: 10
   completed_phases: 9
@@ -97,6 +97,8 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 
 ---
 *Initialized: 2026-03-31*
-*Last session: 2026-04-10 — Gmail hardening shipped (dynamic redirect URI, refresh+retry, persisted thread links + migration + function deploy, plus `gmail_thread_workspace` migration), Quote Builder extended with export/email actions, demo inbox seeded with linked deal emails, and chart-heavy routes lazy-loaded to keep production bundles healthy. Test/build remain green (105 tests).*
+*Last session: 2026-04-10 — Gmail hardening shipped (dynamic redirect URI, refresh+retry, persisted thread links + migration + function deploy, plus `gmail_thread_workspace` migration), Quote Builder extended with export/email actions, demo inbox seeded with linked deal emails, and chart-heavy routes lazy-loaded to keep production bundles healthy. Test/build were green (**105** tests at that milestone; suite has grown since — see 2026-04-21 session note).*
 
 *Session 2026-04-16 — `VITE_APP_CHANNEL` (production / staging / demo / local development), build-time Supabase validation in `vite.config.ts`, runtime alignment in `src/lib/envChannel.ts` + `src/lib/supabase.ts`, shell `EnvironmentBanner`, README + canonical docs + `.planning` requirements/stack/research updates.*
+
+*Session 2026-04-21 — Documentation sweep: root `README` + `docs/project-state` codebase map + design-system doc control aligned with current tree (Automations, `src/i18n/seed/` automation rules, Knip `audit:unused`, Companies empty-state pattern, store/page counts). Vitest baseline: **36** files / **183** tests (`npm run test:run`).*

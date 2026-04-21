@@ -1,6 +1,6 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-04-15
+**Analysis Date:** 2026-04-21
 
 ## Naming Patterns
 
@@ -289,11 +289,11 @@ const t = useTranslations()
 const t = getTranslations()
 ```
 
-**String literals in UI:** The codebase mixes hardcoded Spanish strings (especially in forms and error messages) with i18n-translated strings. New UI strings should use the `t` object from `useTranslations()`.
+**String literals in UI:** Prefer `useTranslations()` / `getTranslations()` for user-visible copy; `npm run i18n:lint` flags long literals outside `src/i18n` and `src/components/ui`.
 
 ---
 
-*Convention analysis: 2026-04-10*
+*Convention analysis: 2026-04-21*
 ---
 
-*Last updated (git): **2026-04-15***
+*Last updated (git): **2026-04-21***

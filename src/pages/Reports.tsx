@@ -264,20 +264,57 @@ export function Reports() {
             <h3 className="text-sm font-semibold text-fg-muted">{t.reports.emailTrackingTitle}</h3>
             <p className="text-xs text-fg-subtle mt-1 max-w-3xl">{t.reports.emailTrackingSubtitle}</p>
           </div>
-          {isSupabaseConfigured && (
-            <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md bg-success/10 text-success border border-success/20 shrink-0">
-              {t.reports.emailTrackingServerBadge}
-            </span>
-          )}
+          <span
+            className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md shrink-0 border ${
+              isSupabaseConfigured
+                ? 'bg-success/10 text-success border-success/20'
+                : 'bg-warning/10 text-warning border-warning/20'
+            }`}
+          >
+            {isSupabaseConfigured ? t.reports.emailTrackingServerBadge : t.reports.emailTrackingDemoBadge}
+          </span>
         </div>
         {!isSupabaseConfigured ? (
-          <p className="text-sm text-fg-subtle">{t.reports.emailTrackingNotConfigured}</p>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
+              <div>
+                <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p>
+                <p className="text-2xl font-bold text-success">—</p>
+              </div>
+              <div>
+                <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p>
+                <p className="text-2xl font-bold text-info">—</p>
+              </div>
+            </div>
+            <p className="text-sm text-fg-subtle pt-2">{t.reports.emailTrackingNotConfigured}</p>
+          </>
         ) : emailTrackingStats.error ? (
           <p className="text-sm text-danger">{t.reports.emailTrackingLoadError}</p>
         ) : emailTrackingStats.loading ? (
-          <p className="text-sm text-fg-subtle">{t.common.loading}</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
+            <div>
+              <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p>
+              <p className="text-2xl font-bold text-success">…</p>
+            </div>
+            <div>
+              <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p>
+              <p className="text-2xl font-bold text-info">…</p>
+            </div>
+          </div>
         ) : emailTrackingStats.opens === 0 && emailTrackingStats.clicks === 0 ? (
-          <p className="text-sm text-fg-subtle">{t.reports.emailTrackingEmpty}</p>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
+              <div>
+                <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p>
+                <p className="text-2xl font-bold text-success">0</p>
+              </div>
+              <div>
+                <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p>
+                <p className="text-2xl font-bold text-info">0</p>
+              </div>
+            </div>
+            <p className="text-sm text-fg-subtle pt-2">{t.reports.emailTrackingEmpty}</p>
+          </>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
             <div>

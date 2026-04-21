@@ -232,7 +232,6 @@ export const es: Translations = {
     contactCount: 'Contactos',
     dealCount: 'Negocios',
     emptyTitle: 'No hay empresas aún',
-    emptyDescription: 'Comienza agregando tu primera empresa para organizar tus cuentas comerciales.',
     deleteConfirm: '¿Estás seguro de que deseas eliminar esta empresa? Esta acción no se puede deshacer.',
     created: 'Empresa creada correctamente',
     updated: 'Empresa actualizada correctamente',
@@ -743,6 +742,7 @@ export const es: Translations = {
     emailTrackingSubtitle:
       'Aperturas y clics registrados cuando el destinatario carga el pixel o sigue un enlace reescrito. Las Edge Functions `track-open` y `track-click` escriben en `email_tracking_events`.',
     emailTrackingServerBadge: 'Basado en servidor',
+    emailTrackingDemoBadge: 'Demo local',
     emailTrackingOpens: 'Aperturas',
     emailTrackingClicks: 'Clics',
     emailTrackingPrivacyNote:
@@ -885,6 +885,14 @@ export const es: Translations = {
     action: 'Acción',
     executionCount: 'Ejecuciones',
     lastExecuted: 'Última ejecución',
+    libraryTitle: 'Plantillas iniciales',
+    librarySubtitle: 'Añade una regla predefinida a tu espacio de trabajo. Podrás editarla después de crearla.',
+    useTemplate: 'Usar plantilla',
+    runtimeActivityDescription: 'Creado automáticamente por la regla «{ruleName}».',
+    runtimeActivitySubjectFallback: 'Seguimiento automático: {dealTitle}',
+    runtimeCreatedBy: 'Automatización',
+    runtimeNotificationTitleFallback: 'Automatización: {ruleName}',
+    runtimeNotificationMessageFallback: 'La oportunidad «{dealTitle}» activó la regla «{ruleName}».',
   },
 
   // ─── Products ────────────────────────────────────────────────────────────────
@@ -1119,6 +1127,7 @@ export const es: Translations = {
     sendLink: 'Enviar enlace',
     backToLogin: 'Volver al inicio de sesión',
     realAuthEnabled: 'Autenticación real activa',
+    demoModeBadge: 'Demo local — solo datos de ejemplo',
     emailPlaceholder: 'tu@empresa.com',
     checkEmailConfirmation: 'Hemos enviado un enlace de confirmación a',
     passwordsDoNotMatch: 'Las contraseñas no coinciden',

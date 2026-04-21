@@ -1,10 +1,6 @@
 import type { Contact, Company, Deal, Activity, AppSettings, CRMEmail } from '../types'
 import { DEFAULT_ROLE_PERMISSIONS } from './permissionProfiles'
 
-// ─── Mock Users ──────────────────────────────────────────────────────────────
-
-export const MOCK_USERS = ['David Muñoz', 'Sara López', 'Carlos Vega']
-
 export const seedSettings: AppSettings = {
   currency: 'EUR',
   themePreference: 'system',

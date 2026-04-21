@@ -16,7 +16,8 @@ A production-grade, full-featured CRM single-page application built with React 1
 | **Dashboard** | KPI cards, revenue bar chart, deal funnel, recent activity, top deals |
 | **Contacts** | Table/grid view, search, filters, bulk delete, CSV export, slide-over form |
 | **Contact Detail** | Overview, Activities, Deals, Notes tabs |
-| **Companies** | Table view, industry/status/size filters, company detail page |
+| **Companies** | Table view, industry/status/size filters, company detail page; empty state uses title + CTA only |
+| **Automations** | Rule builder with starter template library; canonical English seed rules in `src/i18n/seed/automationSeedRulesEn.ts`; runtime labels via `getTranslations()` in `automationsStore` |
 | **Deals** | Kanban drag & drop + list view, deal detail panel, mark Won/Lost, quote builder (save/export/send) |
 | **Activities** | Unified feed, overdue highlighting, quick complete/delete |
 | **Reports** | Revenue forecast, Won/Lost donut, activities by type, contacts by source, conversion funnel |
@@ -170,8 +171,8 @@ src/
 │   ├── deals/          # DealCard, DealForm, KanbanColumn
 │   ├── activities/     # ActivityForm, ActivityItem
 │   └── shared/         # SearchBar, EmptyState, PanelEmpty
-├── pages/              # Route containers (27 pages): CRM modules, auth, inbox, timeline, audit, products
-├── store/              # Zustand stores (19): auth, CRM domains, inbox, settings, templates, products, audit
+├── pages/              # Route containers (33 pages): CRM modules, auth, inbox, timeline, audit, products, automations, goals, sequences, etc.
+├── store/              # Zustand stores (21): auth, CRM domains, inbox, settings, templates, products, audit, automations, …
 ├── types/              # All TypeScript interfaces (index.ts)
 ├── hooks/              # useLocalStorage, useSearch, useFilters
 └── utils/              # formatters, constants, seedData, scoring/health engines
@@ -197,7 +198,8 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
 ## Current status
 
 - **Runtime:** Supabase Auth, org onboarding, RLS multi-tenancy, and core CRM stores with realtime are implemented.
-- **i18n:** EN / ES / PT (plus FR / DE / IT where keyed); run multilingual smoke before releases.
+- **i18n:** EN / ES / PT (plus FR / DE / IT where keyed); demo seed copy under `src/i18n/seed/` (including automation rule templates); run multilingual smoke before releases.
+- **Unused code:** `npm run audit:unused` (Knip) for files and dependencies; see `knip.json`.
 - **Tests:** Vitest (`npm run test:run`); pool + `maxWorkers` cap in `vite.config.ts` for stable Windows/CI runs.
 - **Gmail:** PKCE, server refresh, resilient inbox, persisted thread links; migration `20260410195500_gmail_thread_workspace.sql`.
 - **UX / shell:** Quote PDF/email from deals; lazy-loaded chart routes; `crm-page` / `crm-page-full`, `PanelEmpty`, auth/branding — see `docs/master-design-ui.md`.
@@ -233,4 +235,4 @@ To reset demo data: **Settings → Restaurar datos demo**.
 In Supabase mode, demo users are not rehydrated into organization sessions.
 ---
 
-*Last updated (git): **2026-04-16***
+*Last updated (git): **2026-04-21***

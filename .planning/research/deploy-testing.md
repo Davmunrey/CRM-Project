@@ -639,4 +639,4 @@ No extra production npm dependencies are required for static deploy itself — r
 - Project source: `src/lib/supabase.ts`, `src/store/dealsStore.ts`, `src/utils/leadScoring.ts`, `package.json`, `tsconfig.json`
 ---
 
-*Last updated (git): **2026-04-16***
+*Last updated (git): **2026-04-21***
