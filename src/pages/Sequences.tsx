@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Plus, Mail, Phone, Linkedin, Clock, Users, CheckCircle2,
   PauseCircle, XCircle, ListOrdered, Trash2, PlayCircle, ChevronRight,
-  X, GripVertical,
+  X, GripVertical, Workflow, Library,
 } from 'lucide-react'
 import { useSequencesStore } from '../store/sequencesStore'
 import { useContactsStore } from '../store/contactsStore'
@@ -10,7 +11,9 @@ import { PermissionGate } from '../components/auth/PermissionGate'
 import { toast } from '../store/toastStore'
 import { getTranslations, useI18nStore, useTranslations } from '../i18n'
 import { localizedEmailSequence } from '../i18n/localizeSeed'
-import { PanelEmpty } from '../components/shared/PanelEmpty'
+import { EmptyState } from '../components/ui/EmptyState'
+import { Button } from '../components/ui/Button'
+import { WorkflowTemplateLibraryDialog } from '../components/workflows/WorkflowTemplateLibraryDialog'
 import { Select } from '../components/ui/Select'
 import { Skeleton } from '../components/ui/Skeleton'
 import { formatDateShort } from '../utils/formatters'
@@ -87,7 +90,10 @@ function EnrollModal({ sequence, onClose }: EnrollModalProps) {
     const contact = contacts.find((c) => c.id === selectedContactId)
     if (!contact) return
     enrollContact(sequence.id, contact.id, `${contact.firstName} ${contact.lastName}`)
-    toast.success(`${contact.firstName} ${contact.lastName} — "${locSequence.name}"`)
+    const name = `${contact.firstName} ${contact.lastName}`.trim()
+    toast.success(
+      t.sequences.toastEnrolled.replace('{name}', name).replace('{sequence}', locSequence.name),
+    )
     onClose()
   }
 
@@ -687,6 +693,7 @@ export function Sequences() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showNewSlideOver, setShowNewSlideOver] = useState(false)
   const [showEnrollModal, setShowEnrollModal] = useState(false)
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false)
 
   // Manual Zustand v5 subscription
   const syncState = useCallback(() => {
@@ -701,6 +708,10 @@ export function Sequences() {
     return unsub
   }, [syncState])
 
+  useEffect(() => {
+    void useSequencesStore.getState().fetchSequences()
+  }, [])
+
   const selectedSequence = sequences.find((s) => s.id === selectedId) ?? null
   const selectedSequenceView = useMemo(
     () => (selectedSequence ? localizedEmailSequence(selectedSequence, getTranslations()) : null),
@@ -714,18 +725,39 @@ export function Sequences() {
     if (!confirm(t.common.bulkDeleteConfirm)) return
     useSequencesStore.getState().deleteSequence(seqId)
     if (selectedId === seqId) setSelectedId(null)
-    toast.success(t.sequences.title)
+    toast.success(t.sequences.toastSequenceDeleted)
   }
 
   return (
     <div className="crm-page-full flex flex-col min-h-0">
+      {showTemplateLibrary && (
+        <WorkflowTemplateLibraryDialog onClose={() => setShowTemplateLibrary(false)} />
+      )}
       {/* Page Header */}
-      <div className="flex items-center justify-between shrink-0 py-4 border-b border-fg/6">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3 shrink-0 py-4 border-b border-fg/6">
+        <div className="min-w-0">
           <h2 className="text-2xl font-bold text-fg tracking-tight">{t.sequences.title}</h2>
           <p className="text-sm text-fg-muted mt-1">
             {sequences.length} {t.sequences.title.toLowerCase()} · {enrollments.filter((e) => e.status === 'active').length} {t.sequences.active.toLowerCase()}
           </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            leftIcon={<Library size={14} />}
+            onClick={() => setShowTemplateLibrary(true)}
+          >
+            {t.workflowTemplates.browseButton}
+          </Button>
+          <Link
+            to="/automations"
+            className="inline-flex items-center gap-1.5 rounded-full border border-fg/10 bg-surface-2/90 px-3.5 py-1.5 text-sm text-fg hover:border-border-strong transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          >
+            <Workflow size={14} className="text-accent-400" aria-hidden />
+            {t.sequences.crossLinkAutomations}
+          </Link>
         </div>
       </div>
 
@@ -757,16 +789,20 @@ export function Sequences() {
                 ))}
               </div>
             ) : sequences.length === 0 ? (
-              <div className="flex flex-col items-center gap-1 pb-2">
-                <PanelEmpty icon={<ListOrdered size={28} />} primary={t.common.noResults} density="compact" />
+              <div className="px-2 pb-4">
+                <EmptyState
+                  icon={<ListOrdered size={26} strokeWidth={1.75} />}
+                  title={t.sequences.title}
+                  primary={t.common.noResults}
+                  secondary={t.sequences.emptyDescription}
+                  density="compact"
+                />
                 <PermissionGate permission="sequences:create">
-                  <button
-                    type="button"
-                    onClick={() => setShowNewSlideOver(true)}
-                    className="text-xs text-accent-400 hover:text-accent-300 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500 rounded-md px-2 py-1.5"
-                  >
-                    + {t.sequences.newSequence}
-                  </button>
+                  <div className="flex justify-center -mt-4">
+                    <Button type="button" size="sm" leftIcon={<Plus size={14} />} onClick={() => setShowNewSlideOver(true)}>
+                      {t.sequences.newSequence}
+                    </Button>
+                  </div>
                 </PermissionGate>
               </div>
             ) : (

@@ -82,6 +82,43 @@ export const seedDemo: SeedDemoCatalog = {
       description: 'Quando um negócio entra em Negociação, cria uma tarefa para rever os termos.',
       createActivitySubject: 'Rever termos do contrato',
     },
+    'auto-seed-4': {
+      name: 'Qualificar após a primeira etapa',
+      description: 'Quando um negócio passa de Lead para Qualificado, agenda uma chamada de descoberta para validar BANT.',
+      createActivitySubject: 'Chamada de descoberta — validar BANT',
+    },
+    'auto-seed-5': {
+      name: 'Alinhamento executivo (atalho)',
+      description:
+        'Quando um negócio salta de Qualificado para Negociação, cria uma tarefa de alinhamento executivo antes do jurídico.',
+      createActivitySubject: 'Alinhamento executivo antes das cláusulas',
+    },
+    'auto-seed-6': {
+      name: 'Debrief de negócio perdido',
+      description: 'Quando um negócio é perdido, cria uma tarefa para registar motivos e atualizar o pipeline.',
+      createActivitySubject: 'Debrief win/loss — atualizar CRM',
+    },
+    'auto-seed-7': {
+      name: 'Alerta ao gestor — negócio perdido',
+      description: 'Notifica a equipa quando um negócio é marcado como perdido para rever o impacto no pipeline.',
+      notificationTitle: 'Negócio perdido',
+      notificationMessage: 'Um negócio foi perdido — rever o impacto no pipeline e próximos passos para {dealTitle}.',
+    },
+    'auto-seed-8': {
+      name: 'Kickoff após vitória',
+      description: 'Quando um negócio é ganho, cria uma tarefa para agendar o kickoff com o cliente.',
+      createActivitySubject: 'Agendar kickoff com o cliente',
+    },
+    'auto-seed-9': {
+      name: 'Reciclar ao desqualificar',
+      description: 'Quando um negócio volta de Proposta para Lead, reabre a descoberta e confirma o âmbito.',
+      createActivitySubject: 'Re-qualificar âmbito após retrocesso',
+    },
+    'auto-seed-10': {
+      name: 'Pausa na negociação — renovar proposta',
+      description: 'Quando um negócio volta de Negociação para Proposta, atualiza preços e anexos legais.',
+      createActivitySubject: 'Renovar pacote de proposta',
+    },
   },
   sequences: {
     'seq-001': {
@@ -112,6 +149,64 @@ export const seedDemo: SeedDemoCatalog = {
         'step-002-2': {
           subject: 'Última tentativa, {{firstName}}',
           bodyTemplate: 'Olá {{firstName}},\n\nEste será o meu último e-mail.\n\nMuito sucesso!\n{{senderName}}',
+        },
+      },
+    },
+    'seq-003': {
+      name: 'Acompanhamento pós-demo',
+      description: 'Nutrição multitoque após uma demo: resumo, prova e chamada agendada.',
+      steps: {
+        'step-003-1': {
+          subject: 'Obrigado pela demo — {{firstName}}',
+          bodyTemplate:
+            'Olá {{firstName}},\n\nObrigado pela sessão. Segue um resumo curto do que vimos e o calendário que combinámos.\n\nAtenciosamente,\n{{senderName}}',
+        },
+        'step-003-2': {},
+        'step-003-3': {
+          subject: 'Materiais que pediu — {{company}}',
+          bodyTemplate:
+            'Olá {{firstName}},\n\nEnvio as referências e a visão de segurança prometidas. Disponível para aprofundar qualquer ponto.\n\nAtenciosamente,\n{{senderName}}',
+        },
+        'step-003-4': {
+          taskDescription: 'Ligar para confirmar critérios de avaliação, revisão de segurança e comprador económico.',
+        },
+      },
+    },
+    'seq-004': {
+      name: 'Land and expand',
+      description: 'Outreach quente a clientes atuais: valor, toque social e pedido comercial de expansão.',
+      steps: {
+        'step-004-1': {
+          subject: 'Ideias para {{company}} neste trimestre',
+          bodyTemplate:
+            'Olá {{firstName}},\n\nCom base na utilização da equipa, três ganhos concretos sem migração disruptiva.\n\nAtenciosamente,\n{{senderName}}',
+        },
+        'step-004-2': {
+          taskDescription: 'Engagement leve no LinkedIn com o champion (comentário ou DM).',
+        },
+        'step-004-3': {
+          subject: 'Opções de expansão — {{firstName}}',
+          bodyTemplate:
+            'Olá {{firstName}},\n\nSe fizer sentido mais licenças ou módulos, posso enviar opções alinhadas à renovação.\n\nAtenciosamente,\n{{senderName}}',
+        },
+      },
+    },
+    'seq-005': {
+      name: 'Recuperação após no-show',
+      description: 'Recuperação educada após falta à reunião: reagendar, valor e chamada.',
+      steps: {
+        'step-005-1': {
+          subject: 'Não nos cruzámos hoje — reagendar?',
+          bodyTemplate:
+            'Olá {{firstName}},\n\nTínhamos horário marcado e não vi a ligação. Segue o link da minha agenda para escolher slot.\n\nAtenciosamente,\n{{senderName}}',
+        },
+        'step-005-2': {
+          subject: 'Uma métrica em 5 minutos — {{firstName}}',
+          bodyTemplate:
+            'Olá {{firstName}},\n\nUma referência que equipas do vosso setor acompanham de perto. Posso explicar ao vivo.\n\nAtenciosamente,\n{{senderName}}',
+        },
+        'step-005-3': {
+          taskDescription: 'Ligar para confirmar prioridades e fechar nova janela executiva.',
         },
       },
     },

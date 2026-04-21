@@ -102,6 +102,64 @@ export const seedDemo: SeedDemoCatalog = {
         },
       },
     },
+    'seq-003': {
+      name: 'Post-demo follow-up',
+      description: 'Multi-touch nurture after a demo: recap, proof, then a scheduled call.',
+      steps: {
+        'step-003-1': {
+          subject: 'Thanks for the demo — {{firstName}}',
+          bodyTemplate:
+            'Hi {{firstName}},\n\nThanks for the walkthrough. Here is a short recap of what we covered and the timeline we discussed.\n\nBest,\n{{senderName}}',
+        },
+        'step-003-2': {},
+        'step-003-3': {
+          subject: 'Materials you asked for — {{company}}',
+          bodyTemplate:
+            'Hi {{firstName}},\n\nSharing the references and security overview we promised. Happy to go deeper on any section.\n\nBest,\n{{senderName}}',
+        },
+        'step-003-4': {
+          taskDescription: 'Call to confirm evaluation criteria, security review, and economic buyer.',
+        },
+      },
+    },
+    'seq-004': {
+      name: 'Land and expand',
+      description: 'Warm outreach to existing customers: value recap, social touch, then a commercial expansion ask.',
+      steps: {
+        'step-004-1': {
+          subject: 'Ideas for {{company}} this quarter',
+          bodyTemplate:
+            'Hi {{firstName}},\n\nBased on how your team is using the product, here are three concrete wins we can unlock without a disruptive migration.\n\nBest,\n{{senderName}}',
+        },
+        'step-004-2': {
+          taskDescription: 'Light-touch LinkedIn engagement with your champion (comment or DM).',
+        },
+        'step-004-3': {
+          subject: 'Expansion options — {{firstName}}',
+          bodyTemplate:
+            'Hi {{firstName}},\n\nIf you are open to more seats or add-on modules, I can share options aligned to your renewal window.\n\nBest,\n{{senderName}}',
+        },
+      },
+    },
+    'seq-005': {
+      name: 'Meeting no-show recovery',
+      description: 'Polite recovery after a missed meeting: reschedule, a value ping, then phone outreach.',
+      steps: {
+        'step-005-1': {
+          subject: 'Missed you today — want to reschedule?',
+          bodyTemplate:
+            'Hi {{firstName}},\n\nWe had time blocked and I did not see you join. Here is my calendar link — pick anything that works.\n\nBest,\n{{senderName}}',
+        },
+        'step-005-2': {
+          subject: 'One metric worth 5 minutes — {{firstName}}',
+          bodyTemplate:
+            'Hi {{firstName}},\n\nQuick note with one benchmark peers in your space track closely. Happy to unpack it live.\n\nBest,\n{{senderName}}',
+        },
+        'step-005-3': {
+          taskDescription: 'Call to confirm priorities and lock a new executive slot.',
+        },
+      },
+    },
   },
   customFields: {
     'cf-c-01': { label: 'LinkedIn URL', placeholder: 'https://linkedin.com/in/...' },

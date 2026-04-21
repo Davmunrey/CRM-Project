@@ -1,13 +1,15 @@
 import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { EmailSequence, SequenceEnrollment, EnrollmentStatus } from '../types'
+import type { SeedSequenceId } from '../i18n/types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 
 // ─── Seed data ───────────────────────────────────────────────────────────────
 
-const seedSequences: EmailSequence[] = [
+/** Built-in sequence definitions (demo + template install source). */
+export const seedSequences: EmailSequence[] = [
   {
     id: 'seq-001',
     name: 'Outreach Inicial',
@@ -29,7 +31,120 @@ const seedSequences: EmailSequence[] = [
     ],
     createdBy: 'u1', createdAt: '2025-01-15T09:00:00Z', isActive: true, enrolledCount: 0,
   },
+  {
+    id: 'seq-003',
+    name: 'Post-demo follow-up',
+    description: 'Multi-touch nurture after a demo: recap email, proof point, then a scheduled call.',
+    steps: [
+      {
+        id: 'step-003-1',
+        order: 0,
+        type: 'email',
+        delayDays: 0,
+        subject: 'Thanks for the demo — {{firstName}}',
+        bodyTemplate:
+          'Hi {{firstName}},\n\nThanks for the walkthrough. Here is a short recap of what we covered and the timeline we discussed.\n\nBest,\nDavid',
+      },
+      { id: 'step-003-2', order: 1, type: 'wait', delayDays: 2 },
+      {
+        id: 'step-003-3',
+        order: 2,
+        type: 'email',
+        delayDays: 0,
+        subject: 'Materials you asked for — {{company}}',
+        bodyTemplate:
+          'Hi {{firstName}},\n\nSharing the references and security overview we promised. Happy to go deeper on any section.\n\nBest,\nDavid',
+      },
+      {
+        id: 'step-003-4',
+        order: 3,
+        type: 'call_task',
+        delayDays: 5,
+        taskDescription: 'Call to confirm evaluation criteria, security review, and economic buyer.',
+      },
+    ],
+    createdBy: 'u1',
+    createdAt: '2025-01-20T09:00:00Z',
+    isActive: true,
+    enrolledCount: 0,
+  },
+  {
+    id: 'seq-004',
+    name: 'Land and expand',
+    description: 'Warm outreach to existing customers: value recap, social touch, then a commercial expansion ask.',
+    steps: [
+      {
+        id: 'step-004-1',
+        order: 0,
+        type: 'email',
+        delayDays: 0,
+        subject: 'Ideas for {{company}} this quarter',
+        bodyTemplate:
+          'Hi {{firstName}},\n\nBased on how your team is using the product, here are three concrete wins we can unlock without a disruptive migration.\n\nBest,\nDavid',
+      },
+      {
+        id: 'step-004-2',
+        order: 1,
+        type: 'linkedin_task',
+        delayDays: 3,
+        taskDescription: 'Light-touch LinkedIn engagement with your champion (comment or DM).',
+      },
+      {
+        id: 'step-004-3',
+        order: 2,
+        type: 'email',
+        delayDays: 7,
+        subject: 'Expansion options — {{firstName}}',
+        bodyTemplate:
+          'Hi {{firstName}},\n\nIf you are open to more seats or add-on modules, I can share options aligned to your renewal window.\n\nBest,\nDavid',
+      },
+    ],
+    createdBy: 'u1',
+    createdAt: '2025-01-22T09:00:00Z',
+    isActive: true,
+    enrolledCount: 0,
+  },
+  {
+    id: 'seq-005',
+    name: 'Meeting no-show recovery',
+    description: 'Polite recovery after a missed meeting: reschedule, a value ping, then phone outreach.',
+    steps: [
+      {
+        id: 'step-005-1',
+        order: 0,
+        type: 'email',
+        delayDays: 0,
+        subject: 'Missed you today — want to reschedule?',
+        bodyTemplate:
+          'Hi {{firstName}},\n\nWe had time blocked and I did not see you join. Here is my calendar link — pick anything that works.\n\nBest,\nDavid',
+      },
+      {
+        id: 'step-005-2',
+        order: 1,
+        type: 'email',
+        delayDays: 2,
+        subject: 'One metric worth 5 minutes — {{firstName}}',
+        bodyTemplate:
+          'Hi {{firstName}},\n\nQuick note with one benchmark peers in your space track closely. Happy to unpack it live.\n\nBest,\nDavid',
+      },
+      {
+        id: 'step-005-3',
+        order: 2,
+        type: 'call_task',
+        delayDays: 1,
+        taskDescription: 'Call to confirm priorities and lock a new executive slot.',
+      },
+    ],
+    createdBy: 'u1',
+    createdAt: '2025-01-24T09:00:00Z',
+    isActive: true,
+    enrolledCount: 0,
+  },
 ]
+
+export function getBuiltInSequenceById(id: SeedSequenceId): EmailSequence | undefined {
+  return seedSequences.find((s) => s.id === id)
+}
 
 // ─── Store interface ─────────────────────────────────────────────────────────
 

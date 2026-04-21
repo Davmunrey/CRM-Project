@@ -6,9 +6,19 @@ export type SeedTemplateId = 'tpl-001' | 'tpl-002' | 'tpl-003' | 'tpl-004' | 'tp
 
 export type SeedQuickReplyId = 'qr-1' | 'qr-2'
 
-export type SeedAutomationId = 'auto-seed-1' | 'auto-seed-2' | 'auto-seed-3'
+export type SeedAutomationId =
+  | 'auto-seed-1'
+  | 'auto-seed-2'
+  | 'auto-seed-3'
+  | 'auto-seed-4'
+  | 'auto-seed-5'
+  | 'auto-seed-6'
+  | 'auto-seed-7'
+  | 'auto-seed-8'
+  | 'auto-seed-9'
+  | 'auto-seed-10'
 
-export type SeedSequenceId = 'seq-001' | 'seq-002'
+export type SeedSequenceId = 'seq-001' | 'seq-002' | 'seq-003' | 'seq-004' | 'seq-005'
 
 export interface SeedCustomFieldDemo {
   label: string
@@ -967,6 +977,13 @@ export interface Translations {
     enrolled: string
     active: string
     paused: string
+    /** Link label to Automations (same nav area) */
+    crossLinkAutomations: string
+    /** Empty list / right pane hint */
+    emptyDescription: string
+    toastSequenceDeleted: string
+    /** Interpolation: `{name}`, `{sequence}` */
+    toastEnrolled: string
   }
 
   automations: {
@@ -979,6 +996,17 @@ export interface Translations {
     libraryTitle: string
     librarySubtitle: string
     useTemplate: string
+    crossLinkSequences: string
+    emptyRulesDescription: string
+    statInactiveRules: string
+    executionLogTitle: string
+    executionLogRuleId: string
+    toastRuleCreated: string
+    toastRuleUpdated: string
+    toastRuleDeleted: string
+    toastTemplateAdded: string
+    executionStatusOk: string
+    executionStatusFailed: string
     /** Interpolation: `{ruleName}` */
     runtimeActivityDescription: string
     /** Interpolation: `{dealTitle}` */
@@ -988,6 +1016,42 @@ export interface Translations {
     runtimeNotificationTitleFallback: string
     /** Interpolation: `{dealTitle}`, `{ruleName}` */
     runtimeNotificationMessageFallback: string
+  }
+
+  /** Template library (automations + sequences by situation) */
+  workflowTemplates: {
+    dialogTitle: string
+    dialogSubtitle: string
+    browseButton: string
+    filterAll: string
+    filterAutomations: string
+    filterSequences: string
+    searchPlaceholder: string
+    install: string
+    toastAutomationInstalled: string
+    toastSequenceInstalled: string
+    categories: {
+      deal_motion: string
+      nurture: string
+      recovery: string
+    }
+    situations: {
+      proposalFollowUp: string
+      dealWonNotify: string
+      negotiationReview: string
+      coldOutreach: string
+      winback: string
+      dealQualification: string
+      executiveFastTrack: string
+      lostDealDebrief: string
+      pipelineReviewAlert: string
+      customerKickoffPrep: string
+      scopeResetRecycle: string
+      negotiationRollback: string
+      postDemoNurture: string
+      accountExpansion: string
+      noShowRecovery: string
+    }
   }
 
   products: {

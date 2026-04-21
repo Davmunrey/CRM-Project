@@ -2,7 +2,18 @@ import type { AutomationRule } from '../../types'
 import type { SeedAutomationDemoCopy, SeedAutomationId } from '../types'
 
 /** Stable ids for bundled automation templates (canonical English in store / DB seed). */
-export const AUTOMATION_SEED_TEMPLATE_IDS: readonly SeedAutomationId[] = ['auto-seed-1', 'auto-seed-2', 'auto-seed-3']
+export const AUTOMATION_SEED_TEMPLATE_IDS: readonly SeedAutomationId[] = [
+  'auto-seed-1',
+  'auto-seed-2',
+  'auto-seed-3',
+  'auto-seed-4',
+  'auto-seed-5',
+  'auto-seed-6',
+  'auto-seed-7',
+  'auto-seed-8',
+  'auto-seed-9',
+  'auto-seed-10',
+]
 
 /**
  * Full automation rules in canonical English. Used by the offline store and as the
@@ -63,15 +74,144 @@ export function createAutomationSeedRules(isoNow: string): AutomationRule[] {
       createdAt: isoNow,
       updatedAt: isoNow,
     },
+    {
+      id: 'auto-seed-4',
+      name: 'Qualify after first stage',
+      description: 'When a deal moves from Lead to Qualified, schedule a discovery call to validate BANT.',
+      isActive: true,
+      trigger: { type: 'deal_stage_changed', fromStage: 'lead', toStage: 'qualified' },
+      actions: [
+        {
+          type: 'create_activity',
+          activityType: 'task',
+          activitySubject: 'Discovery call — validate BANT',
+          activityDaysFromNow: 1,
+        },
+      ],
+      executionCount: 0,
+      createdAt: isoNow,
+      updatedAt: isoNow,
+    },
+    {
+      id: 'auto-seed-5',
+      name: 'Executive alignment (fast-track)',
+      description:
+        'When a deal jumps from Qualified to Negotiation, create an exec-alignment task before legal review.',
+      isActive: true,
+      trigger: { type: 'deal_stage_changed', fromStage: 'qualified', toStage: 'negotiation' },
+      actions: [
+        {
+          type: 'create_activity',
+          activityType: 'task',
+          activitySubject: 'Executive alignment before redlines',
+          activityDaysFromNow: 0,
+        },
+      ],
+      executionCount: 0,
+      createdAt: isoNow,
+      updatedAt: isoNow,
+    },
+    {
+      id: 'auto-seed-6',
+      name: 'Lost deal debrief',
+      description: 'When a deal is lost, create a task to capture reasons and refresh the pipeline.',
+      isActive: true,
+      trigger: { type: 'deal_closed_lost' },
+      actions: [
+        {
+          type: 'create_activity',
+          activityType: 'task',
+          activitySubject: 'Win/loss debrief — update CRM',
+          activityDaysFromNow: 1,
+        },
+      ],
+      executionCount: 0,
+      createdAt: isoNow,
+      updatedAt: isoNow,
+    },
+    {
+      id: 'auto-seed-7',
+      name: 'Manager alert — lost deal',
+      description: 'Notifies the team when a deal is marked lost so pipeline impact can be reviewed.',
+      isActive: true,
+      trigger: { type: 'deal_closed_lost' },
+      actions: [
+        {
+          type: 'send_notification',
+          notificationTitle: 'Deal lost',
+          notificationMessage:
+            'A deal was lost — review pipeline impact and next actions for {dealTitle}.',
+        },
+      ],
+      executionCount: 0,
+      createdAt: isoNow,
+      updatedAt: isoNow,
+    },
+    {
+      id: 'auto-seed-8',
+      name: 'Kickoff after win',
+      description: 'When a deal is won, create a task to schedule the customer kickoff.',
+      isActive: true,
+      trigger: { type: 'deal_closed_won' },
+      actions: [
+        {
+          type: 'create_activity',
+          activityType: 'task',
+          activitySubject: 'Schedule customer kickoff',
+          activityDaysFromNow: 0,
+        },
+      ],
+      executionCount: 0,
+      createdAt: isoNow,
+      updatedAt: isoNow,
+    },
+    {
+      id: 'auto-seed-9',
+      name: 'Recycle when disqualified',
+      description: 'When a deal moves from Proposal back to Lead, reopen discovery and confirm scope.',
+      isActive: true,
+      trigger: { type: 'deal_stage_changed', fromStage: 'proposal', toStage: 'lead' },
+      actions: [
+        {
+          type: 'create_activity',
+          activityType: 'task',
+          activitySubject: 'Re-qualify scope after rollback',
+          activityDaysFromNow: 0,
+        },
+      ],
+      executionCount: 0,
+      createdAt: isoNow,
+      updatedAt: isoNow,
+    },
+    {
+      id: 'auto-seed-10',
+      name: 'Pause negotiation — refresh proposal',
+      description: 'When a deal moves from Negotiation back to Proposal, refresh pricing and legal attachments.',
+      isActive: true,
+      trigger: { type: 'deal_stage_changed', fromStage: 'negotiation', toStage: 'proposal' },
+      actions: [
+        {
+          type: 'create_activity',
+          activityType: 'task',
+          activitySubject: 'Refresh proposal package',
+          activityDaysFromNow: 1,
+        },
+      ],
+      executionCount: 0,
+      createdAt: isoNow,
+      updatedAt: isoNow,
+    },
   ]
 }
 
 /** Maps English seed rules into the i18n seed demo catalog shape (English source strings). */
 export function automationSeedRulesToDemoCatalog(rules: AutomationRule[]): Record<SeedAutomationId, SeedAutomationDemoCopy> {
   const out: Partial<Record<SeedAutomationId, SeedAutomationDemoCopy>> = {}
-  for (const r of rules) {
-    if (r.id !== 'auto-seed-1' && r.id !== 'auto-seed-2' && r.id !== 'auto-seed-3') continue
-    const id = r.id as SeedAutomationId
+  for (const id of AUTOMATION_SEED_TEMPLATE_IDS) {
+    const r = rules.find((x) => x.id === id)
+    if (!r) {
+      throw new Error(`Missing automation seed rule: ${id}`)
+    }
     const row: SeedAutomationDemoCopy = { name: r.name, description: r.description }
     for (const a of r.actions) {
       if (a.type === 'create_activity' && a.activitySubject) {

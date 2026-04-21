@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Workflow, Plus, Trash2, ToggleLeft, ToggleRight, Zap, Bell,
   ArrowRight, CheckCircle2, Clock, ChevronDown, ChevronUp, X, Play, Library,
+  ListOrdered,
 } from 'lucide-react'
 import { useAutomationsStore } from '../store/automationsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
@@ -21,6 +23,7 @@ import {
   AUTOMATION_SEED_TEMPLATE_IDS,
   getAutomationTemplateRulePayload,
 } from '../i18n/seed/automationSeedRulesEn'
+import { WorkflowTemplateLibraryDialog } from '../components/workflows/WorkflowTemplateLibraryDialog'
 import type {
   AutomationRule, AutomationTriggerType, AutomationActionType,
   AutomationTrigger, AutomationAction, DealStage, ActivityType,
@@ -407,7 +410,7 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
   const handleSave = (data: Omit<AutomationRule, 'id' | 'executionCount' | 'createdAt' | 'updatedAt'>) => {
     updateRule(rule.id, data)
     setEditing(false)
-    toast.success(t.automations.title)
+    toast.success(t.automations.toastRuleUpdated)
   }
 
   return (
@@ -457,12 +460,10 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
                 ) : (
                   <span className="text-[10px] text-fg-subtle">{t.automations.executionCount}: 0</span>
                 )}
-                {rule.lastExecutedAt && (
-                  <span className="text-[10px] text-fg-subtle flex items-center gap-1">
-                    <Clock size={10} />
-                    {formatRelativeDate(rule.lastExecutedAt)}
-                  </span>
-                )}
+                <span className="text-[10px] text-fg-subtle flex items-center gap-1">
+                  <Clock size={10} />
+                  {rule.lastExecutedAt ? formatRelativeDate(rule.lastExecutedAt) : t.common.notAvailable}
+                </span>
               </div>
             </div>
 
@@ -498,7 +499,7 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
               </PermissionGate>
               <PermissionGate permission="automations:delete">
                 <button type="button"
-                  onClick={() => { deleteRule(rule.id); toast.success(t.common.delete) }}
+                  onClick={() => { deleteRule(rule.id); toast.success(t.automations.toastRuleDeleted) }}
                   title={t.common.delete}
                   aria-label={t.common.delete}
                   className="p-1.5 text-fg-subtle hover:text-danger transition-colors"
@@ -545,25 +546,29 @@ export function Automations() {
   const rules = useAutomationsStore((s) => s.rules)
   const recentExecutions = useAutomationsStore((s) => s.recentExecutions)
   const fetchRecentExecutions = useAutomationsStore((s) => s.fetchRecentExecutions)
+  const fetchRules = useAutomationsStore((s) => s.fetchRules)
   const addRule = useAutomationsStore((s) => s.addRule)
   const [showNew, setShowNew] = useState(false)
+  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false)
 
   useEffect(() => {
-    fetchRecentExecutions()
-  }, [fetchRecentExecutions])
+    void fetchRules()
+    void fetchRecentExecutions()
+  }, [fetchRules, fetchRecentExecutions])
 
   const active = rules.filter((r) => r.isActive).length
+  const inactive = rules.filter((r) => !r.isActive).length
   const totalExecutions = rules.reduce((s, r) => s + r.executionCount, 0)
 
   const handleSave = (data: AutomationRulePayload) => {
     addRule(data)
     setShowNew(false)
-    toast.success(t.automations.title)
+    toast.success(t.automations.toastRuleCreated)
   }
 
   const handleUseTemplate = (payload: AutomationRulePayload) => {
     addRule(payload)
-    toast.success(t.automations.title)
+    toast.success(t.automations.toastTemplateAdded)
   }
 
   return (
@@ -571,15 +576,38 @@ export function Automations() {
       {showNew && (
         <RuleModal initial={blankRule()} onSave={handleSave} onClose={() => setShowNew(false)} />
       )}
+      {showTemplateLibrary && (
+        <WorkflowTemplateLibraryDialog onClose={() => setShowTemplateLibrary(false)} />
+      )}
 
       <PageHeader
         showTitle={false}
         title={t.automations.title}
-        subtitle={`${active} ${t.sequences.active.toLowerCase()} · ${totalExecutions} ${t.automations.executionCount.toLowerCase()}`}
+        subtitle={`${active} ${t.sequences.active.toLowerCase()} · ${inactive} ${t.automations.statInactiveRules.toLowerCase()} · ${totalExecutions} ${t.automations.executionCount.toLowerCase()}`}
+        actions={(
+          <div className="flex flex-wrap items-center gap-2 justify-end">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              leftIcon={<Library size={14} />}
+              onClick={() => setShowTemplateLibrary(true)}
+            >
+              {t.workflowTemplates.browseButton}
+            </Button>
+            <Link
+              to="/sequences"
+              className="inline-flex items-center gap-1.5 rounded-full border border-fg/10 bg-surface-2/90 px-3.5 py-1.5 text-sm text-fg hover:border-border-strong transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+            >
+              <ListOrdered size={14} className="text-accent-400 shrink-0" aria-hidden />
+              {t.automations.crossLinkSequences}
+            </Link>
+          </div>
+        )}
       />
 
       <Toolbar panel>
-        <div className="flex items-center justify-end w-full">
+        <div className="flex items-center justify-end w-full gap-2">
           <PermissionGate permission="automations:create">
             <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setShowNew(true)}>
               {t.automations.newRule}
@@ -603,6 +631,12 @@ export function Automations() {
           icon={<Play size={18} />}
           accent="success"
         />
+        <StatCard
+          title={t.automations.statInactiveRules}
+          value={inactive}
+          icon={<ToggleLeft size={18} />}
+          accent="info"
+        />
       </div>
 
       <AutomationStarterLibrary onUseTemplate={handleUseTemplate} />
@@ -613,8 +647,15 @@ export function Automations() {
           <EmptyState
             icon={<Workflow size={28} strokeWidth={1.75} />}
             title={t.automations.title}
-            description={t.common.noResults}
+            description={t.automations.emptyRulesDescription}
           />
+          <PermissionGate permission="automations:create">
+            <div className="flex justify-center pb-6 -mt-8">
+              <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setShowNew(true)}>
+                {t.automations.newRule}
+              </Button>
+            </div>
+          </PermissionGate>
         </div>
       ) : (
         <div className="space-y-2">
@@ -625,28 +666,36 @@ export function Automations() {
       )}
 
       <div className="glass rounded-xl p-4 border border-fg/6">
-        <p className="text-xs text-fg-subtle mb-3 uppercase tracking-wide">{t.audit.title}</p>
+        <p className="text-xs text-fg-subtle mb-3 uppercase tracking-wide">{t.automations.executionLogTitle}</p>
         {recentExecutions.length === 0 ? (
           <p className="text-xs text-fg-subtle">{t.common.noResults}</p>
         ) : (
           <div className="space-y-2">
-            {recentExecutions.slice(0, 10).map((exec) => (
-              <div key={exec.id} className="flex items-center justify-between gap-3 rounded-lg border border-fg/6 bg-fg/[0.02] px-3 py-2">
-                <div className="min-w-0">
-                  <p className="text-xs text-fg truncate">{exec.triggerType}</p>
-                  <p className="text-[10px] text-fg-subtle truncate">
-                    {formatRelativeDate(exec.createdAt)} · {exec.ruleId}
-                  </p>
+            {recentExecutions.slice(0, 10).map((exec) => {
+              const triggerLabels = getTriggerLabels(t)
+              const triggerLine = triggerLabels[exec.triggerType] ?? exec.triggerType
+              const ruleRow = rules.find((r) => r.id === exec.ruleId)
+              const ruleLabel = ruleRow
+                ? localizedAutomationRule(ruleRow, getTranslations()).name
+                : `${t.automations.executionLogRuleId}: ${exec.ruleId}`
+              return (
+                <div key={exec.id} className="flex items-center justify-between gap-3 rounded-lg border border-fg/6 bg-fg/[0.02] px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-xs text-fg truncate">{triggerLine}</p>
+                    <p className="text-[10px] text-fg-subtle truncate">
+                      {ruleLabel} · {formatRelativeDate(exec.createdAt)}
+                    </p>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
+                    exec.status === 'success'
+                      ? 'text-success border-success/30 bg-success/10'
+                      : 'text-danger border-danger/30 bg-danger/10'
+                  }`}>
+                    {exec.status === 'success' ? t.automations.executionStatusOk : t.automations.executionStatusFailed}
+                  </span>
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${
-                  exec.status === 'success'
-                    ? 'text-success border-success/30 bg-success/10'
-                    : 'text-danger border-danger/30 bg-danger/10'
-                }`}>
-                  {exec.status}
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
