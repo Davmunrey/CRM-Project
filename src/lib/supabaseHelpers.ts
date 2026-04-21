@@ -24,7 +24,7 @@ const sb = () => supabase as any
 /** Generic select with ordering */
 export async function sbSelect<T>(table: string): Promise<T[]> {
   if (!isSupabaseConfigured || !supabase) return []
-  const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false })
+  const { data, error } = await sb().from(table).select('*').order('created_at', { ascending: false })
   if (error) throw error
   return (data ?? []) as T[]
 }
@@ -47,14 +47,14 @@ export async function sbUpdate(table: string, id: string, updates: Record<string
 /** Generic delete by id */
 export async function sbDelete(table: string, id: string): Promise<void> {
   if (!isSupabaseConfigured || !supabase) throw new Error('Supabase not configured')
-  const { error } = await supabase.from(table).delete().eq('id', id)
+  const { error } = await sb().from(table).delete().eq('id', id)
   if (error) throw error
 }
 
 /** Generic bulk delete */
 export async function sbBulkDelete(table: string, ids: string[]): Promise<void> {
   if (!isSupabaseConfigured || !supabase) throw new Error('Supabase not configured')
-  const { error } = await supabase.from(table).delete().in('id', ids)
+  const { error } = await sb().from(table).delete().in('id', ids)
   if (error) throw error
 }
 

@@ -27,6 +27,12 @@
     "lint:ci": "eslint src --cache --cache-location node_modules/.cache/eslint/ --max-warnings 200",
     "ui:lint": "node scripts/ui-lint.mjs",
     "i18n:lint": "node scripts/i18n-lint.mjs",
+    "supabase:login": "supabase login",
+    "supabase:link": "supabase link",
+    "supabase:db:push": "supabase db push",
+    "supabase:secrets:set-webhook-worker": "node scripts/supabase-set-webhook-worker-secret.mjs",
+    "supabase:deploy:webhooks": "supabase functions deploy webhook-subscriptions && supabase functions deploy webhook-worker",
+    "supabase:webhooks:push": "npm run supabase:db:push && npm run supabase:deploy:webhooks",
     "audit:unused": "npx -y knip --no-progress --exclude exports,nsExports,types,nsTypes,enumMembers,namespaceMembers,duplicates --no-config-hints"
   },
   "devDependencies": {
@@ -53,7 +59,8 @@
     "typescript-eslint": "^8.50.0",
     "vite": "^8.0.1",
     "vitest": "^4.1.2",
-    "vitest-axe": "^0.1.0"
+    "vitest-axe": "^0.1.0",
+    "supabase": "^2.92.1"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

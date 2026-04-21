@@ -70,6 +70,7 @@ export const it: Translations = {
     navAddLink: 'Aggiungi link',
     navDeleteGroup: 'Elimina gruppo',
     navMoveUp: 'Sposta su',
+    navMoveDown: 'Sposta giù',
     navLabel: 'Etichetta',
     navRoute: 'Percorso',
     navSavedViews: 'Viste salvate',

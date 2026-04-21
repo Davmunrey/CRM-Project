@@ -711,6 +711,12 @@ export interface Translations {
     signatureSaved: string
     signatureDeleted: string
     signatureNamePlaceholder: string
+    signatureToolbarBold: string
+    signatureToolbarItalic: string
+    signatureToolbarLink: string
+    signatureToolbarImage: string
+    signatureMergeFieldsTitle: string
+    signatureMergeFieldsHelp: string
     tabGeneral: string
     tabBranding: string
     tabPipeline: string
@@ -719,6 +725,7 @@ export interface Translations {
     tabData: string
     tabNavigation: string
     tabAdvanced: string
+    tabWebhooks: string
     tabOnboarding: string
     onboardingTitle: string
     onboardingIntro: string
@@ -731,6 +738,37 @@ export interface Translations {
     onboardingGoContacts: string
     onboardingGoDeals: string
     onboardingGoSequences: string
+    webhooksTitle: string
+    webhooksIntro: string
+    webhooksRequiresSupabase: string
+    webhooksCronHint: string
+    webhooksCreateSection: string
+    webhooksName: string
+    webhooksTargetUrl: string
+    webhooksSigningSecret: string
+    webhooksEventFilters: string
+    webhooksEventFiltersHint: string
+    webhooksCustomHeadersJson: string
+    webhooksCustomHeadersHint: string
+    webhooksCreate: string
+    webhooksCreated: string
+    webhooksLoadError: string
+    webhooksListTitle: string
+    webhooksListEmpty: string
+    webhooksEnabled: string
+    webhooksLastStatus: string
+    webhooksTest: string
+    webhooksTestOk: string
+    webhooksTestFail: string
+    webhooksDelete: string
+    webhooksDeleteConfirm: string
+    webhooksSecretMin: string
+    webhooksInvalidHeadersJson: string
+    webhooksRotateTitle: string
+    webhooksRotateIntro: string
+    webhooksNewSecret: string
+    webhooksRotateSubmit: string
+    webhooksRotated: string
     legalCompanyName: string
     taxIdVat: string
     addressLine1: string
@@ -755,6 +793,7 @@ export interface Translations {
     navAddLink: string
     navDeleteGroup: string
     navMoveUp: string
+    navMoveDown: string
     navLabel: string
     navRoute: string
     navSavedViews: string
@@ -1129,6 +1168,12 @@ export interface Translations {
     foldersNavLabel: string
     /** a11y: thread list region */
     threadListLabel: string
+    listTotalThreads: string
+    listVisibleOfTotal: string
+    listTotalMessages: string
+    listVisibleMessages: string
+    folderUnreadTooltip: string
+    folderTotalTooltip: string
     /** a11y: reading pane region */
     readingPaneLabel: string
     /** Collapsible search help summary */
@@ -1140,6 +1185,9 @@ export interface Translations {
     snoozedFolderEmptyHint: string
     /** Reply action (short) */
     reply: string
+    threadShowFullMessage: string
+    threadCollapseMessage: string
+    threadMessageListLabel: string
   }
 
   // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -1412,6 +1460,22 @@ export interface Translations {
     formatBold: string
     formatItalic: string
     formatBulletList: string
+    formatToolbarLabel: string
+    formatUnderline: string
+    formatStrikethrough: string
+    formatNumberedList: string
+    formatQuote: string
+    formatIndent: string
+    formatOutdent: string
+    formatInsertLink: string
+    formatInsertImage: string
+    formatClear: string
+    formatUndo: string
+    formatRedo: string
+    promptLinkUrl: string
+    promptLinkText: string
+    promptImageUrl: string
+    promptImageAlt: string
     send: string
     discardComposer: string
   }

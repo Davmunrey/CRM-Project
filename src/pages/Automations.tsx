@@ -6,7 +6,9 @@ import {
 import { useAutomationsStore } from '../store/automationsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { Select } from '../components/ui/Select'
+import { Button } from '../components/ui/Button'
 import { PageHeader } from '../components/ui/PageHeader'
+import { Toolbar } from '../components/ui/Toolbar'
 import { StatCard } from '../components/ui/StatCard'
 import { EmptyState } from '../components/ui/EmptyState'
 import { toast } from '../store/toastStore'
@@ -315,18 +317,12 @@ function RuleModal({
 
         {/* Footer */}
         <div className="flex gap-2 px-5 py-4 border-t border-fg/6">
-          <button type="button"
-            onClick={onClose}
-            className="flex-1 py-2 rounded-xl border border-fg/10 text-xs text-fg-muted hover:text-fg hover:bg-fg/4 transition-colors"
-          >
+          <Button type="button" variant="secondary" size="sm" className="flex-1" onClick={onClose}>
             {t.common.cancel}
-          </button>
-          <button type="button"
-            onClick={handleSave}
-            className="flex-1 py-2 rounded-xl bg-accent-500 hover:bg-accent-600 text-xs text-fg font-medium transition-colors"
-          >
+          </Button>
+          <Button type="button" variant="primary" size="sm" className="flex-1" onClick={handleSave}>
             {t.common.save}
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -506,18 +502,17 @@ export function Automations() {
         showTitle={false}
         title={t.automations.title}
         subtitle={`${active} ${t.sequences.active.toLowerCase()} · ${totalExecutions} ${t.automations.executionCount.toLowerCase()}`}
-        actions={
-          <PermissionGate permission="automations:create">
-            <button type="button"
-              onClick={() => setShowNew(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-accent-500 hover:bg-accent-600 text-xs text-fg font-medium transition-colors"
-            >
-              <Plus size={14} />
-              {t.automations.newRule}
-            </button>
-          </PermissionGate>
-        }
       />
+
+      <Toolbar panel>
+        <div className="flex items-center justify-end w-full">
+          <PermissionGate permission="automations:create">
+            <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setShowNew(true)}>
+              {t.automations.newRule}
+            </Button>
+          </PermissionGate>
+        </div>
+      </Toolbar>
 
       {/* KPI strip */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">

@@ -1,0 +1,56 @@
+# Apply remote DB migrations + deploy webhook Edge Functions from GitHub (no local terminal).
+# Configure repository secrets (Settings → Secrets and variables → Actions), then run this workflow manually.
+#
+# Required secrets:
+#   SUPABASE_ACCESS_TOKEN   — https://supabase.com/dashboard/account/tokens
+#   SUPABASE_PROJECT_ID     — project ref from dashboard URL …/project/<ref>
+#   SUPABASE_DB_PASSWORD    — Database password (Settings → Database; reset if unknown)
+#
+# Optional (recommended for webhook-worker):
+#   WEBHOOK_WORKER_SECRET   — long random string; same value as cron / WEBHOOK_WORKER_INVOKE_URL consumer
+
+name: Supabase remote deploy
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: supabase-remote-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.92.1
+
+      - name: Link project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
+
+      - name: Push database migrations
+        run: supabase db push
+
+      - name: Set WEBHOOK_WORKER_SECRET (optional)
+        env:
+          WEBHOOK_WORKER_SECRET: ${{ secrets.WEBHOOK_WORKER_SECRET }}
+        run: |
+          if [ -z "$WEBHOOK_WORKER_SECRET" ]; then
+            echo "WEBHOOK_WORKER_SECRET not set — skipping Edge secret (set it in Dashboard or add repo secret)."
+            exit 0
+          fi
+          supabase secrets set "WEBHOOK_WORKER_SECRET=${WEBHOOK_WORKER_SECRET}"
+
+      - name: Deploy webhook Edge Functions
+        run: |
+          supabase functions deploy webhook-subscriptions
+          supabase functions deploy webhook-worker

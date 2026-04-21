@@ -1,6 +1,6 @@
 # CRM documentation
 
-**Canonical product and engineering narrative** for CRM Pro: seven consolidated **master** documents plus a **project bridge** that ties this folder to `.planning/`.
+**Canonical product and engineering narrative** for CRM Pro: eight consolidated **master** documents plus a **project bridge** that ties this folder to `.planning/`.
 
 ## Start here
 
@@ -12,6 +12,7 @@
 | Start **Google Gmail** restricted-scope verification | [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md) |
 | Run **production smoke** after deploy | [`smoke-checklist-production.md`](./smoke-checklist-production.md) |
 | Own **roadmap / backlog** (30–60–90, GTM matrix) | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
+| Compare **Pipedrive vs CRM Pro**, webhooks parity, group priorities | [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) |
 | Need **what shipped** (chronological handoff) | [`master-implementation-history.md`](./master-implementation-history.md) |
 
 Verify consolidated `docs/` layout (no legacy split sources; masters present): `npm run docs:verify-consolidation`. Normalize phase snapshot headers: `npm run docs:fix-phase-headers`.
@@ -29,13 +30,14 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present): `
 | Release, QA, go/no-go, production handoff | [`master-release-qa.md`](./master-release-qa.md) | Sell-ready checklist, QA evidence, go/no-go, production handoff |
 | Implementation history (full handoff) | [`master-implementation-history.md`](./master-implementation-history.md) | Part A §1–12 · Part B §13–24 |
 | Roadmap 30/60/90 + execution backlog | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Horizon roadmap · Pro backlog board |
+| Competitive / integration parity (Pipedrive, webhooks, API) | [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) | Benchmark tables · Webhooks v1 spec · Top gaps · Executive summary |
 | Manager `/manager` KPI definitions (MQL/SQL, aging, first-touch) | [`manager-dashboard-metrics.md`](./manager-dashboard-metrics.md) | Data contract + i18n key map (narrative in implementation history §23) |
 
 ---
 
 ## By role (quick paths)
 
-- **Product / PM** — [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) · [`project-state.md`](./project-state.md#gaps-not-fully-owned-by-a-single-master-today)
+- **Product / PM** — [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) · [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) · [`project-state.md`](./project-state.md#gaps-not-fully-owned-by-a-single-master-today)
 - **Engineering (feature work)** — [`master-implementation-history.md`](./master-implementation-history.md) Part B · [`master-design-ui.md`](./master-design-ui.md#design-system-and-layout) · [`.planning/codebase/CONVENTIONS.md`](../.planning/codebase/CONVENTIONS.md)
 - **Ops / SRE / release** — [`master-release-qa.md`](./master-release-qa.md#production-handoff-checklist) · [`master-security-compliance.md`](./master-security-compliance.md#supabase-external-hardening-checklist) · [`master-lead-management.md`](./master-lead-management.md#lead-maintenance-runbook)
 - **Security / buyer reviews** — [`master-security-compliance.md`](./master-security-compliance.md#sell-ready-security-evidence-index) · [`master-email-operations.md`](./master-email-operations.md#email-deliverability-resend)
@@ -53,6 +55,7 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present): `
 | Release, QA, go/no-go, production handoff | Gates and evidence | [`master-release-qa.md`](./master-release-qa.md) |
 | Implementation history (full handoff) | Part A + Part B | [`master-implementation-history.md`](./master-implementation-history.md) |
 | Roadmap 30/60/90 + execution backlog | Forward plan | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
+| Pipedrive comparison, webhooks/API parity | Active narrative | [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) |
 | v1 milestone + deploy IDs + bridge / gaps | Tracker + explainer | [`.planning/`](../.planning/) · [`project-state.md`](./project-state.md) |
 
 ---
@@ -77,5 +80,5 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present): `
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-18  
+- **Last updated:** 2026-04-20  
 - **Canonical:** Yes  

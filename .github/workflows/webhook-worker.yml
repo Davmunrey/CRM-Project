@@ -1,0 +1,27 @@
+# Drains `webhook_outbox` by POSTing the `webhook-worker` Edge Function (shared secret).
+# Configure repository secrets: WEBHOOK_WORKER_INVOKE_URL, WEBHOOK_WORKER_SECRET (see supabase/README.md).
+
+name: Webhook worker
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  invoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST webhook-worker
+        env:
+          WEBHOOK_WORKER_INVOKE_URL: ${{ secrets.WEBHOOK_WORKER_INVOKE_URL }}
+          WEBHOOK_WORKER_SECRET: ${{ secrets.WEBHOOK_WORKER_SECRET }}
+        run: |
+          if [ -z "$WEBHOOK_WORKER_INVOKE_URL" ] || [ -z "$WEBHOOK_WORKER_SECRET" ]; then
+            echo "Skip: WEBHOOK_WORKER_INVOKE_URL or WEBHOOK_WORKER_SECRET not set in repo secrets."
+            exit 0
+          fi
+          curl -sS -f -X POST "$WEBHOOK_WORKER_INVOKE_URL" \
+            -H "x-webhook-worker-secret: $WEBHOOK_WORKER_SECRET" \
+            -H "Content-Type: application/json" \
+            -d "{}"

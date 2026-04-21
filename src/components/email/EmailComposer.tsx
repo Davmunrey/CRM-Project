@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ChangeEvent } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import {
   X,
@@ -6,7 +6,6 @@ import {
   ChevronDown,
   FileText,
   Eye,
-  Loader2,
   ArrowLeft,
   Paperclip,
   PenLine,
@@ -14,6 +13,17 @@ import {
   Bold,
   Italic,
   List,
+  ListOrdered,
+  Underline,
+  Strikethrough,
+  TextQuote,
+  Link2,
+  Image as ImageIcon,
+  Eraser,
+  Undo2,
+  Redo2,
+  IndentIncrease,
+  IndentDecrease,
 } from 'lucide-react'
 import { useEmailStore } from '../../store/emailStore'
 import { useActivitiesStore } from '../../store/activitiesStore'
@@ -23,28 +33,53 @@ import { useCompaniesStore } from '../../store/companiesStore'
 import { useTemplateStore } from '../../store/templateStore'
 import { useSettingsStore } from '../../store/settingsStore'
 import { useAuthStore } from '../../store/authStore'
-import { formatCurrency } from '../../utils/formatters'
 import { toast } from '../../store/toastStore'
 import { useTranslations } from '../../i18n'
 import { Select } from '../ui/Select'
+import { Button } from '../ui/Button'
 import { resolveSendContextFromTo } from '../../features/inbox'
 import { resolveEmailProviderName } from '../../services/emailProviders'
+import { applyEmailMergeTokens, buildEmailMergeVariableMap, getEmailMergeFieldOptions } from '../../utils/emailMergeFields'
+import {
+  type BodyEditResult,
+  applyEditToTextarea,
+  clearFormattingInSelection,
+  expandSelectionToLineRange,
+  formatPlainToHtml,
+  indentSelection,
+  numberLinesInSelection,
+  outdentSelection,
+  prefixLinesInSelection,
+  wrapSelectionMarkers,
+} from '../../utils/emailPlainFormatting'
 
-function escapeHtmlForBody(value: string): string {
-  return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+function FormatToolBtn({
+  onClick,
+  disabled,
+  title,
+  children,
+}: {
+  onClick: () => void
+  disabled?: boolean
+  title: string
+  children: ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      aria-label={title}
+      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-fg-muted hover:bg-fg/12 hover:text-fg disabled:pointer-events-none disabled:opacity-35 transition-colors"
+    >
+      {children}
+    </button>
+  )
 }
 
-/** Lightweight body → HTML: `**bold**`, `*italic*`, newlines → `<br/>`. */
-function formatPlainToHtml(plain: string): string {
-  return plain
-    .split('\n')
-    .map((line) => {
-      let s = escapeHtmlForBody(line)
-      s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      s = s.replace(/\*(?!\*)([^*]+)\*(?!\*)/g, '<em>$1</em>')
-      return s
-    })
-    .join('<br/>')
+function ToolbarDivider() {
+  return <span className="hidden sm:block w-px h-6 shrink-0 self-center bg-fg/15 mx-0.5" aria-hidden />
 }
 
 interface EmailComposerProps {
@@ -53,6 +88,10 @@ interface EmailComposerProps {
   defaultTo?: string
   defaultSubject?: string
   defaultBody?: string
+  /** Comma-separated; used when editing an existing draft (`draftId`). */
+  defaultCc?: string
+  defaultBcc?: string
+  defaultReplyTo?: string
   defaultAttachments?: Array<{
     name: string
     mimeType: string
@@ -65,7 +104,12 @@ interface EmailComposerProps {
   draftId?: string
   /** Shown when Gmail is required but disconnected (e.g. OAuth from Inbox). */
   onRequestGmailConnect?: () => void
+  /** `inline`: embedded panel (e.g. thread reply). `modal`: full-screen portal (new mail, drafts). */
+  presentation?: 'modal' | 'inline'
 }
+
+/** Stable default — a fresh `[]` each render was in the seed effect deps and reset the body on every keystroke. */
+const EMPTY_EMAIL_ATTACHMENTS: NonNullable<EmailComposerProps['defaultAttachments']> = []
 
 export function EmailComposer({
   isOpen,
@@ -73,17 +117,25 @@ export function EmailComposer({
   defaultTo = '',
   defaultSubject = '',
   defaultBody = '',
-  defaultAttachments = [],
+  defaultCc = '',
+  defaultBcc = '',
+  defaultReplyTo = '',
+  defaultAttachments = EMPTY_EMAIL_ATTACHMENTS,
   contactId,
   dealId,
   companyId,
   draftId,
   onRequestGmailConnect,
+  presentation = 'modal',
 }: EmailComposerProps) {
   const t = useTranslations()
   const sendHintId = useId()
   const bodyRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const formatUndoPast = useRef<string[]>([])
+  const formatUndoFuture = useRef<string[]>([])
+  const [undoDepth, setUndoDepth] = useState(0)
+  const [redoDepth, setRedoDepth] = useState(0)
   const [to, setTo] = useState(defaultTo)
   const [cc, setCc] = useState('')
   const [bcc, setBcc] = useState('')
@@ -105,7 +157,6 @@ export function EmailComposer({
     dataBase64: string
   }>>([])
   const [activeDraftId, setActiveDraftId] = useState<string | undefined>(draftId)
-  const [draftCreatedForOpen, setDraftCreatedForOpen] = useState(false)
   const [linkContactId, setLinkContactId] = useState<string | undefined>(undefined)
   const [linkDealId, setLinkDealId] = useState<string | undefined>(undefined)
   const [linkCompanyId, setLinkCompanyId] = useState<string | undefined>(undefined)
@@ -162,13 +213,19 @@ export function EmailComposer({
     ],
   )
 
+  const defaultAttachmentsKey = useMemo(() => {
+    if (!defaultAttachments.length) return ''
+    return defaultAttachments
+      .map((a) => `${a.name}\0${a.size}\0${a.dataBase64?.length ?? 0}`)
+      .join('\n')
+  }, [defaultAttachments])
+
   useEffect(() => {
     if (!isOpen) return
     setLinkContactId(contactId)
     setLinkDealId(dealId)
     setLinkCompanyId(companyId)
     setActiveDraftId(draftId)
-    setDraftCreatedForOpen(false)
     setShowTemplates(false)
 
     const seedFromParent =
@@ -203,7 +260,16 @@ export function EmailComposer({
       setTo(defaultTo)
       setSubject(defaultSubject)
       setBody(defaultBody)
-      applyEmptyCcBcc()
+      if (draftId) {
+        setCc(defaultCc)
+        setBcc(defaultBcc)
+        setReplyTo(defaultReplyTo)
+        setShowCc(defaultCc.trim().length > 0)
+        setShowBcc(defaultBcc.trim().length > 0)
+        setShowReplyTo(defaultReplyTo.trim().length > 0)
+      } else {
+        applyEmptyCcBcc()
+      }
       applyDefaultAttachments()
       return
     }
@@ -247,37 +313,17 @@ export function EmailComposer({
     setBody(defaultBody)
     applyEmptyCcBcc()
     applyDefaultAttachments()
-  }, [defaultAttachments, defaultBody, defaultSubject, defaultTo, draftId, draftKey, isOpen])
-
-  useEffect(() => {
-    if (!isOpen || draftCreatedForOpen) return
-    const created = useEmailStore.getState().saveDraft({
-      draftId: activeDraftId,
-      to: to.split(',').map((s) => s.trim()).filter(Boolean),
-      cc: cc.split(',').map((s) => s.trim()).filter(Boolean),
-      bcc: bcc.split(',').map((s) => s.trim()).filter(Boolean),
-      replyTo: replyTo.trim() || undefined,
-      subject,
-      body,
-      contactId: activityContext.contactId,
-      dealId: activityContext.dealId,
-      companyId: activityContext.companyId,
-    })
-    setActiveDraftId(created.id)
-    setDraftCreatedForOpen(true)
   }, [
-    activeDraftId,
-    activityContext.companyId,
-    activityContext.contactId,
-    activityContext.dealId,
-    bcc,
-    body,
-    cc,
-    draftCreatedForOpen,
+    defaultAttachmentsKey,
+    defaultBcc,
+    defaultBody,
+    defaultCc,
+    defaultReplyTo,
+    defaultSubject,
+    defaultTo,
+    draftId,
+    draftKey,
     isOpen,
-    replyTo,
-    subject,
-    to,
   ])
 
   useEffect(() => {
@@ -292,6 +338,14 @@ export function EmailComposer({
       // keep fallback quick replies in local store
     })
   }, [fetchQuickReplies, isOpen])
+
+  useEffect(() => {
+    if (!isOpen) return
+    formatUndoPast.current = []
+    formatUndoFuture.current = []
+    setUndoDepth(0)
+    setRedoDepth(0)
+  }, [isOpen])
 
   useEffect(() => {
     if (!isOpen) return
@@ -319,7 +373,13 @@ export function EmailComposer({
     }
     const start = el.selectionStart ?? 0
     const end = el.selectionEnd ?? 0
-    setBody((prev) => prev.slice(0, start) + text + prev.slice(end))
+    formatUndoPast.current.push(body)
+    while (formatUndoPast.current.length > 40) formatUndoPast.current.shift()
+    formatUndoFuture.current = []
+    setUndoDepth(formatUndoPast.current.length)
+    setRedoDepth(0)
+    const next = body.slice(0, start) + text + body.slice(end)
+    setBody(next)
     requestAnimationFrame(() => {
       const node = bodyRef.current
       if (!node) return
@@ -327,74 +387,172 @@ export function EmailComposer({
       const pos = start + text.length
       node.setSelectionRange(pos, pos)
     })
+  }, [body])
+
+  const runBodyEdit = useCallback(
+    (compute: (b: string, start: number, end: number) => BodyEditResult) => {
+      const el = bodyRef.current
+      if (!el) return
+      const start = el.selectionStart ?? 0
+      const end = el.selectionEnd ?? 0
+      formatUndoPast.current.push(body)
+      while (formatUndoPast.current.length > 40) formatUndoPast.current.shift()
+      formatUndoFuture.current = []
+      const edit = compute(body, start, end)
+      setUndoDepth(formatUndoPast.current.length)
+      setRedoDepth(0)
+      applyEditToTextarea(el, edit, setBody)
+    },
+    [body],
+  )
+
+  const runLineBodyEdit = useCallback(
+    (compute: (b: string, lineStart: number, lineEnd: number) => BodyEditResult) => {
+      const el = bodyRef.current
+      if (!el) return
+      const cs = el.selectionStart ?? 0
+      const ce = el.selectionEnd ?? 0
+      const [ls, le] = expandSelectionToLineRange(body, cs, ce)
+      formatUndoPast.current.push(body)
+      while (formatUndoPast.current.length > 40) formatUndoPast.current.shift()
+      formatUndoFuture.current = []
+      const edit = compute(body, ls, le)
+      setUndoDepth(formatUndoPast.current.length)
+      setRedoDepth(0)
+      applyEditToTextarea(el, edit, setBody)
+    },
+    [body],
+  )
+
+  const handleFormatUndo = useCallback(() => {
+    setBody((prev) => {
+      const snap = formatUndoPast.current.pop()
+      if (snap === undefined) return prev
+      formatUndoFuture.current.push(prev)
+      queueMicrotask(() => {
+        setUndoDepth(formatUndoPast.current.length)
+        setRedoDepth(formatUndoFuture.current.length)
+      })
+      return snap
+    })
+  }, [])
+
+  const handleFormatRedo = useCallback(() => {
+    setBody((prev) => {
+      const snap = formatUndoFuture.current.pop()
+      if (snap === undefined) return prev
+      formatUndoPast.current.push(prev)
+      queueMicrotask(() => {
+        setUndoDepth(formatUndoPast.current.length)
+        setRedoDepth(formatUndoFuture.current.length)
+      })
+      return snap
+    })
   }, [])
 
   const applyBodyBold = useCallback(() => {
-    const el = bodyRef.current
-    if (!el) return
-    const start = el.selectionStart ?? 0
-    const end = el.selectionEnd ?? 0
-    const sel = body.slice(start, end)
-    const wrapped = sel ? `**${sel}**` : '****'
-    const next = body.slice(0, start) + wrapped + body.slice(end)
-    setBody(next)
-    requestAnimationFrame(() => {
-      const node = bodyRef.current
-      if (!node) return
-      node.focus()
-      if (sel) {
-        const pos = start + wrapped.length
-        node.setSelectionRange(pos, pos)
-      } else {
-        node.setSelectionRange(start + 2, start + 2)
-      }
-    })
-  }, [body])
+    runBodyEdit((b, s, e) => wrapSelectionMarkers(b, s, e, '**', '**', ''))
+  }, [runBodyEdit])
 
   const applyBodyItalic = useCallback(() => {
+    runBodyEdit((b, s, e) => wrapSelectionMarkers(b, s, e, '*', '*', 'text'))
+  }, [runBodyEdit])
+
+  const applyBodyUnderline = useCallback(() => {
+    runBodyEdit((b, s, e) => wrapSelectionMarkers(b, s, e, '++', '++', 'text'))
+  }, [runBodyEdit])
+
+  const applyBodyStrike = useCallback(() => {
+    runBodyEdit((b, s, e) => wrapSelectionMarkers(b, s, e, '~~', '~~', 'text'))
+  }, [runBodyEdit])
+
+  const applyBodyBullet = useCallback(() => {
+    runBodyEdit((b, s, e) => prefixLinesInSelection(b, s, e, '- ', /^-\s+/))
+  }, [runBodyEdit])
+
+  const applyBodyNumbered = useCallback(() => {
+    runBodyEdit(numberLinesInSelection)
+  }, [runBodyEdit])
+
+  const applyBodyQuote = useCallback(() => {
+    runBodyEdit((b, s, e) => prefixLinesInSelection(b, s, e, '> ', /^>/))
+  }, [runBodyEdit])
+
+  const applyBodyIndent = useCallback(() => {
+    runLineBodyEdit((b, ls, le) => indentSelection(b, ls, le))
+  }, [runLineBodyEdit])
+
+  const applyBodyOutdent = useCallback(() => {
+    runLineBodyEdit((b, ls, le) => outdentSelection(b, ls, le))
+  }, [runLineBodyEdit])
+
+  const applyBodyClearFormat = useCallback(() => {
+    runBodyEdit(clearFormattingInSelection)
+  }, [runBodyEdit])
+
+  const applyInsertLink = useCallback(() => {
     const el = bodyRef.current
     if (!el) return
     const start = el.selectionStart ?? 0
     const end = el.selectionEnd ?? 0
     const sel = body.slice(start, end)
-    const wrapped = sel ? `*${sel}*` : '*text*'
-    const next = body.slice(0, start) + wrapped + body.slice(end)
+    const rawUrl = window.prompt(t.email.promptLinkUrl, 'https://')
+    if (!rawUrl?.trim()) return
+    let url = rawUrl.trim()
+    if (!/^https?:\/\/|mailto:/i.test(url)) {
+      url = `https://${url.replace(/^\/+/, '')}`
+    }
+    let label = sel.trim()
+    if (!label) {
+      const extra = window.prompt(t.email.promptLinkText, 'Link')
+      if (extra === null) return
+      label = extra.trim() || 'Link'
+    }
+    const md = `[${label}](${url})`
+    formatUndoPast.current.push(body)
+    while (formatUndoPast.current.length > 40) formatUndoPast.current.shift()
+    formatUndoFuture.current = []
+    const next = body.slice(0, start) + md + body.slice(end)
     setBody(next)
+    setUndoDepth(formatUndoPast.current.length)
+    setRedoDepth(0)
+    const pos = start + md.length
     requestAnimationFrame(() => {
-      const node = bodyRef.current
-      if (!node) return
-      node.focus()
-      if (sel) {
-        const pos = start + wrapped.length
-        node.setSelectionRange(pos, pos)
-      } else {
-        node.setSelectionRange(start + 1, start + 5)
-      }
+      el.focus()
+      el.setSelectionRange(pos, pos)
     })
-  }, [body])
+  }, [body, t])
 
-  const applyBodyBullet = useCallback(() => {
+  const applyInsertImage = useCallback(() => {
     const el = bodyRef.current
     if (!el) return
     const start = el.selectionStart ?? 0
     const end = el.selectionEnd ?? 0
-    const chunk = body.slice(start, end)
-    if (chunk) {
-      const lines = chunk.split('\n').map((l) => (l.startsWith('- ') ? l : `- ${l}`))
-      const rep = lines.join('\n')
-      const next = body.slice(0, start) + rep + body.slice(end)
-      setBody(next)
-      requestAnimationFrame(() => {
-        const node = bodyRef.current
-        if (!node) return
-        node.focus()
-        const pos = start + rep.length
-        node.setSelectionRange(pos, pos)
-      })
-    } else {
-      insertAtCursor('- ')
+    const sel = body.slice(start, end)
+    const rawUrl = window.prompt(t.email.promptImageUrl, 'https://')
+    if (!rawUrl?.trim()) return
+    let url = rawUrl.trim()
+    if (!/^https?:\/\//i.test(url)) url = `https://${url.replace(/^\/+/, '')}`
+    let alt = sel.trim()
+    if (!alt) {
+      const extra = window.prompt(t.email.promptImageAlt, '')
+      if (extra === null) return
+      alt = extra.trim()
     }
-  }, [body, insertAtCursor])
+    const md = `![${alt}](${url})`
+    formatUndoPast.current.push(body)
+    while (formatUndoPast.current.length > 40) formatUndoPast.current.shift()
+    formatUndoFuture.current = []
+    const next = body.slice(0, start) + md + body.slice(end)
+    setBody(next)
+    setUndoDepth(formatUndoPast.current.length)
+    setRedoDepth(0)
+    const pos = start + md.length
+    requestAnimationFrame(() => {
+      el.focus()
+      el.setSelectionRange(pos, pos)
+    })
+  }, [body, t])
 
   const handleSend = useCallback(async () => {
     if (!to.trim() || !subject.trim()) {
@@ -423,18 +581,34 @@ export function EmailComposer({
 
     setSending(true)
     try {
-      const signatureText = signature.replace(/<[^>]+>/g, '').trim()
+      const contact = activityContext.contactId
+        ? useContactsStore.getState().contacts.find((c) => c.id === activityContext.contactId)
+        : undefined
+      const deal = activityContext.dealId
+        ? useDealsStore.getState().deals.find((d) => d.id === activityContext.dealId)
+        : undefined
+      const company = activityContext.companyId
+        ? useCompaniesStore.getState().companies.find((c) => c.id === activityContext.companyId)
+        : contact?.companyId
+          ? useCompaniesStore.getState().companies.find((c) => c.id === contact.companyId)
+          : undefined
+      const mergeVars = buildEmailMergeVariableMap({ contact, company, deal })
+      const mergedSubject = applyEmailMergeTokens(subject, mergeVars)
+      const mergedBody = applyEmailMergeTokens(body, mergeVars)
+      const mergedSignature = applyEmailMergeTokens(signature, mergeVars)
+
+      const signatureText = mergedSignature.replace(/<[^>]+>/g, '').trim()
       const signatureBlock = useSignature && signatureText ? `\n\n--\n${signatureText}` : ''
-      const finalBody = `${body}${signatureBlock}`
-      const htmlMain = formatPlainToHtml(body)
-      const signatureHtmlBlock = useSignature && signature.trim() ? `<br/><br/>${signature.trim()}` : ''
+      const finalBody = `${mergedBody}${signatureBlock}`
+      const htmlMain = formatPlainToHtml(mergedBody)
+      const signatureHtmlBlock = useSignature && mergedSignature.trim() ? `<br/><br/>${mergedSignature.trim()}` : ''
       const payload = {
         to: toList,
         cc: ccList.length ? ccList : undefined,
         bcc: bccList.length ? bccList : undefined,
         replyTo: replyToValue || undefined,
         attachments,
-        subject,
+        subject: mergedSubject,
         body: finalBody,
         htmlBody: `${htmlMain}${signatureHtmlBlock}`,
         contactId: activityContext.contactId,
@@ -455,10 +629,10 @@ export function EmailComposer({
       if (trackingEnabled) enableTracking(sent.id)
       useActivitiesStore.getState().addActivity({
         type: 'email',
-        subject,
+        subject: mergedSubject,
         description: sendLater && scheduledAt
-          ? `Email scheduled to ${toList.join(', ')} (${scheduledAt}): ${subject}`
-          : `Email sent to ${toList.join(', ')}: ${subject}`,
+          ? `Email scheduled to ${toList.join(', ')} (${scheduledAt}): ${mergedSubject}`
+          : `Email sent to ${toList.join(', ')}: ${mergedSubject}`,
         status: 'completed',
         contactId: activityContext.contactId,
         dealId: activityContext.dealId,
@@ -524,18 +698,7 @@ export function EmailComposer({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isOpen, sending, handleSend])
 
-  const mergeFieldOptions = useMemo(
-    () => [
-      { token: '{{firstName}}', label: `${t.contacts.firstName} · {{firstName}}` },
-      { token: '{{lastName}}', label: `${t.contacts.lastName} · {{lastName}}` },
-      { token: '{{company}}', label: `${t.contacts.company} · {{company}}` },
-      { token: '{{dealTitle}}', label: `${t.nav.deals} · {{dealTitle}}` },
-      { token: '{{dealValue}}', label: `${t.common.value} · {{dealValue}}` },
-      { token: '{{email}}', label: `${t.common.email} · {{email}}` },
-      { token: '{{jobTitle}}', label: `${t.contacts.jobTitle} · {{jobTitle}}` },
-    ],
-    [t],
-  )
+  const mergeFieldOptions = useMemo(() => getEmailMergeFieldOptions(t), [t])
 
   const handleAttachmentFiles = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
@@ -615,19 +778,9 @@ export function EmailComposer({
   const applyTemplate = (template: typeof templates[0]) => {
     let subj = template.subject
     let bod = template.body
-    const vars: Record<string, string> = {
-      '{{firstName}}': contact?.firstName ?? '',
-      '{{lastName}}': contact?.lastName ?? '',
-      '{{company}}': company?.name ?? '',
-      '{{dealTitle}}': deal?.title ?? '',
-      '{{dealValue}}': deal ? formatCurrency(deal.value, deal.currency) : '',
-      '{{email}}': contact?.email ?? '',
-      '{{jobTitle}}': contact?.jobTitle ?? '',
-    }
-    for (const [key, value] of Object.entries(vars)) {
-      subj = subj.replaceAll(key, value)
-      bod = bod.replaceAll(key, value)
-    }
+    const vars = buildEmailMergeVariableMap({ contact, company, deal })
+    subj = applyEmailMergeTokens(subj, vars)
+    bod = applyEmailMergeTokens(bod, vars)
     setSubject(subj)
     setBody(bod)
     incrementUsage(template.id)
@@ -673,18 +826,18 @@ export function EmailComposer({
         ? t.email.scheduleSendDisabledHint
         : null
 
-  const modal = (
-    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+  const isInline = presentation === 'inline'
+
+  const composerSurface = (
       <div
-        className="absolute inset-0 bg-surface-0/70 backdrop-blur-md"
-        onClick={requestClose}
-        aria-hidden
-      />
-      <div
-        role="dialog"
-        aria-modal="true"
+        role={isInline ? 'region' : 'dialog'}
+        {...(isInline ? {} : { 'aria-modal': true as const })}
         aria-labelledby="email-composer-title"
-        className="relative w-full max-w-6xl max-h-[min(92vh,920px)] mx-0 sm:mx-4 mb-0 sm:mb-0 glass rounded-t-2xl sm:rounded-2xl shadow-float border-fg/10 overflow-hidden animate-slide-up flex flex-col min-h-0"
+        className={
+          isInline
+            ? 'relative z-10 w-full h-full min-h-0 glass rounded-2xl shadow-md border border-fg/10 overflow-hidden flex flex-col'
+            : 'relative z-10 w-full max-w-6xl max-h-[min(92vh,920px)] mx-0 sm:mx-4 mb-0 sm:mb-0 glass rounded-t-2xl sm:rounded-2xl shadow-float border-fg/10 overflow-hidden animate-slide-up flex flex-col min-h-0'
+        }
       >
         {/* Header — product-style back + title + status */}
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-fg/8 flex-shrink-0 bg-surface-1/60">
@@ -694,10 +847,10 @@ export function EmailComposer({
             className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-fg/8 transition-colors shrink-0"
           >
             <ArrowLeft size={16} className="shrink-0" aria-hidden />
-            <span>{t.common.back}</span>
+            <span>{isInline ? t.common.cancel : t.common.back}</span>
           </button>
           <h2 id="email-composer-title" className="text-sm font-semibold text-fg truncate flex-1 min-w-0 sm:text-center">
-            {t.inbox.compose}
+            {isInline ? t.inbox.reply : t.inbox.compose}
           </h2>
           {connected
             ? <span className="text-2xs px-2 py-0.5 rounded-full bg-success/15 text-success shrink-0">Gmail</span>
@@ -759,9 +912,21 @@ export function EmailComposer({
           </div>
         )}
 
-        <div className="flex flex-1 flex-col lg:flex-row min-h-0 overflow-hidden">
-          {/* Main column */}
-          <div className="flex flex-1 flex-col min-h-0 min-w-0 overflow-y-auto p-5 space-y-3">
+        <div
+          className={
+            isInline
+              ? 'flex flex-1 min-h-0 flex-col overflow-hidden'
+              : 'flex flex-1 min-h-0 flex-col lg:flex-row overflow-hidden'
+          }
+        >
+          {/* Main column — single scroll in inline mode; CRM sits below so footer stays visible */}
+          <div
+            className={
+              isInline
+                ? 'flex flex-col flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain p-4 space-y-2.5'
+                : 'flex flex-1 flex-col min-h-0 min-w-0 overflow-y-auto overscroll-contain p-5 space-y-3'
+            }
+          >
           <div className="flex items-center gap-3 border-b border-fg/8 pb-3">
             <span className="text-xs text-fg-subtle w-14 shrink-0">{t.email.composerFrom}</span>
             <span className="text-sm text-fg truncate" title={gmailAddress ?? undefined}>
@@ -885,41 +1050,74 @@ export function EmailComposer({
             </label>
           </div>
 
-          <div className="flex items-center gap-1 rounded-lg border border-fg/8 bg-fg/5 px-2 py-1.5">
-            <button type="button"
-              onClick={applyBodyBold}
-              className="rounded p-1.5 text-fg-muted hover:bg-fg/10 hover:text-fg"
-              title={t.email.formatBold}
-              aria-label={t.email.formatBold}
+          <div
+            className="rounded-xl border border-fg/8 bg-surface-2/25 overflow-hidden focus-within:ring-1 focus-within:ring-accent-500/30"
+            role="group"
+            aria-label={t.email.formatToolbarLabel}
+          >
+            <div
+              role="toolbar"
+              className="flex flex-wrap items-center gap-0.5 px-1 py-1 border-b border-fg/8 bg-fg/[0.045]"
             >
-              <Bold size={16} />
-            </button>
-            <button type="button"
-              onClick={applyBodyItalic}
-              className="rounded p-1.5 text-fg-muted hover:bg-fg/10 hover:text-fg"
-              title={t.email.formatItalic}
-              aria-label={t.email.formatItalic}
-            >
-              <Italic size={16} />
-            </button>
-            <button type="button"
-              onClick={applyBodyBullet}
-              className="rounded p-1.5 text-fg-muted hover:bg-fg/10 hover:text-fg"
-              title={t.email.formatBulletList}
-              aria-label={t.email.formatBulletList}
-            >
-              <List size={16} />
-            </button>
+              <FormatToolBtn onClick={handleFormatUndo} disabled={undoDepth === 0} title={t.email.formatUndo}>
+                <Undo2 size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <FormatToolBtn onClick={handleFormatRedo} disabled={redoDepth === 0} title={t.email.formatRedo}>
+                <Redo2 size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <ToolbarDivider />
+              <FormatToolBtn onClick={applyBodyBold} title={t.email.formatBold}>
+                <Bold size={16} strokeWidth={2.25} aria-hidden />
+              </FormatToolBtn>
+              <FormatToolBtn onClick={applyBodyItalic} title={t.email.formatItalic}>
+                <Italic size={16} strokeWidth={2.25} aria-hidden />
+              </FormatToolBtn>
+              <FormatToolBtn onClick={applyBodyUnderline} title={t.email.formatUnderline}>
+                <Underline size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <FormatToolBtn onClick={applyBodyStrike} title={t.email.formatStrikethrough}>
+                <Strikethrough size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <ToolbarDivider />
+              <FormatToolBtn onClick={applyBodyBullet} title={t.email.formatBulletList}>
+                <List size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <FormatToolBtn onClick={applyBodyNumbered} title={t.email.formatNumberedList}>
+                <ListOrdered size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <FormatToolBtn onClick={applyBodyQuote} title={t.email.formatQuote}>
+                <TextQuote size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <ToolbarDivider />
+              <FormatToolBtn onClick={applyBodyOutdent} title={t.email.formatOutdent}>
+                <IndentDecrease size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <FormatToolBtn onClick={applyBodyIndent} title={t.email.formatIndent}>
+                <IndentIncrease size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <ToolbarDivider />
+              <FormatToolBtn onClick={applyInsertLink} title={t.email.formatInsertLink}>
+                <Link2 size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <FormatToolBtn onClick={applyInsertImage} title={t.email.formatInsertImage}>
+                <ImageIcon size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+              <ToolbarDivider />
+              <FormatToolBtn onClick={applyBodyClearFormat} title={t.email.formatClear}>
+                <Eraser size={16} strokeWidth={2} aria-hidden />
+              </FormatToolBtn>
+            </div>
+            <textarea
+              ref={bodyRef}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder={`${t.common.description}...`}
+              rows={isInline ? 7 : 14}
+              className={`w-full min-w-0 border-0 rounded-none rounded-b-xl bg-transparent px-3 py-2.5 text-sm text-fg placeholder:text-fg-subtle outline-none resize-y leading-relaxed focus:ring-0 ${
+                isInline ? 'min-h-[140px]' : 'min-h-[220px]'
+              }`}
+            />
           </div>
-
-          <textarea
-            ref={bodyRef}
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder={`${t.common.description}...`}
-            rows={14}
-            className="w-full min-h-[220px] bg-surface-2/45 border border-fg/8 rounded-xl px-3 py-2.5 text-sm text-fg placeholder:text-fg-subtle outline-none resize-y leading-relaxed"
-          />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               value={senderName}
@@ -1007,46 +1205,88 @@ export function EmailComposer({
           </div>
           </div>
 
-          {/* CRM link — Pipedrive-style sidebar */}
-          <aside
-            className="lg:w-[288px] shrink-0 border-t lg:border-t-0 lg:border-l border-fg/8 bg-surface-1/35 p-4 space-y-4 overflow-y-auto max-h-[min(40vh,320px)] lg:max-h-none"
-            aria-label={t.email.crmLinkTitle}
-          >
-            <div>
-              <p className="text-xs font-semibold text-fg">{t.email.crmLinkTitle}</p>
-              <p className="text-xs text-fg-subtle mt-1 leading-snug">{t.email.crmLinkHint}</p>
-            </div>
-            <div className="space-y-2">
-              <span className="text-2xs font-medium uppercase tracking-wide text-fg-subtle">{t.nav.contacts}</span>
-              <Select
-                ariaLabel={t.nav.contacts}
-                value={linkContactId ?? ''}
-                onChange={(e) => setLinkContactId(e.target.value || undefined)}
-                options={crmContactOptions}
-                listMaxHeightClass="max-h-40"
-              />
-            </div>
-            <div className="space-y-2">
-              <span className="text-2xs font-medium uppercase tracking-wide text-fg-subtle">{t.nav.deals}</span>
-              <Select
-                ariaLabel={t.nav.deals}
-                value={linkDealId ?? ''}
-                onChange={(e) => setLinkDealId(e.target.value || undefined)}
-                options={crmDealOptions}
-                listMaxHeightClass="max-h-40"
-              />
-            </div>
-            <div className="space-y-2">
-              <span className="text-2xs font-medium uppercase tracking-wide text-fg-subtle">{t.nav.companies}</span>
-              <Select
-                ariaLabel={t.nav.companies}
-                value={linkCompanyId ?? ''}
-                onChange={(e) => setLinkCompanyId(e.target.value || undefined)}
-                options={crmCompanyOptions}
-                listMaxHeightClass="max-h-40"
-              />
-            </div>
-          </aside>
+          {/* CRM link — modal: fixed sidebar; inline: collapsible so the compose area stays calm */}
+          {isInline ? (
+            <details className="group shrink-0 border-t border-fg/8 bg-surface-1/40">
+              <summary className="cursor-pointer list-none flex items-center justify-between gap-2 px-3 py-2.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-fg/5 [&::-webkit-details-marker]:hidden">
+                <span>{t.email.crmLinkTitle}</span>
+                <ChevronDown size={14} className="text-fg-subtle shrink-0 transition-transform group-open:rotate-180" aria-hidden />
+              </summary>
+              <div className="px-3 pb-3 space-y-2.5 border-t border-fg/6" aria-label={t.email.crmLinkTitle}>
+                <p className="text-2xs text-fg-subtle leading-snug pt-2">{t.email.crmLinkHint}</p>
+                <div className="space-y-2">
+                  <span className="text-2xs font-medium uppercase tracking-wide text-fg-subtle">{t.nav.contacts}</span>
+                  <Select
+                    ariaLabel={t.nav.contacts}
+                    value={linkContactId ?? ''}
+                    onChange={(e) => setLinkContactId(e.target.value || undefined)}
+                    options={crmContactOptions}
+                    listMaxHeightClass="max-h-40"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <span className="text-2xs font-medium uppercase tracking-wide text-fg-subtle">{t.nav.deals}</span>
+                  <Select
+                    ariaLabel={t.nav.deals}
+                    value={linkDealId ?? ''}
+                    onChange={(e) => setLinkDealId(e.target.value || undefined)}
+                    options={crmDealOptions}
+                    listMaxHeightClass="max-h-40"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <span className="text-2xs font-medium uppercase tracking-wide text-fg-subtle">{t.nav.companies}</span>
+                  <Select
+                    ariaLabel={t.nav.companies}
+                    value={linkCompanyId ?? ''}
+                    onChange={(e) => setLinkCompanyId(e.target.value || undefined)}
+                    options={crmCompanyOptions}
+                    listMaxHeightClass="max-h-40"
+                  />
+                </div>
+              </div>
+            </details>
+          ) : (
+            <aside
+              className="lg:w-[288px] shrink-0 border-t lg:border-t-0 lg:border-l border-fg/8 bg-surface-1/35 p-4 space-y-4 overflow-y-auto max-h-[min(40vh,320px)] lg:max-h-none"
+              aria-label={t.email.crmLinkTitle}
+            >
+              <div>
+                <p className="text-xs font-semibold text-fg">{t.email.crmLinkTitle}</p>
+                <p className="text-xs text-fg-subtle mt-1 leading-snug">{t.email.crmLinkHint}</p>
+              </div>
+              <div className="space-y-2">
+                <span className="text-2xs font-medium uppercase tracking-wide text-fg-subtle">{t.nav.contacts}</span>
+                <Select
+                  ariaLabel={t.nav.contacts}
+                  value={linkContactId ?? ''}
+                  onChange={(e) => setLinkContactId(e.target.value || undefined)}
+                  options={crmContactOptions}
+                  listMaxHeightClass="max-h-40"
+                />
+              </div>
+              <div className="space-y-2">
+                <span className="text-2xs font-medium uppercase tracking-wide text-fg-subtle">{t.nav.deals}</span>
+                <Select
+                  ariaLabel={t.nav.deals}
+                  value={linkDealId ?? ''}
+                  onChange={(e) => setLinkDealId(e.target.value || undefined)}
+                  options={crmDealOptions}
+                  listMaxHeightClass="max-h-40"
+                />
+              </div>
+              <div className="space-y-2">
+                <span className="text-2xs font-medium uppercase tracking-wide text-fg-subtle">{t.nav.companies}</span>
+                <Select
+                  ariaLabel={t.nav.companies}
+                  value={linkCompanyId ?? ''}
+                  onChange={(e) => setLinkCompanyId(e.target.value || undefined)}
+                  options={crmCompanyOptions}
+                  listMaxHeightClass="max-h-40"
+                />
+              </div>
+            </aside>
+          )}
         </div>
 
         {/* Footer — icon row + primary actions */}
@@ -1087,7 +1327,7 @@ export function EmailComposer({
               type="button"
               onClick={() => setSendLater((v) => !v)}
               className={`rounded-lg p-2 ${
-                sendLater ? 'text-indigo-200 bg-accent-500/15' : 'text-fg-muted hover:bg-fg/8 hover:text-fg'
+                sendLater ? 'text-accent-300 bg-accent-500/15' : 'text-fg-muted hover:bg-fg/8 hover:text-fg'
               }`}
               title={t.email.sendLater}
               aria-label={t.email.sendLater}
@@ -1113,18 +1353,15 @@ export function EmailComposer({
               </p>
             )}
             <div className="flex items-center gap-2 justify-end flex-wrap">
-              <button
-                type="button"
-                onClick={requestClose}
-                className="text-xs font-medium text-fg-muted hover:text-fg px-3 py-2 rounded-lg hover:bg-fg/6 transition-colors"
-              >
+              <Button variant="ghost" size="sm" onClick={requestClose}>
                 {t.email.discardComposer}
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   const toList = to.split(',').map((s) => s.trim()).filter(Boolean)
-                  useEmailStore.getState().saveDraft({
+                  const created = useEmailStore.getState().saveDraft({
                     draftId: activeDraftId,
                     to: toList,
                     cc: cc.split(',').map((s) => s.trim()).filter(Boolean),
@@ -1136,29 +1373,44 @@ export function EmailComposer({
                     dealId: activityContext.dealId,
                     companyId: activityContext.companyId,
                   })
+                  setActiveDraftId(created.id)
                   toast.success(t.email.draftSaved)
                   onClose()
                 }}
-                className="text-xs font-medium text-fg-muted hover:text-fg px-3 py-2 rounded-lg hover:bg-fg/6 transition-colors"
               >
                 {t.common.save}
-              </button>
-              <button type="button"
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                loading={sending}
+                leftIcon={!sending ? <Send size={16} aria-hidden /> : undefined}
                 onClick={() => { void handleSend() }}
                 disabled={sendDisabled}
                 title={sendDisabled ? (sendDisabledHint ?? undefined) : t.email.send}
                 aria-describedby={sendDisabledHint ? sendHintId : undefined}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl btn-gradient text-fg text-sm font-semibold disabled:opacity-40 disabled:pointer-events-none"
               >
-                {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                 {t.email.send}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
       </div>
-    </div>
   )
 
-  return createPortal(modal, document.body)
+  if (isInline) {
+    return composerSurface
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div
+        className="absolute inset-0 bg-surface-0/70 backdrop-blur-md"
+        onClick={requestClose}
+        aria-hidden
+      />
+      {composerSurface}
+    </div>,
+    document.body,
+  )
 }

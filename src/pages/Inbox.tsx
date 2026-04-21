@@ -1,5 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Mail, Send, Inbox as InboxIcon, Loader2, RefreshCw, Wifi, WifiOff, User, Clock, Reply, Plus, Eye, MousePointerClick, Paperclip, Download, Search, ChevronLeft } from 'lucide-react'
+import {
+  Mail, Send, Inbox as InboxIcon, Loader2, RefreshCw, Wifi, WifiOff, User, Clock, Reply, Plus, Eye, MousePointerClick,
+  Paperclip, Download, Search, ChevronLeft, ChevronRight, Archive, Trash2, CheckCheck, ListChecks, X,
+} from 'lucide-react'
 import { Spinner } from '../components/ui/Spinner'
 import { Link } from 'react-router-dom'
 import { useEmailStore } from '../store/emailStore'
@@ -18,7 +21,7 @@ import { toast } from '../store/toastStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { hasPermission } from '../utils/permissions'
 import { useTranslations } from '../i18n'
-import type { GmailThread, CRMEmail, Contact, InboxAdvancedFilters } from '../types'
+import type { GmailThread, GmailMessage, CRMEmail, Contact, InboxAdvancedFilters } from '../types'
 import { formatDateTime, formatRelativeDate } from '../utils/formatters'
 import { trackUxAction } from '../lib/uxMetrics'
 import { buildInboxQueryMatcher } from '../utils/inboxQuery'
@@ -26,12 +29,14 @@ import { toGmailThreadsListQuery } from '../utils/inboxGmailQuery'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
 import { Skeleton } from '../components/ui/Skeleton'
 import { Select } from '../components/ui/Select'
+import { Button } from '../components/ui/Button'
 import {
   extractEmail,
   parseEmails,
   type ThreadMatch,
   buildAutoThreadMatchMap,
   buildPersistedThreadMatchMap,
+  buildReplySubject,
 } from '../features/inbox'
 
 // ─── Thread item ──────────────────────────────────────────────────────────────
@@ -145,7 +150,6 @@ function LocalEmailItem({
   bulkSelected,
   onClick,
   onToggleBulk,
-  onAction,
   contacts,
   onTrackOpen,
   onTrackClick,
@@ -155,24 +159,12 @@ function LocalEmailItem({
   bulkSelected: boolean
   onClick: () => void
   onToggleBulk: () => void
-  onAction: (action: 'mark_read' | 'mark_unread' | 'delete' | 'snooze_1h' | 'snooze_1d' | 'snooze_1w', email: CRMEmail) => void
   contacts: Contact[]
   onTrackOpen: (id: string) => void
   onTrackClick: (id: string) => void
 }) {
   const t = useTranslations()
   const contact = email.contactId ? contacts.find((c) => c.id === email.contactId) : undefined
-  const quickActionOptions = useMemo(
-    () => [
-      { value: 'mark_read', label: t.inbox.markRead },
-      { value: 'mark_unread', label: t.inbox.markUnread },
-      { value: 'snooze_1h', label: t.inbox.snoozeOneHour },
-      { value: 'snooze_1d', label: t.inbox.snoozeOneDay },
-      { value: 'snooze_1w', label: t.inbox.snoozeOneWeek },
-      { value: 'delete', label: t.common.delete },
-    ],
-    [t],
-  )
 
   const unread = email.isRead === false
 
@@ -235,21 +227,6 @@ function LocalEmailItem({
               </button>
             </div>
           )}
-          <div className="mt-2 max-w-xs" onClick={(e) => e.stopPropagation()}>
-            <Select
-              ariaLabel={t.common.actions}
-              value=""
-              placeholder={t.common.actions}
-              onChange={(e) => {
-                const action = e.target.value as 'mark_read' | 'mark_unread' | 'delete' | 'snooze_1h' | 'snooze_1d' | 'snooze_1w'
-                if (!action) return
-                onAction(action, email)
-              }}
-              options={quickActionOptions}
-              listMaxHeightClass="max-h-56"
-              className="[&_button]:text-[10px] [&_button]:rounded-lg [&_button]:py-1 [&_button]:px-2 [&_button]:min-h-0"
-            />
-          </div>
         </div>
       </div>
     </div>
@@ -320,6 +297,31 @@ function ThreadView({
     setManualDealId(match?.dealId ?? '')
   }, [match?.contact?.id, match?.dealId])
 
+  const [expandedMessageIds, setExpandedMessageIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    if (!thread?.messages.length) {
+      setExpandedMessageIds(new Set())
+      return
+    }
+    const last = thread.messages[thread.messages.length - 1]
+    if (last?.id) setExpandedMessageIds(new Set([last.id]))
+  }, [thread?.id, thread?.messages.length])
+
+  const messagePreview = (msg: GmailMessage) => {
+    const raw = (msg.snippet || msg.body || '').replace(/\s+/g, ' ').trim()
+    return raw.length > 160 ? `${raw.slice(0, 160)}…` : raw
+  }
+
+  const toggleMessageExpanded = (messageId: string) => {
+    setExpandedMessageIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(messageId)) next.delete(messageId)
+      else next.add(messageId)
+      return next
+    })
+  }
+
   if (!thread) return (
     <div className="flex flex-1 min-h-0 items-center justify-center p-4 bg-gradient-to-b from-surface-1/40 to-surface-0/20">
       <PanelEmpty
@@ -332,11 +334,35 @@ function ThreadView({
   )
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-surface-1/20">
-      <div className="px-4 py-3 border-b border-fg/8 flex-shrink-0 bg-surface-1/40">
-        <h2 className="text-[15px] font-semibold text-fg leading-snug">{thread.messages[0]?.subject ?? ''}</h2>
-        <p className="text-xs text-fg-subtle mt-1">{t.inbox.messageCount.replace('{n}', String(thread.messages.length))}</p>
-        <div className="flex items-center gap-2 mt-2 flex-wrap">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-gradient-to-b from-surface-1/50 to-surface-1/20">
+      <header className="flex-shrink-0 border-b border-fg/8 bg-surface-1/60">
+        <div className="px-4 pt-3 pb-2">
+          <h2 className="text-base font-semibold text-fg leading-snug tracking-tight">{thread.messages[0]?.subject ?? ''}</h2>
+          <p className="text-2xs text-fg-subtle mt-1 uppercase tracking-wide">
+            {t.inbox.threadMessageListLabel}
+            {' · '}
+            {t.inbox.messageCount.replace('{n}', String(thread.messages.length))}
+          </p>
+        </div>
+        <div
+          className="px-3 py-2 flex flex-wrap items-center gap-1.5 border-t border-fg/6"
+          role="toolbar"
+          aria-label={t.common.actions}
+        >
+          <Button variant="secondary" size="xs" leftIcon={<CheckCheck size={14} aria-hidden />} onClick={() => onThreadAction(thread, 'mark_read')}>
+            {t.inbox.markRead}
+          </Button>
+          <Button variant="secondary" size="xs" leftIcon={<Mail size={14} aria-hidden />} onClick={() => onThreadAction(thread, 'mark_unread')}>
+            {t.inbox.markUnread}
+          </Button>
+          <Button variant="secondary" size="xs" leftIcon={<Archive size={14} aria-hidden />} onClick={() => onThreadAction(thread, 'archive')}>
+            {t.inbox.archive}
+          </Button>
+          <Button variant="danger" size="xs" leftIcon={<Trash2 size={14} aria-hidden />} onClick={() => onThreadAction(thread, 'trash')}>
+            {t.inbox.trash}
+          </Button>
+        </div>
+        <div className="px-3 pb-3 flex flex-wrap items-center gap-2">
           {match?.contact && (
             <Link
               to={`/contacts/${match.contact.id}`}
@@ -399,31 +425,9 @@ function ThreadView({
               {t.followUps.title}
             </button>
           )}
-          <button type="button"
-            onClick={() => onThreadAction(thread, 'mark_read')}
-            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-success/15 hover:text-success transition-colors"
-          >
-            {t.inbox.markRead}
-          </button>
-          <button type="button"
-            onClick={() => onThreadAction(thread, 'mark_unread')}
-            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-accent-500/15 hover:text-accent-300 transition-colors"
-          >
-            {t.inbox.markUnread}
-          </button>
-          <button type="button"
-            onClick={() => onThreadAction(thread, 'archive')}
-            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-warning/15 hover:text-warning transition-colors"
-          >
-            {t.inbox.archive}
-          </button>
-          <button type="button"
-            onClick={() => onThreadAction(thread, 'trash')}
-            className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10 hover:bg-danger/15 hover:text-danger transition-colors"
-          >
-            {t.inbox.trash}
-          </button>
-          {canEditLinks && <div className="flex items-center gap-1 min-w-0 flex-wrap">
+        </div>
+        {canEditLinks && (
+          <div className="px-3 pb-3 flex flex-wrap items-center gap-2 border-t border-fg/6">
             <div className="min-w-[7rem] max-w-[10rem]">
               <Select
                 ariaLabel={t.inbox.contactPlaceholder}
@@ -461,66 +465,119 @@ function ThreadView({
             >
               {t.inbox.saveLink}
             </button>
-          </div>}
-        </div>
-      </div>
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {thread.messages.map((msg, i) => (
-          <div key={msg.id ?? i} className="glass rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-fg/6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-accent-600/20 flex items-center justify-center text-xs font-bold text-accent-400">
+          </div>
+        )}
+      </header>
+      <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-2" aria-label={t.inbox.threadMessageListLabel}>
+        {thread.messages.map((msg, i) => {
+          const expanded = expandedMessageIds.has(msg.id)
+          const fromDisplay = msg.from?.replace(/<.*>/, '').trim() || t.inbox.unknownSender
+          return (
+          <article key={msg.id} className="rounded-2xl border border-fg/10 bg-surface-1/50 shadow-sm overflow-hidden">
+            {!expanded ? (
+              <div className="flex items-center gap-2 px-3 py-2.5">
+                <button type="button"
+                  onClick={() => toggleMessageExpanded(msg.id)}
+                  className="p-1 rounded-lg text-fg-subtle hover:bg-fg/10 hover:text-fg transition-colors shrink-0"
+                  aria-expanded="false"
+                  title={t.inbox.threadShowFullMessage}
+                  aria-label={t.inbox.threadShowFullMessage}
+                >
+                  <ChevronRight size={16} aria-hidden />
+                </button>
+                <div className="w-8 h-8 rounded-full bg-accent-600/20 flex items-center justify-center text-xs font-bold text-accent-400 shrink-0">
                   {(msg.from?.charAt(0) ?? '?').toUpperCase()}
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-fg">{msg.from?.replace(/<.*>/, '').trim()}</p>
-                  <p className="text-[10px] text-fg-subtle">{t.common.to}: {msg.to}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-fg truncate">{fromDisplay}</p>
+                  <p className="text-xs text-fg-subtle truncate">{messagePreview(msg)}</p>
+                </div>
+                <span className="text-2xs text-fg-subtle shrink-0 tabular-nums hidden sm:inline">{msg.date ? formatDateTime(msg.date) : ''}</span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    leftIcon={<Reply size={14} aria-hidden />}
+                    onClick={() => onReply(msg.from, buildReplySubject(msg.subject))}
+                    aria-label={t.inbox.reply}
+                    title={t.inbox.reply}
+                    className="max-sm:px-2"
+                  >
+                    <span className="hidden sm:inline">{t.inbox.reply}</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    leftIcon={<Reply size={14} aria-hidden />}
+                    onClick={() => onReplyAll(thread, i)}
+                    aria-label={t.inbox.replyAll}
+                    title={t.inbox.replyAll}
+                    className="max-sm:px-2"
+                  >
+                    <span className="hidden sm:inline">{t.inbox.replyAll}</span>
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-3 text-fg-subtle">
-                <Clock size={12} />
-                <span className="text-xs">{msg.date ? formatDateTime(msg.date) : ''}</span>
-                <button type="button"
-                  onClick={() => onReply(msg.from, `Re: ${msg.subject}`)}
-                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-fg/6 hover:bg-accent-600/20 hover:text-accent-400 transition-colors"
-                >
-                  <Reply size={11} />
-                  {t.common.back}
-                </button>
-                <button type="button"
-                  onClick={() => onReplyAll(thread, i)}
-                  className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-fg/6 hover:bg-info/20 hover:text-info transition-colors"
-                >
-                  <Reply size={11} />
-                  {t.inbox.replyAll}
-                </button>
-              </div>
-            </div>
-            <div className="px-4 py-4">
-              <p className="text-sm text-fg-muted whitespace-pre-wrap leading-relaxed">{msg.body || msg.snippet}</p>
-              {(msg.attachments?.length ?? 0) > 0 && (
-                <div className="mt-3 space-y-1.5">
-                  {msg.attachments!.map((att) => (
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-fg/6 bg-surface-1/30">
+                  <div className="flex items-center gap-2 min-w-0">
                     <button type="button"
-                      key={att.attachmentId}
-                      onClick={() => onDownloadAttachment(msg.id, att.attachmentId, att.filename)}
-                      className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg bg-fg/5 hover:bg-fg/8 border border-fg/10 text-xs text-fg-muted transition-colors"
+                      onClick={() => toggleMessageExpanded(msg.id)}
+                      className="p-1 rounded-lg text-fg-subtle hover:bg-fg/10 hover:text-fg transition-colors shrink-0"
+                      aria-expanded="true"
+                      title={t.inbox.threadCollapseMessage}
+                      aria-label={t.inbox.threadCollapseMessage}
                     >
-                      <span className="inline-flex items-center gap-1 truncate">
-                        <Paperclip size={11} />
-                        {att.filename}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-fg-subtle">
-                        <Download size={11} />
-                        {Math.ceil((att.size || 0) / 1024)} KB
-                      </span>
+                      <ChevronRight size={16} className="rotate-90" aria-hidden />
                     </button>
-                  ))}
+                    <div className="w-8 h-8 rounded-full bg-accent-600/20 flex items-center justify-center text-xs font-bold text-accent-400 shrink-0">
+                      {(msg.from?.charAt(0) ?? '?').toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-fg truncate">{fromDisplay}</p>
+                      <p className="text-[10px] text-fg-subtle truncate">{t.common.to}: {msg.to}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-fg-subtle shrink-0">
+                    <Clock size={12} aria-hidden />
+                    <span className="text-xs tabular-nums">{msg.date ? formatDateTime(msg.date) : ''}</span>
+                    <Button variant="secondary" size="xs" leftIcon={<Reply size={14} aria-hidden />} onClick={() => onReply(msg.from, buildReplySubject(msg.subject))}>
+                      {t.inbox.reply}
+                    </Button>
+                    <Button variant="secondary" size="xs" leftIcon={<Reply size={14} aria-hidden />} onClick={() => onReplyAll(thread, i)}>
+                      {t.inbox.replyAll}
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        ))}
+                <div className="px-4 py-4">
+                  <p className="text-sm text-fg-muted whitespace-pre-wrap leading-relaxed">{msg.body || msg.snippet}</p>
+                  {(msg.attachments?.length ?? 0) > 0 && (
+                    <div className="mt-3 space-y-1.5">
+                      {msg.attachments!.map((att) => (
+                        <button type="button"
+                          key={att.attachmentId}
+                          onClick={() => onDownloadAttachment(msg.id, att.attachmentId, att.filename)}
+                          className="w-full flex items-center justify-between px-2 py-1.5 rounded-lg bg-fg/5 hover:bg-fg/8 border border-fg/10 text-xs text-fg-muted transition-colors"
+                        >
+                          <span className="inline-flex items-center gap-1 truncate">
+                            <Paperclip size={11} />
+                            {att.filename}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-fg-subtle">
+                            <Download size={11} />
+                            {Math.ceil((att.size || 0) / 1024)} KB
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </article>
+          )
+        })}
         {linkedEmails.length > 0 && (
           <div className="glass rounded-2xl p-4">
             <p className="text-xs text-fg-subtle mb-2">{t.inbox.crmSentInThread}</p>
@@ -543,31 +600,16 @@ function LocalEmailView({
   email,
   contacts,
   onReply,
-  onEmailAction,
   onTrackOpen,
   onTrackClick,
-  canDeleteEmails,
 }: {
   email: CRMEmail | null
   contacts: Contact[]
   onReply: (to: string, subject: string) => void
-  onEmailAction: (action: 'mark_read' | 'mark_unread' | 'delete' | 'snooze_1h' | 'snooze_1d' | 'snooze_1w', email: CRMEmail) => void
   onTrackOpen: (id: string) => void
   onTrackClick: (id: string) => void
-  canDeleteEmails: boolean
 }) {
   const t = useTranslations()
-  const headerActionOptions = useMemo(() => {
-    const opts = [
-      { value: 'mark_read', label: t.inbox.markRead },
-      { value: 'mark_unread', label: t.inbox.markUnread },
-      { value: 'snooze_1h', label: t.inbox.snoozeOneHour },
-      { value: 'snooze_1d', label: t.inbox.snoozeOneDay },
-      { value: 'snooze_1w', label: t.inbox.snoozeOneWeek },
-    ]
-    if (canDeleteEmails) opts.push({ value: 'delete', label: t.common.delete })
-    return opts
-  }, [t, canDeleteEmails])
 
   if (!email) return (
     <div className="flex flex-1 min-h-0 items-center justify-center p-4 bg-gradient-to-b from-surface-1/40 to-surface-0/20">
@@ -594,28 +636,12 @@ function LocalEmailView({
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             type="button"
-            onClick={() => onReply(email.to[0] ?? '', `Re: ${email.subject}`)}
+            onClick={() => onReply(email.to.join(', '), buildReplySubject(email.subject))}
             className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-fg/6 hover:bg-accent-600/15 hover:text-accent-400 text-fg-muted transition-colors"
           >
             <Reply size={12} />
             {t.inbox.reply}
           </button>
-          <div className="min-w-[7.5rem] max-w-[14rem]">
-            <Select
-              ariaLabel={t.common.actions}
-              value=""
-              placeholder={t.common.actions}
-              onChange={(e) => {
-                const action = e.target.value as 'mark_read' | 'mark_unread' | 'delete' | 'snooze_1h' | 'snooze_1d' | 'snooze_1w'
-                if (!action) return
-                if (action === 'delete' && !canDeleteEmails) return
-                onEmailAction(action, email)
-              }}
-              options={headerActionOptions}
-              listMaxHeightClass="max-h-56"
-              className="[&_button]:rounded-full [&_button]:text-xs [&_button]:py-1.5 [&_button]:min-h-0"
-            />
-          </div>
         </div>
       </div>
 
@@ -683,7 +709,12 @@ export function Inbox() {
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null)
   const [composerOpen, setComposerOpen] = useState(false)
-  const [replyTo, setReplyTo] = useState<{ to: string; subject: string } | null>(null)
+  /** Reply composer embedded in the reading pane (not the modal). */
+  const [threadInlineReply, setThreadInlineReply] = useState<{
+    to: string
+    subject: string
+    defaultCc?: string
+  } | null>(null)
   const [disconnecting, setDisconnecting] = useState(false)
   const [connecting, setConnecting] = useState(false)
   const [listQuery, setListQuery] = useState('')
@@ -781,30 +812,6 @@ export function Inbox() {
     }
   }
 
-  const handleLocalEmailAction = (action: 'mark_read' | 'mark_unread' | 'delete' | 'snooze_1h' | 'snooze_1d' | 'snooze_1w', email: CRMEmail) => {
-    if (action === 'mark_read') {
-      useEmailStore.getState().updateEmail(email.id, { isRead: true })
-      return
-    }
-    if (action === 'mark_unread') {
-      useEmailStore.getState().updateEmail(email.id, { isRead: false })
-      return
-    }
-    if (action === 'snooze_1h' || action === 'snooze_1d' || action === 'snooze_1w') {
-      const ms = action === 'snooze_1h'
-        ? 60 * 60 * 1000
-        : action === 'snooze_1d'
-          ? 24 * 60 * 60 * 1000
-          : 7 * 24 * 60 * 60 * 1000
-      snoozeEmail(email.id, new Date(Date.now() + ms).toISOString())
-      toast.success(t.inbox.snoozed)
-      return
-    }
-    deleteEmail(email.id)
-    if (selectedEmailId === email.id) setSelectedEmailId(null)
-    toast.success(t.common.delete)
-  }
-
   // Load Gmail threads when connected (token can be refreshed on-demand)
   useEffect(() => {
     if (connected && folder === 'inbox') {
@@ -878,21 +885,30 @@ export function Inbox() {
     [mailboxEmails],
   )
   const snoozedEmails = useMemo(() => mailboxEmails.filter((e) => e.status === 'snoozed'), [mailboxEmails])
-  const countNeedsAttention = (items: CRMEmail[]) => items.filter((email) => (
-    email.isRead === false
-    || (
-      (email.status === 'sent' || email.status === 'scheduled' || email.status === 'snoozed')
-      && email.trackingEnabled
-      && (email.openCount ?? 0) === 0
-    )
-  )).length
-  const FOLDERS = [
-    { id: 'inbox', label: t.inbox.title, icon: <InboxIcon size={15} />, count: threads.filter((th) => th.messages[th.messages.length - 1]?.labelIds?.includes('UNREAD')).length },
-    { id: 'sent', label: t.inbox.sent, icon: <Send size={15} />, count: countNeedsAttention(sentEmails) },
-    { id: 'scheduled', label: t.email.sendLater, icon: <Clock size={15} />, count: countNeedsAttention(scheduledEmails) },
-    { id: 'drafts', label: t.inbox.drafts, icon: <Mail size={15} />, count: countNeedsAttention(draftEmails) },
-    { id: 'snoozed', label: t.inbox.snoozed, icon: <Clock size={15} />, count: countNeedsAttention(snoozedEmails) },
-  ]
+  const folderNav = useMemo(() => {
+    const inboxUnread = threads.reduce((acc, th) => {
+      const last = th.messages[th.messages.length - 1]
+      return acc + (last?.labelIds?.includes('UNREAD') ? 1 : 0)
+    }, 0)
+    return {
+      inbox: { total: threads.length, unread: inboxUnread },
+      sent: { total: sentEmails.length, unread: sentEmails.filter((e) => e.isRead === false).length },
+      scheduled: { total: scheduledEmails.length, unread: scheduledEmails.filter((e) => e.isRead === false).length },
+      drafts: { total: draftEmails.length, unread: draftEmails.filter((e) => e.isRead === false).length },
+      snoozed: { total: snoozedEmails.length, unread: snoozedEmails.filter((e) => e.isRead === false).length },
+    }
+  }, [threads, sentEmails, scheduledEmails, draftEmails, snoozedEmails])
+
+  const FOLDERS = useMemo(
+    () => [
+      { id: 'inbox' as const, label: t.inbox.title, icon: <InboxIcon size={15} />, ...folderNav.inbox },
+      { id: 'sent' as const, label: t.inbox.sent, icon: <Send size={15} />, ...folderNav.sent },
+      { id: 'scheduled' as const, label: t.email.sendLater, icon: <Clock size={15} />, ...folderNav.scheduled },
+      { id: 'drafts' as const, label: t.inbox.drafts, icon: <Mail size={15} />, ...folderNav.drafts },
+      { id: 'snoozed' as const, label: t.inbox.snoozed, icon: <Clock size={15} />, ...folderNav.snoozed },
+    ],
+    [t, folderNav],
+  )
 
   const hasReadingSelection =
     (folder === 'inbox' && selectedThreadId !== null) ||
@@ -1054,6 +1070,59 @@ export function Inbox() {
     if (folder === 'snoozed') return snoozedEmailsVisible
     return []
   }, [folder, sentEmailsVisible, scheduledEmailsVisible, draftEmailsVisible, snoozedEmailsVisible])
+
+  const listPaneSubtitle = useMemo(() => {
+    if (folder === 'inbox') {
+      const total = threads.length
+      const vis = inboxThreadsVisible.length
+      return vis === total
+        ? t.inbox.listTotalThreads.replace('{n}', String(total))
+        : t.inbox.listVisibleOfTotal.replace('{visible}', String(vis)).replace('{total}', String(total))
+    }
+    if (folder === 'sent') {
+      const total = sentEmails.length
+      const vis = sentEmailsVisible.length
+      return vis === total
+        ? t.inbox.listTotalMessages.replace('{n}', String(total))
+        : t.inbox.listVisibleMessages.replace('{visible}', String(vis)).replace('{total}', String(total))
+    }
+    if (folder === 'scheduled') {
+      const total = scheduledEmails.length
+      const vis = scheduledEmailsVisible.length
+      return vis === total
+        ? t.inbox.listTotalMessages.replace('{n}', String(total))
+        : t.inbox.listVisibleMessages.replace('{visible}', String(vis)).replace('{total}', String(total))
+    }
+    if (folder === 'drafts') {
+      const total = draftEmails.length
+      const vis = draftEmailsVisible.length
+      return vis === total
+        ? t.inbox.listTotalMessages.replace('{n}', String(total))
+        : t.inbox.listVisibleMessages.replace('{visible}', String(vis)).replace('{total}', String(total))
+    }
+    if (folder === 'snoozed') {
+      const total = snoozedEmails.length
+      const vis = snoozedEmailsVisible.length
+      return vis === total
+        ? t.inbox.listTotalMessages.replace('{n}', String(total))
+        : t.inbox.listVisibleMessages.replace('{visible}', String(vis)).replace('{total}', String(total))
+    }
+    return ''
+  }, [
+    folder,
+    threads.length,
+    inboxThreadsVisible.length,
+    t,
+    sentEmails.length,
+    sentEmailsVisible.length,
+    scheduledEmails.length,
+    scheduledEmailsVisible.length,
+    draftEmails.length,
+    draftEmailsVisible.length,
+    snoozedEmails.length,
+    snoozedEmailsVisible.length,
+  ])
+
   const isSyncStale = !!threadsLastSyncedAt && Date.now() - new Date(threadsLastSyncedAt).getTime() > 10 * 60 * 1000
   const syncVisualState = syncState === 'error' ? 'error' : (syncState === 'syncing' ? 'syncing' : (isSyncStale ? 'stale' : 'healthy'))
   const syncText = syncVisualState === 'syncing'
@@ -1105,10 +1174,14 @@ export function Inbox() {
     toast.success(t.inbox.savedViewCreated)
   }
 
-  const openReply = (to: string, subject: string) => {
-    setReplyTo({ to, subject })
-    setComposerOpen(true)
+  const openInlineReply = (to: string, subject: string, defaultCc?: string) => {
+    setThreadInlineReply(defaultCc ? { to, subject, defaultCc } : { to, subject })
+    setComposerOpen(false)
   }
+
+  useEffect(() => {
+    setThreadInlineReply(null)
+  }, [selectedThreadId, selectedEmailId, folder])
 
   const toggleBulkThread = (threadId: string) => {
     setSelectedThreadIds((prev) => {
@@ -1133,6 +1206,12 @@ export function Inbox() {
   }
 
   const clearLocalBulkSelection = () => setSelectedLocalEmailIds(new Set())
+
+  const selectAllVisibleInboxThreads = () => {
+    setSelectedThreadIds(new Set(inboxThreadsVisible.map((th) => th.id)))
+  }
+
+  const clearThreadBulkSelection = () => setSelectedThreadIds(new Set())
 
   const applyBulkLocalEmailAction = (
     action: 'mark_read' | 'mark_unread' | 'delete' | 'snooze_1h' | 'snooze_1d' | 'snooze_1w',
@@ -1205,7 +1284,7 @@ export function Inbox() {
       ...parseEmails(msg.to),
       ...parseEmails(msg.cc ?? ''),
     ].filter((email, idx, arr) => email !== currentMailbox && arr.indexOf(email) === idx)
-    openReply(recipients.join(', '), `Re: ${msg.subject}`)
+    openInlineReply(recipients.join(', '), buildReplySubject(msg.subject))
   }
 
   const runThreadAction = async (thread: GmailThread, action: 'mark_read' | 'mark_unread' | 'archive' | 'trash') => {
@@ -1335,8 +1414,8 @@ export function Inbox() {
               onClick={() => {
                 setSelectedEmailId(null)
                 setSelectedThreadId(null)
+                setThreadInlineReply(null)
                 setComposerOpen(true)
-                setReplyTo(null)
               }}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-xl btn-gradient text-fg text-xs font-semibold"
             >
@@ -1395,11 +1474,22 @@ export function Inbox() {
             >
               {f.icon}
               <span className="flex-1 text-left">{f.label}</span>
-              {(f.count ?? 0) > 0 && (
-                <span className="inline-flex min-w-5 h-5 px-1 items-center justify-center rounded-full bg-accent-500/20 border border-accent-500/30 text-[10px] text-accent-300">
-                  {f.count}
+              <span className="flex items-center gap-1 shrink-0">
+                {f.unread > 0 && (
+                  <span
+                    className="inline-flex min-w-5 h-5 px-1 items-center justify-center rounded-full bg-accent-500/20 border border-accent-500/30 text-[10px] font-semibold text-accent-300"
+                    title={t.inbox.folderUnreadTooltip}
+                  >
+                    {f.unread}
+                  </span>
+                )}
+                <span
+                  className="text-[11px] tabular-nums font-medium text-fg-muted min-w-[1.1rem] text-right"
+                  title={t.inbox.folderTotalTooltip}
+                >
+                  {f.total}
                 </span>
-              )}
+              </span>
             </button>
           ))}
         </div>
@@ -1417,14 +1507,14 @@ export function Inbox() {
             <h2 className="text-[15px] font-semibold text-fg tracking-tight truncate">
               {FOLDERS.find((f) => f.id === folder)?.label}
             </h2>
+            {listPaneSubtitle && (
+              <p className="text-xs text-fg-subtle mt-0.5 truncate">{listPaneSubtitle}</p>
+            )}
             {folder === 'inbox' && threadsLastSyncedAt && (
-              <p className="text-xs text-fg-subtle mt-0.5 truncate">
+              <p className="text-[10px] text-fg-subtle mt-0.5 truncate">
                 {t.common.updatedAt}: {formatDateTime(threadsLastSyncedAt)}
                 {threadsHistoryId ? ` · h:${threadsHistoryId}` : ''}
               </p>
-            )}
-            {folder !== 'inbox' && (
-              <p className="text-xs text-fg-subtle mt-0.5">{t.inbox.threadListLabel}</p>
             )}
           </div>
           {connected && folder === 'inbox' && (
@@ -1440,96 +1530,137 @@ export function Inbox() {
           )}
         </div>
         {folder === 'inbox' && connected && selectedThreadIds.size > 0 && (
-          <div className="px-3 py-2 border-b border-fg/6 flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] text-fg-subtle mr-1">{t.inbox.selectedCount.replace('{n}', String(selectedThreadIds.size))}</span>
-            <button type="button"
-              onClick={() => applyBulkThreadAction('mark_read')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-success/20 hover:text-success transition-colors"
-            >
-              {t.inbox.markRead}
-            </button>
-            <button type="button"
-              onClick={() => applyBulkThreadAction('mark_unread')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
-            >
-              {t.inbox.markUnread}
-            </button>
-            <button type="button"
-              onClick={() => applyBulkThreadAction('archive')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-warning/20 hover:text-warning transition-colors"
-            >
-              {t.inbox.archive}
-            </button>
-            <button type="button"
-              onClick={() => applyBulkThreadAction('trash')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-danger/20 hover:text-danger transition-colors"
-            >
-              {t.inbox.trash}
-            </button>
+          <div className="px-3 py-2.5 border-b border-fg/8 bg-surface-2/50 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+            <span className="text-xs text-fg-muted font-medium shrink-0">
+              {t.inbox.selectedCount.replace('{n}', String(selectedThreadIds.size))}
+            </span>
+            <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+              <Button
+                variant="secondary"
+                size="xs"
+                leftIcon={<CheckCheck size={14} aria-hidden />}
+                onClick={() => applyBulkThreadAction('mark_read')}
+              >
+                {t.inbox.markRead}
+              </Button>
+              <Button
+                variant="secondary"
+                size="xs"
+                leftIcon={<Mail size={14} aria-hidden />}
+                onClick={() => applyBulkThreadAction('mark_unread')}
+              >
+                {t.inbox.markUnread}
+              </Button>
+              <Button
+                variant="secondary"
+                size="xs"
+                leftIcon={<Archive size={14} aria-hidden />}
+                onClick={() => applyBulkThreadAction('archive')}
+              >
+                {t.inbox.archive}
+              </Button>
+              <Button
+                variant="danger"
+                size="xs"
+                leftIcon={<Trash2 size={14} aria-hidden />}
+                onClick={() => applyBulkThreadAction('trash')}
+              >
+                {t.inbox.trash}
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
+                leftIcon={<ListChecks size={14} aria-hidden />}
+                onClick={selectAllVisibleInboxThreads}
+                disabled={inboxThreadsVisible.length === 0}
+              >
+                {t.common.selectAll}
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
+                leftIcon={<X size={14} aria-hidden />}
+                onClick={clearThreadBulkSelection}
+              >
+                {t.common.clear}
+              </Button>
+            </div>
           </div>
         )}
         {(folder === 'sent' || folder === 'scheduled' || folder === 'drafts' || folder === 'snoozed') && selectedLocalEmailIds.size > 0 && (
-          <div className="px-3 py-2 border-b border-fg/6 flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] text-fg-subtle mr-1">{t.inbox.selectedCount.replace('{n}', String(selectedLocalEmailIds.size))}</span>
-            <button
-              type="button"
-              onClick={() => applyBulkLocalEmailAction('mark_read')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-success/20 hover:text-success transition-colors"
-            >
-              {t.inbox.markRead}
-            </button>
-            <button
-              type="button"
-              onClick={() => applyBulkLocalEmailAction('mark_unread')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
-            >
-              {t.inbox.markUnread}
-            </button>
-            <button
-              type="button"
-              onClick={() => applyBulkLocalEmailAction('snooze_1h')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
-            >
-              {t.inbox.snoozeOneHour}
-            </button>
-            <button
-              type="button"
-              onClick={() => applyBulkLocalEmailAction('snooze_1d')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
-            >
-              {t.inbox.snoozeOneDay}
-            </button>
-            <button
-              type="button"
-              onClick={() => applyBulkLocalEmailAction('snooze_1w')}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-accent-500/20 hover:text-accent-300 transition-colors"
-            >
-              {t.inbox.snoozeOneWeek}
-            </button>
-            {canDeleteEmails && (
-              <button
-                type="button"
-                onClick={() => applyBulkLocalEmailAction('delete')}
-                className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-danger/20 hover:text-danger transition-colors"
+          <div className="px-3 py-2.5 border-b border-fg/8 bg-surface-2/50 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+            <span className="text-xs text-fg-muted font-medium shrink-0">
+              {t.inbox.selectedCount.replace('{n}', String(selectedLocalEmailIds.size))}
+            </span>
+            <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+              <Button
+                variant="secondary"
+                size="xs"
+                leftIcon={<CheckCheck size={14} aria-hidden />}
+                onClick={() => applyBulkLocalEmailAction('mark_read')}
               >
-                {t.common.bulkDelete}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={selectAllVisibleLocalEmails}
-              disabled={localFolderVisibleEmails.length === 0}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-fg/10 transition-colors disabled:opacity-40 disabled:pointer-events-none"
-            >
-              {t.common.selectAll}
-            </button>
-            <button
-              type="button"
-              onClick={clearLocalBulkSelection}
-              className="text-[10px] px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-fg/10 transition-colors"
-            >
-              {t.common.clear}
-            </button>
+                {t.inbox.markRead}
+              </Button>
+              <Button
+                variant="secondary"
+                size="xs"
+                leftIcon={<Mail size={14} aria-hidden />}
+                onClick={() => applyBulkLocalEmailAction('mark_unread')}
+              >
+                {t.inbox.markUnread}
+              </Button>
+              <Button
+                variant="secondary"
+                size="xs"
+                leftIcon={<Clock size={14} aria-hidden />}
+                onClick={() => applyBulkLocalEmailAction('snooze_1h')}
+              >
+                {t.inbox.snoozeOneHour}
+              </Button>
+              <Button
+                variant="secondary"
+                size="xs"
+                leftIcon={<Clock size={14} aria-hidden />}
+                onClick={() => applyBulkLocalEmailAction('snooze_1d')}
+              >
+                {t.inbox.snoozeOneDay}
+              </Button>
+              <Button
+                variant="secondary"
+                size="xs"
+                leftIcon={<Clock size={14} aria-hidden />}
+                onClick={() => applyBulkLocalEmailAction('snooze_1w')}
+              >
+                {t.inbox.snoozeOneWeek}
+              </Button>
+              {canDeleteEmails && (
+                <Button
+                  variant="danger"
+                  size="xs"
+                  leftIcon={<Trash2 size={14} aria-hidden />}
+                  onClick={() => applyBulkLocalEmailAction('delete')}
+                >
+                  {t.common.bulkDelete}
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="xs"
+                leftIcon={<ListChecks size={14} aria-hidden />}
+                onClick={selectAllVisibleLocalEmails}
+                disabled={localFolderVisibleEmails.length === 0}
+              >
+                {t.common.selectAll}
+              </Button>
+              <Button
+                variant="ghost"
+                size="xs"
+                leftIcon={<X size={14} aria-hidden />}
+                onClick={clearLocalBulkSelection}
+              >
+                {t.common.clear}
+              </Button>
+            </div>
           </div>
         )}
         <div className="px-3 py-2 border-b border-fg/10 bg-surface-1/50">
@@ -1760,7 +1891,6 @@ export function Inbox() {
                     setSelectedEmailId(email.id)
                     setSelectedThreadId(null)
                   }}
-                  onAction={handleLocalEmailAction}
                   contacts={contacts}
                   onTrackOpen={trackEmailOpen}
                   onTrackClick={trackEmailClick}
@@ -1785,7 +1915,6 @@ export function Inbox() {
                     setSelectedEmailId(email.id)
                     setSelectedThreadId(null)
                   }}
-                  onAction={handleLocalEmailAction}
                   contacts={contacts}
                   onTrackOpen={trackEmailOpen}
                   onTrackClick={trackEmailClick}
@@ -1809,8 +1938,9 @@ export function Inbox() {
                     useEmailStore.getState().updateEmail(email.id, { isRead: true })
                     setSelectedEmailId(email.id)
                     setSelectedThreadId(null)
+                    setThreadInlineReply(null)
+                    setComposerOpen(true)
                   }}
-                  onAction={handleLocalEmailAction}
                   contacts={contacts}
                   onTrackOpen={trackEmailOpen}
                   onTrackClick={trackEmailClick}
@@ -1841,7 +1971,6 @@ export function Inbox() {
                     setSelectedEmailId(email.id)
                     setSelectedThreadId(null)
                   }}
-                  onAction={handleLocalEmailAction}
                   contacts={contacts}
                   onTrackOpen={trackEmailOpen}
                   onTrackClick={trackEmailClick}
@@ -1899,38 +2028,84 @@ export function Inbox() {
         )}
         {folder === 'inbox' ? (
           <div className="flex flex-1 flex-col min-h-0 w-full">
-            <ThreadView
-              thread={selectedThread}
-              match={selectedThreadMatch}
-              linkSource={selectedThreadLink?.source ?? (selectedThreadMatch ? 'auto' : null)}
-              hasPersistedLink={!!selectedThreadLink}
-              linkedEmails={selectedThreadLinkedEmails}
-              onReply={openReply}
-              onReplyAll={openReplyAll}
-              onCreateFollowUp={createFollowUpFromThread}
-              onThreadAction={runThreadAction}
-              onPinLink={pinThreadLink}
-              onUnpinLink={unpinThreadLink}
-              onManualLinkSave={saveManualThreadLink}
-              onDownloadAttachment={handleDownloadAttachment}
-              allContacts={contacts}
-              allDeals={deals.map((d) => ({ id: d.id, title: d.title }))}
-              canEditLinks={canLinkEmails}
-              canCreateFollowUp={canCreateActivities}
-            />
+            <div
+              className={
+                threadInlineReply
+                  ? 'max-h-[min(34vh,300px)] shrink-0 min-h-0 overflow-y-auto overscroll-contain'
+                  : 'flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col'
+              }
+            >
+              <ThreadView
+                thread={selectedThread}
+                match={selectedThreadMatch}
+                linkSource={selectedThreadLink?.source ?? (selectedThreadMatch ? 'auto' : null)}
+                hasPersistedLink={!!selectedThreadLink}
+                linkedEmails={selectedThreadLinkedEmails}
+                onReply={openInlineReply}
+                onReplyAll={openReplyAll}
+                onCreateFollowUp={createFollowUpFromThread}
+                onThreadAction={runThreadAction}
+                onPinLink={pinThreadLink}
+                onUnpinLink={unpinThreadLink}
+                onManualLinkSave={saveManualThreadLink}
+                onDownloadAttachment={handleDownloadAttachment}
+                allContacts={contacts}
+                allDeals={deals.map((d) => ({ id: d.id, title: d.title }))}
+                canEditLinks={canLinkEmails}
+                canCreateFollowUp={canCreateActivities}
+              />
+            </div>
+            {threadInlineReply && (
+              <div className="flex-1 min-h-0 flex flex-col border-t border-fg/8 pt-2 px-0.5">
+                <EmailComposer
+                  presentation="inline"
+                  isOpen
+                  onClose={() => setThreadInlineReply(null)}
+                  defaultTo={threadInlineReply.to}
+                  defaultSubject={threadInlineReply.subject}
+                  defaultCc={threadInlineReply.defaultCc ?? ''}
+                  contactId={selectedThreadMatch?.contact?.id}
+                  dealId={selectedThreadMatch?.dealId}
+                  companyId={selectedThreadMatch?.companyId}
+                  onRequestGmailConnect={handleConnectGmail}
+                />
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-1 flex-col min-h-0 w-full">
-            <LocalEmailView
-              email={selectedEmail}
-              contacts={contacts}
-              onReply={openReply}
-              onEmailAction={handleLocalEmailAction}
-              onTrackOpen={trackEmailOpen}
-              onTrackClick={trackEmailClick}
-              canDeleteEmails={canDeleteEmails}
-            />
-            {selectedEmail && folder !== 'snoozed' && (
+            <div
+              className={
+                threadInlineReply
+                  ? 'max-h-[min(34vh,300px)] shrink-0 min-h-0 overflow-y-auto overscroll-contain'
+                  : 'flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col'
+              }
+            >
+              <LocalEmailView
+                email={selectedEmail}
+                contacts={contacts}
+                onReply={openInlineReply}
+                onTrackOpen={trackEmailOpen}
+                onTrackClick={trackEmailClick}
+              />
+            </div>
+            {threadInlineReply && (
+              <div className="flex-1 min-h-0 flex flex-col border-t border-fg/8 pt-2 px-0.5">
+                <EmailComposer
+                  presentation="inline"
+                  isOpen
+                  onClose={() => setThreadInlineReply(null)}
+                  defaultTo={threadInlineReply.to}
+                  defaultSubject={threadInlineReply.subject}
+                  defaultCc={threadInlineReply.defaultCc ?? ''}
+                  contactId={selectedEmail?.contactId}
+                  dealId={selectedEmail?.dealId}
+                  companyId={selectedEmail?.companyId}
+                  onRequestGmailConnect={handleConnectGmail}
+                />
+              </div>
+            )}
+            {selectedEmail && folder !== 'snoozed' && !threadInlineReply && (
               <div className="px-3 py-2 border-t border-fg/6">
                 {folder === 'scheduled' && selectedEmail.undoableUntil && new Date(selectedEmail.undoableUntil).getTime() > Date.now() && (
                   <button type="button"
@@ -1963,11 +2138,17 @@ export function Inbox() {
 
       <EmailComposer
         isOpen={composerOpen}
-        onClose={() => { setComposerOpen(false); setReplyTo(null) }}
-        defaultTo={replyTo?.to ?? ''}
-        defaultSubject={replyTo?.subject ?? ''}
-        draftId={folder === 'drafts' ? selectedEmail?.id : undefined}
-        defaultBody={folder === 'drafts' ? selectedEmail?.body ?? '' : ''}
+        onClose={() => setComposerOpen(false)}
+        defaultTo={folder === 'drafts' && selectedEmail ? selectedEmail.to.join(', ') : ''}
+        defaultSubject={folder === 'drafts' && selectedEmail ? selectedEmail.subject : ''}
+        defaultBody={folder === 'drafts' && selectedEmail ? selectedEmail.body : ''}
+        defaultCc={folder === 'drafts' && selectedEmail ? (selectedEmail.cc ?? []).join(', ') : ''}
+        defaultBcc={folder === 'drafts' && selectedEmail ? (selectedEmail.bcc ?? []).join(', ') : ''}
+        defaultReplyTo={folder === 'drafts' && selectedEmail ? (selectedEmail.replyTo ?? '') : ''}
+        draftId={folder === 'drafts' && selectedEmail ? selectedEmail.id : undefined}
+        contactId={folder === 'drafts' ? selectedEmail?.contactId : undefined}
+        dealId={folder === 'drafts' ? selectedEmail?.dealId : undefined}
+        companyId={folder === 'drafts' ? selectedEmail?.companyId : undefined}
         onRequestGmailConnect={handleConnectGmail}
       />
     </div>

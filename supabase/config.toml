@@ -1,0 +1,5 @@
+# Supabase CLI project config (minimal). See https://supabase.com/docs/guides/cli/config
+# `webhook-worker` is invoked by cron or automation with a shared secret — no end-user JWT.
+
+[functions.webhook-worker]
+verify_jwt = false

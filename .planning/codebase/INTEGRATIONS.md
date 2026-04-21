@@ -119,11 +119,14 @@
 - None detected
 
 **Outgoing:**
-- None detected (Gmail sending is direct API call, not webhook-based)
+- **CRM domain webhooks (v1):** Postgres triggers enqueue rows in `webhook_outbox` when deals/contacts/companies/activities change (if the org has ≥1 enabled subscription). Edge Function `webhook-worker` delivers signed HTTPS POSTs to each matching `webhook_subscriptions.target_url`. See migration `20260420140000_webhooks_outbound.sql` and `supabase/README.md`.
+- Gmail send remains a direct API call (not CRM lifecycle webhooks).
+
+**Product spec (CRM Pro outbound webhooks v1 + parity vs Pipedrive):** [`docs/master-pipedrive-crm-pro-comparison.md`](../../docs/master-pipedrive-crm-pro-comparison.md).
 
 ---
 
 *Integration audit: 2026-04-10*
 ---
 
-*Last updated (git): **2026-04-10***
+*Last updated (git): **2026-04-20** — link to Pipedrive comparison / webhooks spec master.*

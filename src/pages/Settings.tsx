@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
-import { Plus, Trash2, Download, Upload, RotateCcw, Tag, Mail, Wifi, WifiOff, FileSpreadsheet, SlidersHorizontal, Pencil, X, Check, Globe, Activity, RefreshCw, ShieldAlert, Lock, Bold, Italic, Link as LinkIcon, Image as ImageIcon } from 'lucide-react'
+import {
+  Plus, Trash2, Download, Upload, RotateCcw, Tag, Mail, Wifi, WifiOff, FileSpreadsheet, SlidersHorizontal, Pencil, X, Check,
+  Globe, Activity, RefreshCw, ShieldAlert, Lock, Bold, Italic, Link as LinkIcon, Image as ImageIcon, ChevronUp, ChevronDown,
+} from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import type { DropResult } from '@hello-pangea/dnd'
 import { useSettingsStore } from '../store/settingsStore'
@@ -13,7 +16,11 @@ import { useCustomFieldsStore } from '../store/customFieldsStore'
 import { Button } from '../components/ui/Button'
 import { Checkbox } from '../components/ui/Checkbox'
 import { Input } from '../components/ui/Input'
+import { Textarea } from '../components/ui/Textarea'
 import { Select } from '../components/ui/Select'
+import { PageHeader } from '../components/ui/PageHeader'
+import { Toolbar } from '../components/ui/Toolbar'
+import { Tabs } from '../components/ui/Tabs'
 import { ConfirmDialog } from '../components/ui/Modal'
 import { Avatar } from '../components/ui/Avatar'
 import { toast } from '../store/toastStore'
@@ -39,6 +46,8 @@ import type { DealCurrency, CustomFieldEntityType, CustomFieldType, PipelineStag
 import type { NotificationType } from '../types'
 import type { Permission, UserRole } from '../types/auth'
 import { ALL_PERMISSIONS } from '../utils/permissionProfiles'
+import { SettingsWebhooksPanel } from '../components/settings/SettingsWebhooksPanel'
+import { getEmailMergeFieldOptions } from '../utils/emailMergeFields'
 const ENTITY_TABS: CustomFieldEntityType[] = ['contact', 'company', 'deal']
 
 const FIELD_TYPES: CustomFieldType[] = [
@@ -46,7 +55,7 @@ const FIELD_TYPES: CustomFieldType[] = [
   'checkbox', 'url', 'email', 'currency', 'textarea',
 ]
 
-type SettingsTab = 'general' | 'onboarding' | 'branding' | 'pipeline' | 'email' | 'permissions' | 'data' | 'navigation' | 'advanced'
+type SettingsTab = 'general' | 'onboarding' | 'branding' | 'pipeline' | 'email' | 'permissions' | 'data' | 'navigation' | 'webhooks' | 'advanced'
 
 export function Settings() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -60,6 +69,7 @@ export function Settings() {
     { id: 'permissions', label: t.settings.tabPermissions },
     { id: 'data', label: t.settings.tabData },
     { id: 'navigation', label: t.settings.tabNavigation },
+    { id: 'webhooks', label: t.settings.tabWebhooks },
     { id: 'advanced', label: t.settings.tabAdvanced },
   ]
   const { language, setLanguage, languageMode, setLanguageMode } = useI18nStore()
@@ -421,6 +431,24 @@ export function Settings() {
     setSignatureHtml(next)
   }
 
+  const insertSignatureMergeToken = (token: string) => {
+    const editor = signatureEditorRef.current
+    if (!editor) return
+    const start = editor.selectionStart ?? signatureHtml.length
+    const end = editor.selectionEnd ?? signatureHtml.length
+    const next = `${signatureHtml.slice(0, start)}${token}${signatureHtml.slice(end)}`
+    setSignatureHtml(next)
+    requestAnimationFrame(() => {
+      const el = signatureEditorRef.current
+      if (!el) return
+      el.focus()
+      const pos = start + token.length
+      el.setSelectionRange(pos, pos)
+    })
+  }
+
+  const signatureMergeFieldOptions = useMemo(() => getEmailMergeFieldOptions(t), [t])
+
   const handleSaveSignature = () => {
     if (!currentUser?.id) {
       toast.error(t.errors.generic)
@@ -670,32 +698,31 @@ export function Settings() {
     })
   }
 
+  const activeTabLabel = SETTINGS_TABS.find((tab) => tab.id === activeTab)?.label ?? t.settings.title
+  /** Inner cards / rows — same surface as permission groups & list pages */
+  const innerSurface = 'rounded-xl border border-border-subtle bg-surface-1'
+
   return (
-    <div className="crm-page space-y-8">
-      <section className="crm-surface-section p-3">
-        <div className="flex gap-2 flex-wrap">
-          {SETTINGS_TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
-                activeTab === tab.id
-                  ? 'bg-accent-500 border-accent-500 text-fg shadow-brand-sm'
-                  : 'bg-fg/4 border-fg/8 text-fg-muted hover:text-fg'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </section>
+    <div className="crm-page space-y-5">
+      <PageHeader
+        showTitle={false}
+        title={t.nav.settings}
+        subtitle={activeTabLabel}
+      />
+      <Toolbar panel>
+        <Tabs
+          tabs={SETTINGS_TABS.map((tab) => ({ id: tab.id, label: tab.label }))}
+          activeId={activeTab}
+          onChange={(id) => setActiveTab(id as SettingsTab)}
+          className="min-w-0"
+        />
+      </Toolbar>
 
       <section className={`crm-surface-section p-6 ${tabVisible('onboarding') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-1">{t.settings.onboardingTitle}</h2>
         <p className="text-xs text-fg-subtle mb-4">{t.settings.onboardingIntro}</p>
         <ul className="space-y-4">
-          <li className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-fg/4 border border-fg/8">
+          <li className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 ${innerSurface}`}>
             <div>
               <p className="text-sm font-medium text-fg">{t.settings.onboardingStepImport}</p>
               <Link to="/contacts" className="text-xs text-accent-400 hover:underline mt-1 inline-block">
@@ -715,7 +742,7 @@ export function Settings() {
               {onboardingFlags.importContacts ? t.settings.onboardingMarkTodo : t.settings.onboardingMarkDone}
             </Button>
           </li>
-          <li className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-fg/4 border border-fg/8">
+          <li className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 ${innerSurface}`}>
             <div>
               <p className="text-sm font-medium text-fg">{t.settings.onboardingStepDeal}</p>
               <Link to="/deals" className="text-xs text-accent-400 hover:underline mt-1 inline-block">
@@ -735,7 +762,7 @@ export function Settings() {
               {onboardingFlags.firstDeal ? t.settings.onboardingMarkTodo : t.settings.onboardingMarkDone}
             </Button>
           </li>
-          <li className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-fg/4 border border-fg/8">
+          <li className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 ${innerSurface}`}>
             <div>
               <p className="text-sm font-medium text-fg">{t.settings.onboardingStepSequence}</p>
               <Link to="/sequences" className="text-xs text-accent-400 hover:underline mt-1 inline-block">
@@ -785,16 +812,17 @@ export function Settings() {
 
         <div className="flex flex-wrap gap-2 md:gap-3">
           {(['en', 'es', 'pt', 'fr', 'de', 'it'] as Language[]).map((lang) => (
-            <button type="button"
+            <button
+              type="button"
               key={lang}
               onClick={() => setLanguage(lang)}
-              className={`inline-flex shrink-0 items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium whitespace-nowrap transition-all ${
+              className={`focus-ring inline-flex shrink-0 items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium whitespace-nowrap transition-colors ${
                 language === lang
-                  ? 'bg-accent-500/15 border-accent-500/40 text-fg shadow-brand-sm'
-                  : 'bg-fg/4 border-fg/8 text-fg-muted hover:text-fg hover:border-fg/15'
+                  ? 'bg-accent-500/20 text-accent-400 border-accent-500/30'
+                  : 'bg-fg/5 text-fg-muted border-fg/8 hover:bg-fg/8 hover:text-fg'
               }`}
             >
-              <span className="text-base">{LANGUAGE_FLAGS[lang]}</span>
+              <span className="text-base leading-none">{LANGUAGE_FLAGS[lang]}</span>
               <span>{LANGUAGE_LABELS[lang]}</span>
             </button>
           ))}
@@ -802,30 +830,14 @@ export function Settings() {
 
         <div className="mt-5 space-y-2">
           <p className="text-xs font-medium text-fg-muted">{t.settings.languageModeHelp}</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setLanguageMode('browser')}
-              className={`inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
-                resolvedLanguageMode === 'browser'
-                  ? 'bg-accent-500/15 border-accent-500/40 text-fg shadow-brand-sm'
-                  : 'bg-fg/4 border-fg/8 text-fg-muted hover:text-fg hover:border-fg/15'
-              }`}
-            >
-              {t.settings.languageModeBrowser}
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanguageMode('manual')}
-              className={`inline-flex shrink-0 items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
-                resolvedLanguageMode === 'manual'
-                  ? 'bg-accent-500/15 border-accent-500/40 text-fg shadow-brand-sm'
-                  : 'bg-fg/4 border-fg/8 text-fg-muted hover:text-fg hover:border-fg/15'
-              }`}
-            >
-              {t.settings.languageModeManual}
-            </button>
-          </div>
+          <Tabs
+            tabs={[
+              { id: 'browser', label: t.settings.languageModeBrowser },
+              { id: 'manual', label: t.settings.languageModeManual },
+            ]}
+            activeId={resolvedLanguageMode}
+            onChange={(id) => setLanguageMode(id as 'browser' | 'manual')}
+          />
         </div>
 
         <div className="mt-4 max-w-xs space-y-4">
@@ -855,15 +867,15 @@ export function Settings() {
       <section className={`crm-surface-section p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-3">{t.settings.emailProviderHealth}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="p-3 rounded-xl bg-fg/4 border border-fg/8">
+          <div className={`${innerSurface} p-3`}>
             <p className="text-xs text-fg-subtle mb-1">{t.settings.emailSyncState}</p>
             <p className="text-sm text-fg">{syncState}</p>
           </div>
-          <div className="p-3 rounded-xl bg-fg/4 border border-fg/8">
+          <div className={`${innerSurface} p-3`}>
             <p className="text-xs text-fg-subtle mb-1">{t.settings.emailLastSync}</p>
             <p className="text-sm text-fg">{threadsLastSyncedAt ? formatAgo(threadsLastSyncedAt) : t.settings.leadOpsNotAvailable}</p>
           </div>
-          <div className="p-3 rounded-xl bg-fg/4 border border-fg/8">
+          <div className={`${innerSurface} p-3`}>
             <p className="text-xs text-fg-subtle mb-1">{t.settings.emailLastError}</p>
             <p className="text-sm text-fg">{lastSyncErrorMessage ?? t.settings.leadOpsNotAvailable}</p>
           </div>
@@ -899,15 +911,12 @@ export function Settings() {
           </div>
         ) : (
           <div className="space-y-3">
-            <div>
-              <label className="text-sm font-medium text-fg-muted block mb-1.5">{t.email.googleClientIdLabel}</label>
-              <input
-                value={googleClientId}
-                onChange={(e) => setGoogleClientId(e.target.value)}
-                placeholder={t.settings.placeholderGoogleOAuthClientId}
-                className="w-full bg-surface-2 border border-fg/8 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/40"
-              />
-            </div>
+            <Input
+              label={t.email.googleClientIdLabel}
+              value={googleClientId}
+              onChange={(e) => setGoogleClientId(e.target.value)}
+              placeholder={t.settings.placeholderGoogleOAuthClientId}
+            />
             <Button
               leftIcon={connectingGmail ? undefined : <Mail size={14} />}
               loading={connectingGmail}
@@ -920,7 +929,7 @@ export function Settings() {
               <p>{t.settings.gmailSetupStep1} <span className="text-accent-400">console.cloud.google.com</span></p>
               <p>{t.settings.gmailSetupStep2}</p>
               <p>{t.settings.gmailSetupStep3}</p>
-              <p>{t.settings.gmailSetupStep4.replace('{origin}', '')} <span className="text-accent-400">http://localhost:5173</span></p>
+              <p>{t.settings.gmailSetupStep4.replace('{origin}', '')} <span className="text-accent-400">http://localhost:5174</span></p>
             </div>
           </div>
         )}
@@ -936,16 +945,22 @@ export function Settings() {
               onChange={(e) => setSignatureName(e.target.value)}
               placeholder={t.settings.signatureNamePlaceholder}
             />
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={() => insertAroundSelection('<strong>', '</strong>')} className="px-2 py-1 rounded-md bg-fg/6 border border-fg/10 text-fg-muted"><Bold size={12} /></button>
-              <button type="button" onClick={() => insertAroundSelection('<em>', '</em>')} className="px-2 py-1 rounded-md bg-fg/6 border border-fg/10 text-fg-muted"><Italic size={12} /></button>
-              <button type="button" onClick={() => insertAroundSelection('<a href="https://">', '</a>')} className="px-2 py-1 rounded-md bg-fg/6 border border-fg/10 text-fg-muted"><LinkIcon size={12} /></button>
-              <label className="px-2 py-1 rounded-md bg-fg/6 border border-fg/10 text-fg-muted cursor-pointer inline-flex items-center">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button type="button" variant="ghost" size="xs" className="min-h-8 px-2" onClick={() => insertAroundSelection('<strong>', '</strong>')} aria-label={t.settings.signatureToolbarBold} title={t.settings.signatureToolbarBold}>
+                <Bold size={12} />
+              </Button>
+              <Button type="button" variant="ghost" size="xs" className="min-h-8 px-2" onClick={() => insertAroundSelection('<em>', '</em>')} aria-label={t.settings.signatureToolbarItalic} title={t.settings.signatureToolbarItalic}>
+                <Italic size={12} />
+              </Button>
+              <Button type="button" variant="ghost" size="xs" className="min-h-8 px-2" onClick={() => insertAroundSelection('<a href="https://">', '</a>')} aria-label={t.settings.signatureToolbarLink} title={t.settings.signatureToolbarLink}>
+                <LinkIcon size={12} />
+              </Button>
+              <label className="inline-flex items-center justify-center min-h-8 px-2 rounded-full border border-border-subtle bg-fg/5 text-fg-muted cursor-pointer hover:bg-fg/8 transition-colors focus-within:focus-ring" aria-label={t.settings.signatureToolbarImage} title={t.settings.signatureToolbarImage}>
                 <ImageIcon size={12} />
                 <input
                   type="file"
                   accept="image/*"
-                  className="hidden"
+                  className="sr-only"
                   onChange={async (e) => {
                     const file = e.target.files?.[0]
                     if (!file) return
@@ -961,13 +976,32 @@ export function Settings() {
                 />
               </label>
             </div>
-            <label className="text-xs text-fg-muted">{t.settings.signatureHtml}</label>
-            <textarea
+            <div className="space-y-2 rounded-lg border border-border-subtle bg-surface-2/60 p-3">
+              <p className="text-xs font-medium text-fg">{t.settings.signatureMergeFieldsTitle}</p>
+              <p className="text-[11px] text-fg-subtle leading-relaxed">{t.settings.signatureMergeFieldsHelp}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {signatureMergeFieldOptions.map((o) => (
+                  <Button
+                    key={o.token}
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    className="px-2 font-mono text-[11px]"
+                    onClick={() => insertSignatureMergeToken(o.token)}
+                    title={o.label}
+                  >
+                    {o.token}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <Textarea
               ref={signatureEditorRef}
+              label={t.settings.signatureHtml}
               value={signatureHtml}
               onChange={(e) => setSignatureHtml(e.target.value)}
               rows={7}
-              className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-xs text-fg outline-none"
+              className="text-xs"
               placeholder={t.settings.placeholderEmailSignatureHtml}
             />
             <div className="flex gap-2">
@@ -980,19 +1014,20 @@ export function Settings() {
               <p className="text-xs text-fg-subtle">{t.common.noResults}</p>
             )}
             {currentSignatures.map((sig) => (
-              <div key={sig.id} className="p-3 rounded-xl bg-fg/4 border border-fg/8">
+              <div key={sig.id} className={`${innerSurface} p-3`}>
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <div className="text-sm text-fg font-medium">{sig.name}</div>
                   {sig.id === currentDefaultSignatureId ? (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-500/15 border border-accent-500/30 text-accent-300">{t.settings.signatureDefault}</span>
                   ) : (
-                    <button
+                    <Button
                       type="button"
+                      size="xs"
+                      variant="secondary"
                       onClick={() => currentUser?.id && useSettingsStore.getState().setDefaultEmailSignature(currentUser.id, sig.id)}
-                      className="text-[10px] px-2 py-0.5 rounded-full border border-fg/12 text-fg-muted hover:text-fg"
                     >
                       {t.settings.signatureSetDefault}
-                    </button>
+                    </Button>
                   )}
                 </div>
                 <div className="text-xs text-fg-muted mb-2 line-clamp-2">{sig.html.replace(/<[^>]+>/g, ' ')}</div>
@@ -1029,40 +1064,33 @@ export function Settings() {
           </PermissionGate>
         </div>
 
-        {/* Entity type tabs */}
-        <div className="flex gap-1 p-1 bg-fg/4 rounded-xl mb-4">
-          {ENTITY_TABS.map((et) => (
-            <button type="button"
-              key={et}
-              onClick={() => { setCfActiveEntity(et); cfResetForm() }}
-              className={`flex-1 text-xs font-medium py-1.5 rounded-lg transition-all ${
-                cfActiveEntity === et
-                  ? 'bg-accent-500/20 text-accent-300 border border-accent-500/30'
-                  : 'text-fg-subtle hover:text-fg-muted'
-              }`}
-            >
-              {t.settings.entityLabels[et]}
-            </button>
-          ))}
+        <div className="mb-4">
+          <Tabs
+            tabs={ENTITY_TABS.map((et) => ({ id: et, label: t.settings.entityLabels[et] }))}
+            activeId={cfActiveEntity}
+            onChange={(id) => {
+              setCfActiveEntity(id as CustomFieldEntityType)
+              cfResetForm()
+            }}
+            className="w-full min-w-0 [&>div]:w-full [&>div]:flex-wrap"
+          />
         </div>
 
         {/* Inline add / edit form */}
         {cfShowForm && (
-          <div className="mb-4 p-4 bg-surface-2 border border-fg/10 rounded-xl space-y-3">
+          <div className="mb-4 p-4 rounded-xl border border-border-subtle bg-surface-2 space-y-3">
             <p className="text-xs font-semibold text-fg-muted uppercase tracking-wide">
               {cfEditingId ? `${t.common.edit}` : `${t.common.add} — ${t.settings.entityLabels[cfActiveEntity]}`}
             </p>
 
             {/* Label + type row */}
             <div className="flex gap-3">
-              <div className="flex-1">
-                <label className="text-xs font-medium text-fg-muted block mb-1">{t.settings.fieldName}</label>
-                <input
-                  type="text"
+              <div className="flex-1 min-w-0">
+                <Input
+                  label={t.settings.fieldName}
                   value={cfLabel}
                   onChange={(e) => setCfLabel(e.target.value)}
                   placeholder={t.settings.fieldPlaceholderHint}
-                  className="w-full bg-surface-2 border border-fg/8 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/40"
                 />
               </div>
               <div className="w-44 min-w-0">
@@ -1078,60 +1106,45 @@ export function Settings() {
 
             {/* Options — only for select / multiselect */}
             {['select', 'multiselect'].includes(cfFieldType) && (
-              <div>
-                <label className="text-xs font-medium text-fg-muted block mb-1">
-                  {t.settings.options}
-                </label>
-                <textarea
-                  value={cfOptions}
-                  onChange={(e) => setCfOptions(e.target.value)}
-                  placeholder={t.settings.optionsPlaceholder}
-                  rows={4}
-                  className="w-full bg-surface-2 border border-fg/8 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/40 resize-none"
-                />
-              </div>
+              <Textarea
+                label={t.settings.options}
+                value={cfOptions}
+                onChange={(e) => setCfOptions(e.target.value)}
+                placeholder={t.settings.optionsPlaceholder}
+                rows={4}
+              />
             )}
 
             {/* Placeholder */}
             {!['checkbox', 'date'].includes(cfFieldType) && (
-              <div>
-                <label className="text-xs font-medium text-fg-muted block mb-1">{t.settings.placeholder}</label>
-                <input
-                  type="text"
-                  value={cfPlaceholder}
-                  onChange={(e) => setCfPlaceholder(e.target.value)}
-                  placeholder={t.settings.valuePlaceholderHint}
-                  className="w-full bg-surface-2 border border-fg/8 rounded-xl px-3 py-2 text-sm text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/40"
-                />
-              </div>
+              <Input
+                label={t.settings.placeholder}
+                value={cfPlaceholder}
+                onChange={(e) => setCfPlaceholder(e.target.value)}
+                placeholder={t.settings.valuePlaceholderHint}
+              />
             )}
 
             {/* Toggles row */}
-            <div className="flex gap-4">
-              <button
+            <div className="flex flex-wrap gap-2">
+              <Button
                 type="button"
+                size="xs"
+                variant={cfRequired ? 'secondary' : 'ghost'}
                 onClick={() => setCfRequired((v) => !v)}
-                className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border transition-all ${
-                  cfRequired
-                    ? 'bg-warning/15 border-warning/30 text-warning'
-                    : 'bg-fg/4 border-fg/8 text-fg-subtle hover:text-fg-muted'
-                }`}
+                leftIcon={<span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfRequired ? 'bg-warning' : 'bg-fg-subtle'}`} aria-hidden />}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${cfRequired ? 'bg-warning' : 'bg-surface-2'}`} />
                 {t.settings.required}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                size="xs"
+                variant={cfIsActive ? 'secondary' : 'ghost'}
                 onClick={() => setCfIsActive((v) => !v)}
-                className={`flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg border transition-all ${
-                  cfIsActive
-                    ? 'bg-success/15 border-success/30 text-success'
-                    : 'bg-fg/4 border-fg/8 text-fg-subtle hover:text-fg-muted'
-                }`}
+                leftIcon={<span className={`w-1.5 h-1.5 rounded-full shrink-0 ${cfIsActive ? 'bg-success' : 'bg-fg-subtle'}`} aria-hidden />}
               >
-                <span className={`w-1.5 h-1.5 rounded-full ${cfIsActive ? 'bg-success' : 'bg-surface-2'}`} />
                 {t.common.active}
-              </button>
+              </Button>
             </div>
 
             {/* Action buttons */}
@@ -1156,7 +1169,7 @@ export function Settings() {
             {cfEntityDefs.map((def) => (
               <div
                 key={def.id}
-                className="flex items-center gap-3 p-3 bg-fg/4 rounded-xl border border-fg/5"
+                className={`flex items-center gap-3 p-3 ${innerSurface}`}
               >
                 {/* Type badge */}
                 <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent-500/15 text-accent-300 border border-accent-500/20 uppercase tracking-wide">
@@ -1194,20 +1207,28 @@ export function Settings() {
 
                 {/* Edit / Delete — gated */}
                 <PermissionGate permission="custom_fields:update">
-                  <button type="button"
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="ghost"
                     onClick={() => cfOpenEdit(def.id)}
                     title={t.settings.editField}
-                    className="shrink-0 p-1.5 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 transition-all"
+                    aria-label={t.settings.editField}
+                    className="shrink-0 px-2"
                   >
                     <Pencil size={13} />
-                  </button>
-                  <button type="button"
+                  </Button>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="ghost"
                     onClick={() => setCfDeleteId(def.id)}
                     title={t.settings.deleteField}
-                    className="shrink-0 p-1.5 rounded-lg text-fg-subtle hover:text-danger hover:bg-danger/10 transition-all"
+                    aria-label={t.settings.deleteField}
+                    className="shrink-0 px-2 text-fg-subtle hover:text-danger"
                   >
                     <Trash2 size={13} />
-                  </button>
+                  </Button>
                 </PermissionGate>
               </div>
             ))}
@@ -1344,13 +1365,13 @@ export function Settings() {
                       <div
                         ref={dragProvided.innerRef}
                         {...dragProvided.draggableProps}
-                        className="p-3 bg-fg/4 rounded-xl"
+                        className={`p-3 ${innerSurface}`}
                       >
                         <div className="flex items-start gap-2 mb-2">
                           <button
                             type="button"
                             {...dragProvided.dragHandleProps}
-                            className="mt-2 text-fg-subtle hover:text-fg-muted cursor-grab active:cursor-grabbing shrink-0"
+                            className="focus-ring mt-2 rounded-lg p-1 text-fg-subtle hover:text-fg-muted hover:bg-fg/6 cursor-grab active:cursor-grabbing shrink-0"
                             aria-label={`${t.common.edit} order`}
                             title={`${t.common.edit} order`}
                           >
@@ -1365,21 +1386,18 @@ export function Settings() {
                               className="w-full"
                             />
                             <div className="flex justify-end">
-                              <button
+                              <Button
                                 type="button"
+                                size="xs"
+                                variant="ghost"
                                 disabled={PIPELINE_STAGE_DELETE_BLOCKED.has(stage.id)}
                                 onClick={() => handleRemovePipelineStage(stage.id)}
                                 title={PIPELINE_STAGE_DELETE_BLOCKED.has(stage.id) ? t.settings.pipelineStageProtected : t.settings.pipelineStageDeleteHint}
                                 aria-label={t.common.delete}
-                                className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors ${
-                                  PIPELINE_STAGE_DELETE_BLOCKED.has(stage.id)
-                                    ? 'border-fg/5 text-fg-subtle cursor-not-allowed opacity-40'
-                                    : 'border-fg/10 text-fg-muted hover:text-danger hover:border-danger/30 hover:bg-danger/10'
-                                }`}
+                                leftIcon={<Trash2 size={12} />}
                               >
-                                <Trash2 size={12} />
                                 {t.common.delete}
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -1450,15 +1468,18 @@ export function Settings() {
         </div>
         <div className="flex flex-wrap gap-2">
           {settings.tags.map((tag) => (
-            <div key={tag} className="flex items-center gap-1.5 bg-surface-2 border border-fg/10 rounded-full px-3 py-1">
+            <div key={tag} className="flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-2 px-2 py-1 pl-3">
               <span className="text-xs text-fg-muted">{tag}</span>
-              <button type="button"
+              <Button
+                type="button"
+                size="xs"
+                variant="ghost"
                 onClick={() => { removeTag(tag); toast.success(t.common.delete + ' ✓') }}
                 aria-label={`${t.settings.deleteTagAriaLabel} ${tag}`}
-                className="text-fg-subtle hover:text-danger transition-colors"
+                className="min-h-7 px-1.5 text-fg-subtle hover:text-danger"
               >
                 <Trash2 size={11} />
-              </button>
+              </Button>
             </div>
           ))}
         </div>
@@ -1469,13 +1490,13 @@ export function Settings() {
         <h2 className="text-base font-semibold text-fg mb-4">{t.settings.users}</h2>
         <div className="space-y-3">
           {usersForSettings.map((user) => (
-            <div key={user.id} className="flex items-center gap-3 p-3 rounded-xl border border-accent-500/20 bg-accent-500/10">
+            <div key={user.id} className="flex items-center gap-3 p-3 rounded-xl border border-accent-500/25 bg-accent-500/5">
               <Avatar name={user.name} size="sm" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-fg">{user.name}</p>
-                <p className="text-xs text-fg-subtle">{user.email} · {user.role}</p>
+                <p className="text-xs text-fg-subtle">{user.email} · {t.team.roleLabels[user.role as UserRole] ?? user.role}</p>
               </div>
-              <span className="text-xs px-2 py-0.5 bg-accent-500/15 text-accent-400 rounded-full">{user.role}</span>
+              <span className="text-xs px-2 py-0.5 bg-accent-500/15 text-accent-400 rounded-full">{t.team.roleLabels[user.role as UserRole] ?? user.role}</span>
             </div>
           ))}
         </div>
@@ -1483,7 +1504,7 @@ export function Settings() {
       </section>
 
       {/* Permission Profiles */}
-      <section className={`glass p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
+      <section className={`crm-surface-section p-6 ${tabVisible('permissions') ? '' : 'hidden'}`}>
         <h2 className="text-base font-semibold text-fg mb-2">{t.settings.permissionProfiles}</h2>
         <p className="text-xs text-fg-subtle mb-4">{t.settings.permissionProfilesHint}</p>
         <div className="max-w-xs mb-4">
@@ -1521,7 +1542,7 @@ export function Settings() {
                         />
                         <span className="truncate">{actionLabel ?? action.replace('_', ' ').toUpperCase()}</span>
                       </div>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded border ${active ? 'border-accent-500/40 text-accent-700 bg-accent-500/10' : 'border-border-subtle text-fg-subtle bg-surface-1'}`}>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded border ${active ? 'border-accent-500/40 text-accent-300 bg-accent-500/10' : 'border-border-subtle text-fg-subtle bg-surface-1'}`}>
                         {active ? t.common.enabled : t.common.disabled}
                       </span>
                     </label>
@@ -1572,7 +1593,7 @@ export function Settings() {
               <button type="button"
                 key={type}
                 onClick={() => toggleType(type)}
-                className={`flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                className={`focus-ring flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
                   enabled
                     ? 'bg-accent-500/10 border-accent-500/30 text-fg'
                     : 'bg-fg/3 border-fg/8 text-fg-subtle hover:text-fg-muted'
@@ -1608,14 +1629,20 @@ export function Settings() {
             {sectionOptions.map((section) => {
               const hidden = navPrefs.hiddenSections.includes(section.id)
               return (
-                <div key={section.id} className="p-3 rounded-xl bg-fg/4 border border-fg/8 space-y-2">
+                <div key={section.id} className={`space-y-2 p-3 ${innerSurface}`}>
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm text-fg">{section.label}</p>
                     <div className="flex items-center gap-1">
-                      <button type="button" className="px-2 py-1 text-xs rounded border border-fg/10 text-fg-muted" onClick={() => moveSection(section.id, -1)}>↑</button>
-                      <button type="button" className="px-2 py-1 text-xs rounded border border-fg/10 text-fg-muted" onClick={() => moveSection(section.id, 1)}>↓</button>
-                      <button type="button"
-                        className={`px-2 py-1 text-xs rounded border ${hidden ? 'border-danger/30 text-danger' : 'border-success/30 text-success'}`}
+                      <Button type="button" size="xs" variant="secondary" className="min-w-8 px-2" onClick={() => moveSection(section.id, -1)} aria-label={t.settings.navMoveUp} title={t.settings.navMoveUp}>
+                        <ChevronUp size={14} />
+                      </Button>
+                      <Button type="button" size="xs" variant="secondary" className="min-w-8 px-2" onClick={() => moveSection(section.id, 1)} aria-label={t.settings.navMoveDown} title={t.settings.navMoveDown}>
+                        <ChevronDown size={14} />
+                      </Button>
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant={hidden ? 'danger' : 'secondary'}
                         onClick={() => {
                           void updateNavPrefs((current) => ({
                             ...current,
@@ -1626,20 +1653,26 @@ export function Settings() {
                         }}
                       >
                         {hidden ? t.settings.navSectionHidden : t.settings.navSectionVisible}
-                      </button>
+                      </Button>
                     </div>
                   </div>
                   <div className="space-y-1">
                     {(navPrefs.itemOrderBySection[section.id] ?? createDefaultNavigationPreferences().itemOrderBySection[section.id]).map((itemId) => {
                       const itemHidden = navPrefs.hiddenBuiltinItems.includes(itemId)
                       return (
-                        <div key={itemId} className="flex items-center justify-between text-xs text-fg-muted bg-surface-2 border border-fg/10 rounded-lg px-2 py-1.5">
+                        <div key={itemId} className="flex items-center justify-between text-xs text-fg-muted rounded-lg border border-border-subtle bg-surface-2 px-2 py-1.5">
                           <span>{itemId}</span>
                           <div className="flex gap-1">
-                            <button type="button" className="px-1.5 py-0.5 border border-fg/12 rounded" onClick={() => moveBuiltinItem(section.id, itemId, -1)}>↑</button>
-                            <button type="button" className="px-1.5 py-0.5 border border-fg/12 rounded" onClick={() => moveBuiltinItem(section.id, itemId, 1)}>↓</button>
-                            <button type="button"
-                              className={`px-1.5 py-0.5 border rounded ${itemHidden ? 'border-danger/30 text-danger' : 'border-success/30 text-success'}`}
+                            <Button type="button" size="xs" variant="secondary" className="min-w-7 px-1.5" onClick={() => moveBuiltinItem(section.id, itemId, -1)} aria-label={t.settings.navMoveUp} title={t.settings.navMoveUp}>
+                              <ChevronUp size={12} />
+                            </Button>
+                            <Button type="button" size="xs" variant="secondary" className="min-w-7 px-1.5" onClick={() => moveBuiltinItem(section.id, itemId, 1)} aria-label={t.settings.navMoveDown} title={t.settings.navMoveDown}>
+                              <ChevronDown size={12} />
+                            </Button>
+                            <Button
+                              type="button"
+                              size="xs"
+                              variant={itemHidden ? 'danger' : 'secondary'}
                               onClick={() => {
                                 void updateNavPrefs((current) => ({
                                   ...current,
@@ -1650,7 +1683,7 @@ export function Settings() {
                               }}
                             >
                               {itemHidden ? t.common.disabled : t.common.enabled}
-                            </button>
+                            </Button>
                           </div>
                         </div>
                       )
@@ -1667,7 +1700,7 @@ export function Settings() {
               <p className="text-xs text-fg-subtle">{t.settings.navNoCustomGroups}</p>
             )}
             {navPrefs.customGroups.map((group, index) => (
-              <div key={group.id} className="p-3 rounded-xl bg-fg/4 border border-fg/8 space-y-2">
+              <div key={group.id} className={`space-y-2 p-3 ${innerSurface}`}>
                 <Input
                   label={t.settings.navGroupName}
                   value={group.label}
@@ -1697,9 +1730,12 @@ export function Settings() {
                   {(['admin', 'manager', 'sales_rep', 'viewer'] as UserRole[]).map((role) => {
                     const active = group.roleRules?.includes(role) ?? false
                     return (
-                      <button type="button"
+                      <Button
+                        type="button"
                         key={role}
-                        className={`px-2 py-1 rounded border text-[11px] ${active ? 'border-accent-500/40 text-accent-200' : 'border-fg/12 text-fg-subtle'}`}
+                        size="xs"
+                        variant={active ? 'secondary' : 'ghost'}
+                        className={`text-[11px] ${active ? 'border border-accent-500/40' : 'border border-border-subtle'}`}
                         onClick={() => {
                           void updateNavPrefs((current) => ({
                             ...current,
@@ -1714,8 +1750,8 @@ export function Settings() {
                           }))
                         }}
                       >
-                        {role}
-                      </button>
+                        {t.team.roleLabels[role]}
+                      </Button>
                     )
                   })}
                 </div>
@@ -1766,7 +1802,7 @@ export function Settings() {
                   </Button>
                 </div>
                 {group.items.map((item) => (
-                  <div key={item.id} className="p-2 bg-surface-2 border border-fg/10 rounded-lg space-y-2">
+                  <div key={item.id} className="space-y-2 rounded-lg border border-border-subtle bg-surface-2 p-2">
                     <Input
                       label={t.settings.navLabel}
                       value={item.label}
@@ -1802,6 +1838,10 @@ export function Settings() {
       </section>
 
       {/* Lead Maintenance Ops */}
+      <section className={`crm-surface-section p-6 ${tabVisible('webhooks') ? '' : 'hidden'}`}>
+        <SettingsWebhooksPanel />
+      </section>
+
       <section className={`crm-surface-section p-6 ${tabVisible('advanced') ? '' : 'hidden'}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -1825,23 +1865,23 @@ export function Settings() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-          <div className="p-3 rounded-xl bg-fg/4 border border-fg/8">
+          <div className={`${innerSurface} p-3`}>
             <p className="text-xs text-fg-subtle mb-1">{t.settings.leadOpsLastSuccess}</p>
             <p className="text-sm font-medium text-fg">{formatAgo(lastSuccessAt)}</p>
           </div>
-          <div className="p-3 rounded-xl bg-fg/4 border border-fg/8">
+          <div className={`${innerSurface} p-3`}>
             <p className="text-xs text-fg-subtle mb-1">{t.settings.leadOpsSlaLabel}</p>
             <p className={`text-sm font-medium ${isSlaBreached ? 'text-warning' : 'text-success'}`}>
               {isSlaBreached ? t.settings.leadOpsBreached : t.settings.leadOpsHealthy}
             </p>
           </div>
-          <div className="p-3 rounded-xl bg-fg/4 border border-fg/8">
+          <div className={`${innerSurface} p-3`}>
             <p className="text-xs text-fg-subtle mb-1">{t.settings.leadOpsRecentErrors}</p>
             <p className={`text-sm font-medium ${recentErrors.length > 0 ? 'text-danger' : 'text-fg'}`}>
               {recentErrors.length}
             </p>
           </div>
-          <div className="p-3 rounded-xl bg-fg/4 border border-success/20">
+          <div className={`${innerSurface} border-success/25 bg-success/5 p-3`}>
             <p className="text-xs text-fg-subtle mb-1">{t.settings.leadOpsMailboxScope}</p>
             <p className="text-sm font-medium text-success flex items-center gap-1.5">
               <Lock size={13} />
@@ -1851,25 +1891,18 @@ export function Settings() {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-4">
-          {([
-            { value: 'all', label: t.settings.leadOpsFilterAll },
-            { value: 'success', label: t.settings.leadOpsFilterSuccess },
-            { value: 'running', label: t.settings.leadOpsFilterRunning },
-            { value: 'error', label: t.settings.leadOpsFilterError },
-          ] as const).map((opt) => (
-            <button type="button"
-              key={opt.value}
-              onClick={() => setMaintenanceStatusFilter(opt.value)}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
-                maintenanceStatusFilter === opt.value
-                  ? 'bg-accent-500/15 border-accent-500/30 text-accent-300'
-                  : 'bg-fg/4 border-fg/8 text-fg-muted hover:text-fg'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div className="mb-4 min-w-0">
+          <Tabs
+            tabs={([
+              { value: 'all', label: t.settings.leadOpsFilterAll },
+              { value: 'success', label: t.settings.leadOpsFilterSuccess },
+              { value: 'running', label: t.settings.leadOpsFilterRunning },
+              { value: 'error', label: t.settings.leadOpsFilterError },
+            ] as const).map((opt) => ({ id: opt.value, label: opt.label }))}
+            activeId={maintenanceStatusFilter}
+            onChange={(id) => setMaintenanceStatusFilter(id as 'all' | 'success' | 'running' | 'error')}
+            className="w-full min-w-0 [&>div]:w-full [&>div]:flex-wrap"
+          />
         </div>
 
         {visibleMaintenanceRuns.length === 0 ? (
@@ -1883,7 +1916,7 @@ export function Settings() {
                   ? t.settings.leadOpsFilterRunning
                   : t.settings.leadOpsFilterError
               return (
-              <div key={run.id} className="p-3 rounded-xl bg-fg/4 border border-fg/8">
+              <div key={run.id} className={`${innerSurface} p-3`}>
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-xs text-fg-muted">
                     {run.mode === 'all_orgs' ? t.settings.leadOpsAllOrgs : t.settings.leadOpsSingleOrg} · {formatAgo(run.started_at)}
