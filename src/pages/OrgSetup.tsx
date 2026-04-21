@@ -77,17 +77,24 @@ export function OrgSetup() {
         billingEmail: billingEmail.trim(),
         billingPhone: billingPhone.trim() || undefined,
       })
+      const newOrgId = (u.app_metadata?.organization_id as string | undefined) ?? u.user_metadata?.org_id
       setCurrentUser({
         id: u.id,
         name: u.user_metadata?.full_name ?? u.email?.split('@')[0] ?? t.auth.profile,
         email: u.email ?? '',
         role: (u.app_metadata?.user_role as 'admin' | 'manager' | 'sales_rep' | 'viewer') ?? 'admin',
         jobTitle: u.user_metadata?.job_title ?? '',
-        organizationId: (u.app_metadata?.organization_id as string | undefined) ?? u.user_metadata?.org_id,
+        organizationId: newOrgId,
         isActive: true,
         createdAt: u.created_at,
         updatedAt: u.updated_at ?? u.created_at,
       })
+
+      if (newOrgId) {
+        void useAuthStore.getState().fetchOrgUsers(newOrgId).catch(() => {
+          /* non-critical */
+        })
+      }
 
       navigate('/', { replace: true })
     } catch (err) {

@@ -4,6 +4,8 @@ import { UserPlus, CheckCircle, XCircle } from 'lucide-react'
 import { Spinner } from '../components/ui/Spinner'
 import { supabase } from '../lib/supabase'
 import { useTranslations } from '../i18n'
+import { useAuthStore } from '../store/authStore'
+import type { UserRole } from '../types/auth'
 import { Button } from '../components/ui/Button'
 import { AuthLayout } from '../components/auth/AuthLayout'
 
@@ -112,6 +114,24 @@ export function AcceptInvite() {
 
       const { error: refreshErr } = await supabase!.auth.refreshSession()
       if (refreshErr) throw new Error(refreshErr.message)
+
+      const { data: freshAuth, error: freshErr } = await supabase!.auth.getUser()
+      if (!freshErr && freshAuth.user) {
+        const fu = freshAuth.user
+        const orgId = (fu.app_metadata?.organization_id as string | undefined) ?? invitation.organization_id
+        const cur = useAuthStore.getState().currentUser
+        if (cur?.id === fu.id) {
+          const role = (fu.app_metadata?.user_role as UserRole | undefined) ?? (invitation.role as UserRole)
+          useAuthStore.getState().setCurrentUser({
+            ...cur,
+            organizationId: orgId,
+            role,
+          })
+        }
+        void useAuthStore.getState().fetchOrgUsers(orgId).catch(() => {
+          /* non-critical */
+        })
+      }
 
       setPageState('success')
       setTimeout(() => navigate('/', { replace: true }), 1500)

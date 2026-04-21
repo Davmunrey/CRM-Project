@@ -8,6 +8,7 @@
 |--------|------|
 | Need **v1 phases**, deploy checklist IDs, or latest milestone note | [`.planning/STATE.md`](../.planning/STATE.md) · [`.planning/ROADMAP.md`](../.planning/ROADMAP.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) |
 | Want **one map** of “docs vs `.planning`”, hosting intent, and **known gaps** | [**`project-state.md`**](./project-state.md) |
+| Need **who closes which `[ ]`** (code vs ops vs legal vs evidence) | [`checkbox-ownership-matrix.md`](./checkbox-ownership-matrix.md) |
 | Ship **static hosting** (SPA rewrites, `VITE_APP_CHANNEL`, `VITE_*` per env, preview vs prod) | [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) |
 | Start **Google Gmail** restricted-scope verification | [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md) |
 | Run **production smoke** after deploy | [`smoke-checklist-production.md`](./smoke-checklist-production.md) |

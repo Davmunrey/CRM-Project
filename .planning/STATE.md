@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 10 Pending Deploy
-last_updated: "2026-04-21T12:00:00.000Z"
+last_updated: "2026-04-21T18:00:00.000Z"
 progress:
   total_phases: 10
   completed_phases: 9
@@ -102,3 +102,5 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 *Session 2026-04-16 — `VITE_APP_CHANNEL` (production / staging / demo / local development), build-time Supabase validation in `vite.config.ts`, runtime alignment in `src/lib/envChannel.ts` + `src/lib/supabase.ts`, shell `EnvironmentBanner`, README + canonical docs + `.planning` requirements/stack/research updates.*
 
 *Session 2026-04-21 — Documentation sweep: root `README` + `docs/project-state` codebase map + design-system doc control aligned with current tree (Automations, `src/i18n/seed/` automation rules, Knip `audit:unused`, Companies empty-state pattern, store/page counts). Vitest baseline: **36** files / **183** tests (`npm run test:run`).*
+
+*Session 2026-04-21 (later) — Engineering closure batch: `docs/checkbox-ownership-matrix.md` + `project-state` / `docs/README` links; ROADMAP Phase 9 CI wording aligned with Gitea Actions; Automations/Sequences polish + shared **template library** dialog (`WorkflowTemplateLibraryDialog`, `workflowTemplateCatalog`); `fetchOrgUsers` after **OrgSetup** and **AcceptInvite**; `npm run build`, `npm run i18n:lint`, `npm run ui:lint` green on this snapshot. **`DEPLOY-01`–`DEPLOY-05` and production smoke** remain operator-owned: attach host, channel, Supabase project, smoke outcome, and commit per `.planning/REQUIREMENTS.md` before ticking `[x]` there.*

@@ -6,6 +6,7 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 
 | Need | Primary source | Notes |
 |------|----------------|--------|
+| **Who owns each open `[ ]` cluster** (code vs ops vs legal vs evidence) | [`checkbox-ownership-matrix.md`](./checkbox-ownership-matrix.md) | Matrix for masters, REQUIREMENTS, and phase validations. |
 | v1.0 phase completion, next phase gate, session notes | [`.planning/STATE.md`](../.planning/STATE.md), [`.planning/ROADMAP.md`](../.planning/ROADMAP.md) | Engineering milestone view (Phases 1–10). |
 | Checked requirements IDs (`AUTH-*`, `DEPLOY-*`, …) | [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) | Single checklist for v1 scope. |
 | **Pro** roadmap (30/60/90), execution backlog, GTM matrix | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Product horizon beyond the v1 phase list. |
@@ -48,6 +49,7 @@ Track these explicitly until each is either implemented or moved into the right 
 | **Email open/click “truth” for analytics** | Server path: Edge `track-open` / `track-click` → `email_tracking_events` (RLS per sender). **Reports** surfaces server counts for the signed-in user; org-wide manager rollups still future work. | [`.planning/codebase/CONCERNS.md`](../.planning/codebase/CONCERNS.md); [`master-implementation-history.md`](./master-implementation-history.md) Part A §6 + Part B §15–17; Reports UI + [`master-email-operations.md`](./master-email-operations.md). |
 | **Residual research docs naming one host** | Older notes used a single vendor while `DEPLOY-*` intent is neutral | `.planning/research/deploy-testing.md` was **neutralized** (2026-04-16) and points to [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md). Canonical DEPLOY wording remains `.planning/REQUIREMENTS.md` + Phase 10 in `ROADMAP.md`. |
 | **Pipedrive / group integration parity** (outbound webhooks, public API) | Blocks ERP, RevOps, and iPaaS expectations when the group compares CRM Pro to Pipedrive | **Spec + matrix:** [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) · **Execution:** [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) (API + Webhooks) · **Audit:** [`.planning/codebase/INTEGRATIONS.md`](../.planning/codebase/INTEGRATIONS.md). Remove or shrink this gap row when product webhooks ship and the master is updated. |
+| **Open checklists without a clear owner** | Same `[ ]` interpreted as “dev debt” when it is ops or legal | **Matrix:** [`checkbox-ownership-matrix.md`](./checkbox-ownership-matrix.md) |
 
 ---
 

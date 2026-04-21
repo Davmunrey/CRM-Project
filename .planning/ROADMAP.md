@@ -17,7 +17,7 @@
 - [x] **Phase 6: Secondary Stores & Real Users** — Migrate remaining stores; replace MOCK_USERS; remove AI features and Leaderboard; unify Lead=Contact (completed 2026-04-08)
 - [x] **Phase 7: Gmail Integration** — Auth Code + PKCE OAuth flow; Edge Functions for token exchange and refresh; inbox, send, and contact linking (completed 2026-04-09)
 - [x] **Phase 8: i18n English** — English translation file and language switcher persistence (completed 2026-04-09)
-- [x] **Phase 9: Test Suite** — Vitest setup; unit tests for stores, Zod schemas, and GitHub Actions CI (completed 2026-04-10)
+- [x] **Phase 9: Test Suite** — Vitest setup; unit tests for stores, Zod schemas, and **Gitea Actions** CI (`.gitea/workflows/ci.yml`; optional `.github/workflows` mirrors) (completed 2026-04-10)
 - [ ] **Phase 10: Production deployment** — SPA routing for `dist/`, env vars per environment, preview vs staging Supabase, production deploy, custom domain + HTTPS
 
 ---
@@ -268,7 +268,7 @@ I18N-01, I18N-02
 - 9.2: Write Zustand store tests — `contactsStore.test.ts` and `dealsStore.test.ts`; mock Supabase client; test add/update/delete actions; test `getFilteredContacts` / `getFilteredDeals` selectors; reset store state in `beforeEach`
 - 9.3: Write Zod schema tests — test form validation schemas for ContactForm, DealForm, ActivityForm; assert required field errors, type coercion, and valid payloads pass without ceremony
 - 9.4: Write utility tests — followUpEngine, formatters, permissions
-- 9.5: GitHub Actions CI workflow — create `.github/workflows/ci.yml` running `tsc --noEmit` and `vitest run` on push to `main` and on all PRs; fail the workflow if either command exits non-zero
+- 9.5: CI workflow on the repository forge — primary: **Gitea Actions** `.gitea/workflows/ci.yml` running `tsc --noEmit` and `vitest run` on push to `main` and on merge requests; fail if either exits non-zero. Optional: keep `.github/workflows/ci.yml` for mirrors or forks.
 
 ### Requirements Covered
 
@@ -278,7 +278,7 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 - [ ] `npm run test:run` exits 0 with all tests passing from a clean clone
 - [ ] `npm run test:coverage` shows coverage report
-- [ ] Opening a PR on GitHub triggers the CI workflow and shows test + type check results in the PR checks
+- [ ] Opening a merge request on **Gitea** (e.g. `gitea.apps.privateprompt.tech`) triggers CI and shows test + type check results on the MR
 - [ ] A deliberate type error in `src/types/index.ts` causes the CI `tsc --noEmit` step to fail
 - [ ] A deliberate logic error in a utility causes at least one test to fail
 

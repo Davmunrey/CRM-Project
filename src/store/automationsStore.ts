@@ -65,7 +65,7 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
         updatedAt: r.updated_at as string,
         lastExecutedAt: r.last_executed_at as string | undefined,
       }))
-      set({ rules: rules.length > 0 ? rules : SEED_RULES, isLoading: false })
+      set({ rules, isLoading: false })
     } catch (e: unknown) {
       set({ error: getErrorMessage(e), isLoading: false })
     }

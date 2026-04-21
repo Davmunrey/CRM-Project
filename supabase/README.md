@@ -24,7 +24,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 4. In Supabase SQL Editor, run `supabase/schema.sql`.
-5. Apply pending files under `supabase/migrations/` in chronological order.
+5. Apply pending files under `supabase/migrations/` in chronological order (includes `20260421190000_realtime_publication_more_tables.sql`, which registers extra tables on the `supabase_realtime` publication so the app’s `initRealtimeSubscriptions` receives changes for enrollments, automation runs, leads, audit rows, and org members).
 6. Restart the dev server (`npm run dev`).
 
 When Supabase is configured, the app uses real authentication and PostgreSQL. Without credentials, use **local** mock mode (`VITE_ALLOW_DEMO_MODE=true` in dev) or a **`demo`** channel build for hosted static demos — see root [`README.md`](../README.md) and [`src/lib/envChannel.ts`](../src/lib/envChannel.ts).

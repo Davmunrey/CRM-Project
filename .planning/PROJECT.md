@@ -46,7 +46,7 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 - [ ] Phase 10 production deployment and release checklist
 - [ ] Production environment validation (Supabase vars, Edge Functions, redirects)
 - [ ] End-to-end UAT for organization bootstrap, team invitations, Gmail flows, and quote export/email flows
-- [ ] Optional: load org members from `organization_members` table into Team Management (currently uses session-scoped users in Zustand)
+- [x] Org directory hydration: `list_organization_members_with_identity` via `fetchOrgUsers` on Supabase session, profile updates, **OrgSetup** (after `create_org_self_service`), and **AcceptInvite** (after `refreshSession`); see `authStore.fetchOrgUsers`.
 
 ### Out of Scope
 
@@ -61,7 +61,6 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 **Current state:** Core modules are backed by Supabase with org-scoped data and RLS. Auth/session is handled by Supabase Auth, stores fetch from Supabase, and tests are green (105/105). Recent hardening fixes removed demo-user bleed in Supabase mode, stabilized org creation session checks, fixed UUID field mapping for deals/activities inserts, added Gmail thread-link persistence with remote migrations/deploy (`gmail_thread_links`, `gmail_thread_workspace`), and applied lazy-loading plus UX/UI polish for chart-heavy and inbox/date-localized flows.
 
 **Known critical issues (current):**
-- Team list is still partially driven by local auth-state user list and not fully hydrated from `organization_members`
 - Deployment and environment validation for production are still pending (Phase 10)
 
 **Tech stack:** React 18, TypeScript (strict), Vite 8, Tailwind CSS 3, Zustand 5, React Router v6, React Hook Form + Zod v4, Recharts, @hello-pangea/dnd, @supabase/supabase-js, date-fns, lucide-react
