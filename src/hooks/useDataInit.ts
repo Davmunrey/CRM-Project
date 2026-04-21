@@ -59,6 +59,7 @@ export function useDataInit() {
     useSequencesStore.getState().fetchSequences()
     useAutomationsStore.getState().fetchRules()
     useTemplateStore.getState().fetchTemplates()
+    useTemplateStore.getState().fetchQuickReplies()
     useProductsStore.getState().fetchProducts()
     useAuditStore.getState().fetchEntries()
     useCustomFieldsStore.getState().fetchCustomFields()

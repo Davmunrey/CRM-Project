@@ -178,8 +178,15 @@ export interface AppSettings {
   emailIdentities?: Record<string, {
     senderName?: string
     signature?: string
-    useSignature: boolean
+    /** Legacy: last composer “include signature” state; prefer `composerSignatureDefault` for new composes. */
+    useSignature?: boolean
     defaultSignatureId?: string
+    /**
+     * How new compose / sequence email steps start when they do not override per-step:
+     * `include_default`: checkbox on, default signature selected.
+     * `none_by_default`: checkbox off until the user enables it (can still pick a saved signature after).
+     */
+    composerSignatureDefault?: 'include_default' | 'none_by_default'
     signatures?: Array<{
       id: string
       name: string
@@ -489,6 +496,9 @@ export interface DuplicateGroup {
 
 export type SequenceStepType = 'email' | 'call_task' | 'linkedin_task' | 'wait'
 
+/** How an automated email step is sent when the execution engine delivers it (Gmail / provider). */
+export type SequenceEmailThreadMode = 'new_thread' | 'reply_in_thread'
+
 export interface SequenceStep {
   id: string
   order: number
@@ -496,7 +506,66 @@ export interface SequenceStep {
   delayDays: number        // days after previous step
   subject?: string         // for email steps
   bodyTemplate?: string    // for email steps, supports {{firstName}}, {{companyName}}
+  /** Optional comma-separated Cc when the send pipeline delivers this step. */
+  cc?: string
+  /** Optional comma-separated Bcc when the send pipeline delivers this step. */
+  bcc?: string
+  /** Optional CRM email template applied to this step (subject/body copied; id kept for reference). */
+  emailTemplateId?: string
   taskDescription?: string // for call/linkedin steps
+  /**
+   * Email steps only. `new_thread` = standalone message; `reply_in_thread` = use last outbound
+   * message/thread for this enrollment (see `sequence_enrollments.last_sent_*`) as parent.
+   */
+  emailThreadMode?: SequenceEmailThreadMode
+  /** When true (default), send pipeline may append `emailSignatureHtml` or the user identity signature. */
+  useEmailSignature?: boolean
+  /** Optional HTML signature for this step; empty often means “use identity default” at send time. */
+  emailSignatureHtml?: string
+  /**
+   * Optional display name for the recipient’s mail client (RFC “From” name). The address is always
+   * the connected user’s mailbox at send time; never the contact’s email.
+   */
+  emailSenderName?: string
+}
+
+/** Persisted React Flow-style graph version (see docs/sequences-flow.md). */
+export const SEQUENCE_FLOW_VERSION = 2 as const
+
+export type SequenceFlowNodeKind = SequenceStepType | 'ab_split'
+
+/** Payload for an `ab_split` node (branch weights, percents that sum to 100). */
+export interface AbSplitBranchPayload {
+  kind: 'ab_split'
+  weightA: number
+  weightB: number
+}
+
+export type SequenceFlowNodePayload = SequenceStep | AbSplitBranchPayload
+
+export function isAbSplitPayload(data: SequenceFlowNodePayload): data is AbSplitBranchPayload {
+  return (data as AbSplitBranchPayload).kind === 'ab_split'
+}
+
+export interface SequenceFlowEdge {
+  id: string
+  source: string
+  target: string
+  /** For `ab_split` outputs: `a` | `b`. */
+  sourceHandle?: string | null
+}
+
+export interface SequenceFlowNode {
+  id: string
+  type: SequenceFlowNodeKind
+  position: { x: number; y: number }
+  data: SequenceFlowNodePayload
+}
+
+export interface SequenceFlowDefinition {
+  flowVersion: typeof SEQUENCE_FLOW_VERSION
+  nodes: SequenceFlowNode[]
+  edges: SequenceFlowEdge[]
 }
 
 export interface EmailSequence {
@@ -504,10 +573,22 @@ export interface EmailSequence {
   name: string
   description: string
   steps: SequenceStep[]
+  /** When null/undefined, the UI derives a graph from linear `steps`. */
+  flowDefinition?: SequenceFlowDefinition | null
   createdBy: string
   createdAt: string
   isActive: boolean
   enrolledCount: number
+  /**
+   * When true (default), a detected reply from the enrolled contact stops the sequence so no more
+   * automated steps run; teams continue in the mailbox. Worker / Gmail integration must enforce this.
+   */
+  stopOnContactReply?: boolean
+  /**
+   * Calendar days after enrollment before the first step is due (combined with the first node’s
+   * `delayDays` when computing `next_step_at` on enroll).
+   */
+  enrollmentStartDelayDays?: number
 }
 
 export type EnrollmentStatus = 'active' | 'completed' | 'paused' | 'replied' | 'unsubscribed'
@@ -517,11 +598,20 @@ export interface SequenceEnrollment {
   sequenceId: string
   contactId: string
   contactName: string
-  currentStep: number      // 0-indexed
+  /** Legacy linear index; kept in sync with primary-path projection when using flows. */
+  currentStep: number
+  /** Active node id when the sequence uses `flowDefinition`; optional for legacy rows. */
+  currentNodeId?: string | null
+  /** Assigned branch when sitting on an `ab_split` node. */
+  abVariant?: 'a' | 'b' | null
   status: EnrollmentStatus
   enrolledAt: string
   nextStepAt?: string      // when next step triggers
   completedAt?: string
+  /** Provider thread id after last automated send (for `reply_in_thread` steps). */
+  lastSentThreadId?: string | null
+  /** Provider message id after last automated send (In-Reply-To / References). */
+  lastSentMessageId?: string | null
 }
 
 // ─── Automations ─────────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import {
   X,
@@ -53,6 +53,19 @@ import {
   wrapSelectionMarkers,
 } from '../../utils/emailPlainFormatting'
 
+type EmailIdentityLike = {
+  useSignature?: boolean
+  composerSignatureDefault?: 'include_default' | 'none_by_default'
+}
+
+/** New compose / sequence steps (without explicit per-step override) use this for “Include signature”. */
+function resolveComposerIncludeSignature(identity: EmailIdentityLike | undefined): boolean {
+  if (!identity) return true
+  if (identity.composerSignatureDefault === 'none_by_default') return false
+  if (identity.composerSignatureDefault === 'include_default') return true
+  return identity.useSignature !== false
+}
+
 function FormatToolBtn({
   onClick,
   disabled,
@@ -106,6 +119,31 @@ interface EmailComposerProps {
   onRequestGmailConnect?: () => void
   /** `inline`: embedded panel (e.g. thread reply). `modal`: full-screen portal (new mail, drafts). */
   presentation?: 'modal' | 'inline'
+  /**
+   * Mailbox-style editor for sequence steps: same subject/body/template/formatting column as inbox,
+   * without recipients, CRM sidebar, attachments, or send footer. Signature + sender name are shown in a compact layout and persisted via `onSequenceStepDraftChange`.
+   * Pair with `presentation="inline"`, `isOpen`, and `sequenceEmbedResetKey` (e.g. node id) to reload when switching nodes.
+   */
+  embeddedSequenceStep?: boolean
+  sequenceEmbedResetKey?: string
+  /** Debounced (~400ms) updates while editing a sequence email node */
+  onSequenceStepDraftChange?: (draft: {
+    subject: string
+    body: string
+    useEmailSignature: boolean
+    emailSignatureHtml: string
+    emailSenderName: string
+    cc: string
+    bcc: string
+  }) => void
+  /** Initial signature/sender state when `embeddedSequenceStep` (read on `sequenceEmbedResetKey` change). */
+  sequenceStepEmailExtras?: {
+    useEmailSignature?: boolean
+    emailSignatureHtml?: string
+    emailSenderName?: string
+    cc?: string
+    bcc?: string
+  }
 }
 
 /** Stable default - a fresh `[]` each render was in the seed effect deps and reset the body on every keystroke. */
@@ -127,6 +165,10 @@ export function EmailComposer({
   draftId,
   onRequestGmailConnect,
   presentation = 'modal',
+  embeddedSequenceStep = false,
+  sequenceEmbedResetKey,
+  onSequenceStepDraftChange,
+  sequenceStepEmailExtras,
 }: EmailComposerProps) {
   const t = useTranslations()
   const sendHintId = useId()
@@ -173,7 +215,12 @@ export function EmailComposer({
   const quickReplies = useTemplateStore((s) => s.quickReplies)
   const fetchQuickReplies = useTemplateStore((s) => s.fetchQuickReplies)
   const incrementUsage = useTemplateStore((s) => s.incrementUsage)
-  const currentIdentity = currentUser?.id ? settings.emailIdentities?.[currentUser.id] : undefined
+  /** Single object dep so signature + signatures[] updates always re-sync (Zustand persist / Settings). */
+  const emailIdentityForUser = useMemo(
+    () => (currentUser?.id ? settings.emailIdentities?.[currentUser.id] : undefined),
+    [currentUser?.id, settings.emailIdentities],
+  )
+  const currentIdentity = emailIdentityForUser
   const savedSignatures = currentIdentity?.signatures ?? []
   const defaultSignatureId = currentIdentity?.defaultSignatureId ?? savedSignatures[0]?.id
   const [senderName, setSenderName] = useState(currentIdentity?.senderName ?? '')
@@ -222,6 +269,7 @@ export function EmailComposer({
 
   useEffect(() => {
     if (!isOpen) return
+    if (embeddedSequenceStep) return
     setLinkContactId(contactId)
     setLinkDealId(dealId)
     setLinkCompanyId(companyId)
@@ -324,13 +372,72 @@ export function EmailComposer({
     draftId,
     draftKey,
     isOpen,
+    embeddedSequenceStep,
+  ])
+
+  useEffect(() => {
+    if (!isOpen || !embeddedSequenceStep) return
+    setLinkContactId(contactId)
+    setLinkDealId(dealId)
+    setLinkCompanyId(companyId)
+    setActiveDraftId(draftId)
+    setShowTemplates(false)
+    setTo('')
+    setReplyTo('')
+    setShowReplyTo(false)
+    setAttachments([])
+    setSubject(defaultSubject)
+    setBody(defaultBody)
+
+    const ex = sequenceStepEmailExtras
+    const ccVal = (ex?.cc ?? defaultCc).trim()
+    const bccVal = (ex?.bcc ?? defaultBcc).trim()
+    setCc(ccVal)
+    setBcc(bccVal)
+    setShowCc(ccVal.length > 0)
+    setShowBcc(bccVal.length > 0)
+    setSenderName(ex?.emailSenderName ?? currentIdentity?.senderName ?? '')
+    const prefInclude = resolveComposerIncludeSignature(currentIdentity)
+    if (ex?.useEmailSignature === true || ex?.useEmailSignature === false) {
+      setUseSignature(ex.useEmailSignature)
+    } else if (ex?.emailSignatureHtml?.trim()) {
+      setUseSignature(true)
+    } else {
+      setUseSignature(prefInclude)
+    }
+
+    const stepSig = ex?.emailSignatureHtml?.trim()
+    if (stepSig) {
+      setSignature(stepSig)
+      const match = savedSignatures.find((s) => s.html === stepSig)
+      setActiveSignatureId(match?.id ?? defaultSignatureId ?? '')
+    } else {
+      const nextDefault = defaultSignatureId ?? savedSignatures[0]?.id ?? ''
+      const nextHtml = savedSignatures.find((s) => s.id === nextDefault)?.html
+      setActiveSignatureId(nextDefault)
+      setSignature(nextHtml ?? currentIdentity?.signature ?? '')
+    }
+    /* Reload when switching nodes or when default signature id hydrates (read latest extras + identity from closure). */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    sequenceEmbedResetKey,
+    embeddedSequenceStep,
+    isOpen,
+    defaultSubject,
+    defaultBody,
+    defaultSignatureId,
+    defaultCc,
+    defaultBcc,
+    currentIdentity?.composerSignatureDefault,
+    currentIdentity?.useSignature,
   ])
 
   useEffect(() => {
     if (!isOpen) return
+    if (embeddedSequenceStep) return
     const payload = JSON.stringify({ to, cc, bcc, replyTo, subject, body, attachments })
     localStorage.setItem(draftKey, payload)
-  }, [attachments, bcc, body, cc, draftKey, isOpen, replyTo, subject, to])
+  }, [attachments, bcc, body, cc, draftKey, embeddedSequenceStep, isOpen, replyTo, subject, to])
 
   useEffect(() => {
     if (!isOpen) return
@@ -340,6 +447,33 @@ export function EmailComposer({
   }, [fetchQuickReplies, isOpen])
 
   useEffect(() => {
+    if (!embeddedSequenceStep || !isOpen || !onSequenceStepDraftChange) return
+    const id = window.setTimeout(() => {
+      onSequenceStepDraftChange({
+        subject,
+        body,
+        useEmailSignature: useSignature,
+        emailSignatureHtml: signature,
+        emailSenderName: senderName,
+        cc: cc.trim(),
+        bcc: bcc.trim(),
+      })
+    }, 400)
+    return () => window.clearTimeout(id)
+  }, [
+    body,
+    embeddedSequenceStep,
+    isOpen,
+    onSequenceStepDraftChange,
+    senderName,
+    signature,
+    subject,
+    useSignature,
+    cc,
+    bcc,
+  ])
+
+  useEffect(() => {
     if (!isOpen) return
     formatUndoPast.current = []
     formatUndoFuture.current = []
@@ -347,15 +481,25 @@ export function EmailComposer({
     setRedoDepth(0)
   }, [isOpen])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isOpen) return
-    const nextDefault = currentIdentity?.defaultSignatureId ?? currentIdentity?.signatures?.[0]?.id ?? ''
-    const nextSignature = currentIdentity?.signatures?.find((s) => s.id === nextDefault)?.html
-    setSenderName(currentIdentity?.senderName ?? '')
+    if (embeddedSequenceStep) return
+    const id = emailIdentityForUser
+    if (!id) {
+      setSenderName('')
+      setSignature('')
+      setActiveSignatureId('')
+      setUseSignature(resolveComposerIncludeSignature(undefined))
+      return
+    }
+    const sigs = id.signatures ?? []
+    const nextDefault = id.defaultSignatureId ?? sigs[0]?.id ?? ''
+    const nextSignature = sigs.find((s) => s.id === nextDefault)?.html
+    setSenderName(id.senderName ?? '')
     setActiveSignatureId(nextDefault)
-    setSignature(nextSignature ?? currentIdentity?.signature ?? '')
-    setUseSignature(currentIdentity?.useSignature ?? true)
-  }, [currentIdentity?.senderName, currentIdentity?.signature, currentIdentity?.useSignature, isOpen])
+    setSignature(nextSignature ?? id.signature ?? '')
+    setUseSignature(resolveComposerIncludeSignature(id))
+  }, [isOpen, embeddedSequenceStep, emailIdentityForUser])
 
   const normalizeEmail = (value: string) => value.trim().toLowerCase()
   const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
@@ -647,7 +791,6 @@ export function EmailComposer({
         updateEmailIdentity(currentUser.id, {
           senderName: senderName.trim() || undefined,
           signature: signature.trim() || undefined,
-          useSignature,
           defaultSignatureId: activeSignatureId || undefined,
         })
       }
@@ -839,35 +982,55 @@ export function EmailComposer({
             : 'relative z-10 w-full max-w-6xl max-h-[min(92vh,920px)] mx-0 sm:mx-4 mb-0 sm:mb-0 glass rounded-t-2xl sm:rounded-2xl shadow-float border-fg/10 overflow-hidden animate-slide-up flex flex-col min-h-0'
         }
       >
-        {/* Header - product-style back + title + status */}
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-fg/8 flex-shrink-0 bg-surface-1/60">
-          <button
-            type="button"
-            onClick={requestClose}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-fg/8 transition-colors shrink-0"
-          >
-            <ArrowLeft size={16} className="shrink-0" aria-hidden />
-            <span>{isInline ? t.common.cancel : t.common.back}</span>
-          </button>
-          <h2 id="email-composer-title" className="text-sm font-semibold text-fg truncate flex-1 min-w-0 sm:text-center">
-            {isInline ? t.inbox.reply : t.inbox.compose}
-          </h2>
-          {connected
-            ? <span className="text-2xs px-2 py-0.5 rounded-full bg-success/15 text-success shrink-0">Gmail</span>
-            : <span className="text-2xs px-2 py-0.5 rounded-full bg-fg/8 text-fg-subtle shrink-0">{t.settings.disconnected}</span>}
-          <button
-            type="button"
-            onClick={requestClose}
-            title={t.email.closeComposer}
-            aria-label={t.email.closeComposer}
-            className="p-1.5 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 transition-colors shrink-0"
-          >
-            <span className="sr-only">{t.email.closeComposer}</span>
-            <X size={18} />
-          </button>
-        </div>
+        {/* Header - product-style back + title + status; sequence embed uses a slim title row */}
+        {embeddedSequenceStep ? (
+          <div className="flex-shrink-0 border-b border-fg/8 bg-surface-1/60 px-3 py-2 sm:px-4">
+            <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1.5">
+              <h2 id="email-composer-title" className="text-xs font-semibold text-fg leading-snug min-w-0 flex-1 basis-[min(100%,16rem)] sm:text-sm">
+                {t.sequences.flow.sequenceMailboxEditorTitle}
+              </h2>
+              {connected ? (
+                <span className="text-2xs px-2 py-0.5 rounded-full bg-success/15 text-success shrink-0">Gmail</span>
+              ) : (
+                <span className="text-2xs px-2 py-0.5 rounded-full bg-fg/8 text-fg-subtle shrink-0">{t.settings.disconnected}</span>
+              )}
+            </div>
+            {!connected ? (
+              <p className="mt-1.5 text-[10px] text-fg-subtle leading-snug">{t.sequences.flow.sequenceStepDraftWithoutGmailHint}</p>
+            ) : null}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-4 py-2.5 border-b border-fg/8 flex-shrink-0 bg-surface-1/60">
+            <button
+              type="button"
+              onClick={requestClose}
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-fg/8 transition-colors shrink-0"
+            >
+              <ArrowLeft size={16} className="shrink-0" aria-hidden />
+              <span>{isInline ? t.common.cancel : t.common.back}</span>
+            </button>
+            <h2 id="email-composer-title" className="text-sm font-semibold text-fg truncate flex-1 min-w-0 sm:text-center">
+              {isInline ? t.inbox.reply : t.inbox.compose}
+            </h2>
+            {connected ? (
+              <span className="text-2xs px-2 py-0.5 rounded-full bg-success/15 text-success shrink-0">Gmail</span>
+            ) : (
+              <span className="text-2xs px-2 py-0.5 rounded-full bg-fg/8 text-fg-subtle shrink-0">{t.settings.disconnected}</span>
+            )}
+            <button
+              type="button"
+              onClick={requestClose}
+              title={t.email.closeComposer}
+              aria-label={t.email.closeComposer}
+              className="p-1.5 rounded-lg text-fg-subtle hover:text-fg hover:bg-fg/8 transition-colors shrink-0"
+            >
+              <span className="sr-only">{t.email.closeComposer}</span>
+              <X size={18} />
+            </button>
+          </div>
+        )}
 
-        {gmailRequiredDisconnected && (
+        {gmailRequiredDisconnected && !embeddedSequenceStep && (
           <div className="px-4 py-2.5 border-b border-fg/8 bg-warning/10 flex flex-wrap items-center justify-between gap-2">
             <p className="text-xs text-fg-muted">{t.email.connectGmailToSend}</p>
             {onRequestGmailConnect && (
@@ -923,79 +1086,115 @@ export function EmailComposer({
           <div
             className={
               isInline
-                ? 'flex flex-col flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain p-4 space-y-2.5'
+                ? embeddedSequenceStep
+                  ? 'flex flex-col flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain p-3 sm:p-4 space-y-2.5'
+                  : 'flex flex-col flex-1 min-h-0 min-w-0 overflow-y-auto overscroll-contain p-4 space-y-2.5'
                 : 'flex flex-1 flex-col min-h-0 min-w-0 overflow-y-auto overscroll-contain p-5 space-y-3'
             }
           >
-          <div className="flex items-center gap-3 border-b border-fg/8 pb-3">
-            <span className="text-xs text-fg-subtle w-14 shrink-0">{t.email.composerFrom}</span>
-            <span className="text-sm text-fg truncate" title={gmailAddress ?? undefined}>
-              {gmailAddress ?? t.common.notAvailable}
-            </span>
+          <div
+            className={`space-y-1 border-b border-fg/8 ${embeddedSequenceStep ? 'pb-2' : 'pb-3'}`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-fg-subtle w-14 shrink-0">{t.email.composerFrom}</span>
+              <span className="text-sm text-fg truncate" title={gmailAddress ?? undefined}>
+                {gmailAddress ?? t.common.notAvailable}
+              </span>
+            </div>
+            {gmailAddress ? (
+              <p className="text-[10px] text-fg-subtle leading-snug pl-[3.25rem]">{t.email.outboundFromMailboxHint}</p>
+            ) : null}
           </div>
 
-          <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
-            <span className="text-xs text-fg-subtle w-14 flex-shrink-0">{t.common.to}</span>
-            <div className="flex-1 flex items-center gap-2 min-w-0">
-              <input
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                placeholder={t.common.searchPlaceholder}
-                className="flex-1 min-w-0 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
-              />
-              <button type="button"
-                onClick={() => setShowCc((v) => !v)}
-                className="text-xs text-fg-subtle hover:text-fg-muted flex items-center gap-1 transition-colors shrink-0"
-              >
-                {t.email.ccLabel} <ChevronDown size={14} className={showCc ? 'rotate-180' : ''} />
-              </button>
-              <button type="button"
-                onClick={() => setShowBcc((v) => !v)}
-                className="text-xs text-fg-subtle hover:text-fg-muted flex items-center gap-1 transition-colors shrink-0"
-              >
-                {t.email.bccLabel} <ChevronDown size={14} className={showBcc ? 'rotate-180' : ''} />
-              </button>
-              <button type="button"
-                onClick={() => setShowReplyTo((v) => !v)}
-                className="text-xs text-fg-subtle hover:text-fg-muted flex items-center gap-1 transition-colors shrink-0"
-              >
-                {t.email.replyToLabel} <ChevronDown size={14} className={showReplyTo ? 'rotate-180' : ''} />
-              </button>
+          {embeddedSequenceStep && (
+            <div className="space-y-2 border-b border-fg/8 pb-2" onPointerDown={(e) => e.stopPropagation()}>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs text-fg-subtle w-14 shrink-0">{t.email.ccLabel}</span>
+                <input
+                  value={cc}
+                  onChange={(e) => setCc(e.target.value)}
+                  placeholder={t.sequences.flow.sequenceStepCcPlaceholder}
+                  className="flex-1 min-w-0 rounded-lg border border-fg/10 bg-surface-1/60 px-2 py-1 text-xs text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/40"
+                />
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs text-fg-subtle w-14 shrink-0">{t.email.bccLabel}</span>
+                <input
+                  value={bcc}
+                  onChange={(e) => setBcc(e.target.value)}
+                  placeholder={t.sequences.flow.sequenceStepBccPlaceholder}
+                  className="flex-1 min-w-0 rounded-lg border border-fg/10 bg-surface-1/60 px-2 py-1 text-xs text-fg placeholder:text-fg-subtle outline-none focus:border-accent-500/40"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
-          {showCc && (
-            <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
-              <span className="text-xs text-fg-subtle w-14 flex-shrink-0">{t.email.ccLabel}</span>
-              <input
-                value={cc}
-                onChange={(e) => setCc(e.target.value)}
-                placeholder={t.common.email}
-                className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
-              />
-            </div>
-          )}
-          {showBcc && (
-            <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
-              <span className="text-xs text-fg-subtle w-14 flex-shrink-0">{t.email.bccLabel}</span>
-              <input
-                value={bcc}
-                onChange={(e) => setBcc(e.target.value)}
-                placeholder={t.common.email}
-                className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
-              />
-            </div>
-          )}
-          {showReplyTo && (
-            <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
-              <span className="text-xs text-fg-subtle w-14 flex-shrink-0">{t.email.replyToLabel}</span>
-              <input
-                value={replyTo}
-                onChange={(e) => setReplyTo(e.target.value)}
-                placeholder={t.common.email}
-                className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
-              />
-            </div>
+          {!embeddedSequenceStep && (
+            <>
+              <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
+                <span className="text-xs text-fg-subtle w-14 flex-shrink-0">{t.common.to}</span>
+                <div className="flex-1 flex items-center gap-2 min-w-0">
+                  <input
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                    placeholder={t.common.searchPlaceholder}
+                    className="flex-1 min-w-0 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
+                  />
+                  <button type="button"
+                    onClick={() => setShowCc((v) => !v)}
+                    className="text-xs text-fg-subtle hover:text-fg-muted flex items-center gap-1 transition-colors shrink-0"
+                  >
+                    {t.email.ccLabel} <ChevronDown size={14} className={showCc ? 'rotate-180' : ''} />
+                  </button>
+                  <button type="button"
+                    onClick={() => setShowBcc((v) => !v)}
+                    className="text-xs text-fg-subtle hover:text-fg-muted flex items-center gap-1 transition-colors shrink-0"
+                  >
+                    {t.email.bccLabel} <ChevronDown size={14} className={showBcc ? 'rotate-180' : ''} />
+                  </button>
+                  <button type="button"
+                    onClick={() => setShowReplyTo((v) => !v)}
+                    className="text-xs text-fg-subtle hover:text-fg-muted flex items-center gap-1 transition-colors shrink-0"
+                  >
+                    {t.email.replyToLabel} <ChevronDown size={14} className={showReplyTo ? 'rotate-180' : ''} />
+                  </button>
+                </div>
+              </div>
+
+              {showCc && (
+                <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
+                  <span className="text-xs text-fg-subtle w-14 flex-shrink-0">{t.email.ccLabel}</span>
+                  <input
+                    value={cc}
+                    onChange={(e) => setCc(e.target.value)}
+                    placeholder={t.common.email}
+                    className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
+                  />
+                </div>
+              )}
+              {showBcc && (
+                <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
+                  <span className="text-xs text-fg-subtle w-14 flex-shrink-0">{t.email.bccLabel}</span>
+                  <input
+                    value={bcc}
+                    onChange={(e) => setBcc(e.target.value)}
+                    placeholder={t.common.email}
+                    className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
+                  />
+                </div>
+              )}
+              {showReplyTo && (
+                <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
+                  <span className="text-xs text-fg-subtle w-14 flex-shrink-0">{t.email.replyToLabel}</span>
+                  <input
+                    value={replyTo}
+                    onChange={(e) => setReplyTo(e.target.value)}
+                    placeholder={t.common.email}
+                    className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
+                  />
+                </div>
+              )}
+            </>
           )}
 
           <div className="flex items-center gap-3 border-b border-fg/6 pb-3">
@@ -1007,7 +1206,7 @@ export function EmailComposer({
               className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none font-medium"
             />
           </div>
-          {subjectPresets.length > 0 && (
+          {subjectPresets.length > 0 && !embeddedSequenceStep && (
             <div className="flex flex-wrap gap-1.5">
               {subjectPresets.map((preset) => (
                 <button type="button"
@@ -1112,18 +1311,22 @@ export function EmailComposer({
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder={`${t.common.description}...`}
-              rows={isInline ? 7 : 14}
+              rows={embeddedSequenceStep ? 14 : isInline ? 7 : 14}
               className={`w-full min-w-0 border-0 rounded-none rounded-b-xl bg-transparent px-3 py-2.5 text-sm text-fg placeholder:text-fg-subtle outline-none resize-y leading-relaxed focus:ring-0 ${
-                isInline ? 'min-h-[140px]' : 'min-h-[220px]'
+                embeddedSequenceStep ? 'min-h-[min(12rem,28svh)] sm:min-h-[220px]' : isInline ? 'min-h-[140px]' : 'min-h-[220px]'
               }`}
             />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 gap-2 ${embeddedSequenceStep ? 'gap-1.5' : ''}`}
+          >
             <input
               value={senderName}
               onChange={(e) => setSenderName(e.target.value)}
               placeholder={t.email.senderNamePlaceholder}
-              className="bg-surface-2/45 border border-fg/8 rounded-xl px-3 py-2 text-xs text-fg placeholder:text-fg-subtle outline-none"
+              className={`bg-surface-2/45 border border-fg/8 rounded-xl text-xs text-fg placeholder:text-fg-subtle outline-none ${
+                embeddedSequenceStep ? 'px-2.5 py-1.5' : 'px-3 py-2'
+              }`}
             />
             <label className="inline-flex items-center gap-2 text-xs text-fg-muted">
               <input
@@ -1148,18 +1351,21 @@ export function EmailComposer({
                     setSignature(next?.html ?? '')
                   }}
                   options={savedSignatures.map((sig) => ({ value: sig.id, label: sig.name }))}
-                  listMaxHeightClass="max-h-48"
+                  listMaxHeightClass={embeddedSequenceStep ? 'max-h-32' : 'max-h-48'}
                 />
               )}
               <textarea
                 value={signature}
                 onChange={(e) => setSignature(e.target.value)}
                 placeholder={t.email.signaturePlaceholder}
-                rows={3}
-                className="w-full bg-surface-2/45 border border-fg/8 rounded-xl px-3 py-2 text-xs text-fg placeholder:text-fg-subtle outline-none resize-y leading-relaxed"
+                rows={embeddedSequenceStep ? 2 : 3}
+                className={`w-full bg-surface-2/45 border border-fg/8 rounded-xl text-xs text-fg placeholder:text-fg-subtle outline-none resize-y leading-relaxed ${
+                  embeddedSequenceStep ? 'px-2.5 py-1.5' : 'px-3 py-2'
+                }`}
               />
             </>
           )}
+          {!embeddedSequenceStep && (
           <div className="flex flex-wrap gap-1.5">
             {quickReplies.map((snippet) => (
               <button type="button"
@@ -1172,41 +1378,44 @@ export function EmailComposer({
               </button>
             ))}
           </div>
+          )}
           <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleAttachmentFiles} />
-          <div className="border-t border-fg/6 pt-3 space-y-2">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-fg-subtle">{t.inbox.attachments}</span>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-xs px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-fg/10"
-              >
-                {t.email.addFile}
-              </button>
-            </div>
-            {attachments.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {attachments.map((file, idx) => (
-                  <span key={`${file.name}-${idx}`} className="inline-flex items-center gap-1 text-2xs px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10">
-                    {file.name} ({Math.ceil(file.size / 1024)} KB)
-                    <button type="button"
-                      onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
-                      className="text-fg-subtle hover:text-danger"
-                      title={t.common.remove}
-                      aria-label={t.common.remove}
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
+          {!embeddedSequenceStep && (
+            <div className="border-t border-fg/6 pt-3 space-y-2">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-fg-subtle">{t.inbox.attachments}</span>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-xs px-2 py-1 rounded-full bg-fg/6 text-fg-muted hover:bg-fg/10"
+                >
+                  {t.email.addFile}
+                </button>
               </div>
-            )}
-            <p className="text-2xs text-fg-subtle">{t.email.attachHint}</p>
-          </div>
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {attachments.map((file, idx) => (
+                    <span key={`${file.name}-${idx}`} className="inline-flex items-center gap-1 text-2xs px-2 py-0.5 rounded-full bg-fg/8 text-fg-muted border border-fg/10">
+                      {file.name} ({Math.ceil(file.size / 1024)} KB)
+                      <button type="button"
+                        onClick={() => setAttachments((prev) => prev.filter((_, i) => i !== idx))}
+                        className="text-fg-subtle hover:text-danger"
+                        title={t.common.remove}
+                        aria-label={t.common.remove}
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="text-2xs text-fg-subtle">{t.email.attachHint}</p>
+            </div>
+          )}
           </div>
 
           {/* CRM link - modal: fixed sidebar; inline: collapsible so the compose area stays calm */}
-          {isInline ? (
+          {embeddedSequenceStep ? null : isInline ? (
             <details className="group shrink-0 border-t border-fg/8 bg-surface-1/40">
               <summary className="cursor-pointer list-none flex items-center justify-between gap-2 px-3 py-2.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-fg/5 [&::-webkit-details-marker]:hidden">
                 <span>{t.email.crmLinkTitle}</span>
@@ -1290,6 +1499,7 @@ export function EmailComposer({
         </div>
 
         {/* Footer - icon row + primary actions */}
+        {!embeddedSequenceStep && (
         <div className="px-4 py-2.5 border-t border-fg/8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between flex-shrink-0 bg-surface-1/90">
           <div className="flex items-center gap-1 flex-wrap">
             <button
@@ -1395,6 +1605,7 @@ export function EmailComposer({
             </div>
           </div>
         </div>
+        )}
       </div>
   )
 

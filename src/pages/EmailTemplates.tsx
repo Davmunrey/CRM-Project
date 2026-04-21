@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useId } from 'react'
 import { Plus, Copy, Trash2, Eye, EyeOff, Search, FileText, Mail } from 'lucide-react'
 import { useTemplateStore } from '../store/templateStore'
 import type { EmailTemplate } from '../types'
@@ -9,6 +9,7 @@ import { localizedEmailTemplate } from '../i18n/localizeSeed'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
 import { Select } from '../components/ui/Select'
 import { Skeleton } from '../components/ui/Skeleton'
+import { PlainTextComposerArea } from '../components/email/PlainTextComposerArea'
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -34,17 +35,14 @@ function getCategoryLabels(t: ReturnType<typeof useTranslations>): Record<EmailT
   }
 }
 
-function getTabs(t: ReturnType<typeof useTranslations>): { key: CategoryKey; label: string }[] {
-  return [
-    { key: 'all', label: t.common.all },
-    { key: 'intro', label: t.emailTemplates.categoryLabels.intro },
-    { key: 'follow_up', label: t.emailTemplates.categoryLabels.follow_up },
-    { key: 'proposal', label: t.emailTemplates.categoryLabels.proposal },
-    { key: 'closing', label: t.emailTemplates.categoryLabels.closing },
-    { key: 'nurture', label: t.emailTemplates.categoryLabels.nurture },
-    { key: 'custom', label: t.emailTemplates.categoryLabels.custom },
-  ]
-}
+const TEMPLATE_CATEGORY_ORDER: EmailTemplate['category'][] = [
+  'intro',
+  'follow_up',
+  'proposal',
+  'closing',
+  'nurture',
+  'custom',
+]
 
 // ─── Helper ─────────────────────────────────────────────────────────────────────
 
@@ -76,7 +74,19 @@ export function EmailTemplates() {
   const t = useTranslations()
   const language = useI18nStore((s) => s.language)
   const categoryLabels = getCategoryLabels(t)
-  const tabs = getTabs(t)
+
+  const categoryFilterSelectOptions = useMemo(() => {
+    const labels = getCategoryLabels(t)
+    return [
+      { value: 'all', label: t.common.all },
+      ...TEMPLATE_CATEGORY_ORDER.map((key) => ({ value: key, label: labels[key] })),
+    ]
+  }, [t])
+
+  const templateCategorySelectOptions = useMemo(() => {
+    const labels = getCategoryLabels(t)
+    return TEMPLATE_CATEGORY_ORDER.map((key) => ({ value: key, label: labels[key] }))
+  }, [t])
   const templates = useTemplateStore((s) => s.templates)
   const quickReplies = useTemplateStore((s) => s.quickReplies)
   const addTemplate = useTemplateStore((s) => s.addTemplate)
@@ -101,6 +111,7 @@ export function EmailTemplates() {
   const [draftBody, setDraftBody] = useState('')
   const [draftCategory, setDraftCategory] = useState<EmailTemplate['category']>('custom')
   const [isDirty, setIsDirty] = useState(false)
+  const templateBodyFieldId = useId()
 
   // ─── Derived ────────────────────────────────────────────────────────────────
 
@@ -308,21 +319,15 @@ export function EmailTemplates() {
             </div>
           </div>
 
-          {/* Category tabs */}
-          <div className="px-2 py-2 border-b border-fg/6 flex flex-col gap-0.5">
-            {tabs.map((tab) => (
-              <button type="button"
-                key={tab.key}
-                onClick={() => setCategoryFilter(tab.key)}
-                className={`text-left text-sm px-3 py-2 rounded-lg transition-colors ${
-                  categoryFilter === tab.key
-                    ? 'text-accent-400 bg-accent-500/10 border-l-2 border-accent-500'
-                    : 'text-fg-muted hover:bg-fg/4 hover:text-fg'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+          {/* Category filter */}
+          <div className="px-3 py-2 border-b border-fg/6">
+            <Select
+              label={t.common.filters}
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value as CategoryKey)}
+              options={categoryFilterSelectOptions}
+              listMaxHeightClass="max-h-56"
+            />
           </div>
 
           {/* Template list */}
@@ -450,7 +455,7 @@ export function EmailTemplates() {
                   {preview ? (
                     <>
                       <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.emailTemplates.category}</label>
-                      <span className={`text-xs font-medium px-3 py-1 rounded-full ${CATEGORY_COLORS[draftCategory]}`}>
+                      <span className={`inline-flex text-xs font-medium px-3 py-1 rounded-full ${CATEGORY_COLORS[draftCategory]}`}>
                         {categoryLabels[draftCategory]}
                       </span>
                     </>
@@ -462,10 +467,7 @@ export function EmailTemplates() {
                         setDraftCategory(e.target.value as EmailTemplate['category'])
                         markDirty()
                       }}
-                      options={Object.entries(categoryLabels).map(([val, lab]) => ({
-                        value: val,
-                        label: lab,
-                      }))}
+                      options={templateCategorySelectOptions}
                       listMaxHeightClass="max-h-56"
                     />
                   )}
@@ -491,18 +493,25 @@ export function EmailTemplates() {
 
                 {/* Body */}
                 <div>
-                  <label className="block text-xs font-medium text-fg-muted mb-1.5">{t.common.description}</label>
+                  <label htmlFor={templateBodyFieldId} className="block text-xs font-medium text-fg-muted mb-1.5">
+                    {t.common.description}
+                  </label>
                   {preview ? (
                     <div className="bg-fg/5 border border-fg/6 rounded-xl px-5 py-4 text-sm text-fg whitespace-pre-wrap leading-relaxed min-h-[200px]">
                       {replaceVariables(draftBody, t)}
                     </div>
                   ) : (
-                    <textarea
+                    <PlainTextComposerArea
+                      id={templateBodyFieldId}
                       value={draftBody}
-                      onChange={(e) => { setDraftBody(e.target.value); markDirty() }}
+                      onChange={(next) => {
+                        setDraftBody(next)
+                        markDirty()
+                      }}
+                      resetKey={selectedId ?? ''}
                       placeholder={`${t.common.description}... {{variable}}`}
-                      rows={12}
-                      className="w-full bg-surface-2 border border-fg/10 rounded-xl px-4 py-3 text-sm text-fg font-mono placeholder:text-fg-subtle focus:outline-none focus:border-accent-500/50 resize-none leading-relaxed"
+                      minRows={12}
+                      hint={t.emailTemplates.bodyEditorHint}
                     />
                   )}
                 </div>

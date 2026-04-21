@@ -7,7 +7,7 @@
 ## Table of contents
 
 - [Part A — Sections 1–12 (foundation)](#implementation-history-sections-01-12)
-- [Part B — Sections 13–24 (recent waves)](#implementation-history)
+- [Part B — Sections 13–25 (recent waves)](#implementation-history)
 - [Chronological index (oldest → newest)](#chronological-index-oldest--newest)
 
 ---
@@ -15,7 +15,7 @@
 <a id="chronological-index-oldest--newest"></a>
 ## Chronological index (oldest → newest)
 
-Approximate delivery dates for quick scanning. **Section numbers (1–24) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
+Approximate delivery dates for quick scanning. **Section numbers (1–25) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
 
 | Date | Section | Summary |
 |------|---------|---------|
@@ -32,6 +32,7 @@ Approximate delivery dates for quick scanning. **Section numbers (1–24) stay t
 | 2026-04-15 | [§22](#implementation-history-section-22) | Ola C — information consistency (i18n waves, QA template, backlog sequencing, research neutrality). |
 | 2026-04-16 | [§23](#implementation-history-section-23) | Manager Dashboard Pack + onboarding (`/manager`, checklist, UX telemetry). |
 | 2026-04-18 | [§24](#implementation-history-section-24) | Cross-cutting UI quality pass — tokens, responsive shell, a11y, performance, i18n hygiene. |
+| 2026-04-21 | [§25](#implementation-history-section-25) | Entity list UX — Deals toolbar, saved/distribution lists (Contacts & Companies), lead delete reliability, `companies:export`, i18n keys. |
 
 ---
 
@@ -39,7 +40,7 @@ Approximate delivery dates for quick scanning. **Section numbers (1–24) stay t
 <a id="implementation-history-sections-01-12"></a>
 ## Part A — Sections 1–12 (foundation)
 
-Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–24).
+Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–25).
 
 ## Document control
 
@@ -209,9 +210,9 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 
 
 <a id="implementation-history"></a>
-## Part B — Sections 13–24 (recent waves)
+## Part B — Sections 13–25 (recent waves)
 
-**Part B** is the active delivery narrative (sections 13–24). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
+**Part B** is the active delivery narrative (sections 13–25). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
 
 ## Document control
 
@@ -225,7 +226,7 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 | Part | Location | Sections |
 |------|----------|----------|
 | **A** | [Anchor `#implementation-history-sections-01-12`](#implementation-history-sections-01-12) | 1–12: platform, tenancy, auth, org setup, security, email tracking, **leads**, i18n, UI, SSO, tests, ops notes |
-| **B** | *below in this section* | 13–24 |
+| **B** | *below in this section* | 13–25 |
 
 Cross-references elsewhere in the repo to **“section 19”**, **“section 21”**, etc. mean **Part B** in this file. References to **section 7** (leads baseline) mean **Part A** above.
 
@@ -495,3 +496,19 @@ Narrative layout and tokens: [`master-design-ui.md`](./master-design-ui.md#main-
 - **i18n:** FR / DE / IT coverage extended where listed; Forecast / Notifications / Products key fixes.
 - **Persistence / privacy:** `emailStore` `partialize` omits message bodies from persisted state; related cleanup flags in data init where applicable.
 - **Lint:** `lint:ci` `max-warnings` set to **200** (tighter than the prior ceiling).
+
+<a id="implementation-history-section-25"></a>
+## 25) Entity lists, list toolbars, and lead delete hardening (April 2026)
+
+- **Deals (`src/pages/Deals.tsx`):** Primary action **New deal** lives inside the glass **`Toolbar`** row with search, filters, and view toggles (same pattern as Contacts/Companies), not isolated in `PageHeader`.
+- **Contacts & Companies — saved filters + distribution lists:**
+  - **`EntityListsToolbar`** (`src/components/shared/EntityListsToolbar.tsx`): “Save filtered list” persists merged toolbar + smart-view criteria into **`viewsStore`** (`addView`); optional pin. **`distributionListsStore`** (`src/store/distributionListsStore.ts`, localStorage `crm_distribution_lists`) holds named **distribution lists** (member id snapshots) with selector, create-from-selection / create-from-current-results, delete.
+  - **`src/lib/entityListFilters.ts`:** `mergeContactFiltersForSave` / `mergeCompanyFiltersForSave` combine `SmartViewBar` filters with toolbar fields for persistence.
+  - Selecting a smart view clears conflicting toolbar filters via **`applyViewFiltersFromBar`** on each page.
+  - Active distribution list restricts rows by id **and** other filters still apply.
+- **`SmartViewBar`:** User-created views (non-seed ids) can be **deleted** from pinned chips and the “more views” dropdown (`Trash2`).
+- **Companies parity with Contacts:** Same toolbar order (bulk actions → CSV → duplicates → list/grid → new company), **sort chips** (name / industry / updated), **grid cards**, **export CSV** gated by **`companies:export`** (`src/types/auth.ts`, `src/utils/permissionProfiles.ts`). **Duplicates** modal uses **`findDuplicateCompanies`** (`src/utils/duplicateDetection.ts`).
+- **Leads (`src/store/leadsStore.ts`):** **`deleteLead`** awaits Supabase `DELETE`, returns **`Promise<boolean>`**; on failure shows **`leads.deleteFailed`** + **`fetchLeads()`** so rows do not stay falsely removed when RLS/network rejects delete. **`Leads.tsx`** shows success toast only when delete succeeds.
+- **i18n:** `common.csv`; `entityLists.*` (EN/ES/PT); `companies.duplicates*`, `sortIndustry`, `sortUpdated`; `leads.deleteFailed`. Contacts/Companies CSV buttons use `t.common.csv`.
+
+**Related:** [`master-design-ui.md` — Entity list toolbars](./master-design-ui.md#entity-list-toolbars-contacts-companies-deals) · [`master-lead-management.md`](./master-lead-management.md) (backend contract unchanged; UI delete behavior above).

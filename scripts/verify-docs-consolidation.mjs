@@ -65,6 +65,7 @@ const DOCS_MD_ALLOWLIST = new Set([
   'google-gmail-oauth-verification.md',
   'smoke-checklist-production.md',
   'design-system-reference.md',
+  'sequences-flow.md',
 ])
 
 const errors = []

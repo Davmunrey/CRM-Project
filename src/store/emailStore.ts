@@ -13,6 +13,8 @@ import { getTranslations } from '../i18n'
 import { seedEmails } from '../utils/seedData'
 import type { Database } from '../lib/database.types'
 import { injectOpenPixel, normalizeBodyToHtml, rewriteLinksForTracking } from '../lib/emailTracking'
+import { buildCrmFromLabel } from '../utils/outboundEmailIdentity'
+import { syncSequenceEnrollmentsAfterGmailSync } from '../features/sequences-flow/syncEnrollmentRepliesFromGmailThreads'
 
 export interface GmailThreadLink {
   threadId: string
@@ -106,6 +108,7 @@ export interface EmailStore {
     contactId?: string
     dealId?: string
     companyId?: string
+    /** Display name only; the mailbox in `from` is always `gmailAddress` for CRM records / Gmail sends. */
     senderName?: string
     trackingEnabled?: boolean
     accessToken?: string
@@ -128,6 +131,7 @@ export interface EmailStore {
     contactId?: string
     dealId?: string
     companyId?: string
+    /** Display name only; the mailbox in `from` is always `gmailAddress` for CRM records / Gmail sends. */
     senderName?: string
     trackingEnabled?: boolean
     runAt: string
@@ -344,9 +348,7 @@ export const useEmailStore = create<EmailStore>()(
         }
 
         const baseFrom = get().gmailAddress ?? 'me@crm.local'
-        const from = params.senderName?.trim()
-          ? `${params.senderName.trim()} <${baseFrom}>`
-          : baseFrom
+        const from = buildCrmFromLabel(baseFrom, params.senderName)
         const email: CRMEmail = {
           id: emailId,
           ownerUserId: currentUserId,
@@ -407,9 +409,7 @@ export const useEmailStore = create<EmailStore>()(
       scheduleEmail: (params) => {
         const currentUserId = useAuthStore.getState().currentUser?.id
         const baseFrom = get().gmailAddress ?? 'me@crm.local'
-        const from = params.senderName?.trim()
-          ? `${params.senderName.trim()} <${baseFrom}>`
-          : baseFrom
+        const from = buildCrmFromLabel(baseFrom, params.senderName)
         const email = get().addEmail({
           ownerUserId: currentUserId,
           from,
@@ -643,6 +643,7 @@ export const useEmailStore = create<EmailStore>()(
             lastSyncErrorAt: null,
             lastSyncErrorMessage: null,
           })
+          syncSequenceEnrollmentsAfterGmailSync(threads, get().gmailAddress)
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : getTranslations().errors.gmailThreadsLoadError
           set({

@@ -51,10 +51,10 @@ CRM/
 - Contains: 33 `.tsx` route modules under `src/pages/` (lazy routes still map one component per path)
 - Key files:
   - `src/pages/Dashboard.tsx` — KPI cards, charts, activity feed
-  - `src/pages/Contacts.tsx` — contacts list with filters and smart views
+  - `src/pages/Contacts.tsx` — contacts list; toolbar + `SmartViewBar` + `EntityListsToolbar` (saved filtered lists, distribution lists)
   - `src/pages/ContactDetail.tsx` — single-contact detail view with timeline
   - `src/pages/Deals.tsx` — kanban / list deal pipeline + quote builder (save/export/email)
-  - `src/pages/Companies.tsx` — companies list
+  - `src/pages/Companies.tsx` — companies list (same toolbar / smart views / entity lists pattern as Contacts; CSV, duplicates, table/grid)
   - `src/pages/CompanyDetail.tsx` — single-company view
   - `src/pages/Activities.tsx` — activity log with filters
   - `src/pages/Inbox.tsx` — Gmail integration inbox
@@ -67,7 +67,7 @@ CRM/
 
 **`src/store/`:**
 - Purpose: All persistent application state; each file is one Zustand store
-- Contains: 21 store files
+- Contains: 22+ store files
 - Key files:
   - `src/store/authStore.ts` — current user, session, org, all users, passwords, invitations; also exports `initSupabaseAuth()`
   - `src/store/contactsStore.ts` — contacts array, filter state, CRUD + bulk ops
@@ -86,7 +86,8 @@ CRM/
   - `src/store/productsStore.ts` — product catalog for deal quotes
   - `src/store/customFieldsStore.ts` — custom field definitions and values
   - `src/store/attachmentsStore.ts` — file attachments stored as base64 strings
-  - `src/store/viewsStore.ts` — smart view (saved filter preset) definitions
+  - `src/store/viewsStore.ts` — smart view (saved filter preset) definitions; user-created views deletable from UI
+  - `src/store/distributionListsStore.ts` — named distribution lists (contact/company id sets), localStorage `crm_distribution_lists`
   - `src/store/leadsStore.ts` — lead records and scoring hooks
   - `src/store/onboardingStore.ts` — org bootstrap / first-run wizard state
   - `src/store/navigationPrefsStore.ts` — sidebar order and navigation preferences
@@ -108,7 +109,8 @@ CRM/
 - Purpose: Cross-domain smart components that may access stores or apply cross-cutting logic
 - Key files:
   - `src/components/shared/SearchBar.tsx` — text search input with debounce
-  - `src/components/shared/SmartViewBar.tsx` — renders saved smart view filter tabs
+  - `src/components/shared/SmartViewBar.tsx` — saved smart view filter chips; delete for user-created views
+  - `src/components/shared/EntityListsToolbar.tsx` — save filtered list to `viewsStore`; distribution list picker + create/delete (`distributionListsStore`)
   - `src/components/ui/EmptyState.tsx` — empty list placeholder with icon and CTA; `src/components/shared/EmptyState.tsx` re-exports for backwards compatibility
   - `src/components/shared/PanelEmpty.tsx` — compact empty/placeholder for side panels and split views
   - `src/components/shared/CustomFieldRenderer.tsx` — renders and edits custom field values

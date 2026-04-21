@@ -1,6 +1,13 @@
 import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
-import type { EmailSequence, SequenceEnrollment, EnrollmentStatus } from '../types'
+import type { EmailSequence, SequenceEnrollment, EnrollmentStatus, SequenceFlowDefinition, SequenceStep } from '../types'
+import { computeEnrollmentStart } from '../features/sequences-flow/sequenceFlowEnrollment'
+import {
+  createDefaultFlowDefinition,
+  flowPrimaryPathToSteps,
+  linearStepsToFlow,
+  parseFlowDefinition,
+} from '../features/sequences-flow/sequenceFlowConverters'
 import type { SeedSequenceId } from '../i18n/types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
@@ -157,11 +164,13 @@ export interface SequencesStore {
   createSequence: (data: Omit<EmailSequence, 'id' | 'createdAt' | 'enrolledCount'>) => EmailSequence
   updateSequence: (id: string, updates: Partial<EmailSequence>) => void
   deleteSequence: (id: string) => void
-  enrollContact: (sequenceId: string, contactId: string, contactName: string) => SequenceEnrollment
+  enrollContact: (sequenceId: string, contactId: string, contactName: string) => SequenceEnrollment | null
   pauseEnrollment: (enrollmentId: string) => void
   resumeEnrollment: (enrollmentId: string) => void
   completeEnrollment: (enrollmentId: string) => void
   unenrollContact: (enrollmentId: string) => void
+  /** Set enrollment to `replied` and stop automation (call from Gmail/inbox integration when a reply is detected). */
+  markEnrollmentReplied: (enrollmentId: string) => void
   getEnrollmentsForContact: (contactId: string) => SequenceEnrollment[]
   getEnrollmentsForSequence: (sequenceId: string) => SequenceEnrollment[]
 }
@@ -188,14 +197,32 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
       if (seqRes.error) throw seqRes.error
       if (enrRes.error) throw enrRes.error
       const sequences: EmailSequence[] = (seqRes.data ?? []).map((r: any) => ({
-        id: r.id, name: r.name, description: r.description,
-        steps: r.steps ?? [], createdBy: r.created_by, createdAt: r.created_at,
-        isActive: r.is_active, enrolledCount: r.enrolled_count ?? 0,
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        steps: r.steps ?? [],
+        flowDefinition: parseFlowDefinition(r.flow_definition) ?? null,
+        createdBy: r.created_by,
+        createdAt: r.created_at,
+        isActive: r.is_active,
+        enrolledCount: r.enrolled_count ?? 0,
+        stopOnContactReply: r.stop_on_contact_reply !== false,
+        enrollmentStartDelayDays: Math.max(0, Number(r.enrollment_start_delay_days) || 0),
       }))
       const enrollments: SequenceEnrollment[] = (enrRes.data ?? []).map((r: any) => ({
-        id: r.id, sequenceId: r.sequence_id, contactId: r.contact_id,
-        contactName: r.contact_name, currentStep: r.current_step, status: r.status,
-        enrolledAt: r.enrolled_at, nextStepAt: r.next_step_at, completedAt: r.completed_at,
+        id: r.id,
+        sequenceId: r.sequence_id,
+        contactId: r.contact_id,
+        contactName: r.contact_name,
+        currentStep: r.current_step,
+        currentNodeId: r.current_node_id ?? null,
+        abVariant: r.ab_variant === 'a' || r.ab_variant === 'b' ? r.ab_variant : null,
+        status: r.status,
+        enrolledAt: r.enrolled_at,
+        nextStepAt: r.next_step_at,
+        completedAt: r.completed_at,
+        lastSentThreadId: r.last_sent_thread_id ?? null,
+        lastSentMessageId: r.last_sent_message_id ?? null,
       }))
       set({ sequences, enrollments, isLoading: false })
     } catch (e: any) {
@@ -205,13 +232,43 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
 
   createSequence: (data) => {
     const now = new Date().toISOString()
-    const newSeq: EmailSequence = { ...data, id: uuidv4(), createdAt: now, enrolledCount: 0 }
+    const parsed = data.flowDefinition != null ? parseFlowDefinition(data.flowDefinition) : null
+    let flow: SequenceFlowDefinition
+    let steps: SequenceStep[]
+    if (parsed) {
+      flow = parsed
+      steps = data.steps?.length ? data.steps : flowPrimaryPathToSteps(flow)
+    } else if (data.steps?.length) {
+      steps = data.steps
+      flow = linearStepsToFlow(steps)
+    } else {
+      flow = createDefaultFlowDefinition()
+      steps = flowPrimaryPathToSteps(flow)
+    }
+    const newSeq: EmailSequence = {
+      ...data,
+      steps,
+      flowDefinition: flow,
+      id: uuidv4(),
+      createdAt: now,
+      enrolledCount: 0,
+      stopOnContactReply: data.stopOnContactReply !== false,
+      enrollmentStartDelayDays: Math.max(0, data.enrollmentStartDelayDays ?? 0),
+    }
     set((s) => ({ sequences: [...s.sequences, newSeq] }))
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('email_sequences').insert({
-        id: newSeq.id, name: newSeq.name, description: newSeq.description,
-        steps: newSeq.steps, created_by: newSeq.createdBy, is_active: newSeq.isActive,
-        enrolled_count: 0, organization_id: getOrgId(),
+        id: newSeq.id,
+        name: newSeq.name,
+        description: newSeq.description,
+        steps: newSeq.steps,
+        flow_definition: newSeq.flowDefinition,
+        created_by: newSeq.createdBy,
+        is_active: newSeq.isActive,
+        enrolled_count: 0,
+        stop_on_contact_reply: newSeq.stopOnContactReply !== false,
+        enrollment_start_delay_days: newSeq.enrollmentStartDelayDays ?? 0,
+        organization_id: getOrgId(),
       }).then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] insert error', error) })
     }
     return newSeq
@@ -224,8 +281,13 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
       if (updates.name !== undefined) row.name = updates.name
       if (updates.description !== undefined) row.description = updates.description
       if (updates.steps !== undefined) row.steps = updates.steps
+      if (updates.flowDefinition !== undefined) row.flow_definition = updates.flowDefinition
       if (updates.isActive !== undefined) row.is_active = updates.isActive
       if (updates.enrolledCount !== undefined) row.enrolled_count = updates.enrolledCount
+      if (updates.stopOnContactReply !== undefined) row.stop_on_contact_reply = updates.stopOnContactReply
+      if (updates.enrollmentStartDelayDays !== undefined) {
+        row.enrollment_start_delay_days = Math.max(0, updates.enrollmentStartDelayDays)
+      }
       ;(supabase as any).from('email_sequences').update(row).eq('id', id)
         .then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] update error', error) })
     }
@@ -243,17 +305,26 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
 
   enrollContact: (sequenceId, contactId, contactName) => {
     const sequence = get().sequences.find((s) => s.id === sequenceId)
+    if (!sequence || !sequence.isActive) return null
     const now = new Date().toISOString()
-    const firstStep = sequence?.steps.find((s) => s.order === 0)
-    let nextStepAt: string | undefined
-    if (firstStep) {
-      const d = new Date()
-      d.setDate(d.getDate() + (firstStep.delayDays ?? 0))
-      nextStepAt = d.toISOString()
-    }
+    const start = sequence ? computeEnrollmentStart(sequence) : null
+    const seqStartDays = Math.max(0, sequence?.enrollmentStartDelayDays ?? 0)
+    const firstStepDelay = Math.max(0, start?.delayDays ?? sequence?.steps.find((s) => s.order === 0)?.delayDays ?? 0)
+    const totalDelayDays = seqStartDays + firstStepDelay
+    const d = new Date()
+    d.setDate(d.getDate() + totalDelayDays)
+    const nextStepAt = d.toISOString()
     const enrollment: SequenceEnrollment = {
-      id: uuidv4(), sequenceId, contactId, contactName,
-      currentStep: 0, status: 'active', enrolledAt: now, nextStepAt,
+      id: uuidv4(),
+      sequenceId,
+      contactId,
+      contactName,
+      currentStep: start?.currentStep ?? 0,
+      currentNodeId: start?.currentNodeId ?? null,
+      abVariant: start?.abVariant ?? null,
+      status: 'active',
+      enrolledAt: now,
+      nextStepAt,
     }
     set((s) => ({
       enrollments: [...s.enrollments, enrollment],
@@ -261,9 +332,17 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
     }))
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('sequence_enrollments').insert({
-        id: enrollment.id, sequence_id: sequenceId, contact_id: contactId,
-        contact_name: contactName, current_step: 0, status: 'active',
-        enrolled_at: now, next_step_at: nextStepAt, organization_id: getOrgId(),
+        id: enrollment.id,
+        sequence_id: sequenceId,
+        contact_id: contactId,
+        contact_name: contactName,
+        current_step: enrollment.currentStep,
+        current_node_id: enrollment.currentNodeId,
+        ab_variant: enrollment.abVariant,
+        status: 'active',
+        enrolled_at: now,
+        next_step_at: nextStepAt,
+        organization_id: getOrgId(),
       }).then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] enroll error', error) })
     }
     return enrollment
@@ -298,6 +377,31 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
     set((s) => ({ enrollments: s.enrollments.filter((e) => e.id !== enrollmentId) }))
     if (isSupabaseConfigured && supabase) {
       sbDelete('sequence_enrollments', enrollmentId).catch((e) => devConsole.error('[sequencesStore] unenroll error', e))
+    }
+  },
+
+  markEnrollmentReplied: (enrollmentId) => {
+    const now = new Date().toISOString()
+    set((s) => ({
+      enrollments: s.enrollments.map((e) =>
+        e.id === enrollmentId
+          ? {
+              ...e,
+              status: 'replied' as EnrollmentStatus,
+              completedAt: now,
+              nextStepAt: undefined,
+            }
+          : e,
+      ),
+    }))
+    if (isSupabaseConfigured && supabase) {
+      ;(supabase as any)
+        .from('sequence_enrollments')
+        .update({ status: 'replied', completed_at: now, next_step_at: null })
+        .eq('id', enrollmentId)
+        .then(({ error }: any) => {
+          if (error) devConsole.error('[sequencesStore] markEnrollmentReplied error', error)
+        })
     }
   },
 

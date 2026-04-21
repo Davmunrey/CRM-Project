@@ -1,4 +1,4 @@
-import type { Contact, DuplicateGroup } from '../types'
+import type { Company, Contact, DuplicateGroup } from '../types'
 
 /**
  * Normalize a string for comparison: lowercase, strip accents, trim.
@@ -117,5 +117,63 @@ export function findDuplicates(contacts: Contact[]): DuplicateGroup[] {
   // Sort by confidence descending
   groups.sort((a, b) => b.confidence - a.confidence)
 
+  return groups
+}
+
+export interface CompanyDuplicateGroup {
+  companies: Company[]
+  matchType: 'domain' | 'name'
+  confidence: number
+}
+
+function normalizeCompanyDomain(domain: string): string {
+  return domain
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .split('/')[0]
+    ?.trim() ?? ''
+}
+
+/**
+ * Find duplicate companies by domain (strongest) or exact normalized name.
+ */
+export function findDuplicateCompanies(companies: Company[]): CompanyDuplicateGroup[] {
+  const groups: CompanyDuplicateGroup[] = []
+
+  const domainMap = new Map<string, Company[]>()
+  for (const c of companies) {
+    const raw = c.domain || c.website || ''
+    const key = normalizeCompanyDomain(raw)
+    if (!key || key.length < 3) continue
+    const arr = domainMap.get(key) || []
+    arr.push(c)
+    domainMap.set(key, arr)
+  }
+
+  for (const [, arr] of domainMap) {
+    if (arr.length >= 2) {
+      groups.push({ companies: arr, matchType: 'domain', confidence: 100 })
+    }
+  }
+
+  const nameMap = new Map<string, Company[]>()
+  for (const c of companies) {
+    const key = normalize(c.name)
+    if (!key) continue
+    const arr = nameMap.get(key) || []
+    arr.push(c)
+    nameMap.set(key, arr)
+  }
+
+  for (const [, arr] of nameMap) {
+    if (arr.length >= 2) {
+      groups.push({ companies: arr, matchType: 'name', confidence: 80 })
+    }
+  }
+
+  groups.sort((a, b) => b.confidence - a.confidence)
   return groups
 }

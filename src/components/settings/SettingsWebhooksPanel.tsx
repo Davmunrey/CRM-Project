@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Trash2, FlaskConical } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Trash2, FlaskConical, Sparkles, Link2, HelpCircle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/authStore'
 import { useTranslations } from '../../i18n'
@@ -10,6 +10,39 @@ import { Textarea } from '../ui/Textarea'
 import { Switch } from '../ui/Switch'
 import { ConfirmDialog } from '../ui/Modal'
 import { toast } from '../../store/toastStore'
+
+function suggestSigningSecret(): string {
+  const bytes = new Uint8Array(24)
+  crypto.getRandomValues(bytes)
+  const bin = Array.from(bytes, (b) => String.fromCharCode(b)).join('')
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function WebhookSigningSecretHelpBlock({
+  toggle,
+  p1,
+  p2,
+  p3,
+}: {
+  toggle: string
+  p1: string
+  p2: string
+  p3: string
+}) {
+  return (
+    <details className="rounded-lg border border-fg/8 bg-surface-2/30 px-3 py-2 group">
+      <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-medium text-fg-muted select-none hover:text-accent-400 [&::-webkit-details-marker]:hidden">
+        <HelpCircle size={15} className="shrink-0 text-accent-400/90" aria-hidden />
+        <span className="border-b border-dotted border-fg-subtle/50 group-open:border-transparent">{toggle}</span>
+      </summary>
+      <div className="mt-3 space-y-2 border-l-2 border-accent-500/25 pl-3 text-xs leading-relaxed text-fg-subtle">
+        <p>{p1}</p>
+        <p>{p2}</p>
+        <p>{p3}</p>
+      </div>
+    </details>
+  )
+}
 
 type WebhookRow = {
   id: string
@@ -31,6 +64,7 @@ export function SettingsWebhooksPanel() {
 
   const [rows, setRows] = useState<WebhookRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [targetUrl, setTargetUrl] = useState('')
   const [signingSecret, setSigningSecret] = useState('')
@@ -41,30 +75,40 @@ export function SettingsWebhooksPanel() {
   const [testingId, setTestingId] = useState<string | null>(null)
   const [rotateId, setRotateId] = useState<string | null>(null)
   const [rotateSecret, setRotateSecret] = useState('')
+  const loadGenerationRef = useRef(0)
 
   const load = useCallback(async () => {
+    const snapshot = (loadGenerationRef.current += 1)
     if (!supabase || !organizationId) {
-      setRows([])
-      setLoading(false)
+      if (snapshot === loadGenerationRef.current) {
+        setRows([])
+        setLoading(false)
+      }
       return
     }
     setLoading(true)
+    setLoadError(null)
     const { data, error } = await supabase
       .from('webhook_subscriptions')
       .select('id, name, target_url, enabled, event_filters, custom_headers, last_http_status, last_delivery_error, last_delivery_at')
       .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
+    if (snapshot !== loadGenerationRef.current) return
     if (error) {
-      toast.error(t.settings.webhooksLoadError)
+      setLoadError(t.settings.webhooksLoadErrorInline)
       setRows([])
     } else {
+      setLoadError(null)
       setRows((data ?? []) as WebhookRow[])
     }
     setLoading(false)
-  }, [organizationId, t.settings.webhooksLoadError])
+  }, [organizationId, t])
 
   useEffect(() => {
     void load()
+    return () => {
+      loadGenerationRef.current += 1
+    }
   }, [load])
 
   const parseFilters = (): string[] => {
@@ -213,12 +257,56 @@ export function SettingsWebhooksPanel() {
     <div className="space-y-6">
       <div>
         <h2 className="text-base font-semibold text-fg">{t.settings.webhooksTitle}</h2>
-        <p className="text-xs text-fg-subtle mt-1">{t.settings.webhooksIntro}</p>
-        <p className="text-xs text-fg-muted mt-2">{t.settings.webhooksCronHint}</p>
+        <p className="text-sm text-fg-muted mt-2 leading-relaxed max-w-2xl">{t.settings.webhooksIntro}</p>
+        <p className="text-xs text-fg-subtle mt-2 max-w-2xl">{t.settings.webhooksTagline}</p>
+        <details className="mt-4 group rounded-xl border border-fg/10 bg-fg/[0.02] px-3 py-2">
+          <summary className="text-xs font-medium text-fg-muted cursor-pointer list-none flex items-center gap-2 select-none hover:text-accent-400 [&::-webkit-details-marker]:hidden">
+            <span className="border-b border-dotted border-fg-subtle/60 group-open:border-transparent">
+              {t.settings.webhooksCronHintTitle}
+            </span>
+          </summary>
+          <p className="text-xs text-fg-subtle mt-2 leading-relaxed pl-0.5 border-l-2 border-accent-500/25 pl-2.5">
+            {t.settings.webhooksCronHint}
+          </p>
+        </details>
       </div>
 
+      {!canManage && (
+        <div className="space-y-3">
+          <div
+            className="rounded-xl border border-info/25 bg-info/8 px-4 py-3 text-sm text-fg-muted leading-relaxed"
+            role="status"
+          >
+            {t.settings.webhooksReadOnlyHint}
+          </div>
+          <WebhookSigningSecretHelpBlock
+            toggle={t.settings.webhooksSigningSecretHelpToggle}
+            p1={t.settings.webhooksSigningSecretHelpP1}
+            p2={t.settings.webhooksSigningSecretHelpP2}
+            p3={t.settings.webhooksSigningSecretHelpP3}
+          />
+        </div>
+      )}
+
+      {loadError && (
+        <div
+          className="flex flex-col gap-3 rounded-xl border border-warning/30 bg-warning/8 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+          role="alert"
+        >
+          <p className="text-sm text-fg-muted leading-relaxed">{loadError}</p>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button type="button" size="sm" variant="secondary" onClick={() => void load()}>
+              {t.settings.webhooksRetryLoad}
+            </Button>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setLoadError(null)}>
+              {t.common.close}
+            </Button>
+          </div>
+        </div>
+      )}
+
       {canManage && (
-        <div className="space-y-3 rounded-xl border border-border-subtle bg-surface-1 p-4">
+        <div className="space-y-3 rounded-xl border border-border-subtle bg-surface-1 p-4 shadow-sm">
           <p className="text-sm font-medium text-fg">{t.settings.webhooksCreateSection}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <Input label={t.settings.webhooksName} value={name} onChange={(e) => setName(e.target.value)} />
@@ -229,30 +317,60 @@ export function SettingsWebhooksPanel() {
               placeholder="https://"
             />
           </div>
-          <Input
-            label={t.settings.webhooksSigningSecret}
-            type="password"
-            autoComplete="new-password"
-            value={signingSecret}
-            onChange={(e) => setSigningSecret(e.target.value)}
-          />
-          <Input
-            label={t.settings.webhooksEventFilters}
-            value={eventFilters}
-            onChange={(e) => setEventFilters(e.target.value)}
-            helpText={t.settings.webhooksEventFiltersHint}
-          />
-          <div>
-            <Textarea
-              label={t.settings.webhooksCustomHeadersJson}
-              value={customHeadersJson}
-              onChange={(e) => setCustomHeadersJson(e.target.value)}
-              spellCheck={false}
-              rows={4}
-              className="min-h-[72px] font-mono text-sm"
-            />
-            <p className="text-xs text-fg-subtle mt-1">{t.settings.webhooksCustomHeadersHint}</p>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1">
+              <Input
+                label={t.settings.webhooksSigningSecret}
+                type="password"
+                autoComplete="new-password"
+                value={signingSecret}
+                onChange={(e) => setSigningSecret(e.target.value)}
+              />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              className="shrink-0"
+              leftIcon={<Sparkles size={14} aria-hidden />}
+              onClick={() => setSigningSecret(suggestSigningSecret())}
+            >
+              {t.settings.webhooksGenerateSecret}
+            </Button>
           </div>
+          <WebhookSigningSecretHelpBlock
+            toggle={t.settings.webhooksSigningSecretHelpToggle}
+            p1={t.settings.webhooksSigningSecretHelpP1}
+            p2={t.settings.webhooksSigningSecretHelpP2}
+            p3={t.settings.webhooksSigningSecretHelpP3}
+          />
+          <details className="rounded-lg border border-fg/8 bg-surface-2/40 px-3 py-2 group">
+            <summary className="text-xs font-medium text-fg-muted cursor-pointer list-none select-none hover:text-accent-400 [&::-webkit-details-marker]:hidden">
+              <span className="border-b border-dotted border-fg-subtle/50 group-open:border-transparent">
+                {t.settings.webhooksOptionalFieldsTitle}
+              </span>
+            </summary>
+            <p className="text-[11px] text-fg-subtle mt-2 mb-2 leading-relaxed">{t.settings.webhooksOptionalFieldsHint}</p>
+            <div className="space-y-3 pt-1">
+              <Input
+                label={t.settings.webhooksEventFilters}
+                value={eventFilters}
+                onChange={(e) => setEventFilters(e.target.value)}
+                helpText={t.settings.webhooksEventFiltersHint}
+              />
+              <div>
+                <Textarea
+                  label={t.settings.webhooksCustomHeadersJson}
+                  value={customHeadersJson}
+                  onChange={(e) => setCustomHeadersJson(e.target.value)}
+                  spellCheck={false}
+                  rows={4}
+                  className="min-h-[72px] font-mono text-sm"
+                />
+                <p className="text-xs text-fg-subtle mt-1">{t.settings.webhooksCustomHeadersHint}</p>
+              </div>
+            </div>
+          </details>
           <Button type="button" size="sm" onClick={() => void handleCreate()} disabled={saving}>
             {t.settings.webhooksCreate}
           </Button>
@@ -264,7 +382,13 @@ export function SettingsWebhooksPanel() {
         {loading ? (
           <p className="text-xs text-fg-muted">{t.common.loading}</p>
         ) : rows.length === 0 ? (
-          <p className="text-xs text-fg-muted">{t.settings.webhooksListEmpty}</p>
+          <div className="rounded-xl border border-dashed border-fg/15 bg-fg/[0.02] px-5 py-8 text-center max-w-md">
+            <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-accent-500/10 text-accent-400">
+              <Link2 size={20} aria-hidden />
+            </div>
+            <p className="text-sm font-medium text-fg">{t.settings.webhooksListEmpty}</p>
+            <p className="text-xs text-fg-subtle mt-2 leading-relaxed">{t.settings.webhooksListEmptyHint}</p>
+          </div>
         ) : (
           <ul className="space-y-3">
             {rows.map((row) => (
@@ -318,6 +442,12 @@ export function SettingsWebhooksPanel() {
                 {canManage && rotateId === row.id && (
                   <div className="border-t border-fg/8 pt-3 space-y-2">
                     <p className="text-xs text-fg-muted">{t.settings.webhooksRotateIntro}</p>
+                    <WebhookSigningSecretHelpBlock
+                      toggle={t.settings.webhooksSigningSecretHelpToggle}
+                      p1={t.settings.webhooksSigningSecretHelpP1}
+                      p2={t.settings.webhooksSigningSecretHelpP2}
+                      p3={t.settings.webhooksSigningSecretHelpP3}
+                    />
                     <Input
                       label={t.settings.webhooksNewSecret}
                       type="password"

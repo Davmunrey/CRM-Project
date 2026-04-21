@@ -153,6 +153,10 @@ export interface Translations {
     edit: string
     create: string
     close: string
+    /** Invisible overlay that closes a menu or popup (accessibility). */
+    closeMenu: string
+    /** Compact placeholder for empty table cells or missing values (e.g. hyphen). */
+    emptyCell: string
     confirm: string
     actions: string
     name: string
@@ -169,8 +173,11 @@ export interface Translations {
     envBannerStaging: string
     envBannerDemo: string
     export: string
+    /** Short label for CSV download buttons (e.g. toolbar). */
+    csv: string
     import: string
     reset: string
+    refresh: string
     view: string
     all: string
     selected: string
@@ -279,6 +286,8 @@ export interface Translations {
     warm: string
     cold: string
     noLeads: string
+    /** Shown when Supabase delete fails (e.g. RLS); list is refreshed after. */
+    deleteFailed: string
     /** Extra line under empty inbox */
     emptyInboxHint: string
     loadingLeads: string
@@ -332,6 +341,12 @@ export interface Translations {
     contactCount: string
     dealCount: string
     emptyTitle: string
+    duplicates: string
+    duplicatesFound: string
+    noDuplicates: string
+    merge: string
+    sortIndustry: string
+    sortUpdated: string
     deleteConfirm: string
     created: string
     updated: string
@@ -726,6 +741,15 @@ export interface Translations {
     signatureToolbarImage: string
     signatureMergeFieldsTitle: string
     signatureMergeFieldsHelp: string
+    signatureEditorLinkPrompt: string
+    signatureEditorVisualHint: string
+    signatureEditorPreviewLabel: string
+    signatureEditorPreviewEmpty: string
+    /** Default when opening compose / new sequence email (no per-step override) */
+    composerSignatureDefaultLabel: string
+    composerSignatureDefaultAutomatic: string
+    composerSignatureDefaultManual: string
+    composerSignatureDefaultHelp: string
     tabGeneral: string
     tabBranding: string
     tabPipeline: string
@@ -749,21 +773,32 @@ export interface Translations {
     onboardingGoSequences: string
     webhooksTitle: string
     webhooksIntro: string
+    webhooksTagline: string
     webhooksRequiresSupabase: string
     webhooksCronHint: string
+    webhooksCronHintTitle: string
     webhooksCreateSection: string
     webhooksName: string
     webhooksTargetUrl: string
     webhooksSigningSecret: string
+    webhooksSigningSecretHelpToggle: string
+    webhooksSigningSecretHelpP1: string
+    webhooksSigningSecretHelpP2: string
+    webhooksSigningSecretHelpP3: string
     webhooksEventFilters: string
     webhooksEventFiltersHint: string
     webhooksCustomHeadersJson: string
     webhooksCustomHeadersHint: string
+    webhooksOptionalFieldsTitle: string
+    webhooksOptionalFieldsHint: string
     webhooksCreate: string
     webhooksCreated: string
     webhooksLoadError: string
+    webhooksLoadErrorInline: string
+    webhooksRetryLoad: string
     webhooksListTitle: string
     webhooksListEmpty: string
+    webhooksListEmptyHint: string
     webhooksEnabled: string
     webhooksLastStatus: string
     webhooksTest: string
@@ -778,6 +813,8 @@ export interface Translations {
     webhooksNewSecret: string
     webhooksRotateSubmit: string
     webhooksRotated: string
+    webhooksGenerateSecret: string
+    webhooksReadOnlyHint: string
     legalCompanyName: string
     taxIdVat: string
     addressLine1: string
@@ -973,7 +1010,16 @@ export interface Translations {
   sequences: {
     title: string
     newSequence: string
+    /** Default name when creating a sequence from the studio */
+    defaultNewSequenceName: string
     steps: string
+    /** Flow editor tab label */
+    tabFlow: string
+    tabStructure: string
+    tabPersonalise: string
+    tabMetrics: string
+    /** Enrollments tab label */
+    tabEnrolled: string
     enrolled: string
     active: string
     paused: string
@@ -984,6 +1030,100 @@ export interface Translations {
     toastSequenceDeleted: string
     /** Interpolation: `{name}`, `{sequence}` */
     toastEnrolled: string
+    /** Shown after flow + steps are saved to the server */
+    toastFlowSaved: string
+    /** When user tries to enroll while the sequence is inactive */
+    enrollBlockedInactive: string
+    /** Label next to the on/off control for whether the sequence accepts new enrollments / runs */
+    sequenceActiveToggleLabel: string
+    /** Sequence setting: cancel automation when the contact replies */
+    stopOnContactReplyLabel: string
+    stopOnContactReplyHint: string
+    /** Enrollment badge when stopped because the contact replied */
+    enrollmentStatusReplied: string
+    enrollmentStartDelayLabel: string
+    enrollmentStartDelayHint: string
+    sequenceNoActiveEnrollmentsBanner: string
+    /** Collapsible header section for stop-on-reply + enrollment start delay */
+    sequenceDeliveryRulesToggle: string
+    flow: {
+      studioTitle: string
+      toolbarAdd: string
+      addAbSplit: string
+      deleteNode: string
+      canvasHint: string
+      /** Short label for collapsed “how the flow editor works” help */
+      canvasHintSummary: string
+      inspectorTitle: string
+      /** Title row when embedding the inbox-style composer in the flow inspector */
+      sequenceMailboxEditorTitle: string
+      /** Shown under the title when Gmail is not connected (sequence step editor still saves drafts) */
+      sequenceStepDraftWithoutGmailHint: string
+      inspectorEmpty: string
+      abWeightA: string
+      abWeightB: string
+      /** Interpolation: `{a}`, `{b}`: branch weight percents */
+      abSplitWeightsSummary: string
+      abInspectorHint: string
+      waitInspectorHint: string
+      metricsPlaceholder: string
+      /** Interpolation: `{days}`: short line on node cards when delay is greater than zero */
+      nodeTimingAfterDays: string
+      /** Shown under the email body editor (merge fields, formatting) */
+      emailBodyComposerHint: string
+      /** Label for delay field on email / call / LinkedIn steps */
+      timingGapDaysLabel: string
+      /** Helper under delay field (non-wait steps) */
+      timingGapDaysHint: string
+      /** Compact label next to delay input on flow canvas cards */
+      nodeCanvasDelayLabel: string
+      inspectorLegacyNonEmail: string
+      inspectorLegacyNonEmailHint: string
+      /** Label for delay on a dedicated Wait node */
+      timingWaitDaysLabel: string
+      /** Helper for Wait node duration */
+      timingWaitDaysHint: string
+      /** When the first step in the path has delay 0 */
+      timingFirstStepGapNote: string
+      /** Email step: send as new Gmail message vs reply in the last outbound thread for this enrollment */
+      emailThreadModeLabel: string
+      emailThreadModeNew: string
+      emailThreadModeReply: string
+      emailThreadModeReplyHint: string
+      nodeSummaryEmail: string
+      nodeSummaryTask: string
+      /** Interpolation: `{days}` */
+      nodeSummaryWait: string
+      nodeTypeAbSplit: string
+      nodeTypeLabels: {
+        email: string
+        call_task: string
+        linkedin_task: string
+        wait: string
+      }
+      validationEmpty: string
+      validationCycle: string
+      /** Enrollment table: show current node id when set */
+      enrollmentNodeColumn: string
+      /** Enrollment table: branch variant */
+      enrollmentVariantColumn: string
+      stepEmailTemplateLabel: string
+      stepEmailTemplateNone: string
+      sequenceStepCcPlaceholder: string
+      sequenceStepBccPlaceholder: string
+      personalizeTitle: string
+      personalizeIntro: string
+      personalizeCopy: string
+      personalizeTokenCopied: string
+      metricsTitle: string
+      metricsSubtitle: string
+      metricsEmpty: string
+      metricsNeedsSupabase: string
+      metricsColTime: string
+      metricsColEvent: string
+      metricsColNode: string
+      metricsColMeta: string
+    }
   }
 
   automations: {
@@ -1159,6 +1299,8 @@ export interface Translations {
     category: string
     variables: string
     usageCount: string
+    /** Short hint under the template body composer (formatting + variables). */
+    bodyEditorHint: string
     categoryLabels: {
       follow_up: string
       intro: string
@@ -1532,6 +1674,8 @@ export interface Translations {
     openEmailTracking: string
     /** Composer - Pipedrive-style layout */
     composerFrom: string
+    /** Composer: outbound address is always the connected mailbox */
+    outboundFromMailboxHint: string
     composerInsertField: string
     composerTemplatesToolbar: string
     crmLinkTitle: string
@@ -1571,6 +1715,27 @@ export interface Translations {
     today: string
     older: string
     markRead: string
+  }
+
+  // ─── Entity lists (saved filters + distribution lists) ─────────────────────────
+  entityLists: {
+    saveFilteredList: string
+    filteredListNamePlaceholder: string
+    filteredListSaved: string
+    nameRequired: string
+    noMembersSelected: string
+    distributionList: string
+    noDistributionList: string
+    newDistributionList: string
+    listNamePlaceholder: string
+    createFromSelection: string
+    createFromCurrentResults: string
+    distributionListCreated: string
+    distributionListDeleted: string
+    deleteDistributionList: string
+    deleteDistributionListConfirm: string
+    pinToBar: string
+    name: string
   }
 
   // ─── Pipeline Timeline page ──────────────────────────────────────────────────

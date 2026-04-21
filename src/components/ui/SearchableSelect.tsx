@@ -1,5 +1,28 @@
-import { useEffect, useId, useMemo, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Search } from 'lucide-react'
+import { useTranslations } from '../../i18n'
+
+type PanelRect = { top: number; left: number; width: number; maxHeight: number }
+
+function computePanelRect(trigger: HTMLButtonElement): PanelRect {
+  const r = trigger.getBoundingClientRect()
+  const gap = 4
+  const margin = 8
+  const maxPanel = 320
+  const spaceBelow = window.innerHeight - r.bottom - gap - margin
+  const maxHeight =
+    spaceBelow <= 0
+      ? Math.min(maxPanel, 120)
+      : Math.min(maxPanel, Math.max(spaceBelow, 48))
+  const left = Math.max(margin, Math.min(r.left, window.innerWidth - r.width - margin))
+  return {
+    top: r.bottom + gap,
+    left,
+    width: r.width,
+    maxHeight,
+  }
+}
 
 export interface SearchableSelectOption {
   value: string
@@ -50,6 +73,7 @@ export function SearchableSelect({
   listMaxHeightClass = 'max-h-56',
   ariaLabel,
 }: SearchableSelectProps) {
+  const t = useTranslations()
   const genId = useId()
   const baseId = id ?? genId
   const listboxId = `${baseId}-listbox`
@@ -59,9 +83,30 @@ export function SearchableSelect({
 
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const [panelRect, setPanelRect] = useState<PanelRect | null>(null)
 
   useEffect(() => {
     if (!open) setQuery('')
+  }, [open])
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setPanelRect(null)
+      return
+    }
+    const el = triggerRef.current
+    if (!el) return
+    const update = () => {
+      if (triggerRef.current) setPanelRect(computePanelRect(triggerRef.current))
+    }
+    update()
+    window.addEventListener('resize', update)
+    document.addEventListener('scroll', update, true)
+    return () => {
+      window.removeEventListener('resize', update)
+      document.removeEventListener('scroll', update, true)
+    }
   }, [open])
 
   useEffect(() => {
@@ -92,6 +137,7 @@ export function SearchableSelect({
 
       <div className="relative">
         <button
+          ref={triggerRef}
           id={baseId}
           type="button"
           disabled={disabled}
@@ -117,72 +163,83 @@ export function SearchableSelect({
           <ChevronDown size={14} className="shrink-0 text-fg-muted pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" aria-hidden />
         </button>
 
-        {open && (
-          <>
-            <button
-              type="button"
-              className="fixed inset-0 z-overlay cursor-default bg-transparent"
-              aria-label="Close"
-              onClick={() => setOpen(false)}
-            />
-            <div className="absolute z-dropdown left-0 right-0 top-full mt-1 flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-surface-1 shadow-lg">
-              <div className="border-b border-border-subtle p-2 shrink-0">
-                <div className="relative">
-                  <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none" aria-hidden />
-                  <input
-                    type="search"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder={searchPlaceholder}
-                    className="focus-ring w-full rounded-lg border border-border-subtle bg-surface-2 py-1.5 pl-8 pr-2 text-sm text-fg placeholder:text-fg-muted/70 focus-visible:border-accent-500/50"
-                    autoComplete="off"
-                    autoFocus
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </div>
-              </div>
+        {open &&
+          panelRect &&
+          createPortal(
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-overlay cursor-default bg-transparent"
+                aria-label={t.common.closeMenu}
+                onClick={() => setOpen(false)}
+              />
               <div
-                id={listboxId}
-                role="listbox"
-                aria-label={label}
-                className={`overflow-y-auto py-1 ${listMaxHeightClass}`}
+                className="fixed z-dropdown flex min-h-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-surface-1 shadow-lg pointer-events-auto"
+                style={{
+                  top: panelRect.top,
+                  left: panelRect.left,
+                  width: panelRect.width,
+                  maxHeight: panelRect.maxHeight,
+                }}
               >
-                {filtered.length === 0 ? (
-                  <div className="px-3 py-2 text-sm text-fg-muted">{emptyLabel || '-'}</div>
-                ) : (
-                  filtered.map((opt) => {
-                    const selected = opt.value === value
-                    return (
-                      <div
-                        key={opt.value}
-                        role="option"
-                        aria-selected={selected}
-                        tabIndex={-1}
-                        className={`
+                <div className="border-b border-border-subtle p-2 shrink-0">
+                  <div className="relative">
+                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-muted pointer-events-none" aria-hidden />
+                    <input
+                      type="search"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder={searchPlaceholder}
+                      className="focus-ring w-full rounded-lg border border-border-subtle bg-surface-2 py-1.5 pl-8 pr-2 text-sm text-fg placeholder:text-fg-muted/70 focus-visible:border-accent-500/50"
+                      autoComplete="off"
+                      autoFocus
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
+                <div
+                  id={listboxId}
+                  role="listbox"
+                  aria-label={label}
+                  className={`min-h-0 flex-1 overflow-y-auto overscroll-contain py-1 ${listMaxHeightClass}`}
+                >
+                  {filtered.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-fg-muted">{emptyLabel || t.common.emptyCell}</div>
+                  ) : (
+                    filtered.map((opt) => {
+                      const selected = opt.value === value
+                      return (
+                        <div
+                          key={opt.value}
+                          role="option"
+                          aria-selected={selected}
+                          tabIndex={-1}
+                          className={`
                           cursor-pointer px-3 py-2 text-sm transition-colors
                           ${selected ? 'bg-accent-500/12 text-fg font-medium' : 'text-fg hover:bg-fg/[0.06]'}
                         `}
-                        onClick={() => {
-                          onChange(opt.value)
-                          setOpen(false)
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
+                          onClick={() => {
                             onChange(opt.value)
                             setOpen(false)
-                          }
-                        }}
-                      >
-                        {opt.label}
-                      </div>
-                    )
-                  })
-                )}
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              onChange(opt.value)
+                              setOpen(false)
+                            }
+                          }}
+                        >
+                          {opt.label}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
               </div>
-            </div>
-          </>
-        )}
+            </>,
+            document.body,
+          )}
       </div>
 
       {hint ? (

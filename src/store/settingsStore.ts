@@ -18,8 +18,9 @@ interface SettingsState {
   updateEmailIdentity: (userId: string, identity: {
     senderName?: string
     signature?: string
-    useSignature: boolean
+    useSignature?: boolean
     defaultSignatureId?: string
+    composerSignatureDefault?: 'include_default' | 'none_by_default'
   }) => void
   upsertEmailSignature: (userId: string, signature: {
     id?: string
@@ -85,22 +86,34 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       updateEmailIdentity: (userId, identity) => {
-        set((state) => ({
-          // Keep backwards compatibility while migrating to multi-signature identities.
-          settings: {
-            ...state.settings,
-            emailIdentities: {
-              ...(state.settings.emailIdentities ?? {}),
-              [userId]: {
-                ...(state.settings.emailIdentities?.[userId] ?? {}),
-                senderName: identity.senderName?.trim() || undefined,
-                signature: identity.signature?.trim() || undefined,
-                useSignature: identity.useSignature,
-                defaultSignatureId: identity.defaultSignatureId ?? state.settings.emailIdentities?.[userId]?.defaultSignatureId,
+        set((state) => {
+          const prev = state.settings.emailIdentities?.[userId] ?? { useSignature: true }
+          const next = { ...prev }
+          if (identity.senderName !== undefined) {
+            next.senderName = identity.senderName?.trim() || undefined
+          }
+          if (identity.signature !== undefined) {
+            next.signature = identity.signature?.trim() || undefined
+          }
+          if (identity.useSignature !== undefined) {
+            next.useSignature = identity.useSignature
+          }
+          if (identity.defaultSignatureId !== undefined) {
+            next.defaultSignatureId = identity.defaultSignatureId
+          }
+          if (identity.composerSignatureDefault !== undefined) {
+            next.composerSignatureDefault = identity.composerSignatureDefault
+          }
+          return {
+            settings: {
+              ...state.settings,
+              emailIdentities: {
+                ...(state.settings.emailIdentities ?? {}),
+                [userId]: next,
               },
             },
-          },
-        }))
+          }
+        })
       },
 
       upsertEmailSignature: (userId, signature) => {

@@ -43,6 +43,9 @@ test.describe('CRM smoke', () => {
 
     await page.goto('/inbox')
     await expect(page).not.toHaveURL(/\/login$/)
+
+    await page.goto('/sequences')
+    await expect(page.getByRole('button', { name: /flow|flujo|fluxo/i })).toBeVisible()
   })
 })
 

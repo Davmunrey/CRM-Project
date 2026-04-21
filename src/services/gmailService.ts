@@ -181,6 +181,11 @@ function buildMimeMessage(params: {
     .replace(/=+$/, '')
 }
 
+/**
+ * Sends via Gmail API `users.messages.send` with OAuth. The visible mailbox is always the
+ * authenticated account; we do not set a custom `From` header in the MIME (Gmail would reject or
+ * override arbitrary addresses anyway).
+ */
 export async function sendGmailEmail(
   params: {
     to: string[]

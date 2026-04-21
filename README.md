@@ -14,11 +14,11 @@ A production-grade, full-featured CRM single-page application built with React 1
 | Module | Features |
 |---|---|
 | **Dashboard** | KPI cards, revenue bar chart, deal funnel, recent activity, top deals |
-| **Contacts** | Table/grid view, search, filters, bulk delete, CSV export, slide-over form |
+| **Contacts** | Table/grid, toolbar (search, filters, CSV, duplicates, view toggle, new contact), smart views + **saved filtered lists** + **distribution lists** (`EntityListsToolbar`, `distributionListsStore`), bulk actions, slide-over form; strings via i18n (`common.csv`, `entityLists.*`, etc.) |
 | **Contact Detail** | Overview, Activities, Deals, Notes tabs |
-| **Companies** | Table view, industry/status/size filters, company detail page; empty state uses title + CTA only |
+| **Companies** | Same toolbar pattern as Contacts (CSV with `companies:export`, duplicates by domain/name, table/grid, sort chips), smart views + saved lists + distribution lists, industry/status/size filters, detail page |
 | **Automations** | Rule builder with starter template library; canonical English seed rules in `src/i18n/seed/automationSeedRulesEn.ts`; runtime labels via `getTranslations()` in `automationsStore` |
-| **Deals** | Kanban drag & drop + list view, deal detail panel, mark Won/Lost, quote builder (save/export/send) |
+| **Deals** | Kanban + list; primary **New deal** inside glass `Toolbar` (aligned with Contacts/Companies); smart views; quote builder (save/export/send) |
 | **Activities** | Unified feed, overdue highlighting, quick complete/delete |
 | **Reports** | Revenue forecast, Won/Lost donut, activities by type, contacts by source, conversion funnel |
 | **Inbox Collaboration** | Gmail Inbox, real thread sync, pinned thread-to-CRM links, workspace-aware thread linking |
@@ -170,12 +170,13 @@ src/
 │   ├── companies/      # CompanyForm
 │   ├── deals/          # DealCard, DealForm, KanbanColumn
 │   ├── activities/     # ActivityForm, ActivityItem
-│   └── shared/         # SearchBar, EmptyState, PanelEmpty
+│   └── shared/         # SearchBar, EmptyState, PanelEmpty, SmartViewBar, EntityListsToolbar
 ├── pages/              # Route containers (33 pages): CRM modules, auth, inbox, timeline, audit, products, automations, goals, sequences, etc.
-├── store/              # Zustand stores (21): auth, CRM domains, inbox, settings, templates, products, audit, automations, …
+├── store/              # Zustand stores (22+): auth, CRM domains, `viewsStore`, `distributionListsStore`, inbox, …
 ├── types/              # All TypeScript interfaces (index.ts)
 ├── hooks/              # useLocalStorage, useSearch, useFilters
-└── utils/              # formatters, constants, seedData, scoring/health engines
+├── lib/                # Supabase client, env, `entityListFilters.ts` (merge toolbar + smart view filters for save)
+└── utils/              # formatters, constants, `duplicateDetection` (contacts + companies), seedData, scoring/health engines
 ```
 
 ## Architecture Decisions

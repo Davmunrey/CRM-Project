@@ -92,11 +92,14 @@ The app ships **EN** (source), **ES**, and **PT** with full catalogs. **FR, DE, 
 - Build splitting: `vite.config.ts` (`manualChunks` for heavy chart/date libraries).
 - Planning artifacts: `.planning/PROJECT.md`, `.planning/codebase/STRUCTURE.md`, `.planning/codebase/CONVENTIONS.md` (UI canon points at `master-design-ui`).
 - Automations: `src/pages/Automations.tsx`, `src/store/automationsStore.ts`, canonical English seed rules `src/i18n/seed/automationSeedRulesEn.ts` (runtime labels via `getTranslations()`).
+- Entity lists (saved filters + distribution lists): `src/components/shared/EntityListsToolbar.tsx`, `src/store/distributionListsStore.ts`, merge helpers `src/lib/entityListFilters.ts`; `SmartViewBar` + `viewsStore` on Contacts, Companies, Deals.
+- Company duplicate detection: `findDuplicateCompanies` in `src/utils/duplicateDetection.ts`.
+- Lead UI delete: `src/store/leadsStore.ts` `deleteLead` awaits Supabase and refetches on failure (see [`master-implementation-history.md` §25](./master-implementation-history.md#implementation-history-section-25)).
 - Dead-code drift: `npm run audit:unused` (Knip) — `knip.json`.
 
 ---
 
-*Last updated: 2026-04-21 — Codebase map lines refreshed (Automations + Knip); prior 2026-04-20 note: Pipedrive comparison master ([`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md)), integration parity gap row, and 2026-04-18 UI quality pass in [`master-implementation-history.md`](./master-implementation-history.md#implementation-history-section-24) / [`master-design-ui.md`](./master-design-ui.md#main-canvas-and-responsive-shell).*
+*Last updated: 2026-04-21 — Codebase map: entity lists (`EntityListsToolbar`, `distributionListsStore`, `entityListFilters`), duplicate companies helper, lead delete hardening (§25); prior notes: Automations + Knip; Pipedrive comparison; UI quality pass §24 / [`master-design-ui.md`](./master-design-ui.md#entity-list-toolbars-contacts-companies-deals).*
 
 ---
 

@@ -6,6 +6,8 @@ import { devConsole } from '../lib/devConsole'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 import { useAuthStore } from './authStore'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 interface TemplateStore {
   templates: EmailTemplate[]
   quickReplies: Array<{ id: string; title: string; body: string; createdAt: string; updatedAt: string }>
@@ -33,22 +35,8 @@ const seedTemplates: EmailTemplate[] = [
 
 export const useTemplateStore = create<TemplateStore>()((set, get) => ({
   templates: seedTemplates,
-  quickReplies: [
-    {
-      id: 'qr-1',
-      title: 'Quick follow-up',
-      body: 'Hi {{firstName}},\n\nJust checking in on this.\n\nBest regards,',
-      createdAt: '2026-04-01T10:00:00.000Z',
-      updatedAt: '2026-04-01T10:00:00.000Z',
-    },
-    {
-      id: 'qr-2',
-      title: 'Meeting summary',
-      body: 'Thanks for your time today.\n\nAs discussed, here are the next steps:\n1) \n2) \n3) \n\nBest,',
-      createdAt: '2026-04-01T10:00:00.000Z',
-      updatedAt: '2026-04-01T10:00:00.000Z',
-    },
-  ],
+  /** Loaded from Supabase (or empty). In-memory demo IDs are not used so deletes do not “respawn” after reload. */
+  quickReplies: [],
   isLoading: false,
   error: null,
 
@@ -73,7 +61,10 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
   },
 
   fetchQuickReplies: async () => {
-    if (!isSupabaseConfigured || !supabase) return
+    if (!isSupabaseConfigured || !supabase) {
+      set({ quickReplies: [] })
+      return
+    }
     try {
       const { data, error } = await (supabase as any)
         .from('quick_replies')
@@ -90,7 +81,7 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
         })),
       })
     } catch {
-      // Keep local fallback replies.
+      // Leave current list unchanged; do not restore removed demo rows.
     }
   },
 
@@ -138,12 +129,14 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
     if (isSupabaseConfigured && supabase) {
       const currentUserId = useAuthStore.getState().currentUser?.id
       if (!currentUserId) return
-      ;(supabase as any).from('quick_replies').insert({
+      void (supabase as any).from('quick_replies').insert({
         id: item.id,
         user_id: currentUserId,
         title: item.title,
         body: item.body,
         organization_id: getOrgId(),
+      }).then(({ error }: { error: Error | null }) => {
+        if (error) devConsole.error('[templateStore] quick_reply insert', error)
       })
     }
   },
@@ -162,18 +155,24 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
           : reply
       )),
     }))
-    if (isSupabaseConfigured && supabase) {
+    if (isSupabaseConfigured && supabase && UUID_RE.test(id)) {
       const patch: Record<string, unknown> = { updated_at: updatedAt }
       if (updates.title !== undefined) patch.title = updates.title.trim()
       if (updates.body !== undefined) patch.body = updates.body
-      ;(supabase as any).from('quick_replies').update(patch).eq('id', id)
+      void (supabase as any).from('quick_replies').update(patch).eq('id', id)
+        .then(({ error }: { error: Error | null }) => {
+          if (error) devConsole.error('[templateStore] quick_reply update', error)
+        })
     }
   },
 
   deleteQuickReply: (id) => {
     set((s) => ({ quickReplies: s.quickReplies.filter((reply) => reply.id !== id) }))
-    if (isSupabaseConfigured && supabase) {
-      ;(supabase as any).from('quick_replies').delete().eq('id', id)
+    if (isSupabaseConfigured && supabase && UUID_RE.test(id)) {
+      void (supabase as any).from('quick_replies').delete().eq('id', id)
+        .then(({ error }: { error: Error | null }) => {
+          if (error) devConsole.error('[templateStore] quick_reply delete', error)
+        })
     }
   },
 

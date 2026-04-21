@@ -1152,6 +1152,7 @@ export function Inbox() {
       if (pick) {
         setSelectedThreadId(pick.id)
         setSelectedEmailId(null)
+        setComposerOpen(false)
       }
     }
     window.addEventListener('keydown', onKey, true)
@@ -1463,6 +1464,7 @@ export function Inbox() {
                 setFolder(f.id as 'inbox' | 'sent' | 'scheduled' | 'drafts' | 'snoozed')
                 setSelectedThreadId(null)
                 setSelectedEmailId(null)
+                setComposerOpen(false)
                 setSelectedThreadIds(new Set())
                 setSelectedLocalEmailIds(new Set())
               }}
@@ -1855,7 +1857,11 @@ export function Inbox() {
                   thread={thread}
                   selected={selectedThreadId === thread.id}
                   bulkSelected={selectedThreadIds.has(thread.id)}
-                  onClick={() => { setSelectedThreadId(thread.id); setSelectedEmailId(null) }}
+                  onClick={() => {
+                    setSelectedThreadId(thread.id)
+                    setSelectedEmailId(null)
+                    setComposerOpen(false)
+                  }}
                   onToggleBulk={() => toggleBulkThread(thread.id)}
                   contactByEmail={contactByEmail}
                 />
@@ -1890,6 +1896,7 @@ export function Inbox() {
                     useEmailStore.getState().updateEmail(email.id, { isRead: true })
                     setSelectedEmailId(email.id)
                     setSelectedThreadId(null)
+                    setComposerOpen(false)
                   }}
                   contacts={contacts}
                   onTrackOpen={trackEmailOpen}
@@ -1914,6 +1921,7 @@ export function Inbox() {
                     useEmailStore.getState().updateEmail(email.id, { isRead: true })
                     setSelectedEmailId(email.id)
                     setSelectedThreadId(null)
+                    setComposerOpen(false)
                   }}
                   contacts={contacts}
                   onTrackOpen={trackEmailOpen}
@@ -1938,8 +1946,7 @@ export function Inbox() {
                     useEmailStore.getState().updateEmail(email.id, { isRead: true })
                     setSelectedEmailId(email.id)
                     setSelectedThreadId(null)
-                    setThreadInlineReply(null)
-                    setComposerOpen(true)
+                    setComposerOpen(false)
                   }}
                   contacts={contacts}
                   onTrackOpen={trackEmailOpen}
@@ -1970,6 +1977,7 @@ export function Inbox() {
                     useEmailStore.getState().updateEmail(email.id, { isRead: true })
                     setSelectedEmailId(email.id)
                     setSelectedThreadId(null)
+                    setComposerOpen(false)
                   }}
                   contacts={contacts}
                   onTrackOpen={trackEmailOpen}
@@ -1995,6 +2003,7 @@ export function Inbox() {
               onClick={() => {
                 setSelectedThreadId(null)
                 setSelectedEmailId(null)
+                setComposerOpen(false)
               }}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-400 hover:text-accent-300"
             >
@@ -2074,62 +2083,86 @@ export function Inbox() {
           </div>
         ) : (
           <div className="flex flex-1 flex-col min-h-0 w-full">
-            <div
-              className={
-                threadInlineReply
-                  ? 'max-h-[min(34vh,300px)] shrink-0 min-h-0 overflow-y-auto overscroll-contain'
-                  : 'flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col'
-              }
-            >
-              <LocalEmailView
-                email={selectedEmail}
-                contacts={contacts}
-                onReply={openInlineReply}
-                onTrackOpen={trackEmailOpen}
-                onTrackClick={trackEmailClick}
-              />
-            </div>
-            {threadInlineReply && (
-              <div className="flex-1 min-h-0 flex flex-col border-t border-fg/8 pt-2 px-0.5">
+            {folder === 'drafts' && selectedEmail ? (
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-0.5 pt-0.5">
                 <EmailComposer
+                  key={selectedEmail.id}
                   presentation="inline"
                   isOpen
-                  onClose={() => setThreadInlineReply(null)}
-                  defaultTo={threadInlineReply.to}
-                  defaultSubject={threadInlineReply.subject}
-                  defaultCc={threadInlineReply.defaultCc ?? ''}
-                  contactId={selectedEmail?.contactId}
-                  dealId={selectedEmail?.dealId}
-                  companyId={selectedEmail?.companyId}
+                  onClose={() => setSelectedEmailId(null)}
+                  defaultTo={selectedEmail.to.join(', ')}
+                  defaultSubject={selectedEmail.subject}
+                  defaultBody={selectedEmail.body}
+                  defaultCc={(selectedEmail.cc ?? []).join(', ')}
+                  defaultBcc={(selectedEmail.bcc ?? []).join(', ')}
+                  defaultReplyTo={selectedEmail.replyTo ?? ''}
+                  draftId={selectedEmail.id}
+                  contactId={selectedEmail.contactId}
+                  dealId={selectedEmail.dealId}
+                  companyId={selectedEmail.companyId}
                   onRequestGmailConnect={handleConnectGmail}
                 />
               </div>
-            )}
-            {selectedEmail && folder !== 'snoozed' && !threadInlineReply && (
-              <div className="px-3 py-2 border-t border-fg/6">
-                {folder === 'scheduled' && selectedEmail.undoableUntil && new Date(selectedEmail.undoableUntil).getTime() > Date.now() && (
-                  <button type="button"
-                    onClick={() => {
-                      deleteEmail(selectedEmail.id)
-                      setSelectedEmailId(null)
-                      toast.success(t.email.undoSendSuccess)
-                    }}
-                    className="mr-2 text-xs px-3 py-1.5 rounded-lg border border-warning/40 bg-warning/12 text-warning hover:bg-warning/20 transition-colors"
-                  >
-                    {t.email.undoSend}
-                  </button>
-                )}
-                <button type="button"
-                  onClick={() => {
-                    snoozeEmail(selectedEmail.id, new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())
-                    toast.success(t.inbox.snoozed)
-                    setFolder('snoozed')
-                  }}
-                  className="text-xs px-3 py-1.5 rounded-lg bg-fg/6 text-fg-muted hover:bg-fg/10 transition-colors"
+            ) : (
+              <>
+                <div
+                  className={
+                    threadInlineReply
+                      ? 'max-h-[min(34vh,300px)] shrink-0 min-h-0 overflow-y-auto overscroll-contain'
+                      : 'flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col'
+                  }
                 >
-                  {t.inbox.snoozeOneDay}
-                </button>
-              </div>
+                  <LocalEmailView
+                    email={selectedEmail}
+                    contacts={contacts}
+                    onReply={openInlineReply}
+                    onTrackOpen={trackEmailOpen}
+                    onTrackClick={trackEmailClick}
+                  />
+                </div>
+                {threadInlineReply && (
+                  <div className="flex-1 min-h-0 flex flex-col border-t border-fg/8 pt-2 px-0.5">
+                    <EmailComposer
+                      presentation="inline"
+                      isOpen
+                      onClose={() => setThreadInlineReply(null)}
+                      defaultTo={threadInlineReply.to}
+                      defaultSubject={threadInlineReply.subject}
+                      defaultCc={threadInlineReply.defaultCc ?? ''}
+                      contactId={selectedEmail?.contactId}
+                      dealId={selectedEmail?.dealId}
+                      companyId={selectedEmail?.companyId}
+                      onRequestGmailConnect={handleConnectGmail}
+                    />
+                  </div>
+                )}
+                {selectedEmail && folder !== 'snoozed' && folder !== 'drafts' && !threadInlineReply && (
+                  <div className="px-3 py-2 border-t border-fg/6">
+                    {folder === 'scheduled' && selectedEmail.undoableUntil && new Date(selectedEmail.undoableUntil).getTime() > Date.now() && (
+                      <button type="button"
+                        onClick={() => {
+                          deleteEmail(selectedEmail.id)
+                          setSelectedEmailId(null)
+                          toast.success(t.email.undoSendSuccess)
+                        }}
+                        className="mr-2 text-xs px-3 py-1.5 rounded-lg border border-warning/40 bg-warning/12 text-warning hover:bg-warning/20 transition-colors"
+                      >
+                        {t.email.undoSend}
+                      </button>
+                    )}
+                    <button type="button"
+                      onClick={() => {
+                        snoozeEmail(selectedEmail.id, new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString())
+                        toast.success(t.inbox.snoozed)
+                        setFolder('snoozed')
+                      }}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-fg/6 text-fg-muted hover:bg-fg/10 transition-colors"
+                    >
+                      {t.inbox.snoozeOneDay}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -2139,16 +2172,6 @@ export function Inbox() {
       <EmailComposer
         isOpen={composerOpen}
         onClose={() => setComposerOpen(false)}
-        defaultTo={folder === 'drafts' && selectedEmail ? selectedEmail.to.join(', ') : ''}
-        defaultSubject={folder === 'drafts' && selectedEmail ? selectedEmail.subject : ''}
-        defaultBody={folder === 'drafts' && selectedEmail ? selectedEmail.body : ''}
-        defaultCc={folder === 'drafts' && selectedEmail ? (selectedEmail.cc ?? []).join(', ') : ''}
-        defaultBcc={folder === 'drafts' && selectedEmail ? (selectedEmail.bcc ?? []).join(', ') : ''}
-        defaultReplyTo={folder === 'drafts' && selectedEmail ? (selectedEmail.replyTo ?? '') : ''}
-        draftId={folder === 'drafts' && selectedEmail ? selectedEmail.id : undefined}
-        contactId={folder === 'drafts' ? selectedEmail?.contactId : undefined}
-        dealId={folder === 'drafts' ? selectedEmail?.dealId : undefined}
-        companyId={folder === 'drafts' ? selectedEmail?.companyId : undefined}
         onRequestGmailConnect={handleConnectGmail}
       />
     </div>

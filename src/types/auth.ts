@@ -8,7 +8,7 @@ export type Permission =
   // Contacts
   | 'contacts:read' | 'contacts:create' | 'contacts:update' | 'contacts:delete' | 'contacts:export'
   // Companies
-  | 'companies:read' | 'companies:create' | 'companies:update' | 'companies:delete'
+  | 'companies:read' | 'companies:create' | 'companies:update' | 'companies:delete' | 'companies:export'
   // Deals
   | 'deals:read' | 'deals:create' | 'deals:update' | 'deals:delete' | 'deals:move'
   // Activities

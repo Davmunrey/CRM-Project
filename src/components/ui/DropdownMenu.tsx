@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
+import { useTranslations } from '../../i18n'
 
 interface DropdownMenuProps {
   open: boolean
@@ -24,6 +25,7 @@ export function DropdownMenu({
   className = '',
   contentClassName = '',
 }: DropdownMenuProps) {
+  const t = useTranslations()
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -40,7 +42,7 @@ export function DropdownMenu({
         <>
           <button type="button"
             className="fixed inset-0 z-overlay cursor-default bg-transparent"
-            aria-label="Close menu"
+            aria-label={t.common.closeMenu}
             onClick={() => onOpenChange(false)}
           />
           <div

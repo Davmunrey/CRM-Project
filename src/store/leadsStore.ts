@@ -123,7 +123,8 @@ export interface LeadsState {
     status?: Lead['status']
   }) => Lead
   updateLead: (id: string, updates: Partial<Lead>) => void
-  deleteLead: (id: string) => void
+  /** Returns false if the row was restored after a failed server delete. */
+  deleteLead: (id: string) => Promise<boolean>
   setSearch: (value: string) => void
   setStageFilter: (value: LeadsState['stageFilter']) => void
   setScoreFilter: (value: LeadsState['scoreFilter']) => void
@@ -227,11 +228,16 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
     }
   },
 
-  deleteLead: (id) => {
+  deleteLead: async (id) => {
     set((s) => ({ leads: s.leads.filter((lead) => lead.id !== id) }))
-    if (isSupabaseConfigured && supabase) {
-      sb().from('leads').delete().eq('id', id)
+    if (!isSupabaseConfigured || !supabase) return true
+    const { error } = await sb().from('leads').delete().eq('id', id)
+    if (error) {
+      toast.error(`${getTranslations().leads.deleteFailed} ${error.message}`)
+      await get().fetchLeads()
+      return false
     }
+    return true
   },
 
   setSearch: (value) => set({ search: value }),

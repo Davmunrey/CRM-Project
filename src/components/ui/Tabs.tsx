@@ -11,12 +11,19 @@ interface TabsProps {
   activeId: string
   onChange: (id: string) => void
   className?: string
+  /** Merged onto the tablist row (e.g. `w-full overflow-x-auto flex-nowrap` for horizontal scroll). */
+  tabListClassName?: string
 }
 
-export function Tabs({ tabs, activeId, onChange, className = '' }: TabsProps) {
+export function Tabs({ tabs, activeId, onChange, className = '', tabListClassName }: TabsProps) {
   return (
     <div className={className}>
-      <div className="flex gap-1 p-1 rounded-xl bg-surface-2/80 border border-border-subtle w-fit flex-wrap" role="tablist">
+      <div
+        className={`flex gap-1 p-1 rounded-xl bg-surface-2/80 border border-border-subtle ${
+          tabListClassName ?? 'w-fit flex-wrap'
+        }`}
+        role="tablist"
+      >
         {tabs.map((tab) => {
           const active = tab.id === activeId
           return (
@@ -26,7 +33,7 @@ export function Tabs({ tabs, activeId, onChange, className = '' }: TabsProps) {
               aria-selected={active}
               onClick={() => onChange(tab.id)}
               className={`
-                px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-ring
+                shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-ring
                 ${active ? 'bg-accent-600/20 text-fg border border-accent-500/30' : 'text-fg-muted hover:text-fg hover:bg-fg/[0.04]'}
               `}
             >

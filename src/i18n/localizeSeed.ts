@@ -18,8 +18,10 @@ import type {
   AutomationRule,
   AutomationAction,
   EmailSequence,
+  SequenceFlowNode,
   SequenceStep,
 } from '../types'
+import { isAbSplitPayload } from '../types'
 import type { AuthUser, Organization } from '../types/auth'
 
 function isSeedProductId(id: string): id is SeedProductId {
@@ -91,6 +93,27 @@ function patchSequenceSteps(steps: SequenceStep[], stepCopy: Record<string, { su
   })
 }
 
+function patchFlowNodesFromStepCopy(
+  nodes: SequenceFlowNode[],
+  stepCopy: Record<string, { subject?: string; bodyTemplate?: string; taskDescription?: string }>,
+): SequenceFlowNode[] {
+  return nodes.map((node) => {
+    if (node.type === 'ab_split' || isAbSplitPayload(node.data)) return node
+    const step = node.data as SequenceStep
+    const sc = stepCopy[step.id]
+    if (!sc) return node
+    return {
+      ...node,
+      data: {
+        ...step,
+        ...(sc.subject !== undefined ? { subject: sc.subject } : {}),
+        ...(sc.bodyTemplate !== undefined ? { bodyTemplate: sc.bodyTemplate } : {}),
+        ...(sc.taskDescription !== undefined ? { taskDescription: sc.taskDescription } : {}),
+      },
+    }
+  })
+}
+
 export function localizedEmailSequence(sequence: EmailSequence, t: Translations): EmailSequence {
   if (!(sequence.id in t.seedDemo.sequences)) return sequence
   const copy = t.seedDemo.sequences[sequence.id as SeedSequenceId]
@@ -99,6 +122,12 @@ export function localizedEmailSequence(sequence: EmailSequence, t: Translations)
     name: copy.name,
     description: copy.description,
     steps: patchSequenceSteps(sequence.steps, copy.steps),
+    flowDefinition: sequence.flowDefinition
+      ? {
+          ...sequence.flowDefinition,
+          nodes: patchFlowNodesFromStepCopy(sequence.flowDefinition.nodes, copy.steps),
+        }
+      : sequence.flowDefinition,
   }
 }
 

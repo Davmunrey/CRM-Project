@@ -10,6 +10,7 @@ import {
 } from '../../lib/workflowTemplateCatalog'
 import { useAutomationsStore } from '../../store/automationsStore'
 import { useAuthStore } from '../../store/authStore'
+import { linearStepsToFlow } from '../../features/sequences-flow/sequenceFlowConverters'
 import { getBuiltInSequenceById, useSequencesStore } from '../../store/sequencesStore'
 import { toast } from '../../store/toastStore'
 import { Button } from '../ui/Button'
@@ -66,10 +67,12 @@ export function WorkflowTemplateLibraryDialog({ onClose }: { onClose: () => void
     }
     const loc = localizedEmailSequence(raw, getTranslations())
     const uid = useAuthStore.getState().currentUser?.id ?? raw.createdBy
+    const flow = linearStepsToFlow(loc.steps)
     createSequence({
       name: loc.name,
       description: loc.description,
       steps: loc.steps,
+      flowDefinition: flow,
       createdBy: uid,
       isActive: true,
     })

@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import {
   Plus, Trash2, Download, Upload, RotateCcw, Tag, Mail, Wifi, WifiOff, FileSpreadsheet, SlidersHorizontal, Pencil, X, Check,
-  Globe, Activity, RefreshCw, ShieldAlert, Lock, Bold, Italic, Link as LinkIcon, Image as ImageIcon, ChevronUp, ChevronDown,
+  Globe, Activity, RefreshCw, ShieldAlert, Lock, ChevronUp, ChevronDown,
 } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import type { DropResult } from '@hello-pangea/dnd'
@@ -47,7 +47,7 @@ import type { NotificationType } from '../types'
 import type { Permission, UserRole } from '../types/auth'
 import { ALL_PERMISSIONS } from '../utils/permissionProfiles'
 import { SettingsWebhooksPanel } from '../components/settings/SettingsWebhooksPanel'
-import { getEmailMergeFieldOptions } from '../utils/emailMergeFields'
+import { SignatureRichEditor } from '../components/settings/SignatureRichEditor'
 const ENTITY_TABS: CustomFieldEntityType[] = ['contact', 'company', 'deal']
 
 const FIELD_TYPES: CustomFieldType[] = [
@@ -74,7 +74,7 @@ export function Settings() {
   ]
   const { language, setLanguage, languageMode, setLanguageMode } = useI18nStore()
   const resolvedLanguageMode = languageMode ?? 'manual'
-  const { settings, updateThemePreference, updateUiDensity, updateCurrency, updateLeadSlaHours, updatePermissionProfile, updateBranding, updateGoogleClientId, addTag, removeTag, resetToDefaults, reorderStages, addPipelineStage } = useSettingsStore()
+  const { settings, updateThemePreference, updateUiDensity, updateCurrency, updateLeadSlaHours, updatePermissionProfile, updateBranding, updateGoogleClientId, addTag, removeTag, resetToDefaults, reorderStages, addPipelineStage, updateEmailIdentity } = useSettingsStore()
   const { disabledTypes, toggleType } = useNotificationsStore()
   const contactsStore = useContactsStore()
   const companiesStore = useCompaniesStore()
@@ -240,7 +240,6 @@ export function Settings() {
   const [signatureName, setSignatureName] = useState('')
   const [signatureHtml, setSignatureHtml] = useState('')
   const [editingSignatureId, setEditingSignatureId] = useState<string | null>(null)
-  const signatureEditorRef = useRef<HTMLTextAreaElement | null>(null)
   const PIPELINE_STAGE_COLORS = ['#3b82f6', '#8b5cf6', '#14b8a6', '#f59e0b', '#f97316', '#ec4899']
 
   const connected = isGmailConnected()
@@ -420,34 +419,6 @@ export function Settings() {
     })
     toast.success(t.common.save + ' ✓')
   }
-
-  const insertAroundSelection = (before: string, after = '') => {
-    const editor = signatureEditorRef.current
-    if (!editor) return
-    const start = editor.selectionStart ?? signatureHtml.length
-    const end = editor.selectionEnd ?? signatureHtml.length
-    const selected = signatureHtml.slice(start, end)
-    const next = `${signatureHtml.slice(0, start)}${before}${selected}${after}${signatureHtml.slice(end)}`
-    setSignatureHtml(next)
-  }
-
-  const insertSignatureMergeToken = (token: string) => {
-    const editor = signatureEditorRef.current
-    if (!editor) return
-    const start = editor.selectionStart ?? signatureHtml.length
-    const end = editor.selectionEnd ?? signatureHtml.length
-    const next = `${signatureHtml.slice(0, start)}${token}${signatureHtml.slice(end)}`
-    setSignatureHtml(next)
-    requestAnimationFrame(() => {
-      const el = signatureEditorRef.current
-      if (!el) return
-      el.focus()
-      const pos = start + token.length
-      el.setSelectionRange(pos, pos)
-    })
-  }
-
-  const signatureMergeFieldOptions = useMemo(() => getEmailMergeFieldOptions(t), [t])
 
   const handleSaveSignature = () => {
     if (!currentUser?.id) {
@@ -939,70 +910,35 @@ export function Settings() {
         <h2 className="text-base font-semibold text-fg mb-3">{t.settings.emailSignatures}</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="space-y-2">
+            <div className="space-y-2 max-w-xl">
+              <Select
+                label={t.settings.composerSignatureDefaultLabel}
+                value={currentIdentity?.composerSignatureDefault ?? 'include_default'}
+                onChange={(e) => {
+                  if (!currentUser?.id) return
+                  const v = e.target.value === 'none_by_default' ? 'none_by_default' : 'include_default'
+                  updateEmailIdentity(currentUser.id, { composerSignatureDefault: v })
+                }}
+                options={[
+                  { value: 'include_default', label: t.settings.composerSignatureDefaultAutomatic },
+                  { value: 'none_by_default', label: t.settings.composerSignatureDefaultManual },
+                ]}
+                disabled={!currentUser?.id}
+              />
+              <p className="text-[11px] text-fg-subtle leading-relaxed">{t.settings.composerSignatureDefaultHelp}</p>
+            </div>
             <Input
               label={t.settings.signatureName}
               value={signatureName}
               onChange={(e) => setSignatureName(e.target.value)}
               placeholder={t.settings.signatureNamePlaceholder}
             />
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button type="button" variant="ghost" size="xs" className="min-h-8 px-2" onClick={() => insertAroundSelection('<strong>', '</strong>')} aria-label={t.settings.signatureToolbarBold} title={t.settings.signatureToolbarBold}>
-                <Bold size={12} />
-              </Button>
-              <Button type="button" variant="ghost" size="xs" className="min-h-8 px-2" onClick={() => insertAroundSelection('<em>', '</em>')} aria-label={t.settings.signatureToolbarItalic} title={t.settings.signatureToolbarItalic}>
-                <Italic size={12} />
-              </Button>
-              <Button type="button" variant="ghost" size="xs" className="min-h-8 px-2" onClick={() => insertAroundSelection('<a href="https://">', '</a>')} aria-label={t.settings.signatureToolbarLink} title={t.settings.signatureToolbarLink}>
-                <LinkIcon size={12} />
-              </Button>
-              <label className="inline-flex items-center justify-center min-h-8 px-2 rounded-full border border-border-subtle bg-fg/5 text-fg-muted cursor-pointer hover:bg-fg/8 transition-colors focus-within:focus-ring" aria-label={t.settings.signatureToolbarImage} title={t.settings.signatureToolbarImage}>
-                <ImageIcon size={12} />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    const dataUrl = await new Promise<string>((resolve, reject) => {
-                      const reader = new FileReader()
-                      reader.onload = () => resolve(String(reader.result ?? ''))
-                      reader.onerror = () => reject(reader.error)
-                      reader.readAsDataURL(file)
-                    })
-                    insertAroundSelection(`<img src="${dataUrl}" alt="${file.name}" style="max-width:180px;max-height:80px;" />`)
-                    e.currentTarget.value = ''
-                  }}
-                />
-              </label>
-            </div>
-            <div className="space-y-2 rounded-lg border border-border-subtle bg-surface-2/60 p-3">
-              <p className="text-xs font-medium text-fg">{t.settings.signatureMergeFieldsTitle}</p>
-              <p className="text-[11px] text-fg-subtle leading-relaxed">{t.settings.signatureMergeFieldsHelp}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {signatureMergeFieldOptions.map((o) => (
-                  <Button
-                    key={o.token}
-                    type="button"
-                    variant="ghost"
-                    size="xs"
-                    className="px-2 font-mono text-[11px]"
-                    onClick={() => insertSignatureMergeToken(o.token)}
-                    title={o.label}
-                  >
-                    {o.token}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <Textarea
-              ref={signatureEditorRef}
+            <SignatureRichEditor
+              id="settings-email-signature"
               label={t.settings.signatureHtml}
-              value={signatureHtml}
-              onChange={(e) => setSignatureHtml(e.target.value)}
-              rows={7}
-              className="text-xs"
               placeholder={t.settings.placeholderEmailSignatureHtml}
+              value={signatureHtml}
+              onChange={setSignatureHtml}
             />
             <div className="flex gap-2">
               <Button size="sm" onClick={handleSaveSignature}>{editingSignatureId ? t.common.save : t.common.create}</Button>
@@ -1838,9 +1774,11 @@ export function Settings() {
       </section>
 
       {/* Lead Maintenance Ops */}
-      <section className={`crm-surface-section p-6 ${tabVisible('webhooks') ? '' : 'hidden'}`}>
-        <SettingsWebhooksPanel />
-      </section>
+      {activeTab === 'webhooks' && (
+        <section className="crm-surface-section p-6">
+          <SettingsWebhooksPanel />
+        </section>
+      )}
 
       <section className={`crm-surface-section p-6 ${tabVisible('advanced') ? '' : 'hidden'}`}>
         <div className="flex items-center justify-between mb-4">

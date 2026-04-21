@@ -13,6 +13,7 @@
 - [Theme system](#theme-system)
 - [Navigation (Settings + Sidebar) runbook](#navigation-settings-sidebar-runbook)
 - [User profile display names](#user-profile-display-names)
+- [Entity list toolbars (Contacts, Companies, Deals)](#entity-list-toolbars-contacts-companies-deals)
 
 ---
 
@@ -93,11 +94,26 @@ Defined in `src/index.css` (`@layer components`):
 - `npm run test:run` (Vitest)
 - Quick visual pass: **Dashboard**, **Contacts**, **Deals** (kanban + list), **Inbox**, **Settings**, and **Login** in both **dark** and **light** (Settings → theme preference).
 
+<a id="entity-list-toolbars-contacts-companies-deals"></a>
+## Entity list toolbars (Contacts, Companies, Deals)
+
+**Canonical implementation (April 2026):** list pages that show CRM entities in a **glass `Toolbar`** share the same **right-aligned** action cluster pattern:
+
+1. Optional **bulk** controls when there is a selection.
+2. **CSV** export where product allows (`contacts:export`, `companies:export`) — button label uses **`common.csv`** (i18n).
+3. **Duplicates** (Contacts / Companies) opens a modal; strings live under `contacts.*` / `companies.*`.
+4. **View mode** segmented control (**list / grid** for Contacts and Companies; **kanban / list** for Deals).
+5. **Primary CTA** (New contact / New company / New deal) as the last control in that row — **not** floating in `PageHeader` alone.
+
+**Contacts and Companies** add a second row: **`SmartViewBar`** (saved smart views from `viewsStore`) plus **`EntityListsToolbar`** (save current filters as a new view; distribution lists from `distributionListsStore`). See [Implementation history §25](./master-implementation-history.md#implementation-history-section-25).
+
+**Deals** keep **New deal** inside the same toolbar as search/filters/view toggles (see §25).
+
 ## Related documents
 
 - Theme behavior: [#theme-system](#theme-system)
 - Navigation and settings UI: [#navigation-settings-sidebar-runbook](#navigation-settings-sidebar-runbook)
-- Implementation changelog: [`master-implementation-history`](./master-implementation-history.md#implementation-history) Part B — UI shell (§18), cross-cutting UI quality pass (§24)
+- Implementation changelog: [`master-implementation-history`](./master-implementation-history.md#implementation-history) Part B — UI shell (§18), cross-cutting UI quality pass (§24), entity lists & toolbars (§25)
 
 ---
 

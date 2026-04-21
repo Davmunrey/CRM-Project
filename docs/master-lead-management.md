@@ -23,7 +23,7 @@ This document defines how backend jobs can execute lead score maintenance withou
 
 - Status: Active
 - Owner: Backend
-- Last updated: 2026-04-15
+- Last updated: 2026-04-21
 - Canonical: Yes
 
 ## Edge Function
@@ -365,6 +365,16 @@ Defines **how long** categories of data are kept and **how to enforce** reductio
 3. **Execute**: batched deletes or partition drops to avoid long locks; use maintenance windows.
 4. **Verify**: row counts zero or within expected residual (e.g. anonymized aggregates only).
 5. **Record**: ticket with SQL hash, time window, operator.
+
+## SPA — lead row delete (UI)
+
+The **Leads** inbox (`src/pages/Leads.tsx`) calls **`deleteLead`** in `src/store/leadsStore.ts`. As of April 2026:
+
+- The client **awaits** `DELETE` on `public.leads` when Supabase is configured.
+- On **error** (e.g. **RLS** denying delete, network failure), the store shows **`leads.deleteFailed`** (i18n) plus the server message, then **refetches** leads so the UI matches the database (rows that “came back” were never deleted server-side).
+- Success toasts run only when the delete completes without error.
+
+Canonical narrative: [`master-implementation-history.md` §25](./master-implementation-history.md#implementation-history-section-25).
 
 ## References
 

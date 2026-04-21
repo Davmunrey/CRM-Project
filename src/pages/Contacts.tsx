@@ -14,6 +14,7 @@ import { Badge } from '../components/ui/Badge'
 import { Avatar } from '../components/ui/Avatar'
 import { SearchBar } from '../components/shared/SearchBar'
 import { SmartViewBar } from '../components/shared/SmartViewBar'
+import { EntityListsToolbar } from '../components/shared/EntityListsToolbar'
 import { EmptyState } from '../components/shared/EmptyState'
 import { SlideOver, ConfirmDialog } from '../components/ui/Modal'
 import { isSupabaseConfigured } from '../lib/supabase'
@@ -26,6 +27,8 @@ import { formatRelativeDate, formatDateShort } from '../utils/formatters'
 import { CONTACT_SOURCE_LABELS } from '../utils/constants'
 
 import { findDuplicates } from '../utils/duplicateDetection'
+import { mergeContactFiltersForSave } from '../lib/entityListFilters'
+import { useDistributionListsStore } from '../store/distributionListsStore'
 import type { Contact, ContactStatus, DuplicateGroup, SmartViewFilter } from '../types'
 import { Users } from 'lucide-react'
 import { PermissionGate } from '../components/auth/PermissionGate'
@@ -84,6 +87,32 @@ export function Contacts() {
   const [bulkEmailMarketing, setBulkEmailMarketing] = useState(false)
   const [bulkEmailStagger, setBulkEmailStagger] = useState('45')
   const [bulkEmailSubmitting, setBulkEmailSubmitting] = useState(false)
+  const [distributionListId, setDistributionListId] = useState<string | null>(null)
+
+  const distributionLists = useDistributionListsStore((s) => s.lists)
+
+  const distMemberSet = useMemo(() => {
+    if (!distributionListId) return null
+    const list = distributionLists.find(
+      (l) => l.id === distributionListId && l.entityType === 'contact',
+    )
+    if (!list) return null
+    return new Set(list.memberIds)
+  }, [distributionListId, distributionLists])
+
+  useEffect(() => {
+    if (!distributionListId) return
+    if (!distributionLists.some((l) => l.id === distributionListId)) {
+      setDistributionListId(null)
+    }
+  }, [distributionListId, distributionLists])
+
+  const applyViewFiltersFromBar = useCallback((filters: SmartViewFilter[]) => {
+    setViewFilters(filters)
+    setStatusFilter('')
+    setSourceFilter('')
+    setAssignedFilter('')
+  }, [])
 
   const getCompanyName = useCallback(
     (id: string) => localizedCompanies.find((c) => c.id === id)?.name ?? '-',
@@ -99,6 +128,7 @@ export function Contacts() {
 
   const filtered = useMemo(() => {
     const result = localizedContacts.map((c) => ({ contact: c })).filter(({ contact: c }) => {
+      if (distMemberSet && !distMemberSet.has(c.id)) return false
       const q = search.toLowerCase()
       if (q) {
         const name = `${c.firstName} ${c.lastName}`.toLowerCase()
@@ -127,7 +157,7 @@ export function Contacts() {
     })
 
     return result
-  }, [localizedContacts, search, statusFilter, sourceFilter, assignedFilter, myDataOnly, currentUser, sortBy, viewFilters, getContactScore])
+  }, [localizedContacts, distMemberSet, search, statusFilter, sourceFilter, assignedFilter, myDataOnly, currentUser, sortBy, viewFilters, getContactScore])
 
   useEffect(() => {
     if (searchParams.get('create') !== '1') return
@@ -204,7 +234,7 @@ export function Contacts() {
     a.download = 'contacts.csv'
     a.click()
     URL.revokeObjectURL(url)
-    toast.success(`${t.common.export} CSV`)
+    toast.success(`${t.common.export} ${t.common.csv}`)
   }
 
   return (
@@ -330,7 +360,7 @@ export function Contacts() {
           )}
           <PermissionGate permission="contacts:export">
             <Button variant="ghost" size="sm" leftIcon={<Download size={14} />} onClick={exportCSV}>
-              CSV
+              {t.common.csv}
             </Button>
           </PermissionGate>
           <Button
@@ -374,8 +404,26 @@ export function Contacts() {
       </div>
       </Toolbar>
 
-      {/* Smart Views bar */}
-      <SmartViewBar entityType="contact" onFiltersChange={setViewFilters} />
+      {/* Smart Views + saved / distribution lists */}
+      <div className="space-y-3">
+        <SmartViewBar entityType="contact" onFiltersChange={applyViewFiltersFromBar} />
+        <EntityListsToolbar
+          entityType="contact"
+          getSavableFilters={() =>
+            mergeContactFiltersForSave(viewFilters, {
+              statusFilter,
+              sourceFilter,
+              assignedFilter,
+              myDataOnly,
+              currentUserName: currentUser?.name,
+            })
+          }
+          distributionListId={distributionListId}
+          onDistributionListIdChange={setDistributionListId}
+          selectionIds={selectedIds}
+          currentResultIds={filteredContacts.map((c) => c.id)}
+        />
+      </div>
 
       {/* Filters */}
       {showFilters && (

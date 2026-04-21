@@ -329,9 +329,9 @@ export function Leads() {
               )}
               <button
                 type="button"
-                onClick={() => {
-                  deleteLead(lead.id)
-                  toast.success(t.common.delete)
+                onClick={async () => {
+                  const ok = await deleteLead(lead.id)
+                  if (ok) toast.success(t.common.delete)
                 }}
                 className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-danger/12 border border-danger/30 text-danger hover:bg-danger/18"
                 title={t.common.delete}

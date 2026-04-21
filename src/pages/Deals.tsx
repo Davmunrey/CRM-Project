@@ -965,95 +965,88 @@ export function Deals() {
 
   return (
     <div className="crm-page-full flex flex-col">
-      <div className="shrink-0 px-4 pt-3 sm:px-6">
-        <PageHeader
-          showTitle={false}
-          title={t.nav.deals}
-          actions={
-            <PermissionGate permission="deals:create">
-              <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setIsFormOpen(true)}>
-                {t.deals.newDeal}
-              </Button>
-            </PermissionGate>
-          }
-        />
-      </div>
-      <div className="shrink-0 flex flex-col gap-4">
-      <Toolbar
-        panel
-        className="!flex-row flex-wrap items-center gap-3 py-3 shrink-0"
-      >
-        <div className="flex w-full flex-wrap items-center gap-3">
-        <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-64" />
-        <Button
-          variant={showFilters ? 'secondary' : 'ghost'}
-          size="sm"
-          leftIcon={<Filter size={14} />}
-          onClick={() => setShowFilters((v) => !v)}
+      <div className="shrink-0 space-y-4 px-4 pt-3 sm:px-6 lg:px-8">
+        <PageHeader showTitle={false} title={t.nav.deals} />
+        <Toolbar
+          panel
+          className="!flex-row flex-wrap items-center gap-3 py-3 shrink-0"
         >
-          {t.common.filters}
-        </Button>
-        <button
-          type="button"
-          onClick={() => setMyDataOnly((v) => !v)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-            myDataOnly
-              ? 'bg-accent-500/20 border-accent-500/40 text-accent-300'
-              : 'bg-fg/4 border-fg/10 text-fg-muted hover:text-fg'
-          }`}
-        >
-          <KanbanSquare size={12} />
-          {myDataOnly ? t.deals.title : t.common.all}
-        </button>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="flex rounded-xl border border-fg/10 bg-fg/[0.05] overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setViewMode('kanban')}
-              aria-label={t.deals.kanban}
-              className={`p-1.5 ${viewMode === 'kanban' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
+          <div className="flex w-full flex-wrap items-center gap-3">
+            <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-64" />
+            <Button
+              variant={showFilters ? 'secondary' : 'ghost'}
+              size="sm"
+              leftIcon={<Filter size={14} />}
+              onClick={() => setShowFilters((v) => !v)}
             >
-              <KanbanSquare size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              aria-label={t.deals.list}
-              className={`p-1.5 ${viewMode === 'list' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
-            >
-              <LayoutList size={16} />
-            </button>
-          </div>
-        </div>
-        </div>
-      </Toolbar>
-
-      <SmartViewBar entityType="deal" onFiltersChange={setViewFilters} />
-
-      {showFilters && (
-        <div className="flex gap-3 flex-wrap items-center glass p-4">
-          <Select
-            options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
-            placeholder={t.common.assignedTo}
-            value={assignedFilter}
-            onChange={(e) => setAssignedFilter(e.target.value)}
-          />
-          <Select
-            options={[
-              { value: 'low', label: t.deals.priorityLabels.low }, { value: 'medium', label: t.deals.priorityLabels.medium }, { value: 'high', label: t.deals.priorityLabels.high },
-            ]}
-            placeholder={t.common.priority}
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-          />
-          {(assignedFilter || priorityFilter) && (
-            <Button variant="ghost" size="sm" leftIcon={<X size={14} />}
-              onClick={() => { setAssignedFilter(''); setPriorityFilter('') }}>
-              {t.common.clear}
+              {t.common.filters}
             </Button>
-          )}
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={() => setMyDataOnly((v) => !v)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                myDataOnly
+                  ? 'bg-accent-500/20 border-accent-500/40 text-accent-300'
+                  : 'bg-fg/4 border-fg/10 text-fg-muted hover:text-fg'
+              }`}
+            >
+              <KanbanSquare size={12} />
+              {myDataOnly ? t.deals.title : t.common.all}
+            </button>
+            <div className="ml-auto flex items-center gap-2">
+              <div className="flex rounded-xl border border-fg/10 bg-fg/[0.05] overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('kanban')}
+                  aria-label={t.deals.kanban}
+                  className={`p-1.5 ${viewMode === 'kanban' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
+                >
+                  <KanbanSquare size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  aria-label={t.deals.list}
+                  className={`p-1.5 ${viewMode === 'list' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
+                >
+                  <LayoutList size={16} />
+                </button>
+              </div>
+              <PermissionGate permission="deals:create">
+                <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => setIsFormOpen(true)}>
+                  {t.deals.newDeal}
+                </Button>
+              </PermissionGate>
+            </div>
+          </div>
+        </Toolbar>
+
+        <SmartViewBar entityType="deal" onFiltersChange={setViewFilters} />
+
+        {showFilters && (
+          <div className="flex gap-3 flex-wrap items-center glass p-4">
+            <Select
+              options={orgUsers.map((u) => ({ value: u.name, label: u.name }))}
+              placeholder={t.common.assignedTo}
+              value={assignedFilter}
+              onChange={(e) => setAssignedFilter(e.target.value)}
+            />
+            <Select
+              options={[
+                { value: 'low', label: t.deals.priorityLabels.low }, { value: 'medium', label: t.deals.priorityLabels.medium }, { value: 'high', label: t.deals.priorityLabels.high },
+              ]}
+              placeholder={t.common.priority}
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+            />
+            {(assignedFilter || priorityFilter) && (
+              <Button variant="ghost" size="sm" leftIcon={<X size={14} />}
+                onClick={() => { setAssignedFilter(''); setPriorityFilter('') }}>
+                {t.common.clear}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Kanban */}

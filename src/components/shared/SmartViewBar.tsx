@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bookmark, Plus, Pin, X, Flame, Users, Handshake, TrendingUp, Cloud } from 'lucide-react'
+import { Bookmark, Plus, Pin, X, Flame, Users, Handshake, TrendingUp, Cloud, Trash2 } from 'lucide-react'
 import { useViewsStore } from '../../store/viewsStore'
 import type { CustomFieldEntityType, SmartViewFilter } from '../../types'
 import { useTranslations } from '../../i18n'
@@ -12,6 +12,10 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   'trending-up': <TrendingUp size={13} />,
   cloud: <Cloud size={13} />,
   bookmark: <Bookmark size={13} />,
+}
+
+function isSeedSmartView(id: string): boolean {
+  return /^sv-\d{2}$/.test(id)
 }
 
 const COLOR_MAP: Record<string, string> = {
@@ -87,19 +91,31 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
         const isActive = currentActiveId === view.id
         const colorClass = view.color ? (COLOR_MAP[view.color] ?? '') : ''
         return (
-          <button type="button"
-            key={view.id}
-            onClick={() => handleSelectView(isActive ? null : view.id)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
-              isActive
-                ? colorClass || 'bg-accent-500/20 text-accent-400 border-accent-500/30'
-                : 'bg-fg/4 border-fg/8 text-fg-subtle hover:text-fg-muted'
-            }`}
-          >
-            {view.icon && ICON_MAP[view.icon]}
-            {getViewLabel(view)}
-            {isActive && <X size={11} className="ml-0.5 opacity-60" />}
-          </button>
+          <div key={view.id} className="flex items-center gap-0.5">
+            <button type="button"
+              onClick={() => handleSelectView(isActive ? null : view.id)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                isActive
+                  ? colorClass || 'bg-accent-500/20 text-accent-400 border-accent-500/30'
+                  : 'bg-fg/4 border-fg/8 text-fg-subtle hover:text-fg-muted'
+              }`}
+            >
+              {view.icon && ICON_MAP[view.icon]}
+              {getViewLabel(view)}
+              {isActive && <X size={11} className="ml-0.5 opacity-60" />}
+            </button>
+            {!isSeedSmartView(view.id) && (
+              <button
+                type="button"
+                className="p-1 rounded-lg border border-fg/8 bg-fg/4 text-fg-subtle hover:text-danger hover:border-danger/30 transition-colors"
+                aria-label={t.common.delete}
+                title={t.common.delete}
+                onClick={() => useViewsStore.getState().deleteView(view.id)}
+              >
+                <Trash2 size={11} />
+              </button>
+            )}
+          </div>
         )
       })}
 
@@ -143,6 +159,16 @@ export function SmartViewBar({ entityType, onFiltersChange }: SmartViewBarProps)
                     >
                       <Pin size={11} />
                     </button>
+                    {!isSeedSmartView(view.id) && (
+                      <button type="button"
+                        onClick={() => useViewsStore.getState().deleteView(view.id)}
+                        className="p-1 text-fg-subtle hover:text-danger transition-colors"
+                        title={t.common.delete}
+                        aria-label={t.common.delete}
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

@@ -2,7 +2,7 @@ import type { Permission, UserRole } from '../types/auth'
 
 export const ALL_PERMISSIONS: Permission[] = [
   'contacts:read', 'contacts:create', 'contacts:update', 'contacts:delete', 'contacts:export',
-  'companies:read', 'companies:create', 'companies:update', 'companies:delete',
+  'companies:read', 'companies:create', 'companies:update', 'companies:delete', 'companies:export',
   'deals:read', 'deals:create', 'deals:update', 'deals:delete', 'deals:move',
   'activities:read', 'activities:create', 'activities:update', 'activities:delete',
   'email:read', 'email:send', 'email:update', 'email:link',
@@ -23,7 +23,7 @@ export const ALL_PERMISSIONS: Permission[] = [
 export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   admin: [
     'contacts:read', 'contacts:create', 'contacts:update', 'contacts:delete', 'contacts:export',
-    'companies:read', 'companies:create', 'companies:update', 'companies:delete',
+    'companies:read', 'companies:create', 'companies:update', 'companies:delete', 'companies:export',
     'deals:read', 'deals:create', 'deals:update', 'deals:delete', 'deals:move',
     'activities:read', 'activities:create', 'activities:update', 'activities:delete',
     'email:read', 'email:send', 'email:update', 'email:link',
@@ -42,7 +42,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
   manager: [
     'contacts:read', 'contacts:create', 'contacts:update', 'contacts:delete', 'contacts:export',
-    'companies:read', 'companies:create', 'companies:update', 'companies:delete',
+    'companies:read', 'companies:create', 'companies:update', 'companies:delete', 'companies:export',
     'deals:read', 'deals:create', 'deals:update', 'deals:delete', 'deals:move',
     'activities:read', 'activities:create', 'activities:update', 'activities:delete',
     'email:read', 'email:send', 'email:update', 'email:link',
