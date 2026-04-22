@@ -1,4 +1,5 @@
 import type { Contact, Company, Deal, Activity, AppSettings, CRMEmail } from '../types'
+import { APP_NAME } from '../lib/appIdentity'
 import { DEFAULT_ROLE_PERMISSIONS } from './permissionProfiles'
 
 export const seedSettings: AppSettings = {
@@ -8,7 +9,7 @@ export const seedSettings: AppSettings = {
   leadSlaHours: 8,
   permissionProfiles: DEFAULT_ROLE_PERMISSIONS,
   branding: {
-    appName: 'Velo Demo',
+    appName: `${APP_NAME} Demo`,
     primaryColor: '#4f46e5',
     legalName: 'Demo Company Ltd',
     country: 'Spain',
