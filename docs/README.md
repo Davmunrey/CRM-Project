@@ -92,5 +92,5 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-22 (deploy doc consolidation: offline demo + integrations E2E; doc conventions)  
+- **Last updated:** 2026-04-22 (Supabase-only deploy narrative, security master password + Zustand section, roadmap Part B range, Gitea CI `vite build --mode development`)  
 - **Canonical:** Yes  
