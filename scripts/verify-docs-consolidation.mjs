@@ -53,7 +53,7 @@ const MASTERS = [
   'master-release-qa.md',
   'master-implementation-history.md',
   'master-roadmap-backlog.md',
-  'master-pipedrive-crm-pro-comparison.md',
+  'master-pipedrive-velo-comparison.md',
 ]
 
 /** Non-master Markdown allowed under docs/ (index, bridge, certified runbooks, engineering reference). */
@@ -66,6 +66,8 @@ const DOCS_MD_ALLOWLIST = new Set([
   'smoke-checklist-production.md',
   'design-system-reference.md',
   'sequences-flow.md',
+  'public-api-phase1.md',
+  'lead-capture-public-endpoint.md',
 ])
 
 const errors = []

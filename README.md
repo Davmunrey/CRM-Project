@@ -21,7 +21,7 @@ A production-grade, full-featured CRM single-page application built with React 1
 | **Deals** | Kanban + list; primary **New deal** inside glass `Toolbar` (aligned with Contacts/Companies); smart views; quote builder (save/export/send) |
 | **Activities** | Unified feed, overdue highlighting, quick complete/delete |
 | **Reports** | Revenue forecast, Won/Lost donut, activities by type, contacts by source, conversion funnel |
-| **Inbox Collaboration** | Gmail Inbox, real thread sync, pinned thread-to-CRM links, workspace-aware thread linking |
+| **Inbox Collaboration** | Gmail Inbox, real thread sync, pinned thread-to-record links, workspace-aware thread linking |
 | **Pipeline Timeline** | Timeline view for stage progression and pipeline activity context |
 | **Products** | Product catalog for quote line items and deal quoting workflows |
 | **Audit Log** | Organization activity audit trail with filters and chronology |
@@ -90,7 +90,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 **Deploy:** SPA rewrites, `VITE_APP_CHANNEL`, and Supabase vars per environment are documented in [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md). Gmail OAuth verification: [`docs/google-gmail-oauth-verification.md`](docs/google-gmail-oauth-verification.md). Post-deploy smoke: [`docs/smoke-checklist-production.md`](docs/smoke-checklist-production.md).
-Offline demo behavior and privacy policy: [`docs/demo-offline.md`](docs/demo-offline.md).
+Offline demo behavior and privacy: [`docs/deployment-spa-and-env.md#offline-demo-mode`](docs/deployment-spa-and-env.md#offline-demo-mode).
 
 When `VITE_EMAIL_PROVIDER=resend`, deploy Supabase Edge Function `resend-send-email` and set server-side secrets in Supabase:
 
@@ -172,8 +172,8 @@ src/
 │   ├── deals/          # DealCard, DealForm, KanbanColumn
 │   ├── activities/     # ActivityForm, ActivityItem
 │   └── shared/         # SearchBar, EmptyState, PanelEmpty, SmartViewBar, EntityListsToolbar
-├── pages/              # Route containers (33 pages): CRM modules, auth, inbox, timeline, audit, products, automations, goals, sequences, etc.
-├── store/              # Zustand stores (22+): auth, CRM domains, `viewsStore`, `distributionListsStore`, inbox, …
+├── pages/              # Route containers (33 pages): Velo modules, auth, inbox, timeline, audit, products, automations, goals, sequences, etc.
+├── store/              # Zustand stores (22+): auth, data domains, `viewsStore`, `distributionListsStore`, inbox, …
 ├── types/              # All TypeScript interfaces (index.ts)
 ├── hooks/              # useLocalStorage, useSearch, useFilters
 ├── lib/                # Supabase client, env, `entityListFilters.ts` (merge toolbar + smart view filters for save)
@@ -199,7 +199,7 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
 
 ## Current status
 
-- **Runtime:** Supabase Auth, org onboarding, RLS multi-tenancy, and core CRM stores with realtime are implemented.
+- **Runtime:** Supabase Auth, org onboarding, RLS multi-tenancy, and core data stores with realtime are implemented.
 - **i18n:** EN / ES / PT (plus FR / DE / IT where keyed); demo seed copy under `src/i18n/seed/` (including automation rule templates); run multilingual smoke before releases.
 - **Unused code:** `npm run audit:unused` (Knip) for files and dependencies; see `knip.json`.
 - **Tests:** Vitest (`npm run test:run`); pool + `maxWorkers` cap in `vite.config.ts` for stable Windows/CI runs.
@@ -215,7 +215,7 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
 
 | If you need… | Start here |
 |----------------|------------|
-| **v1 phases / DEPLOY checkboxes vs Pro docs** | [`docs/project-state.md`](docs/project-state.md) |
+| **v1 phases / DEPLOY checkboxes vs canonical docs** | [`docs/project-state.md`](docs/project-state.md) |
 | Full shipped narrative | `docs/master-implementation-history.md` |
 | Priorities and backlog | `docs/master-roadmap-backlog.md` |
 | Security / compliance evidence pack | `docs/master-security-compliance.md` |

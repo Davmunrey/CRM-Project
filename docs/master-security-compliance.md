@@ -431,7 +431,7 @@ If you add deployment or Supabase integration jobs later, define secrets in Gite
 Use SSH remote:
 
 ```bash
-git remote set-url origin git@gitea.apps.privateprompt.tech:david/crm-pro.git
+git remote set-url origin git@gitea.apps.privateprompt.tech:david/velo.git
 ```
 
 And in `~/.ssh/config`, set:

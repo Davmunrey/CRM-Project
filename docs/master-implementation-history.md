@@ -33,6 +33,8 @@ Approximate delivery dates for quick scanning. **Section numbers (1–25) stay t
 | 2026-04-16 | [§23](#implementation-history-section-23) | Manager Dashboard Pack + onboarding (`/manager`, checklist, UX telemetry). |
 | 2026-04-18 | [§24](#implementation-history-section-24) | Cross-cutting UI quality pass — tokens, responsive shell, a11y, performance, i18n hygiene. |
 | 2026-04-21 | [§25](#implementation-history-section-25) | Entity list UX — Deals toolbar, saved/distribution lists (Contacts & Companies), lead delete reliability, `companies:export`, i18n keys. |
+| 2026-04-21 | [§26](#implementation-history-section-26) | Integration fabric: webhook DELETE payload parity, `listFailedOutbox` / `replayOutbox`, Edge Functions `api-keys`, `crm-public-api`, `lead-capture`, `lead-capture-tokens`; Settings tab **API & capture** + webhooks failed-queue UI; `npm run supabase:deploy:integrations` / `supabase:deploy:all-edge`. |
+| 2026-04-22 | [§27](#implementation-history-section-27) | API & capture hardening: idempotent delete contracts, standardized error payloads (`error/code/status/request_id`), structured Edge logs, requestId propagation, resilient Settings feedback, Playwright smoke coverage, and English runbooks. |
 
 ---
 
@@ -46,7 +48,7 @@ Foundation through operational notes (platform, tenancy, auth, tracking, leads, 
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-21  
+- **Last updated:** 2026-04-22  
 - **Canonical:** Yes (together with Part B)  
 
 This file is an **archive-stable** slice: it should change rarely. Prefer editing Part B for ongoing delivery narrative.
@@ -218,7 +220,7 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-21  
+- **Last updated:** 2026-04-22  
 - **Canonical:** Yes (Part A + Part B together)  
 
 ## Contents
@@ -512,3 +514,32 @@ Narrative layout and tokens: [`master-design-ui.md`](./master-design-ui.md#main-
 - **i18n:** `common.csv`; `entityLists.*` (EN/ES/PT); `companies.duplicates*`, `sortIndustry`, `sortUpdated`; `leads.deleteFailed`. Contacts/Companies CSV buttons use `t.common.csv`.
 
 **Related:** [`master-design-ui.md` — Entity list toolbars](./master-design-ui.md#entity-list-toolbars-contacts-companies-deals) · [`master-lead-management.md`](./master-lead-management.md) (backend contract unchanged; UI delete behavior above).
+
+<a id="implementation-history-section-26"></a>
+## 26) Integration fabric — webhooks replay, API keys, lead capture (April 2026)
+
+- **SQL:** `supabase/migrations/20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` — DELETE webhook events enqueue JSON `null` for `data` (via `'null'::jsonb`) and prior row in `previous`; new tables `organization_api_keys`, `lead_capture_tokens`; index on failed outbox by org.
+- **Edge:** `webhook-subscriptions` extended with `listFailedOutbox` and `replayOutbox` (JWT + org admin).
+- **Docs:** [`public-api-phase1.md`](./public-api-phase1.md), [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md), updates to [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md), [`project-state.md`](./project-state.md), [`supabase/README.md`](../supabase/README.md).
+- **Shipped in repo:** Edge Function sources under `supabase/functions/`, `config.toml` (`verify_jwt = false` for `crm-public-api` and `lead-capture`), Settings UI + i18n, `database.types.ts`, deploy scripts in `package.json`.
+
+<a id="implementation-history-section-27"></a>
+## 27) API & capture hardening — contracts, observability, UX, and smoke tests (April 2026)
+
+- **Backend contracts (`api-keys`, `lead-capture-tokens`):**
+  - Unified error envelope for management actions: `{ error, code, status, request_id }`.
+  - `list` always returns `200` with collections.
+  - `create` still returns one-time secret values.
+  - `delete` on API keys and lead tokens is now idempotent (`200`, `deleted: true|false`).
+- **Operational observability (`api-keys`, `lead-capture-tokens`, `crm-public-api`, `lead-capture`):**
+  - Structured JSON logs with `request_id`, `action`, `organization_id`, `user_id` (when available), `result`, `status`, and `latency_ms`.
+  - `request_id` is propagated in responses to correlate UI errors with Edge logs.
+- **Settings UX resilience (`SettingsIntegrationsPanel`):**
+  - Error feedback is now status-aware (`401`, `403`, `404`, `400/409`) with actionable English messaging.
+  - Double-submit prevention for destructive actions through per-row in-flight states.
+  - Success and failure handling aligned with idempotent backend behavior.
+- **Automated regression coverage:**
+  - New Playwright smoke suite `e2e/integrations-api-capture.spec.ts` validates create/use/delete lifecycle for API keys and lead tokens.
+  - CI workflow runs this suite when integration E2E secrets are configured.
+- **Documentation and runbooks (same delivery):**
+  - Updated `docs/public-api-phase1.md`, `docs/lead-capture-public-endpoint.md`, and `supabase/README.md` with error maps, idempotency notes, and troubleshooting workflow.

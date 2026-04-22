@@ -4,6 +4,8 @@
 
 **Replaces:** pro-roadmap-30-60-90, pro-backlog.
 
+> **Naming note:** `PRO` / `pro-backlog` / `pro-roadmap` are **legacy internal document IDs** from the pre-consolidation doc split. They are **not** the retired commercial product name.
+
 ## Table of contents
 
 - [Roadmap (30 / 60 / 90 days)](#pro-roadmap-30-60-90)

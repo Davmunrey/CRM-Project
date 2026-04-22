@@ -39,4 +39,4 @@ This document describes the Velo public REST surface after the API & capture har
 
 ## Automated regression (E2E)
 
-- See [`e2e-integrations-api-capture.md`](./e2e-integrations-api-capture.md) for env vars, CI secrets, and `npm run test:e2e:integrations:local`.
+- See [`deployment-spa-and-env.md` — E2E integrations smoke](./deployment-spa-and-env.md#e2e-integrations-smoke) for env vars, CI secrets, and `npm run test:e2e:integrations:local`.

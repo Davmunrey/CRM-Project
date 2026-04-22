@@ -65,7 +65,7 @@ Stakeholders want **webhooks with strong connection potential**: a **platform ho
 | Events (initial set) | At minimum: **deal** created/updated/deleted; **contact** created/updated/deleted; **company** created/updated/deleted; **activity** created/updated/deleted. Use consistent `entity.action` naming (e.g. `deal.updated`). |
 | Filters | **Wildcard or multi-select** subscription filters (e.g. all deal events, or only `deal.deleted`) |
 | Payload | JSON with **`meta`** (`event_id`, `event`, `organization_id`, `timestamp`, `schema_version`, `delivery_attempt`, optional `actor_user_id`) + **`data`** (resource fields) + **`previous`** on update when feasible |
-| Signing | **HMAC-SHA256** (or documented equivalent) over canonical body; **secret per subscription**; header name documented (e.g. `X-CRM-Pro-Signature`) |
+| Signing | **HMAC-SHA256** (or documented equivalent) over canonical body; **secret per subscription**; header name documented (e.g. `X-Velo-Signature`) |
 | Transport | **HTTPS only**; optional **static custom headers** (e.g. `Authorization: Bearer …`, `X-Api-Key`) for downstream auth |
 | Reliability | **Retries with backoff** + **dead-letter** queue + **manual replay** from admin UI (align [`./master-roadmap-backlog.md`](./master-roadmap-backlog.md)) |
 | Admin | Settings (or dedicated) UI: create secret, rotate secret, test delivery, view last status / response code / latency |
@@ -132,7 +132,7 @@ Aligned to [`../README.md`](../README.md) feature table and [`.planning/codebase
 | Multi-tenancy | `organization_id`, RLS | `supabase/migrations/`, `docs/master-security-compliance.md` |
 | Audit | Org audit log | `src/store/auditStore.ts` |
 | Auth / roles | Supabase Auth, permission gates | `src/store/authStore.ts`, `src/components/auth/PermissionGate.tsx` |
-| **Outbound webhooks** | **Shipped** (Supabase: subscriptions, HMAC `X-CRM-Pro-Signature`, outbox, worker, Settings UI) — replay failed rows via Edge `webhook-subscriptions` actions `listFailedOutbox` / `replayOutbox` | `supabase/migrations/20260420140000_webhooks_outbound.sql`, `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` |
+| **Outbound webhooks** | **Shipped** (Supabase: subscriptions, HMAC `X-Velo-Signature`, outbox, worker, Settings UI) — replay failed rows via Edge `webhook-subscriptions` actions `listFailedOutbox` / `replayOutbox` | `supabase/migrations/20260420140000_webhooks_outbound.sql`, `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` |
 | **Public REST API** | **Phase 1 (read) in progress** — org-scoped API keys + `crm-public-api` Edge Function (deploy when code lands); see `docs/public-api-phase1.md` | `./master-roadmap-backlog.md` |
 
 ---
