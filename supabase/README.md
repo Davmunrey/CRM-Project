@@ -27,7 +27,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 5. Apply pending files under `supabase/migrations/` in chronological order (includes `20260421190000_realtime_publication_more_tables.sql`, which registers extra tables on the `supabase_realtime` publication so the app’s `initRealtimeSubscriptions` receives changes for enrollments, automation runs, leads, audit rows, and org members).
 6. Restart the dev server (`npm run dev`).
 
-When Supabase is configured, the app uses real authentication and PostgreSQL. Without credentials, use **local** mock mode (`VITE_ALLOW_DEMO_MODE=true` in dev) or a **`demo`** channel build for hosted static demos — see root [`README.md`](../README.md) and [`src/lib/envChannel.ts`](../src/lib/envChannel.ts).
+When Supabase is configured, the app uses real authentication and PostgreSQL. Without valid `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`, the client stays **unconfigured** (no mock tenant data in this branch) — see [`docs/deployment-spa-and-env.md`](../docs/deployment-spa-and-env.md) and root [`README.md`](../README.md).
 
 ## Remote project (CLI): migrations + webhooks
 

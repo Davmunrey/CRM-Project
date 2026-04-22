@@ -292,7 +292,7 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 ### Plans
 
 - 10.1: SPA catch-all routing — on **private** static hosting, configure the reverse proxy or CDN so unknown paths serve `index.html`; verify React Router deep links on direct load. *Primary examples:* nginx `try_files`, Caddy, or CDN error rules. A checked-in `vercel.json` is optional reference only, not the production requirement.
-- 10.2: Connect the repository to **your** deploy pipeline and set build-time env vars — `VITE_APP_CHANNEL` (`production` vs `staging` vs `demo`) plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` per environment (production vs staging; demo may omit Supabase for mock bundles)
+- 10.2: Connect the repository to **your** deploy pipeline and set build-time env vars — `VITE_APP_CHANNEL` (`production` vs `staging`) plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` per environment (compile-only CI may use `vite build --mode development` without keys; see `docs/deployment-spa-and-env.md`)
 - 10.3: Verify **staging** deployments — build from a non-production branch or job; confirm the **staging** URL uses the **staging** Supabase project (not production), e.g. via DevTools / network base URL
 - 10.4: Production deploy — merge to `main`; confirm production URL serves the expected build; smoke test: signup, login, create contact, log activity
 - 10.5: Custom domain — add DNS records per your host; confirm HTTPS/TLS is valid

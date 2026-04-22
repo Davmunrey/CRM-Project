@@ -309,7 +309,7 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 ## 1) Pre-Go-Live (T-7 to T-1 days)
 
 - [ ] **Environment Variables**
-  - [ ] `VITE_APP_CHANNEL` (`production` on prod host; `staging` on preview/UAT; `demo` only for intentional mock bundles)
+  - [ ] `VITE_APP_CHANNEL` (`production` on prod host; `staging` on preview/UAT; omit or `development` only for local dev — no mock-channel bundle)
   - [ ] `VITE_SUPABASE_URL`
   - [ ] `VITE_SUPABASE_ANON_KEY`
   - [ ] `LEAD_MAINTENANCE_SECRET`

@@ -437,7 +437,7 @@ These items describe the gap until the product is fully consistent **everywhere*
 | Topic | Description | Suggested priority |
 |-------|-------------|-------------------|
 | **Historical values in CRM data** | Contacts, deals, activities, notifications, saved views, etc. may store **plain-text** old names (e.g. `assigned_to` as a label, or seeds like `"David Muñoz"`). Changing the profile **does not** rewrite those rows automatically. | Medium: propagation or one-off migration on rename. |
-| **Identifier vs label** | Where the **DB schema already uses UUID** (`assigned_to` → `auth.users`), the UI should always resolve **display name from current users**, not rely on stale strings. Where local/demo data still uses strings, labels can drift. | High–medium term: single source of truth (user id + resolution in UI). |
+| **Identifier vs label** | Where the **DB schema already uses UUID** (`assigned_to` → `auth.users`), the UI should always resolve **display name from current users**, not rely on stale strings. Where legacy fixtures still use plain strings, labels can drift. | High–medium term: single source of truth (user id + resolution in UI). |
 | **Saved filters keyed by name** | If a filter stored the exact previous name string, it may stop matching after a rename. | Low/medium depending on usage. |
 | **Real avatar (file upload)** | If the UI only stores a URL in metadata but there is no **Storage upload** flow, the avatar may stay empty or manual. | Per profile roadmap. |
 | **Error message i18n** | The `toast` may show a technical English message from Supabase. | Product polish. |

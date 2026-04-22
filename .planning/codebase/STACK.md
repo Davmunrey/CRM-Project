@@ -81,8 +81,8 @@
 **Environment:**
 - Variables loaded by Vite from `.env` file (prefixed `VITE_`)
 - Primary env vars (see `.env.example`):
-  - `VITE_APP_CHANNEL` — `production` \| `staging` \| `demo`; omit in local dev → `development` (`src/lib/envChannel.ts`)
-  - `VITE_SUPABASE_URL` — Supabase project URL (required for production/staging builds; optional for local demo or `demo` channel)
+  - `VITE_APP_CHANNEL` — `production` \| `staging` when set explicitly; omit in local dev → `development` (`src/lib/envChannel.ts`)
+  - `VITE_SUPABASE_URL` — Supabase project URL (required for production/staging builds; optional only for local `vite build --mode development` compile smoke)
   - `VITE_SUPABASE_ANON_KEY` — Supabase anon/public key (same rules as URL)
 - See `.env.example` for template
 - OpenRouter API key is user-provided at runtime via settings store; sensitive server-only keys are kept in Supabase Edge Function env vars

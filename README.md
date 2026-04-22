@@ -52,34 +52,30 @@ npm run build
 npm run preview
 ```
 
-The app runs at `http://localhost:5173`. With **Supabase** configured, data and auth hit your project. Without it, you can use **offline demo** (see below).
+The app runs at `http://localhost:5174` (see [`vite.config.ts`](vite.config.ts)). With **Supabase** configured, data and auth hit your project. Without valid env vars, the Supabase client is `null` and auth/data stay disabled until you configure a project (see [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md)).
 
 ### Deploy channels (`VITE_APP_CHANNEL`)
 
-The SPA resolves a **channel** at build/runtime via [`src/lib/envChannel.ts`](src/lib/envChannel.ts). Set `VITE_APP_CHANNEL` in CI for every hosted build (local `npm run dev` omits it → `development`).
+The SPA resolves a **channel** at build/runtime via [`src/lib/envChannel.ts`](src/lib/envChannel.ts). Set `VITE_APP_CHANNEL` in CI for hosted **production** and **staging** builds (local `npm run dev` omits it → `development`).
 
 | Channel | When to use | Supabase URL + anon key at `vite build` |
 |--------|-------------|----------------------------------------|
 | **`production`** | Live customers (`main` / prod host) | **Required** (build fails if missing/invalid) |
 | **`staging`** | Preview, UAT, pre-prod (separate Supabase project) | **Required** |
-| **`demo`** | Static sales / training demo (mock auth + seed data) | **Optional** (offline bundle) |
-| *(omit locally)* | `npm run dev` on your machine | Optional |
+| **`development`** | Local `npm run dev` (channel unset; Vite `MODE` is not production) | **Strongly recommended** (otherwise `supabase` is `null`) |
 
-Staging and production builds **must** use different Supabase projects in dashboard env vars. The app shows a **staging** or **demo** banner in the shell when the channel matches ([`src/components/layout/EnvironmentBanner.tsx`](src/components/layout/EnvironmentBanner.tsx)).
+Staging and production builds **must** use different Supabase projects in dashboard env vars. The shell shows a **staging** banner only when `appChannel === 'staging'` ([`src/components/layout/EnvironmentBanner.tsx`](src/components/layout/EnvironmentBanner.tsx)).
 
 ### Environment Variables
 
 Create a `.env.local` file in the project root (see also [`.env.example`](.env.example)):
 
 ```bash
-# Hosted builds: production | staging | demo (omit locally)
+# Hosted builds: production | staging (omit locally → development)
 # VITE_APP_CHANNEL=staging
 
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Local dev only: offline seed users + mock auth when Supabase is unset (ignored on staging/production bundles)
-# VITE_ALLOW_DEMO_MODE=true
 
 # Optional outbound provider (defaults to gmail)
 # VITE_EMAIL_PROVIDER=gmail
@@ -90,7 +86,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 **Deploy:** SPA rewrites, `VITE_APP_CHANNEL`, and Supabase vars per environment are documented in [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md). Gmail OAuth verification: [`docs/google-gmail-oauth-verification.md`](docs/google-gmail-oauth-verification.md). Post-deploy smoke: [`docs/smoke-checklist-production.md`](docs/smoke-checklist-production.md).
-Offline demo behavior and privacy: [`docs/deployment-spa-and-env.md#offline-demo-mode`](docs/deployment-spa-and-env.md#offline-demo-mode).
+Supabase-only runtime (legacy “offline demo” anchor retained for bookmarks): [`docs/deployment-spa-and-env.md#offline-demo-mode`](docs/deployment-spa-and-env.md#offline-demo-mode).
 
 When `VITE_EMAIL_PROVIDER=resend`, deploy Supabase Edge Function `resend-send-email` and set server-side secrets in Supabase:
 
@@ -177,7 +173,7 @@ src/
 ├── types/              # All TypeScript interfaces (index.ts)
 ├── hooks/              # useLocalStorage, useSearch, useFilters
 ├── lib/                # Supabase client, env, `entityListFilters.ts` (merge toolbar + smart view filters for save)
-└── utils/              # formatters, constants, `duplicateDetection` (contacts + companies), seedData, scoring/health engines
+└── utils/              # formatters, constants, `defaultAppSettings`, `duplicateDetection` (contacts + companies), scoring/health engines
 ```
 
 ## Architecture Decisions
@@ -200,7 +196,7 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
 ## Current status
 
 - **Runtime:** Supabase Auth, org onboarding, RLS multi-tenancy, and core data stores with realtime are implemented.
-- **i18n:** EN / ES / PT (plus FR / DE / IT where keyed); demo seed copy under `src/i18n/seed/` (including automation rule templates); run multilingual smoke before releases.
+- **i18n:** EN / ES / PT (plus FR / DE / IT where keyed); English automation seeds in `src/i18n/seed/automationSeedRulesEn.ts`; workflow marketing copy in `src/i18n/workflowLibrary/`; run multilingual smoke before releases.
 - **Unused code:** `npm run audit:unused` (Knip) for files and dependencies; see `knip.json`.
 - **Tests:** Vitest (`npm run test:run`); pool + `maxWorkers` cap in `vite.config.ts` for stable Windows/CI runs.
 - **Gmail:** PKCE, server refresh, resilient inbox, persisted thread links; migration `20260410195500_gmail_thread_workspace.sql`.
@@ -221,20 +217,10 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
 | Security / compliance evidence pack | `docs/master-security-compliance.md` |
 | Go-live operations | `docs/master-release-qa.md` (Production handoff section) |
 
-## Seed Data
-**Local** offline demo: Supabase unset + `VITE_ALLOW_DEMO_MODE=true` in `.env.local` (not used on `staging` / `production` bundles). **Hosted** static demo: set `VITE_APP_CHANNEL=demo` at build time (mock auth without Supabase). Real **production** and **staging** channels require valid Supabase env vars; `vite build` enforces this for those channels.
+## Data and defaults
 
-In mock mode, the app ships with fictional, privacy-safe seed data:
-- **25 contacts** with generic identities
-- **10 companies** with generic names/domains
-- **18 deals** across pipeline stages
-- **30 activities** (calls, emails, meetings, tasks, LinkedIn, notes)
-- **4 demo emails** linked to seed contacts/companies/deals
-- **3 mock users**: `Demo Admin`, `Demo Manager`, `Demo Rep`
+Velo is **Supabase-backed**: tenant data lives in Postgres under RLS. Initial **client defaults** for pipeline/tags/currency (before org settings load) come from [`src/utils/defaultAppSettings.ts`](src/utils/defaultAppSettings.ts). CSV import and org onboarding create real rows in your project; there is no built-in “mock CRM” mode in this branch.
 
-To reset demo data: **Settings → Restaurar datos demo**.
-
-In Supabase mode, demo users are not rehydrated into organization sessions.
 ---
 
-*Last updated (git): **2026-04-21***
+*Last updated (git): **2026-04-22***

@@ -11,7 +11,7 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 | Checked requirements IDs (`AUTH-*`, `DEPLOY-*`, …) | [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) | Single checklist for v1 scope. |
 | **Pro** roadmap (30/60/90), execution backlog, GTM matrix | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Product horizon beyond the v1 phase list. |
 | Pipedrive parity, webhooks/API spec, group killer gaps | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) | Benchmark + v1 webhook acceptance criteria + interview template. |
-| What shipped, in narrative form (Parts A + B) | [`master-implementation-history.md`](./master-implementation-history.md) | Archive-stable Part A; active Part B (sections 13–24). |
+| What shipped, in narrative form (Parts A + B) | [`master-implementation-history.md`](./master-implementation-history.md) | Archive-stable Part A; active Part B (sections 13–28). |
 | Go-live, QA matrices, production handoff | [`master-release-qa.md`](./master-release-qa.md) | Especially [Production handoff checklist](master-release-qa.md#production-handoff-checklist). |
 | Auth/SSO contracts, evidence index, Supabase external checklist | [`master-security-compliance.md`](./master-security-compliance.md) | Includes OAuth redirect / CORS reminders. |
 | Lead maintenance jobs, retention, ops | [`master-lead-management.md`](./master-lead-management.md) | Edge function `lead-score-maintenance`, runbooks. |
@@ -27,7 +27,7 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 `.planning/REQUIREMENTS.md` still lists `DEPLOY-01`–`DEPLOY-05` with example filenames from one host; the **intent** is:
 
 1. **SPA routing** — every client-side route must resolve to the built `index.html` on cold load (configure the static host or reverse proxy accordingly). **Repo examples:** [`vercel.json`](../vercel.json), [`public/_redirects`](../public/_redirects) — explained in [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md).
-2. **Build-time env** — `VITE_APP_CHANNEL` (`production` \| `staging` \| `demo`) plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` where required; see [`src/lib/envChannel.ts`](../src/lib/envChannel.ts), [`src/lib/supabase.ts`](../src/lib/supabase.ts), and [`vite.config.ts`](../vite.config.ts). Canonical copy: [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md) and [`.env.example`](../.env.example).
+2. **Build-time env** — `VITE_APP_CHANNEL` when set is **`production`** or **`staging`** (otherwise inferred from Vite `MODE`; local dev → `development`); plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for real hosted builds. See [`src/lib/envChannel.ts`](../src/lib/envChannel.ts), [`src/lib/supabase.ts`](../src/lib/supabase.ts), and [`vite.config.ts`](../vite.config.ts). Canonical copy: [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md) and [`.env.example`](../.env.example).
 3. **Preview ↔ Supabase** — set **`VITE_APP_CHANNEL=staging`** on preview builds and point keys at a **non-production** Supabase project; add preview origins and OAuth redirects to Supabase Auth allowlists and Edge Function CORS (see research in `.planning/research/` if present).
 4. **Production pipeline** — deploy from protected `main` (or your release branch) with a recorded smoke pass — [`docs/smoke-checklist-production.md`](./smoke-checklist-production.md).
 5. **Custom domain + TLS** — DNS and certificate as required by your provider.
@@ -99,8 +99,8 @@ The app ships **EN** (source), **ES**, and **PT** with full catalogs. **FR, DE, 
 
 ---
 
-*Last updated: 2026-04-21 — Codebase map: entity lists (`EntityListsToolbar`, `distributionListsStore`, `entityListFilters`), duplicate companies helper, lead delete hardening (§25); prior notes: Automations + Knip; Pipedrive comparison; UI quality pass §24 / [`master-design-ui.md`](./master-design-ui.md#entity-list-toolbars-contacts-companies-deals).*
+*Last updated: 2026-04-22 — Doc bridge: Part B range §13–28; deploy channel wording aligned with Supabase-only runtime (`envChannel`, `supabase.ts`, `deployment-spa-and-env.md`).*
 
 ---
 
-*Last updated (git): **2026-04-21***
+*Last updated (git): **2026-04-22***

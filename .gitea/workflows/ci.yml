@@ -28,13 +28,10 @@ jobs:
       - name: Unit tests
         run: npx vitest run
 
-      # vite build runs in production mode; without secrets the repo rejects
-      # production/staging channels (see vite.config.ts). Demo channel matches
-      # an offline CI smoke build — real deploys set channel + Supabase on the host.
+      # Compile-only production bundle: use development mode so the Supabase
+      # build gate is skipped (real deploys use production/staging + secrets).
       - name: Vite build (CI)
-        env:
-          VITE_APP_CHANNEL: demo
-        run: npm run build
+        run: npm run build -- --mode development
 
       - name: Install Playwright (Chromium, API smoke only)
         if: ${{ secrets.E2E_SUPABASE_URL != '' && secrets.E2E_SUPABASE_ANON_KEY != '' && secrets.E2E_USER_EMAIL != '' && secrets.E2E_USER_PASSWORD != '' && secrets.E2E_ORGANIZATION_ID != '' }}

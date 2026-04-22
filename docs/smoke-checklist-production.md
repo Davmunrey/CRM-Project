@@ -6,7 +6,7 @@ Use this after a production deploy (or before marking **`DEPLOY-04`** done). Rec
 
 ## Preconditions
 
-- [ ] `VITE_APP_CHANNEL` is **`production`** for this deploy (not `staging` or `demo`).
+- [ ] `VITE_APP_CHANNEL` is **`production`** for this deploy (not `staging`).
 - [ ] `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` match the **production** Supabase project for this build.
 - [ ] SPA deep links work ([`deployment-spa-and-env.md`](./deployment-spa-and-env.md)).
 - [ ] Optional: Gmail restricted-scope verification status noted ([`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md)).

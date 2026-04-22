@@ -29,13 +29,15 @@ Vite inlines variables prefixed with `VITE_` at **build** time. Configure **sepa
 
 | Variable | Used in |
 |----------|---------|
-| `VITE_APP_CHANNEL` | [`src/lib/envChannel.ts`](../src/lib/envChannel.ts) — `production` \| `staging` \| `demo`; omit locally → `development` |
+| `VITE_APP_CHANNEL` | [`src/lib/envChannel.ts`](../src/lib/envChannel.ts) — optional explicit **`production`** or **`staging`**. If unset, the channel follows Vite `MODE` (`vite build` defaults to **production** unless you pass `--mode staging` or `--mode development`). Local `npm run dev` resolves to **`development`**. Values other than `production` / `staging` are **not** first-class channels (for example a stray `demo` string does not enable a mock bundle). |
 | `VITE_SUPABASE_URL` | [`src/lib/supabase.ts`](../src/lib/supabase.ts) |
 | `VITE_SUPABASE_ANON_KEY` | Same |
 
-**Build:** `vite build` rejects **production** and **staging** channels unless Supabase env vars are valid ([`vite.config.ts`](../vite.config.ts)). **demo** channel allows a bundle without Supabase (offline mock for static hosting).
+**Build gate:** When the resolved channel is **`production`** or **`staging`**, `vite build` fails unless `VITE_SUPABASE_URL` (must start with `https://`) and `VITE_SUPABASE_ANON_KEY` validate ([`vite.config.ts`](../vite.config.ts)). Use `vite build --mode development` only for **compile-only CI**; release and preview hosts must still inject real Supabase keys for production/staging modes.
 
-**Runtime:** `production` / `staging` without Supabase show the bootstrap fatal screen (`isBootstrapFatalError` in [`src/lib/supabase.ts`](../src/lib/supabase.ts)). `demo` without Supabase enables offline mock. Local `npm run dev` defaults to `development`.
+**Runtime (`dataRuntime`):** [`src/lib/supabase.ts`](../src/lib/supabase.ts) exports `dataRuntime` as `supabase` \| `unconfigured`, `supabase` as a client or `null`, and `isBootstrapFatalError` when a **production** bundle has no valid env. There is **no** offline mock CRM: **`unconfigured`** means auth and data paths stay disabled (local dev logs a console warning).
+
+**Shell banner:** [`EnvironmentBanner.tsx`](../src/components/layout/EnvironmentBanner.tsx) shows the staging strip only when `appChannel === 'staging'`.
 
 Local template: [`.env.example`](../.env.example).
 
@@ -56,46 +58,18 @@ Follow your DNS and certificate process (e.g. ACME on the reverse proxy, or cert
 
 <a id="offline-demo-mode"></a>
 
-## Offline demo mode
+## Supabase-only runtime (legacy anchor: offline demo)
 
-Velo supports a **hosted demo** bundle and **local offline demo** when Supabase is not configured. Runtime resolution lives in [`src/lib/supabase.ts`](../src/lib/supabase.ts).
+Older documentation described a **`demo`** deploy channel and **`VITE_ALLOW_DEMO_MODE`** for a local mock CRM. **That stack is removed.** The canonical model is:
 
-### Runtime labels
-
-- `supabase`: real authentication and persistence (production/staging style).
-- `offline_demo`: mock auth + seed data, no Supabase backend required.
-- `unconfigured`: Supabase missing and demo mode not enabled.
-
-### Environment variables (demo)
-
-- `VITE_APP_CHANNEL=demo`: builds a hosted demo bundle.
-- `VITE_ALLOW_DEMO_MODE=true`: enables local offline demo when Supabase is not configured.
-- `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`: required for **production** and **staging** channels (see [Build-time environment](#build-time-environment-deploy-02)).
-
-### Privacy (demo)
-
-- Login UI must not expose demo credentials, account hints, or personal names.
-- Seed-facing identity stays generic (for example `demo.admin@example.com`, `Demo Admin`).
-- Public-facing offline seed records should avoid company-identifiable names and domains.
-
-### Parity checklist (demo vs production)
-
-- Data shapes match production models (`types`, stores, and mappers).
-- Offline leads include scoring rules and seed events aligned with migration defaults.
-- Sequence seeds include `flowDefinition` and enrollment examples.
-- Notifications and references use valid seed IDs (`u*`, `d*`, `a*`).
-- Realtime-only features degrade gracefully in offline mode.
+- **Hosted `production` / `staging`:** always ship valid `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (separate Supabase projects per environment).
+- **Local `development`:** point the same vars at a dev project; without them, `supabase` stays `null` and the app does not impersonate tenants.
+- **Training / sales demos:** use a disposable Supabase project and seed orgs through normal product flows (or SQL migrations), not a client-only mock.
 
 ### Quick verification
 
-1. `npm run build` and `npm run test:run`.
-2. Smoke in demo mode: auth, leads, sequences (flow tab + enrollments), notifications, contacts / companies / deals, reports.
-
-### Known limitations (offline demo)
-
-- No edge functions (`promote-lead`, sequence workers, maintenance jobs) execute.
-- No live Gmail OAuth / send / refresh.
-- No Supabase Realtime sync; stores run local seed behavior.
+1. `npm run build` with production-like env (or `npm run build -- --mode development` for compile-only checks) plus `npm run test:run`.
+2. Smoke on a real project: auth, core entities, sequences, notifications per your release matrix.
 
 <a id="e2e-integrations-smoke"></a>
 

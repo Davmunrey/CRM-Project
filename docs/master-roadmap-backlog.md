@@ -161,7 +161,7 @@ This is the actionable backlog derived from the 30/60/90 roadmap.
 All previously listed “in progress” packs (automations v1, scoring v2, lead maintenance ops, ops docs, email privacy/Ola 3, navigation, app shell, sell-ready security wave) are **done**. Narrative and ordering:
 
 - **`docs/master-implementation-history.md#implementation-history-sections-01-12`** — sections **1–12** (includes **section 7** leads baseline).  
-- **`docs/master-implementation-history.md#implementation-history`** (Part B) — sections **13–24** (status, maintenance, email hardening, navigation, UI shell, sell-ready, sprint archive, automations/scoring, Ola C docs, manager dashboard + onboarding, April 2026 UI quality pass).
+- **`docs/master-implementation-history.md#implementation-history`** (Part B) — sections **13–28** (status, maintenance, email hardening, navigation, UI shell, sell-ready, sprint archive, automations/scoring, Ola C docs, manager dashboard + onboarding, April 2026 UI quality pass, Supabase-only shell + password UX + integrations/API waves).
 - **`docs/README.md`** — status snapshot table.
 
 ## Reference docs (team register)

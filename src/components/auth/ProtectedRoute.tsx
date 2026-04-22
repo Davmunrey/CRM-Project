@@ -34,7 +34,7 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
   }
 
   // AUTH-06: Authenticated users without an org must create one before accessing Velo.
-  // Skip this check for Supabase mock mode (isSupabaseConfigured = false) so demo/dev still works.
+  // When Supabase is not configured, org resolution is skipped (unconfigured runtime).
   if (isAuthenticated && !organizationId && isSupabaseConfigured) {
     if (tenantResolutionStatus === 'resolving' || tenantResolutionStatus === 'idle') {
       return null

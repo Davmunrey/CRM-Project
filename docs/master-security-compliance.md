@@ -1,11 +1,12 @@
 # Security & Compliance (master)
 
-> Consolidated **2026-04-15**. Single reference for auth/SSO contracts, hardening matrix, sell-ready evidence index, Supabase external checklist, SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
+> Consolidated **2026-04-15**; password policy and selector hygiene added **2026-04-22**. Single reference for auth/SSO contracts, hardening matrix, sell-ready evidence index, Supabase external checklist, SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
 
 **Replaces:** auth-sso-backend-handoff, hardening-matrix, sell-ready-security-evidence-index, supabase-external-hardening-checklist, compliance-mapping, dsar-playbook, gitea-operations.
 
 ## Table of contents
 
+- [Client password policy and Zustand selectors](#client-password-policy-and-zustand-selectors)
 - [Auth / SSO backend handoff](#auth-sso-backend-handoff)
 - [Hardening matrix (audit-ready)](#hardening-matrix)
 - [Sell-ready security & compliance evidence index](#sell-ready-security-evidence-index)
@@ -16,17 +17,32 @@
 
 ---
 
+<a id="client-password-policy-and-zustand-selectors"></a>
+## Client password policy and Zustand selectors
+
+### Password UX and validation
+
+- Shared helpers live in `src/lib/securePassword.ts` (`isStrongPassword`, `getPasswordRuleMet`, optional generator). Unit tests: `tests/lib/securePassword.test.ts`.
+- `src/components/auth/SecurePasswordField.tsx` renders a live checklist (length, mixed case, digit, symbol) and optional generator; parents pass label strings from i18n so the checklist does not mount a second translation scope.
+- Surfaces wired to the same rules: login (when org policy requires strong passwords), register, password reset, profile password change, and team member invite / password reset flows in team management.
+- Org default `enforceStrongPasswordMinLength` (from `organizations.settings`) gates minimum length on the client; when it is off, the login form shows a short hint that the server may still reject weak passwords.
+
+### React “maximum update depth” hygiene
+
+- **Zustand selectors must return stable references.** Selecting a freshly constructed object (for example `getFlags()` that returns `{ ... }` every call) causes `useSyncExternalStore` to re-subscribe in a tight loop. Prefer selecting a primitive slice or a stable store field, then derive view objects with `useMemo` in the component.
+- **Effects that call `setState` must depend on primitives**, not object identity from the host or Supabase session, unless the effect compares previous values and only updates when meaningfully changed.
+- **Context providers** should memoize their `value` object when it aggregates several fields, so consumers do not re-render every parent render.
 
 <a id="auth-sso-backend-handoff"></a>
 ## Auth / SSO backend handoff
 
-This project is ready to integrate backend-managed SSO for Google, Azure, Apple, and SAML 2.0.
+The shipped SPA shell is **email/password + magic link** against Supabase; OAuth/SAML paths below describe **contracts already present in the client** for when backend SSO is enabled. Until those flows are turned on in Supabase and env, treat SSO as integration-ready, not default login.
 
 ## Document Control
 
 - Status: Active
 - Owner: Backend/Auth
-- Last updated: 2026-04-16
+- Last updated: 2026-04-22
 - Canonical: Yes
 
 ## Frontend contract already implemented
@@ -127,7 +143,7 @@ This matrix tracks production hardening posture across security, reliability, op
 
 - Status: Active
 - Owner: Security/Ops/Backend
-- Last updated: 2026-04-16
+- Last updated: 2026-04-22
 - Canonical: Yes
 
 ## Scoring Legend
@@ -193,7 +209,7 @@ This index ties **internal documentation**, **code controls**, and **external ch
 - **V4 Access control** — RLS + app gates: [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist); `src/utils/permissions.ts`
 - **V9 Communications** — TLS to APIs + outbound mail controls: external CDN/infra; `supabase/functions/resend-send-email/index.ts`; [`master-email-operations`](./master-email-operations.md#email-deliverability-resend)
 - **V7 Error handling / logging** — `audit_log`, maintenance telemetry, failed send audit: [`master-lead-management`](./master-lead-management.md#lead-maintenance-runbook); [#hardening-matrix](#hardening-matrix); `src/store/emailStore.ts`
-- **V14 Configuration** — Channels + Supabase: `src/lib/envChannel.ts`, `src/lib/supabase.ts`, `vite.config.ts`, `.env.example` (`VITE_APP_CHANNEL`, staging/prod build gates, hosted `demo` mock)
+- **V14 Configuration** — Channels + Supabase: `src/lib/envChannel.ts`, `src/lib/supabase.ts`, `vite.config.ts`, `.env.example` (`VITE_APP_CHANNEL` production/staging, `development` default in dev, staging/prod build gates; Supabase-only runtime, no hosted mock channel)
 - **V8 Data protection** — Tenant isolation + DSAR/retention: [#dsar-playbook](#dsar-playbook); [`master-lead-management`](./master-lead-management.md#data-retention-runbook)
 
 ## Revision history
@@ -266,7 +282,7 @@ It is a pragmatic engineering mapping (not legal advice and not a formal certifi
 
 - Status: Active
 - Owner: Security/Backend/Ops
-- Last updated: 2026-04-16
+- Last updated: 2026-04-22
 - Canonical: Yes
 
 **Related hub:** [`README`](./README.md) (status snapshot + index). DSAR and retention: [#dsar-playbook](#dsar-playbook), [`master-lead-management` — retention](./master-lead-management.md#data-retention-runbook).

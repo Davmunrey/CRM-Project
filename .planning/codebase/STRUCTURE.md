@@ -1,6 +1,6 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-04-21
+**Analysis Date:** 2026-04-22
 
 ## Directory Layout
 
@@ -119,8 +119,10 @@ CRM/
 **`src/components/auth/`:**
 - Purpose: Authentication and authorisation enforcement in the component tree
 - Key files:
-  - `src/components/auth/ProtectedRoute.tsx` — redirects to `/login` if unauthenticated; shows access-denied UI if permission missing
+  - `src/components/auth/ProtectedRoute.tsx` — redirects to `/login` if unauthenticated; org/workspace gates when Supabase is configured; shows access-denied UI if permission missing
   - `src/components/auth/PermissionGate.tsx` — inline conditional render based on `hasPermission()`
+  - `src/components/auth/SecurePasswordField.tsx` — strong-password checklist + optional generator; pairs with `src/lib/securePassword.ts`
+  - `src/components/auth/WorkspaceHostBootstrap.tsx` — resolves org/workspace from host before protected routes settle
 
 **`src/components/deals/`:**
 - Purpose: Deal-specific presentational components
@@ -141,7 +143,8 @@ CRM/
   - `src/utils/permissions.ts` — `ROLE_PERMISSIONS` map, `hasPermission()`, `canAccessRoute()`, role label/color maps
   - `src/utils/constants.ts` — label/color maps for all status enums, `LS_KEYS` object (localStorage key names), `DEAL_STAGES_ORDER`
   - `src/utils/formatters.ts` — `formatCurrency()`, `formatDate()`, `formatRelativeDate()`
-  - `src/utils/seedData.ts` — `seedContacts`, `seedDeals`, `seedSettings`, `seedEmails` used for mock/demo population
+  - `src/utils/defaultAppSettings.ts` — initial settings-store defaults when no org row is loaded yet
+  - `src/lib/securePassword.ts` — strong password validation helpers (`isStrongPassword`, `getPasswordRuleMet`)
   - `src/utils/leadScoring.ts` — `computeLeadScore()` returning `LeadScoreBreakdown`
   - `src/utils/dealHealth.ts` — `computeDealHealth()` returning a health status indicator
   - `src/utils/followUpEngine.ts` — derives `FollowUpReminder` list from contacts + activities
@@ -156,15 +159,18 @@ CRM/
 **`src/lib/`:**
 - Purpose: External library client instantiation
 - Key files:
-  - `src/lib/supabase.ts` — conditional Supabase client; exports `supabase` (null if not configured) and `isSupabaseConfigured` boolean
+  - `src/lib/supabase.ts` — conditional Supabase client; exports `supabase` (null if not configured), `dataRuntime`, `isSupabaseConfigured`, `isBootstrapFatalError`
   - `src/lib/database.types.ts` — auto-generated Supabase TypeScript types
+  - `src/lib/envChannel.ts` — `production` \| `staging` \| `development` deploy channel
+  - `src/lib/workspaceSlug.ts` — hostname → workspace slug helpers for multi-tenant routing
 
 **`src/i18n/`:**
 - Purpose: Internationalisation — translations and language state
 - Key files:
   - `src/i18n/index.ts` — `useI18nStore` (persisted Zustand), `useTranslations()` hook, `LANGUAGE_LABELS`, `LANGUAGE_FLAGS`
   - `src/i18n/en.ts`, `src/i18n/es.ts`, `src/i18n/pt.ts`, `src/i18n/fr.ts`, `src/i18n/de.ts`, `src/i18n/it.ts` — translation objects
-  - `src/i18n/seed/` — demo-only seed strings (e.g. `en.demo.ts`, `automationSeedRulesEn.ts`) consumed by stores at init
+  - `src/i18n/seed/` — English automation rule seeds (`automationSeedRulesEn.ts`) and other seed catalogs consumed at init
+  - `src/i18n/workflowLibrary/` — localized workflow template marketing strings (EN/ES/PT)
 
 **`src/hooks/`:**
 - Purpose: Generic React hooks not tied to a specific domain
