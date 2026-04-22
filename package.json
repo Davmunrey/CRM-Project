@@ -1,7 +1,8 @@
 {
-  "name": "crm-app",
+  "name": "velo",
   "private": true,
   "version": "0.0.0",
+  "description": "Velo — outbound-native CRM for high-velocity sales teams",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -17,6 +18,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
+    "test:e2e:integrations": "playwright test --config=e2e/playwright.integrations.config.ts",
+    "test:e2e:integrations:local": "node --env-file=.env.e2e ./node_modules/@playwright/test/cli.js test --config=e2e/playwright.integrations.config.ts",
     "docs:md-inventory": "node scripts/md-chronology.mjs inventory",
     "docs:md-footers": "node scripts/md-chronology.mjs apply-footers",
     "docs:md-sort-state": "node scripts/md-chronology.mjs sort-state-key-decisions",
@@ -32,6 +35,8 @@
     "supabase:db:push": "supabase db push",
     "supabase:secrets:set-webhook-worker": "node scripts/supabase-set-webhook-worker-secret.mjs",
     "supabase:deploy:webhooks": "supabase functions deploy webhook-subscriptions && supabase functions deploy webhook-worker",
+    "supabase:deploy:integrations": "supabase functions deploy api-keys && supabase functions deploy crm-public-api && supabase functions deploy lead-capture && supabase functions deploy lead-capture-tokens",
+    "supabase:deploy:all-edge": "npm run supabase:deploy:webhooks && npm run supabase:deploy:integrations",
     "supabase:webhooks:push": "npm run supabase:db:push && npm run supabase:deploy:webhooks",
     "audit:unused": "npx -y knip --no-progress --exclude exports,nsExports,types,nsTypes,enumMembers,namespaceMembers,duplicates --no-config-hints"
   },

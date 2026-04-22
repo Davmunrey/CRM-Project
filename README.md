@@ -1,4 +1,4 @@
-# CRM Pro — Sales Platform
+# Velo — Sales Platform
 
 A production-grade, full-featured CRM single-page application built with React 18, TypeScript, Vite, and Tailwind CSS. Inspired by HubSpot/Pipedrive, designed for Spanish/European B2B sales teams.
 
@@ -90,6 +90,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 **Deploy:** SPA rewrites, `VITE_APP_CHANNEL`, and Supabase vars per environment are documented in [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md). Gmail OAuth verification: [`docs/google-gmail-oauth-verification.md`](docs/google-gmail-oauth-verification.md). Post-deploy smoke: [`docs/smoke-checklist-production.md`](docs/smoke-checklist-production.md).
+Offline demo behavior and privacy policy: [`docs/demo-offline.md`](docs/demo-offline.md).
 
 When `VITE_EMAIL_PROVIDER=resend`, deploy Supabase Edge Function `resend-send-email` and set server-side secrets in Supabase:
 
@@ -223,13 +224,13 @@ All components are kept under 200 lines. Large pages (Contacts, Deals) delegate 
 ## Seed Data
 **Local** offline demo: Supabase unset + `VITE_ALLOW_DEMO_MODE=true` in `.env.local` (not used on `staging` / `production` bundles). **Hosted** static demo: set `VITE_APP_CHANNEL=demo` at build time (mock auth without Supabase). Real **production** and **staging** channels require valid Supabase env vars; `vite build` enforces this for those channels.
 
-In mock mode, the app ships with realistic Spanish/European B2B seed data:
-- **25 contacts** across companies in fintech, SaaS, insurance, banking, retail
-- **10 companies** including Bankia, Factorial, Mapfre, Inditex, Cabify, Deloitte
-- **18 deals** across all pipeline stages (€500–€50,000)
+In mock mode, the app ships with fictional, privacy-safe seed data:
+- **25 contacts** with generic identities
+- **10 companies** with generic names/domains
+- **18 deals** across pipeline stages
 - **30 activities** (calls, emails, meetings, tasks, LinkedIn, notes)
-- **4 demo emails** linked to real contacts/companies/deals for Inbox and quote demo flows
-- **3 mock users**: David Muñoz (Sales Manager), Sara López (AE), Carlos Vega (SDR)
+- **4 demo emails** linked to seed contacts/companies/deals
+- **3 mock users**: `Demo Admin`, `Demo Manager`, `Demo Rep`
 
 To reset demo data: **Settings → Restaurar datos demo**.
 

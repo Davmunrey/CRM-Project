@@ -104,13 +104,16 @@
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None detected
+- **Lead capture (planned/landing):** unauthenticated POST to `lead-capture` Edge Function with opaque `lct_…` token (hashed in `lead_capture_tokens`) — see [`docs/lead-capture-public-endpoint.md`](../../docs/lead-capture-public-endpoint.md).
 
 **Outgoing:**
-- **CRM domain webhooks (v1):** Postgres triggers enqueue rows in `webhook_outbox` when deals/contacts/companies/activities change (if the org has ≥1 enabled subscription). Edge Function `webhook-worker` delivers signed HTTPS POSTs to each matching `webhook_subscriptions.target_url`. See migration `20260420140000_webhooks_outbound.sql` and `supabase/README.md`.
+- **CRM domain webhooks (v1):** Postgres triggers enqueue rows in `webhook_outbox` when deals/contacts/companies/activities change (if the org has ≥1 enabled subscription). Edge Function `webhook-worker` delivers signed HTTPS POSTs to each matching `webhook_subscriptions.target_url`. Signature header: **`X-CRM-Pro-Signature`** (HMAC-SHA256 hex over raw JSON body). DELETE events use JSON `null` for `data` and the deleted row in `previous`. Failed rows can be **replayed** via `webhook-subscriptions` actions `listFailedOutbox` / `replayOutbox`. See migrations `20260420140000_webhooks_outbound.sql`, `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql`, and `supabase/README.md`.
+
+**Public read API (phase 1):**
+- **GET** `crm-public-api` with `Authorization: Bearer crm_live_…` and `?collection=…` — see [`docs/public-api-phase1.md`](../../docs/public-api-phase1.md). Keys stored in `organization_api_keys` (hash only).
 - Gmail send remains a direct API call (not CRM lifecycle webhooks).
 
-**Product spec (CRM Pro outbound webhooks v1 + parity vs Pipedrive):** [`docs/master-pipedrive-crm-pro-comparison.md`](../../docs/master-pipedrive-crm-pro-comparison.md).
+**Product spec (Velo outbound webhooks v1 + parity vs Pipedrive):** [`docs/master-pipedrive-crm-pro-comparison.md`](../../docs/master-pipedrive-crm-pro-comparison.md).
 
 ---
 

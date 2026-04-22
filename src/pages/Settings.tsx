@@ -28,6 +28,12 @@ import { seedContacts } from '../utils/seedData'
 import { seedCompanies } from '../utils/seedData'
 import { seedDeals } from '../utils/seedData'
 import { seedActivities } from '../utils/seedData'
+import {
+  sanitizeDemoActivities,
+  sanitizeDemoCompanies,
+  sanitizeDemoContacts,
+  sanitizeDemoDeals,
+} from '../utils/demoDataSanitizer'
 import { initiateGmailOAuth } from '../services/gmailService'
 import { CSVImport } from '../components/import/CSVImport'
 import { PermissionGate } from '../components/auth/PermissionGate'
@@ -47,6 +53,7 @@ import type { NotificationType } from '../types'
 import type { Permission, UserRole } from '../types/auth'
 import { ALL_PERMISSIONS } from '../utils/permissionProfiles'
 import { SettingsWebhooksPanel } from '../components/settings/SettingsWebhooksPanel'
+import { SettingsIntegrationsPanel } from '../components/settings/SettingsIntegrationsPanel'
 import { SignatureRichEditor } from '../components/settings/SignatureRichEditor'
 const ENTITY_TABS: CustomFieldEntityType[] = ['contact', 'company', 'deal']
 
@@ -55,7 +62,18 @@ const FIELD_TYPES: CustomFieldType[] = [
   'checkbox', 'url', 'email', 'currency', 'textarea',
 ]
 
-type SettingsTab = 'general' | 'onboarding' | 'branding' | 'pipeline' | 'email' | 'permissions' | 'data' | 'navigation' | 'webhooks' | 'advanced'
+type SettingsTab =
+  | 'general'
+  | 'onboarding'
+  | 'branding'
+  | 'pipeline'
+  | 'email'
+  | 'permissions'
+  | 'data'
+  | 'navigation'
+  | 'webhooks'
+  | 'integrations'
+  | 'advanced'
 
 export function Settings() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -70,6 +88,7 @@ export function Settings() {
     { id: 'data', label: t.settings.tabData },
     { id: 'navigation', label: t.settings.tabNavigation },
     { id: 'webhooks', label: t.settings.tabWebhooks },
+    { id: 'integrations', label: t.settings.tabIntegrations },
     { id: 'advanced', label: t.settings.tabAdvanced },
   ]
   const { language, setLanguage, languageMode, setLanguageMode } = useI18nStore()
@@ -401,7 +420,7 @@ export function Settings() {
 
   const handleSaveBranding = () => {
     updateBranding({
-      appName: brandingDraft.appName.trim() || 'CRM Pro',
+      appName: brandingDraft.appName.trim() || t.brand.defaultAppName,
       primaryColor: brandingDraft.primaryColor || '#7c3aed',
       logoUrl: brandingDraft.logoUrl?.trim() || undefined,
       customDomain: brandingDraft.customDomain?.trim() || undefined,
@@ -440,10 +459,10 @@ export function Settings() {
   }
 
   const handleResetBranding = () => {
-    setBrandingDraft({ appName: 'CRM Pro', primaryColor: '#7c3aed' })
+    setBrandingDraft({ appName: t.brand.defaultAppName, primaryColor: '#4f46e5' })
     updateBranding({
-      appName: 'CRM Pro',
-      primaryColor: '#7c3aed',
+      appName: t.brand.defaultAppName,
+      primaryColor: '#4f46e5',
       logoUrl: undefined,
       customDomain: undefined,
       privacyUrl: undefined,
@@ -559,13 +578,13 @@ export function Settings() {
   const handleReset = () => {
     // Reset all stores to seed data
     contactsStore.bulkDelete(contactsStore.contacts.map((c) => c.id))
-    seedContacts.forEach((c) => contactsStore.addContact(c))
+    sanitizeDemoContacts(seedContacts).forEach((c) => contactsStore.addContact(c))
     companiesStore.companies.forEach((c) => companiesStore.deleteCompany(c.id))
-    seedCompanies.forEach((c) => companiesStore.addCompany(c))
+    sanitizeDemoCompanies(seedCompanies).forEach((c) => companiesStore.addCompany(c))
     dealsStore.deals.forEach((d) => dealsStore.deleteDeal(d.id))
-    seedDeals.forEach((d) => dealsStore.addDeal(d))
+    sanitizeDemoDeals(seedDeals).forEach((d) => dealsStore.addDeal(d))
     activitiesStore.activities.forEach((a) => activitiesStore.deleteActivity(a.id))
-    seedActivities.forEach((a) => activitiesStore.addActivity(a))
+    sanitizeDemoActivities(seedActivities).forEach((a) => activitiesStore.addActivity(a))
     resetToDefaults()
     toast.success(t.settings.resetData + ' ✓')
   }
@@ -1777,6 +1796,12 @@ export function Settings() {
       {activeTab === 'webhooks' && (
         <section className="crm-surface-section p-6">
           <SettingsWebhooksPanel />
+        </section>
+      )}
+
+      {activeTab === 'integrations' && (
+        <section className="crm-surface-section p-6">
+          <SettingsIntegrationsPanel />
         </section>
       )}
 

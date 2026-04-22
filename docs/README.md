@@ -1,6 +1,6 @@
 # CRM documentation
 
-**Canonical product and engineering narrative** for CRM Pro: nine consolidated **`master-*.md`** documents plus a **project bridge** that ties this folder to `.planning/`.
+**Canonical product and engineering narrative** for Velo: nine consolidated **`master-*.md`** documents plus a **project bridge** that ties this folder to `.planning/`.
 
 ## Start here
 
@@ -14,7 +14,7 @@
 | Start **Google Gmail** restricted-scope verification | [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md) |
 | Run **production smoke** after deploy | [`smoke-checklist-production.md`](./smoke-checklist-production.md) |
 | Own **roadmap / backlog** (30–60–90, GTM matrix) | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
-| Compare **Pipedrive vs CRM Pro**, webhooks parity, group priorities | [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) |
+| Compare **Pipedrive vs Velo**, webhooks parity, group priorities | [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) |
 | Need **what shipped** (chronological handoff) | [`master-implementation-history.md`](./master-implementation-history.md) |
 
 Verify consolidated `docs/` layout (no legacy split sources; masters present; **only allowlisted** `docs/*.md`): `npm run docs:verify-consolidation`. Normalize phase snapshot headers: `npm run docs:fix-phase-headers`.
@@ -30,7 +30,9 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 | Leads: scoring backend, maintenance, retention | [`master-lead-management.md`](./master-lead-management.md) | Edge maintenance contract, Ops dashboard, runbook, data retention |
 | Design system, theme, navigation, profiles | [`master-design-ui.md`](./master-design-ui.md) · [`design-system-reference.md`](./design-system-reference.md) | Page shells, **main canvas** (`.app-main-surface`), mobile drawer + command palette; **reference** adds tokens, motion buckets, charts/locale loading, `ui:lint`, density |
 | Release, QA, go/no-go, production handoff | [`master-release-qa.md`](./master-release-qa.md) | Sell-ready checklist, QA evidence, go/no-go, production handoff |
-| Implementation history (full handoff) | [`master-implementation-history.md`](./master-implementation-history.md) | Part A §1–12 · Part B §13–25 |
+| Implementation history (full handoff) | [`master-implementation-history.md`](./master-implementation-history.md) | Part A §1–12 · Part B §13–26 |
+| Public REST API (phase 1, read) | [`public-api-phase1.md`](./public-api-phase1.md) | Bearer `crm_live_…` keys, `crm-public-api` collection query |
+| Public lead capture | [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md) | `lct_…` tokens, honeypot, duplicate handling |
 | Roadmap 30/60/90 + execution backlog | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Horizon roadmap · Pro backlog board |
 | Competitive / integration parity (Pipedrive, webhooks, API) | [`master-pipedrive-crm-pro-comparison.md`](./master-pipedrive-crm-pro-comparison.md) | Benchmark tables · Webhooks v1 spec · Top gaps · Executive summary |
 | Manager `/manager` KPI definitions (MQL/SQL, aging, first-touch) | [`master-implementation-history.md` §23 + data contract](./master-implementation-history.md#manager-dashboard-data-contract) | Section 23 narrative; [subsection](./master-implementation-history.md#manager-dashboard-data-contract) for tables, i18n keys, tests |

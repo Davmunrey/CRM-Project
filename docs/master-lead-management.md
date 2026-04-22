@@ -4,6 +4,8 @@
 
 **Replaces:** lead-score-maintenance-backend, lead-maintenance-ops-dashboard, lead-maintenance-runbook, data-retention-runbook.
 
+**Public lead capture:** unauthenticated website forms using opaque tokens (`lct_…`) and the `lead-capture` Edge Function are documented in [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md) (spam honeypot, duplicate email behavior).
+
 ## Table of contents
 
 - [Lead score maintenance — backend contract](#lead-score-maintenance-backend)
@@ -337,7 +339,7 @@ Escalate to backend team when:
 <a id="data-retention-runbook"></a>
 ## Data retention runbook
 
-Defines **how long** categories of data are kept and **how to enforce** reduction or deletion in a CRM Pro + Supabase deployment. Tune periods to your legal, contractual, and insurance requirements. Not legal advice.
+Defines **how long** categories of data are kept and **how to enforce** reduction or deletion in a Velo + Supabase deployment. Tune periods to your legal, contractual, and insurance requirements. Not legal advice.
 
 **Doc hub:** [`README`](./README.md).
 

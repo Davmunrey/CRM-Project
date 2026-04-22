@@ -8,7 +8,7 @@ import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 const SEED_PRODUCTS: Product[] = (() => {
   const now = new Date().toISOString()
   return [
-    { id: 'prod-001', name: 'CRM Pro License', description: 'Licencia anual CRM Pro con soporte incluido', sku: 'CRM-PRO-001', price: 1200, currency: 'EUR', category: 'software', isActive: true, createdAt: now, updatedAt: now },
+    { id: 'prod-001', name: 'Velo License', description: 'Annual Velo license with support included', sku: 'VELO-001', price: 1200, currency: 'EUR', category: 'software', isActive: true, createdAt: now, updatedAt: now },
     { id: 'prod-002', name: 'Implementación Básica', description: 'Servicio de implementación y migración de datos', sku: 'SRV-IMP-001', price: 3500, currency: 'EUR', category: 'consulting', isActive: true, createdAt: now, updatedAt: now },
     { id: 'prod-003', name: 'Soporte Premium 24/7', description: 'Soporte prioritario con SLA garantizado < 2h', sku: 'SUP-PREM-001', price: 800, currency: 'EUR', category: 'support', isActive: true, createdAt: now, updatedAt: now },
     { id: 'prod-004', name: 'Formación Equipos', description: 'Sesiones de formación presencial para equipos de ventas', sku: 'TRN-EQ-001', price: 1500, currency: 'EUR', category: 'service', isActive: true, createdAt: now, updatedAt: now },

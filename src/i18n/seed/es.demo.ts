@@ -3,8 +3,8 @@ import type { SeedDemoCatalog } from '../types'
 export const seedDemo: SeedDemoCatalog = {
   products: {
     'prod-001': {
-      name: 'Licencia CRM Pro',
-      description: 'Licencia anual CRM Pro con soporte incluido',
+      name: 'Licencia Velo',
+      description: 'Licencia anual Velo con soporte incluido',
     },
     'prod-002': {
       name: 'Implementación básica',
@@ -233,7 +233,7 @@ export const seedDemo: SeedDemoCatalog = {
     'cf-d-04': { label: 'Presupuesto aprobado', placeholder: '0,00' },
   },
   demoAuth: {
-    organizationName: 'CRM Pro Ventas',
+    organizationName: 'Velo Ventas',
     users: {
       u1: { jobTitle: 'Director comercial' },
       u2: { jobTitle: 'Ejecutiva de cuentas' },

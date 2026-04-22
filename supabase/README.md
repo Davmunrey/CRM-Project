@@ -42,7 +42,7 @@ If you cannot run a shell locally, use the manual workflow **[`.github/workflows
    - *(Recommended)* `WEBHOOK_WORKER_SECRET` — long random string for the `webhook-worker` Edge function
 2. **Actions → “Supabase remote deploy” → Run workflow**.
 
-That applies `supabase/migrations/` to the linked project and deploys `webhook-subscriptions` and `webhook-worker`.
+That applies `supabase/migrations/` to the linked project and deploys **all** Edge Functions used by the app: `webhook-subscriptions`, `webhook-worker`, `api-keys`, `crm-public-api`, `lead-capture`, and `lead-capture-tokens`.
 
 ### On your machine (CLI)
 
@@ -53,8 +53,31 @@ From the repo root after `npm install` (installs the `supabase` dev dependency):
 3. `npm run supabase:db:push` — applies pending SQL in `supabase/migrations/` to the linked remote database (review with `supabase db diff` if you use a branching workflow).
 4. **Once per project:** `npm run supabase:secrets:set-webhook-worker` — sets Edge secret `WEBHOOK_WORKER_SECRET`. If the env var `WEBHOOK_WORKER_SECRET` is unset, a new random value is generated and printed; save it for GitHub Actions / cron.
 5. `npm run supabase:deploy:webhooks` — deploys `webhook-subscriptions` and `webhook-worker`.
+6. `npm run supabase:deploy:integrations` — deploys `api-keys`, `crm-public-api`, `lead-capture`, and `lead-capture-tokens`.
 
 Shortcut for steps 3 + 5 after the first secret setup: `npm run supabase:webhooks:push`.
+
+To deploy **all** Edge Functions (webhooks + integrations): `npm run supabase:deploy:all-edge`.
+
+## API & capture troubleshooting runbook
+
+Use this checklist when `Settings > Integrations` shows API key/token errors.
+
+1. **Capture context first**
+   - Save the failing endpoint (`api-keys`, `lead-capture-tokens`, `crm-public-api`, or `lead-capture`).
+   - Copy the response payload, especially `status`, `code`, and `request_id`.
+2. **Interpret status/code quickly**
+   - `401` / `unauthorized`: expired or missing user JWT, invalid API key format, revoked/deleted key, or invalid/disabled lead token.
+   - `403` / `forbidden`: user is authenticated but lacks `admin|owner|manager` for mutations.
+   - `400` / `validation_error`: request body is missing required fields (`organizationId`, `name`, `keyId`, `tokenId`, form required fields).
+3. **Verify session and permissions**
+   - Re-authenticate in UI and retry (the panel already refreshes session once on 401).
+   - Confirm membership role in `organization_members` for the same `organizationId`.
+4. **Check idempotent semantics**
+   - Repeating API key delete or token delete should remain `200` and return `deleted: false` when already removed.
+5. **Correlate with Edge logs**
+   - Search logs by `request_id`.
+   - Structured logs include `action`, `organization_id`, `user_id` (when applicable), `result`, `status`, and `latency_ms`.
 
 ## Migration Notes
 
@@ -63,13 +86,18 @@ Shortcut for steps 3 + 5 after the first secret setup: `npm run supabase:webhook
 - Keep migration behavior aligned with related docs in `docs/` (runbooks/contracts).
 - `20260415120000_list_organization_members_with_identity.sql` — `list_organization_members_with_identity()` RPC (org-scoped member email + display name for the app directory); grant `EXECUTE` to `authenticated` only.
 - `20260420140000_webhooks_outbound.sql` — outbound webhooks: `webhook_subscriptions`, `webhook_subscription_secrets`, `webhook_outbox`, `webhook_delivery_log`, triggers on deals/contacts/companies/activities.
+- `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` — DELETE webhook payload shape (JSON null `data`), `organization_api_keys`, `lead_capture_tokens`, failed-outbox index.
 
 ## Edge Functions: outbound webhooks
 
 Deploy:
 
-- `webhook-subscriptions` — JWT-authenticated: create subscription + signing secret, rotate secret, send test `ping` payload.
+- `webhook-subscriptions` — JWT-authenticated: create subscription + signing secret, rotate secret, send test `ping` payload, **list failed outbox rows** (`action: listFailedOutbox`), **replay a failed delivery** (`action: replayOutbox` + `outboxId`).
 - `webhook-worker` — **no JWT**; requires header `x-webhook-worker-secret` matching the Edge secret `WEBHOOK_WORKER_SECRET`.
+
+**Payload contract:** JSON body `{ meta, data, previous }` with HMAC-SHA256 over the raw body in header **`X-CRM-Pro-Signature`** (hex). Delete events use JSON `null` for `data` and the last row snapshot in `previous` (Pipedrive-style). After deploying migration `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql`, also deploy **`api-keys`**, **`crm-public-api`**, **`lead-capture`**, **`lead-capture-tokens`** (see [`../docs/public-api-phase1.md`](../docs/public-api-phase1.md) and [`../docs/lead-capture-public-endpoint.md`](../docs/lead-capture-public-endpoint.md)).
+
+**Delivery policy (Velo vs Pipedrive-style bans):** failed rows stay in `webhook_outbox` with status `failed` after retry exhaustion; they are **not** silently dropped. Operators can **replay** from Settings (or via `replayOutbox`). Subscriptions are **not** auto-deleted after N days of failures.
 
 From the repo root (after `npm install` and `supabase login` / `supabase link`): `npm run supabase:deploy:webhooks`
 

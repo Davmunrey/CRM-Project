@@ -1,5 +1,5 @@
 # Supabase Multi-Tenant SaaS Architecture Research
-# CRM Pro — React 18 + TypeScript + Vite + Zustand + Supabase
+# Velo — React 18 + TypeScript + Vite + Zustand + Supabase
 
 **Researched:** 2026-03-31
 **Scope:** Migration from localStorage/Zustand persist to Supabase with full multi-tenancy
@@ -798,7 +798,7 @@ serve(async (req) => {
 })
 ```
 
-**Note:** For the CRM Pro demo/MVP, the existing implicit flow (GIS token client) is acceptable as it avoids needing a backend secret. The Edge Function approach is the production-grade path when you need offline access or long-lived tokens.
+**Note:** For the Velo demo/MVP, the existing implicit flow (GIS token client) is acceptable as it avoids needing a backend secret. The Edge Function approach is the production-grade path when you need offline access or long-lived tokens.
 
 ### Edge Function Deployment
 
@@ -896,7 +896,7 @@ function getOrgId(): string {
 
 Supabase Auth provides `supabase.auth.admin.inviteUserByEmail()` which sends a magic-link email. This is available only from the service role (Edge Function), not from the browser client.
 
-**Recommended flow for CRM Pro:**
+**Recommended flow for Velo:**
 
 ```
 Admin clicks "Invite"

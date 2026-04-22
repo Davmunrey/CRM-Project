@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
+import { Logo } from '../components/brand/Logo'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
@@ -14,10 +15,13 @@ export function OrgSetup() {
   const navigate = useNavigate()
   const t = useTranslations()
   const setCurrentUser = useAuthStore((s) => s.setCurrentUser)
+  const workspaceSlugFromHost = useAuthStore((s) => s.workspaceSlugFromHost)
   const updateBranding = useSettingsStore((s) => s.updateBranding)
 
   const [orgName, setOrgName] = useState('')
   const [slug, setSlug] = useState('')
+  /** When true, org name typing does not overwrite slug (slug came from company subdomain). */
+  const [slugTiedToSubdomain, setSlugTiedToSubdomain] = useState(false)
   const [legalName, setLegalName] = useState('')
   const [taxId, setTaxId] = useState('')
   const [addressLine1, setAddressLine1] = useState('')
@@ -28,9 +32,17 @@ export function OrgSetup() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  useEffect(() => {
+    if (!workspaceSlugFromHost) return
+    setSlug((prev) => (prev ? prev : workspaceSlugFromHost))
+    setSlugTiedToSubdomain(true)
+  }, [workspaceSlugFromHost])
+
   const handleNameChange = (value: string) => {
     setOrgName(value)
-    setSlug(value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
+    if (!slugTiedToSubdomain) {
+      setSlug(value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -109,7 +121,7 @@ export function OrgSetup() {
       variant="centered"
       logo={(
         <div className="w-14 h-14 rounded-2xl bg-accent-500/20 flex items-center justify-center mx-auto mb-4 border border-accent-500/25">
-          <Building2 size={28} className="text-accent-400" aria-hidden />
+          <Logo variant="icon" size={28} />
         </div>
       )}
       title={<h1 className="text-2xl font-bold text-fg">{t.orgSetup.title}</h1>}
@@ -137,7 +149,10 @@ export function OrgSetup() {
               <input
                 type="text"
                 value={slug}
-                onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                onChange={(e) => {
+                  setSlugTiedToSubdomain(false)
+                  setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                }}
                 placeholder={t.orgSetup.slugPlaceholder}
                 className="flex-1 bg-transparent text-fg placeholder-fg-muted focus:outline-none text-sm"
                 disabled={isLoading}

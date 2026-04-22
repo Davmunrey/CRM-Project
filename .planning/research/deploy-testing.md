@@ -1,4 +1,4 @@
-# Deploy + Testing Research: CRM Pro
+# Deploy + Testing Research: Velo
 
 **Topic:** Static hosting for a Vite + React + TypeScript SPA, plus Vitest testing notes  
 **Researched:** 2026-03-31; **neutralized / cross-checked:** 2026-04-16  
@@ -532,7 +532,7 @@ jobs:
 
 **Example — deploy only from Actions (vendor-specific CLI names omitted):** pattern is `checkout` → `setup-node` → `npm ci` → `npm run test:run` → **then** invoke your host’s deploy CLI with repository secrets for org/project/token. Exact secret names depend on the provider.
 
-**Recommendation for CRM Pro:** Keep **canonical** routing/env in [`docs/deployment-spa-and-env.md`](../../docs/deployment-spa-and-env.md); add **CI** that runs `tsc --noEmit` and `vitest run` on PRs (this repo already has workflows under `.github/` and `.gitea/`).
+**Recommendation for Velo:** Keep **canonical** routing/env in [`docs/deployment-spa-and-env.md`](../../docs/deployment-spa-and-env.md); add **CI** that runs `tsc --noEmit` and `vitest run` on PRs (this repo already has workflows under `.github/` and `.gitea/`).
 
 ---
 

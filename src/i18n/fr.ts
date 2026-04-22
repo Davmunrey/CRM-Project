@@ -146,7 +146,7 @@ export const fr: Translations = {
     orgNameLabel: "Nom de l'organisation",
     orgNamePlaceholder: 'Equipe commerciale Acme',
     slugLabel: 'Slug (identifiant unique)',
-    slugPrefix: 'crmpro.app/',
+    slugPrefix: 'velo.app/',
     slugPlaceholder: 'acme-sales',
     slugHint: 'Lettres minuscules, chiffres et tirets uniquement',
     legalCompanyName: 'Raison sociale',

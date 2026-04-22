@@ -142,12 +142,21 @@ export interface Translations {
     config: string
   }
 
+  /** Product identity (Velo). `productName` is the commercial proper noun. */
+  brand: {
+    productName: string
+    defaultAppName: string
+    productTagline: string
+  }
+
   // ─── Common ──────────────────────────────────────────────────────────────────
   common: {
     search: string
     filters: string
     clear: string
     save: string
+    copied: string
+    copy: string
     cancel: string
     delete: string
     edit: string
@@ -759,6 +768,7 @@ export interface Translations {
     tabNavigation: string
     tabAdvanced: string
     tabWebhooks: string
+    tabIntegrations: string
     tabOnboarding: string
     onboardingTitle: string
     onboardingIntro: string
@@ -815,6 +825,45 @@ export interface Translations {
     webhooksRotated: string
     webhooksGenerateSecret: string
     webhooksReadOnlyHint: string
+    webhooksFailedTitle: string
+    webhooksFailedEmpty: string
+    webhooksFailedEvent: string
+    webhooksFailedAttempts: string
+    webhooksFailedError: string
+    webhooksReplay: string
+    webhooksReplayed: string
+    webhooksLoadFailed: string
+    integrationsTitle: string
+    integrationsIntro: string
+    integrationsPublicApiTitle: string
+    integrationsPublicApiHint: string
+    integrationsEndpointLabel: string
+    integrationsPublicApiAuthHint: string
+    integrationsApiKeyName: string
+    integrationsCreateApiKey: string
+    integrationsApiKeysList: string
+    integrationsApiKeysEmpty: string
+    integrationsCopyKeyOnce: string
+    integrationsRevokeKey: string
+    integrationsRevokeConfirm: string
+    integrationsRevoked: string
+    integrationsDeleteApiKey: string
+    integrationsDeleteApiKeyConfirm: string
+    integrationsDeleted: string
+    integrationsKeyPrefix: string
+    integrationsLastUsed: string
+    integrationsRevokedBadge: string
+    integrationsLeadCaptureTitle: string
+    integrationsLeadCaptureHint: string
+    integrationsLeadCaptureHoneypotHint: string
+    integrationsTokenLabel: string
+    integrationsCreateToken: string
+    integrationsTokensList: string
+    integrationsTokensEmpty: string
+    integrationsDeleteToken: string
+    integrationsDeleteTokenConfirm: string
+    integrationsTokenCreated: string
+    integrationsLoadError: string
     legalCompanyName: string
     taxIdVat: string
     addressLine1: string
@@ -1552,6 +1601,11 @@ export interface Translations {
     memberWithoutName: string
     tenantInvitationWithOrg: string
     tenantInvitationGeneric: string
+    /** `{name}` = resolved workspace display name from hostname */
+    workspaceUrlSigningInTo: string
+    workspaceUrlUnknownSlug: string
+    workspaceHostMismatchTitle: string
+    workspaceHostMismatch: string
     /** Fatal misconfiguration before router mounts (production/staging without Supabase) */
     configurationBootstrapTitle: string
     configurationBootstrapUses: string

@@ -212,14 +212,14 @@ function QuoteBuilder({
     const doc = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' })
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
-    const accent = branding.primaryColor || '#7c3aed'
+    const accent = branding.primaryColor || '#4f46e5'
     const title = documentType === 'invoice'
       ? t.deals.documentTypeInvoice
       : documentType === 'proforma'
         ? t.deals.documentTypeProforma
         : t.deals.documentTypeQuote
     const companyLines = [
-      branding.legalName || branding.appName || 'CRM Pro',
+      branding.legalName || branding.appName || t.brand.defaultAppName,
       ...(branding.taxId ? [`${t.settings.taxIdVat}: ${branding.taxId}`] : []),
       ...((branding.addressLine1 || branding.postalCode || branding.city || branding.country)
         ? [[branding.addressLine1, branding.postalCode, branding.city, branding.country].filter(Boolean).join(', ')]

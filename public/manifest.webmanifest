@@ -1,0 +1,17 @@
+{
+  "name": "Velo",
+  "short_name": "Velo",
+  "description": "Outbound-native CRM for high-velocity sales teams.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F6F5F1",
+  "theme_color": "#4F46E5",
+  "icons": [
+    {
+      "src": "/brand/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

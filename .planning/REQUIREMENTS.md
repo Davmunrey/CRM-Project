@@ -1,4 +1,4 @@
-# Requirements: CRM Pro
+# Requirements: Velo
 
 **Defined:** 2026-03-31
 **Core Value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time — with lead scoring, reporting, and collaboration (no Anthropic/Claude LLM stack in product scope).

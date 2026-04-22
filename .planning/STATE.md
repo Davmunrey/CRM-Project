@@ -11,7 +11,7 @@ progress:
   completed_plans: 43
 ---
 
-# CRM Pro — Project State
+# Velo — Project State
 
 ## Project Reference
 

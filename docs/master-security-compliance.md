@@ -206,7 +206,7 @@ Single consolidation 2026-04-15: prior `sell-ready-security-evidence-index` + re
 <a id="supabase-external-hardening-checklist"></a>
 ## Supabase external hardening checklist
 
-Use this checklist when validating a **production** Supabase project backing CRM Pro. Record evidence (screenshots, SQL output, dashboard URLs) in your security ticket or the [#sell-ready security evidence index](#sell-ready-security-evidence-index).
+Use this checklist when validating a **production** Supabase project backing Velo. Record evidence (screenshots, SQL output, dashboard URLs) in your security ticket or the [#sell-ready security evidence index](#sell-ready-security-evidence-index).
 
 **Doc hub:** [`README`](./README.md) (status snapshot and full index).
 
@@ -259,7 +259,7 @@ References: [Supabase RLS](https://supabase.com/docs/guides/auth/auth-deep-dive/
 <a id="compliance-mapping"></a>
 ## Compliance mapping (SOC2 / GDPR-lite)
 
-This document maps current CRM Pro controls to common enterprise compliance expectations.
+This document maps current Velo controls to common enterprise compliance expectations.
 It is a pragmatic engineering mapping (not legal advice and not a formal certification artifact).
 
 ## Document Control
@@ -273,7 +273,7 @@ It is a pragmatic engineering mapping (not legal advice and not a formal certifi
 
 ## Scope
 
-- Application: CRM Pro
+- Application: Velo
 - Backend: Supabase (Auth, Postgres, Edge Functions, RLS)
 - Operational controls: lead maintenance telemetry/SLA, runbooks, handoff checklists
 
@@ -322,7 +322,7 @@ Do not maintain a second list of the same links. Use **[Sell-ready security evid
 <a id="dsar-playbook"></a>
 ## DSAR playbook
 
-Engineering-oriented procedure for handling **data subject access requests** in a CRM Pro deployment backed by **Supabase (Auth + Postgres + RLS)**. This is not legal advice; align intake, timelines, and legal review with your organization’s privacy counsel and jurisdiction.
+Engineering-oriented procedure for handling **data subject access requests** in a Velo deployment backed by **Supabase (Auth + Postgres + RLS)**. This is not legal advice; align intake, timelines, and legal review with your organization’s privacy counsel and jurisdiction.
 
 **Doc hub:** [`README`](./README.md).
 

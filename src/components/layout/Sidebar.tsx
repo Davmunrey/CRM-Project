@@ -3,10 +3,11 @@ import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Users, Building2, KanbanSquare,
   Activity, BarChart3, Settings, ChevronLeft, ChevronRight,
-  Zap, Mail, UserCheck, FileText, ScrollText, Target, UsersRound, BellRing, GanttChart,
+  Mail, UserCheck, FileText, ScrollText, Target, UsersRound, BellRing, GanttChart,
   LineChart, ListOrdered, Workflow, Package, FunnelPlus,
   Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays, LayoutGrid,
 } from 'lucide-react'
+import { Logo } from '../brand/Logo'
 import { useViewsStore } from '../../store/viewsStore'
 import { useActivitiesStore } from '../../store/activitiesStore'
 import { useEmailStore } from '../../store/emailStore'
@@ -361,7 +362,7 @@ export function Sidebar() {
           {branding.logoUrl ? (
             <img src={branding.logoUrl} alt={branding.appName} className="w-full h-full object-cover" />
           ) : (
-            <Zap size={15} className="text-fg" />
+            <Logo variant="icon" theme="mono" size={20} className="text-fg" />
           )}
         </div>
         {!collapsed && (

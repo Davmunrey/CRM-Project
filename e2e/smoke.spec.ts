@@ -33,7 +33,7 @@ test.describe('CRM smoke', () => {
   test('mock login allows protected navigation', async ({ page }) => {
     await page.goto('/login')
 
-    const demoUserBtn = page.getByRole('button', { name: /david@crmpro\.es/i })
+    const demoUserBtn = page.getByRole('button', { name: /david@velo\.es/i })
     const hasDemoMode = (await demoUserBtn.count()) > 0
     test.skip(!hasDemoMode, 'Mock-mode smoke only (demo credentials not visible)')
 

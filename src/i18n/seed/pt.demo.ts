@@ -4,8 +4,8 @@ import { demoEntityOverlaysPt } from './entityOverlaysPt'
 export const seedDemo: SeedDemoCatalog = {
   products: {
     'prod-001': {
-      name: 'Licença CRM Pro',
-      description: 'Licença anual CRM Pro com suporte incluído',
+      name: 'Licença Velo',
+      description: 'Licença anual Velo com suporte incluído',
     },
     'prod-002': {
       name: 'Implementação básica',
@@ -235,7 +235,7 @@ export const seedDemo: SeedDemoCatalog = {
   },
   ...demoEntityOverlaysPt,
   demoAuth: {
-    organizationName: 'CRM Pro Vendas',
+    organizationName: 'Velo Vendas',
     users: {
       u1: { jobTitle: 'Gestor de vendas' },
       u2: { jobTitle: 'Executiva de contas' },

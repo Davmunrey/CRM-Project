@@ -204,6 +204,73 @@ Deno.serve(async (req: Request) => {
       })
     }
 
+    if (action === 'listFailedOutbox') {
+      const limit = Math.min(50, Math.max(1, Number((body as { limit?: number }).limit) || 20))
+      const { data: rows, error: fErr } = await admin
+        .from('webhook_outbox')
+        .select('id, created_at, event_key, entity_type, entity_id, attempts, last_error, status')
+        .eq('organization_id', organizationId)
+        .eq('status', 'failed')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+      if (fErr) {
+        return new Response(JSON.stringify({ error: fErr.message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify({ success: true, rows: rows ?? [] }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (action === 'replayOutbox') {
+      const outboxId = (body as { outboxId?: string }).outboxId
+      if (!outboxId) {
+        return new Response(JSON.stringify({ error: 'outboxId required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: row, error: oErr } = await admin
+        .from('webhook_outbox')
+        .select('id, organization_id, status')
+        .eq('id', outboxId)
+        .single()
+      if (oErr || !row || row.organization_id !== organizationId) {
+        return new Response(JSON.stringify({ error: 'Outbox row not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      if (row.status !== 'failed') {
+        return new Response(JSON.stringify({ error: 'Only failed deliveries can be replayed' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { error: uErr } = await admin
+        .from('webhook_outbox')
+        .update({
+          status: 'pending',
+          attempts: 0,
+          next_retry_at: null,
+          last_error: null,
+        })
+        .eq('id', outboxId)
+      if (uErr) {
+        return new Response(JSON.stringify({ error: uErr.message }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (action === 'test') {
       const subscriptionId = body.subscriptionId
       if (!subscriptionId) {
@@ -243,7 +310,7 @@ Deno.serve(async (req: Request) => {
         schema_version: sub.schema_version ?? 1,
         delivery_attempt: 1,
       }
-      const payload = { meta, data: { message: 'CRM Pro webhook connectivity test' }, previous: null as null }
+      const payload = { meta, data: { message: 'Velo webhook connectivity test' }, previous: null as null }
       const rawBody = JSON.stringify(payload)
       const signature = await hmacSha256Hex(secRow.signing_secret, rawBody)
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Zap, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Users } from 'lucide-react'
+import { Logo } from '../components/brand/Logo'
 import type { AppSettings } from '../types'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -28,7 +29,7 @@ function LoginHero({ branding, t }: { branding: AppSettings['branding']; t: Retu
         {branding.logoUrl ? (
           <img src={branding.logoUrl} alt="" className="w-full h-full object-cover" />
         ) : (
-          <Zap size={28} className="text-fg" aria-hidden />
+          <Logo variant="icon" theme="mono" size={28} className="text-fg" />
         )}
       </div>
       <div>
@@ -80,6 +81,9 @@ export function Login() {
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
+  const workspaceFromHost = useAuthStore((s) => s.workspaceFromHost)
+  const workspaceHostSlugNotFound = useAuthStore((s) => s.workspaceHostSlugNotFound)
+  const workspaceSlugFromHost = useAuthStore((s) => s.workspaceSlugFromHost)
   useEffect(() => {
     const unsub = useSettingsStore.subscribe((s) => setBranding(s.settings.branding))
     return unsub
@@ -139,6 +143,16 @@ export function Login() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
+        {isSupabaseConfigured && workspaceFromHost ? (
+          <div className="px-4 py-3 rounded-xl bg-accent-500/10 border border-accent-500/20 text-sm text-fg-muted">
+            {t.errors.workspaceUrlSigningInTo.replace('{name}', workspaceFromHost.name)}
+          </div>
+        ) : null}
+        {isSupabaseConfigured && workspaceHostSlugNotFound && workspaceSlugFromHost ? (
+          <div className="px-4 py-3 rounded-xl bg-warning/10 border border-warning/25 text-sm text-warning">
+            {t.errors.workspaceUrlUnknownSlug}
+          </div>
+        ) : null}
         {error && (
           <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">{error}</div>
         )}
@@ -203,37 +217,7 @@ export function Login() {
         </p>
       </div>
 
-      {isOfflineDemoMode ? (
-        <details className="mt-6 glass rounded-xl border border-fg/8 p-4 group">
-          <summary className="text-xs font-semibold text-fg-muted cursor-pointer list-none flex items-center justify-between gap-2">
-            <span>{t.auth.demoCredentialsTitle}</span>
-            <span className="text-fg-subtle text-[10px] group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div className="mt-3 space-y-1.5 pt-1 border-t border-fg/8">
-            {[
-              { email: 'david@crmpro.es', role: t.acceptInvite.roleAdmin, color: 'text-danger' },
-              { email: 'sara@crmpro.es', role: t.acceptInvite.roleManager, color: 'text-accent-400' },
-              { email: 'carlos@crmpro.es', role: t.acceptInvite.roleSalesRep, color: 'text-success' },
-            ].map((demo) => (
-              <button
-                type="button"
-                key={demo.email}
-                onClick={() => {
-                  setEmail(demo.email)
-                  setPassword('demo123')
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-fg/5 transition-colors text-left"
-              >
-                <span className="text-xs text-fg-muted">{demo.email}</span>
-                <span className={`text-[10px] font-semibold ${demo.color}`}>{demo.role}</span>
-              </button>
-            ))}
-            <p className="text-[10px] text-fg-subtle pt-1">
-              {t.auth.password}: demo123
-            </p>
-          </div>
-        </details>
-      ) : null}
+      {/* Offline demo login remains available, but account hints are intentionally hidden. */}
     </Card>
   )
 

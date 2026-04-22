@@ -1,6 +1,6 @@
 # Gmail OAuth2 + AI Features Research
 
-**Project:** CRM Pro
+**Project:** Velo
 **Researched:** 2026-03-31
 **Scope:** Gmail OAuth2 PKCE, secure token storage, thread-to-CRM linking, Anthropic Claude AI features, Supabase Edge Function proxy, XSS prevention
 **Confidence:** HIGH (based on official API documentation knowledge; web tools unavailable in this session)

@@ -41,7 +41,7 @@ References: [Resend: email authentication for developers](https://resend.com/blo
 
 ## 3. Content and reputation
 
-- [ ] Send both **text** and **html** where possible (CRM Pro sends `body` + `htmlBody` when provided).
+- [ ] Send both **text** and **html** where possible (Velo sends `body` + `htmlBody` when provided).
 - [ ] Bounce and complaint handling process defined (who monitors Resend dashboard).
 - [ ] Warm-up plan for new dedicated IPs (if applicable — Resend shared infra is typical).
 
@@ -85,7 +85,7 @@ CRM-specific outbound and inbox behavior (complements the Resend DNS checklist a
 <a id="email-mailbox-privacy-runbook"></a>
 ## Email mailbox privacy runbook
 
-This runbook helps support and operations teams validate and troubleshoot per-user mailbox privacy in CRM Pro.
+This runbook helps support and operations teams validate and troubleshoot per-user mailbox privacy in Velo.
 
 ## Document Control
 

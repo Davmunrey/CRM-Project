@@ -8,8 +8,8 @@ const AUTOMATION_SEED_DEMO_TS = '2020-01-01T00:00:00.000Z'
 export const seedDemo: SeedDemoCatalog = {
   products: {
     'prod-001': {
-      name: 'CRM Pro License',
-      description: 'Annual CRM Pro license with support included',
+      name: 'Velo License',
+      description: 'Annual Velo license with support included',
     },
     'prod-002': {
       name: 'Basic implementation',
