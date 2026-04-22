@@ -6,6 +6,25 @@
  */
 
 :root {
+  /* Velo brand primitives (hex; for docs, exports, and non-Tailwind surfaces) */
+  --velo-50: #eef0ff;
+  --velo-100: #e0e3ff;
+  --velo-200: #c7ccfe;
+  --velo-300: #a5a8fc;
+  --velo-400: #8b84ff;
+  --velo-500: #6366f1;
+  --velo-600: #4f46e5;
+  --velo-700: #4338ca;
+  --velo-800: #3730a3;
+  --velo-900: #1e1b4b;
+  --accent: #ff6b57;
+  --accent-dark: #e85340;
+  --brand-primary: var(--velo-600);
+  --brand-ink: var(--velo-900);
+
+  --font-sans: 'Satoshi', system-ui, sans-serif;
+  --font-display: 'General Sans', system-ui, sans-serif;
+
   /* ── Primitives (dark default) - accent scale; 500/600 overridden at runtime by branding --accent-rgb */
   --color-accent-50: 238 242 255;
   --color-accent-100: 224 231 255;

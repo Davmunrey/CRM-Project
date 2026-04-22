@@ -18,6 +18,10 @@ export default {
         xl: '1280px',
         '2xl': '1536px',
       },
+      fontFamily: {
+        sans: ['"Satoshi"', 'system-ui', 'sans-serif'],
+        display: ['"General Sans"', 'system-ui', 'sans-serif'],
+      },
       colors: {
         surface: {
           0: 'rgb(var(--color-surface-0) / <alpha-value>)',

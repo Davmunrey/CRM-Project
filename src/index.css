@@ -34,9 +34,15 @@
   body {
     background-color: var(--bg-main);
     color: var(--text-main);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
   }
 
   ::selection {
@@ -365,7 +371,7 @@
     box-shadow: 0 0 0 2px rgb(var(--color-ring) / 0.22);
   }
 
-  .crm-form-label {
+  .velo-form-label {
     display: block;
     font-size: 0.75rem;
     line-height: 1rem;
@@ -373,15 +379,15 @@
     color: var(--text-muted);
   }
 
-  .crm-input-icon {
+  .velo-input-icon {
     color: var(--text-muted);
   }
 
-  .crm-profile-card-title {
+  .velo-profile-card-title {
     color: var(--text-main);
   }
 
-  .crm-profile-value {
+  .velo-profile-value {
     color: var(--text-main);
   }
 }
