@@ -133,7 +133,7 @@ export const useAuthStore = create<AuthState>()(
       invitations: [],
 
       setCurrentUser: (user) => {
-        // In Supabase mode we do not use demo users.
+        // With Supabase, org members come from the server, not local seed maps.
         // Keep only org-scoped runtime users and upsert current user.
         if (isSupabaseConfigured) {
           set((state) => {

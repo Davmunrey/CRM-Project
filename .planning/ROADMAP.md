@@ -144,7 +144,7 @@ SEC-02, SEC-03, SEC-04, SEC-06
 - [x] **`crm_ai` / Anthropic in browser:** `aiStore` and related persist keys were removed with the client AI stack (Phase 06.5). Legacy `localStorage` keys may linger until a user clears site data — no active writer.
 - [x] **AIAgent XSS class:** `AIAgent` and hand-rolled markdown rendering were **removed** with the client AI feature set; any future rich AI UI must use `react-markdown` + `rehype-sanitize` (policy retained in SEC-03 narrative).
 - [x] **`dangerouslyAllowBrowser`:** `aiService.ts` deleted — no browser Anthropic SDK path remains.
-- [x] **Missing Supabase hint:** `src/lib/supabase.ts` emits `devConsole.warn` in dev when env is absent (`dataRuntime === 'unconfigured'`), including guidance for demo mode vs real keys.
+- [x] **Missing Supabase hint:** `src/lib/supabase.ts` emits `devConsole.warn` in dev when env is absent (`dataRuntime === 'unconfigured'`), pointing engineers to set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
 
 ---
 
@@ -216,7 +216,7 @@ Plans:
 - [x] 07-3-PLAN.md — GmailCallback page + App.tsx route + useDataInit silent refresh (Wave 2)
 - [x] 07-4-PLAN.md — Inbox wired to real Gmail threads + contact email matching chips (Wave 3)
 - [x] 07-5-PLAN.md — Send email from ContactDetail/Deals + activity logging on send (Wave 4)
-- [x] 07-HARDENING — Dynamic redirect URI, refresh/retry in Inbox+Composer, persisted `gmail_thread_links`, pin/unpin links, demo linked emails
+- [x] 07-HARDENING — Dynamic redirect URI, refresh/retry in Inbox+Composer, persisted `gmail_thread_links`, pin/unpin links, fixture-linked deal emails for inbox QA
 
 ### Requirements Covered
 

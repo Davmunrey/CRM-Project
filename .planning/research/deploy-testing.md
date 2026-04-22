@@ -98,9 +98,9 @@ Preview branches:
   VITE_SUPABASE_URL     → https://staging-project.supabase.co
   VITE_SUPABASE_ANON_KEY → staging anon key
 
-Static demo bundle (optional):
-  VITE_APP_CHANNEL      → demo
-  (Supabase vars omitted — offline mock; see src/lib/envChannel.ts)
+Repository CI compile (no secrets):
+  npm run build -- --mode development
+  (Skips the production/staging Supabase env gate; real deploys still inject URL + anon key.)
 
 Local development (.env.local):
   (omit VITE_APP_CHANNEL → development in Vite dev server)
@@ -168,7 +168,6 @@ export default defineConfig({
         'src/**/*.d.ts',
         'src/types/**',
         'src/lib/database.types.ts',
-        'src/utils/seedData.ts',
         'src/main.tsx',
       ],
     },

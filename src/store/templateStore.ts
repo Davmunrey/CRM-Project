@@ -73,7 +73,7 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
         })),
       })
     } catch {
-      // Leave current list unchanged; do not restore removed demo rows.
+      // Leave current list unchanged; do not restore removed template rows.
     }
   },
 

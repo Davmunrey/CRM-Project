@@ -1,6 +1,6 @@
 # External Integrations
 
-**Analysis Date:** 2026-04-21
+**Analysis Date:** 2026-04-22
 
 ## APIs & External Services
 
@@ -29,7 +29,7 @@
 
 **Databases:**
 - Supabase (PostgreSQL)
-  - Connection: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (env vars, optional)
+  - Connection: `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (required for hosted production/staging; optional only for local `vite build --mode development` compile smoke)
   - Client: `@supabase/supabase-js` 2.100, initialized in `src/lib/supabase.ts`
   - The client is `null` when env vars are absent; all stores check `isSupabaseConfigured` before using it
   - Schema defined in `supabase/schema.sql`
@@ -41,10 +41,10 @@
   - UUID primary keys via `uuid-ossp` extension
   - TypeScript types generated/maintained manually in `src/lib/database.types.ts`
 
-**Fallback / Offline Storage:**
-- When Supabase is not configured, all CRM data is persisted to `localStorage` via Zustand `persist` middleware
-- This is the default mode in development without a Supabase project configured
-- `localStorage` keys: `crm_auth` (auth persist) and per-domain keys from `LS_KEYS` in `src/utils/constants.ts` plus explicit `name` fields on individual `persist(...)` configs (e.g. `crm_emails_v2`, `crm_views`, `crm_onboarding_v1`, `crm_attachments`) — see stores under `src/store/`
+**Client persistence (not a substitute for Supabase):**
+- Some Zustand slices still use `persist` → `localStorage` for UI preferences, navigation, and similar non-authoritative state.
+- **Tenant CRM data and auth** require a configured Supabase client; with `dataRuntime === 'unconfigured'` the app does not run a historical “offline mock CRM” — see [`docs/deployment-spa-and-env.md`](../../docs/deployment-spa-and-env.md).
+- Representative keys include entries from `LS_KEYS` in `src/utils/constants.ts` plus explicit `name` fields on individual `persist(...)` configs — inspect `src/store/*` for the current set.
 
 **File Storage:**
 - Not detected — no S3, Supabase Storage, or other file storage integration present
@@ -60,8 +60,7 @@
   - Listens to `supabase.auth.onAuthStateChange` and maps Supabase user to `AuthUser` type
   - Role and organization context resolved from JWT/app metadata + org membership
 
-**Fallback Auth Provider (demo mode only):**
-- Local/demo auth state is used only when Supabase env vars are absent
+**Fallback auth provider:** none in this branch — sign-in is Supabase Auth when `isSupabaseConfigured`; otherwise the client cannot authenticate to the product shell.
 
 **Gmail OAuth:**
 - Handled separately via Google Identity Services (see Gmail section above)
@@ -74,7 +73,7 @@
 
 **Logs:**
 - `src/store/auditStore.ts` provides an in-app audit log: `logAction(action, entity, entityId, title, detail)`
-- Audit entries are persisted in Supabase in configured mode (with local fallback only when Supabase is not configured)
+- Audit entries are persisted in Supabase when the client is configured; without Supabase the audit surface is not the operational source of truth
 - Audit log is viewable at the `/audit` route (`src/pages/AuditLog.tsx`)
 - No external log shipping
 

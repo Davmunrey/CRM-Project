@@ -1,6 +1,6 @@
 # Architecture
 
-**Analysis Date:** 2026-04-21
+**Analysis Date:** 2026-04-22
 
 ## Pattern Overview
 
@@ -26,7 +26,7 @@
 **Stores (`src/store/*`):**
 - Domain-specific Zustand stores.
 - Supabase CRUD + realtime subscriptions where applicable.
-- Local or **demo-channel** mock mode remains supported when Supabase config is absent (`src/lib/envChannel.ts`, `src/lib/supabase.ts`); staging/production require Supabase.
+- When Supabase env vars are missing, `supabase` is `null` (`dataRuntime === 'unconfigured'`): no client mock CRM; staging/production builds require valid keys (`src/lib/envChannel.ts`, `src/lib/supabase.ts`, `vite.config.ts`).
 
 **Services (`src/services/*`):**
 - Stateless integration adapters (`gmailService`, `src/services/emailProviders/*`, etc.).

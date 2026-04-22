@@ -80,7 +80,7 @@ describe('UI primitives (a11y smoke)', () => {
       <fieldset>
         <legend>Pick</legend>
         <label htmlFor="r1">
-          <Radio id="r1" name="demo" value="1" defaultChecked aria-label="Option one" />
+          <Radio id="r1" name="radio-group" value="1" defaultChecked aria-label="Option one" />
         </label>
       </fieldset>,
     )

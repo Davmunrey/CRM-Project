@@ -784,7 +784,7 @@ export interface Attachment {
   fileName: string
   fileSize: number       // bytes
   mimeType: string
-  data: string           // base64 encoded (demo - in prod would be S3 URL)
+  data: string           // base64 encoded (browser/local path; production file hosting may use object storage)
   uploadedBy: string
   uploadedAt: string
   notes?: string

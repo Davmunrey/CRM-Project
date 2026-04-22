@@ -35,7 +35,7 @@ export function AttachmentsList({ entityType, entityId }: AttachmentsListProps) 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
 
-  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB limit for localStorage demo
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB limit for base64-in-row attachments
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return

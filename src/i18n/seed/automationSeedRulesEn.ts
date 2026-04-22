@@ -204,7 +204,7 @@ export function createAutomationSeedRules(isoNow: string): AutomationRule[] {
   ]
 }
 
-/** Maps English seed rules into the i18n seed demo catalog shape (English source strings). */
+/** Maps English seed rules into the i18n seed catalog shape (English source strings). */
 export function automationSeedRulesToDemoCatalog(rules: AutomationRule[]): Record<SeedAutomationId, SeedAutomationDemoCopy> {
   const out: Partial<Record<SeedAutomationId, SeedAutomationDemoCopy>> = {}
   for (const id of AUTOMATION_SEED_TEMPLATE_IDS) {
