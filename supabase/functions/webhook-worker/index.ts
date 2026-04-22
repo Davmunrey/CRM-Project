@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { OUTBOUND_WEBHOOK_SIGNATURE_HEADER } from '../_shared/outboundWebhookSignature.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -135,7 +136,10 @@ Deno.serve(async (req: Request) => {
         const rawBody = JSON.stringify(envelope)
         const signature = await hmacSha256Hex(secRow.signing_secret, rawBody)
 
-        const headers = new Headers({ 'Content-Type': 'application/json', 'X-CRM-Pro-Signature': signature })
+        const headers = new Headers({
+          'Content-Type': 'application/json',
+          [OUTBOUND_WEBHOOK_SIGNATURE_HEADER]: signature,
+        })
         const ch = sub.custom_headers as Record<string, string> | null
         if (ch && typeof ch === 'object') {
           for (const [k, v] of Object.entries(ch)) {

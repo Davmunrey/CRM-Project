@@ -244,7 +244,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
             status: (['lead', 'prospect', 'customer', 'churned'].includes(record.status) ? record.status : 'lead') as ContactStatus,
             source: (['website', 'referral', 'outbound', 'event', 'linkedin', 'other'].includes(record.source) ? record.source : 'other') as ContactSource,
             tags: [],
-            assignedTo: 'user-001',
+            assignedTo: 'u1',
             notes: record.notes || '',
             linkedDeals: [],
             lastContactedAt: '',

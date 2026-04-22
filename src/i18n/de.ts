@@ -188,7 +188,7 @@ export const de: Translations = {
     landingTagline: 'Pipeline, Posteingang und Team an einem ruhigen Ort.',
     landingFeature1: 'Unternehmensreife Berechtigungen und pruffreundliche Ablaufe.',
     landingFeature2: 'Schnelle Ansichten fur Leads, Deals und Follow-ups.',
-    landingFeature3: 'Fur kleine Teams, die trotzdem ein serioses CRM wollen.',
+    landingFeature3: 'Fur kleine Teams, die trotzdem eine ernsthafte Sales-Umgebung brauchen.',
     demoCredentialsTitle: 'Demo-Zugangsdaten',
   },
   errors: {
@@ -239,7 +239,7 @@ export const de: Translations = {
     dropSubtitle: 'oder klicken zum Auswählen',
     dropHint: 'Unterstützt .csv-Dateien mit Komma- oder Semikolon-Trennzeichen',
     expectedFieldsFor: 'Erwartete Felder für',
-    mapColumns: 'Ordnen Sie CSV-Spalten den CRM-Feldern zu',
+    mapColumns: 'Ordnen Sie CSV-Spalten den Velo-Feldern zu',
     doNotMap: 'Nicht zuordnen',
     requiredFieldsWarning: 'Ordnen Sie alle Pflichtfelder (*) zu, um fortzufahren',
     back: 'Zurück',

@@ -48,6 +48,23 @@ export interface AuthState {
   tenantResolutionStatus: 'idle' | 'resolving' | 'ready' | 'needs_invitation' | 'error'
   tenantResolutionMessage: string | null
 
+  /** When `VITE_WORKSPACE_ROOT_DOMAIN` is set: subdomain slug → org (public RPC). */
+  workspaceSlugFromHost: string | null
+  workspaceFromHost: { id: string; name: string } | null
+  workspaceHostSlugNotFound: boolean
+  workspaceHostResolutionPending: boolean
+  workspaceHostMismatch: boolean
+  setWorkspaceHostContext: (
+    ctx:
+      | null
+      | {
+          slug: string | null
+          pending: boolean
+          resolved: { id: string; name: string } | null
+          slugNotFound: boolean
+        },
+  ) => void
+
   // All users in the org
   users: AuthUser[]
   passwords: Record<string, string> // userId -> hashed password
@@ -97,8 +114,8 @@ export interface AuthState {
 
 const SEED_ORG: Organization = {
   id: 'org-001',
-  name: 'CRM Pro Sales',
-  domain: 'crmpro.es',
+  name: 'Demo Workspace',
+  domain: 'example.com',
   plan: 'pro',
   maxUsers: 25,
   createdAt: '2024-01-01T00:00:00Z',
@@ -107,8 +124,8 @@ const SEED_ORG: Organization = {
 const SEED_USERS: AuthUser[] = [
   {
     id: 'u1',
-    email: 'david@crmpro.es',
-    name: 'David Muñoz',
+    email: 'demo.admin@example.com',
+    name: 'Demo Admin',
     role: 'admin',
     jobTitle: 'Sales Manager',
     phone: '+34 612 345 678',
@@ -120,8 +137,8 @@ const SEED_USERS: AuthUser[] = [
   },
   {
     id: 'u2',
-    email: 'sara@crmpro.es',
-    name: 'Sara López',
+    email: 'demo.manager@example.com',
+    name: 'Demo Manager',
     role: 'manager',
     jobTitle: 'Account Executive',
     phone: '+34 623 456 789',
@@ -132,8 +149,8 @@ const SEED_USERS: AuthUser[] = [
   },
   {
     id: 'u3',
-    email: 'carlos@crmpro.es',
-    name: 'Carlos Vega',
+    email: 'demo.rep@example.com',
+    name: 'Demo Rep',
     role: 'sales_rep',
     jobTitle: 'SDR',
     phone: '+34 634 567 890',
@@ -162,6 +179,11 @@ export const useAuthStore = create<AuthState>()(
       organizationId: null,
       tenantResolutionStatus: 'idle',
       tenantResolutionMessage: null,
+      workspaceSlugFromHost: null,
+      workspaceFromHost: null,
+      workspaceHostSlugNotFound: false,
+      workspaceHostResolutionPending: false,
+      workspaceHostMismatch: false,
       users: isSupabaseConfigured ? [] : (isOfflineDemoMode ? SEED_USERS : []),
       passwords: isSupabaseConfigured ? {} : (isOfflineDemoMode ? SEED_PASSWORDS : {}),
       invitations: [],
@@ -178,6 +200,7 @@ export const useAuthStore = create<AuthState>()(
                 users: [],
                 tenantResolutionStatus: 'idle',
                 tenantResolutionMessage: null,
+                workspaceHostMismatch: false,
               }
             }
             const nextUsers = state.users.filter((u) => u.id !== user.id)
@@ -210,6 +233,25 @@ export const useAuthStore = create<AuthState>()(
 
       setTenantResolution: (status, message = null) => {
         set({ tenantResolutionStatus: status, tenantResolutionMessage: message })
+      },
+
+      setWorkspaceHostContext: (ctx) => {
+        if (ctx === null) {
+          set({
+            workspaceSlugFromHost: null,
+            workspaceFromHost: null,
+            workspaceHostSlugNotFound: false,
+            workspaceHostResolutionPending: false,
+            workspaceHostMismatch: false,
+          })
+          return
+        }
+        set({
+          workspaceSlugFromHost: ctx.slug,
+          workspaceFromHost: ctx.resolved,
+          workspaceHostSlugNotFound: ctx.slugNotFound,
+          workspaceHostResolutionPending: ctx.pending,
+        })
       },
 
       fetchOrgUsers: async (organizationId) => {
@@ -344,6 +386,7 @@ export const useAuthStore = create<AuthState>()(
           organizationId: null,
           tenantResolutionStatus: 'idle',
           tenantResolutionMessage: null,
+          workspaceHostMismatch: false,
         })
       },
 

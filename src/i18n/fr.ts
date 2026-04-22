@@ -188,7 +188,7 @@ export const fr: Translations = {
     landingTagline: 'Pipeline, boite de reception et equipe dans un espace calme.',
     landingFeature1: 'Permissions adaptees a lentreprise et flux compatibles audit.',
     landingFeature2: 'Vues rapides pour leads, affaires et relances.',
-    landingFeature3: 'Pense pour les petites equipes qui veulent un CRM serieux.',
+    landingFeature3: 'Pense pour les petites equipes qui veulent un espace commercial serieux.',
     demoCredentialsTitle: 'Identifiants de demonstration',
   },
   errors: {
@@ -239,7 +239,7 @@ export const fr: Translations = {
     dropSubtitle: 'ou cliquez pour sélectionner',
     dropHint: 'Prend en charge les fichiers .csv avec séparateur virgule ou point-virgule',
     expectedFieldsFor: 'Champs attendus pour',
-    mapColumns: 'Mappez les colonnes CSV aux champs CRM',
+    mapColumns: 'Mappez les colonnes CSV aux champs Velo',
     doNotMap: 'Ne pas mapper',
     requiredFieldsWarning: 'Mappez tous les champs obligatoires (*) pour continuer',
     back: 'Retour',

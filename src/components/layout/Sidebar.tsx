@@ -362,7 +362,7 @@ export function Sidebar() {
           {branding.logoUrl ? (
             <img src={branding.logoUrl} alt={branding.appName} className="w-full h-full object-cover" />
           ) : (
-            <Logo variant="icon" theme="mono" size={20} className="text-fg" />
+            <Logo variant="icon" theme="onAccent" size={20} />
           )}
         </div>
         {!collapsed && (

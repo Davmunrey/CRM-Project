@@ -46,7 +46,7 @@ export interface SeedSequenceDemoCopy {
   steps: Record<string, SeedSequenceStepCopy>
 }
 
-/** Optional i18n overlays for offline demo CRM entities (keyed by stable seed ids). */
+/** Optional i18n overlays for offline demo entities (keyed by stable seed ids). */
 export type SeedDemoAuthUserId = 'u1' | 'u2' | 'u3'
 
 export interface SeedDemoAuthOverlay {
@@ -1724,7 +1724,7 @@ export interface Translations {
     scheduleSendDisabledHint: string
     /** Must connect Gmail before sending (Gmail provider) */
     connectGmailToSend: string
-    /** Toggle: track opens/clicks (not CRM follow-up tasks) */
+    /** Toggle: track opens/clicks (not manual follow-up tasks) */
     openEmailTracking: string
     /** Composer - Pipedrive-style layout */
     composerFrom: string

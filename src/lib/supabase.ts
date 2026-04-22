@@ -57,12 +57,12 @@ const isVitest = import.meta.env.MODE === 'test'
 if (dataRuntime === 'unconfigured' && import.meta.env.DEV && !isVitest) {
   if (readDemoModeFlag()) {
     devConsole.warn(
-      '[CRM] Supabase env vars missing. Offline demo mode is ON (VITE_ALLOW_DEMO_MODE).\n' +
+      '[Velo] Supabase env vars missing. Offline demo mode is ON (VITE_ALLOW_DEMO_MODE).\n' +
         'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to use real auth.',
     )
   } else {
     devConsole.warn(
-      '[CRM] Supabase env vars missing or invalid. Auth/data are disabled until configured.\n' +
+      '[Velo] Supabase env vars missing or invalid. Auth/data are disabled until configured.\n' +
         'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, or set VITE_ALLOW_DEMO_MODE=true for local demo only.',
     )
   }

@@ -19,7 +19,7 @@ describe('supabase lib', () => {
     vi.stubEnv('VITE_SUPABASE_URL', '')
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
     await import('../../src/lib/supabase')
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[CRM]'))
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[Velo]'))
   })
 
   it('SEC-06: no console.warn when VITE_SUPABASE_URL is present and valid', async () => {

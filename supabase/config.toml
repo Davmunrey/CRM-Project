@@ -3,3 +3,15 @@
 
 [functions.webhook-worker]
 verify_jwt = false
+
+[functions.crm-public-api]
+verify_jwt = false
+
+[functions.api-keys]
+verify_jwt = false
+
+[functions.lead-capture]
+verify_jwt = false
+
+[functions.lead-capture-tokens]
+verify_jwt = false

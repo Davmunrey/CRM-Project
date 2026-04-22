@@ -23,13 +23,17 @@ function LoginHero({ branding, t }: { branding: AppSettings['branding']; t: Retu
   return (
     <div className="flex flex-col justify-center gap-6 lg:gap-8 text-left max-w-lg mx-auto lg:mx-0">
       <div
-        className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center shadow-brand-sm overflow-hidden shrink-0"
+        className="relative w-14 h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center shadow-brand-sm overflow-hidden shrink-0 ring-1 ring-fg/10 motion-safe:transition motion-safe:duration-300 motion-safe:ease-out motion-safe:hover:shadow-md motion-safe:hover:ring-fg/18 motion-safe:hover:scale-[1.02]"
         style={{ backgroundColor: branding.primaryColor }}
       >
+        <div
+          className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/35 via-white/8 to-transparent opacity-90"
+          aria-hidden
+        />
         {branding.logoUrl ? (
-          <img src={branding.logoUrl} alt="" className="w-full h-full object-cover" />
+          <img src={branding.logoUrl} alt="" className="relative z-[1] w-full h-full object-cover" />
         ) : (
-          <Logo variant="icon" theme="mono" size={28} className="text-fg" />
+          <Logo variant="icon" theme="onAccent" size={28} className="relative z-[1]" />
         )}
       </div>
       <div>

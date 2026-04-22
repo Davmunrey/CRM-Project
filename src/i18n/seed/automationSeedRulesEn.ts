@@ -121,7 +121,7 @@ export function createAutomationSeedRules(isoNow: string): AutomationRule[] {
         {
           type: 'create_activity',
           activityType: 'task',
-          activitySubject: 'Win/loss debrief - update CRM',
+          activitySubject: 'Win/loss debrief - update Velo',
           activityDaysFromNow: 1,
         },
       ],

@@ -11,6 +11,7 @@ import { useAuthStore } from './authStore'
 import { useLeadsStore } from './leadsStore'
 import { getTranslations } from '../i18n'
 import { seedEmails } from '../utils/seedData'
+import { sanitizeDemoEmails } from '../utils/demoDataSanitizer'
 import type { Database } from '../lib/database.types'
 import { injectOpenPixel, normalizeBodyToHtml, rewriteLinksForTracking } from '../lib/emailTracking'
 import { buildCrmFromLabel } from '../utils/outboundEmailIdentity'
@@ -173,7 +174,7 @@ type GmailThreadLinkRow = Database['public']['Tables']['gmail_thread_links']['Ro
 export const useEmailStore = create<EmailStore>()(
   persist(
     (set, get) => ({
-      emails: isSupabaseConfigured ? [] : seedEmails,
+      emails: isSupabaseConfigured ? [] : sanitizeDemoEmails(seedEmails),
       gmailAddress: null,
       threads: [],
       threadLinks: {},
@@ -936,14 +937,14 @@ export const useEmailStore = create<EmailStore>()(
           const s = persistedState as Record<string, unknown>
           delete s.gmailTokens
           if (!isSupabaseConfigured && (!Array.isArray(s.emails) || s.emails.length === 0)) {
-            s.emails = seedEmails
+            s.emails = sanitizeDemoEmails(seedEmails)
           }
           return s
         }
         const s = persistedState as Record<string, unknown>
         if (version < 3) {
           if (!isSupabaseConfigured && (!Array.isArray(s.emails) || s.emails.length === 0)) {
-            s.emails = seedEmails
+            s.emails = sanitizeDemoEmails(seedEmails)
           }
         }
         if (version < 4) {

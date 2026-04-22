@@ -131,34 +131,24 @@ export function localizedEmailSequence(sequence: EmailSequence, t: Translations)
   }
 }
 
-export function localizedContact(contact: Contact, t: Translations): Contact {
-  const o = t.seedDemo.demoContacts?.[contact.id]
-  if (!o) return contact
-  return { ...contact, ...o }
+export function localizedContact(contact: Contact, _t: Translations): Contact {
+  return contact
 }
 
-export function localizedCompany(company: Company, t: Translations): Company {
-  const o = t.seedDemo.demoCompanies?.[company.id]
-  if (!o) return company
-  return { ...company, ...o }
+export function localizedCompany(company: Company, _t: Translations): Company {
+  return company
 }
 
-export function localizedDeal(deal: Deal, t: Translations): Deal {
-  const o = t.seedDemo.demoDeals?.[deal.id]
-  if (!o) return deal
-  return { ...deal, ...o }
+export function localizedDeal(deal: Deal, _t: Translations): Deal {
+  return deal
 }
 
-export function localizedActivity(activity: Activity, t: Translations): Activity {
-  const o = t.seedDemo.demoActivities?.[activity.id]
-  if (!o) return activity
-  return { ...activity, ...o }
+export function localizedActivity(activity: Activity, _t: Translations): Activity {
+  return activity
 }
 
-export function localizedCRMEmail(email: CRMEmail, t: Translations): CRMEmail {
-  const o = t.seedDemo.demoEmails?.[email.id]
-  if (!o) return email
-  return { ...email, ...o }
+export function localizedCRMEmail(email: CRMEmail, _t: Translations): CRMEmail {
+  return email
 }
 
 export function localizedAuthUser(user: AuthUser, t: Translations): AuthUser {

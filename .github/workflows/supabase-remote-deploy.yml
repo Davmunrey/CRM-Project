@@ -8,6 +8,8 @@
 #
 # Optional (recommended for webhook-worker):
 #   WEBHOOK_WORKER_SECRET   — long random string; same value as cron / WEBHOOK_WORKER_INVOKE_URL consumer
+#
+# This workflow also deploys: api-keys, crm-public-api, lead-capture, lead-capture-tokens (see supabase/README.md).
 
 name: Supabase remote deploy
 
@@ -50,7 +52,11 @@ jobs:
           fi
           supabase secrets set "WEBHOOK_WORKER_SECRET=${WEBHOOK_WORKER_SECRET}"
 
-      - name: Deploy webhook Edge Functions
+      - name: Deploy Edge Functions (webhooks + integrations)
         run: |
           supabase functions deploy webhook-subscriptions
           supabase functions deploy webhook-worker
+          supabase functions deploy api-keys
+          supabase functions deploy crm-public-api
+          supabase functions deploy lead-capture
+          supabase functions deploy lead-capture-tokens

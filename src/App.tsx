@@ -4,6 +4,7 @@ import { initSupabaseAuth, useAuthStore } from './store/authStore'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/layout/ErrorBoundary'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
+import { WorkspaceHostBootstrap } from './components/auth/WorkspaceHostBootstrap'
 import { ContactDetail } from './pages/ContactDetail'
 import { CompanyDetail } from './pages/CompanyDetail'
 import { FollowUps } from './pages/FollowUps'
@@ -214,6 +215,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <GmailTokenProvider>
+        <WorkspaceHostBootstrap />
         <AppRoutes />
       </GmailTokenProvider>
     </BrowserRouter>

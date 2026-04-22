@@ -29,7 +29,7 @@ export const seedDemo: SeedDemoCatalog = {
     },
     'prod-006': {
       name: 'On-premise server',
-      description: 'Dedicated hardware for local CRM installation',
+      description: 'Dedicated hardware for local Velo installation',
     },
   },
   emailTemplates: {

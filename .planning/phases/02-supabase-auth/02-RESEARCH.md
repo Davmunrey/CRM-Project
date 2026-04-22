@@ -106,7 +106,7 @@ The SEC-06 warning should trigger only when `isSupabaseConfigured` is false AND 
 // lib/supabase.ts — add after isSupabaseConfigured declaration
 if (!isSupabaseConfigured && import.meta.env.DEV) {
   console.warn(
-    '[CRM] Supabase env vars missing or invalid. Running in mock/demo mode.\n' +
+    '[Velo] Supabase env vars missing or invalid. Running in mock/demo mode.\n' +
     'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local to enable real auth.'
   )
 }

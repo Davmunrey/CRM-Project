@@ -24,7 +24,7 @@ export const seedDemo: SeedDemoCatalog = {
     },
     'prod-006': {
       name: 'Servidor on-premise',
-      description: 'Hardware dedicado para instalación local del CRM',
+      description: 'Hardware dedicado para instalación local de Velo',
     },
   },
   emailTemplates: {
@@ -95,7 +95,7 @@ export const seedDemo: SeedDemoCatalog = {
     'auto-seed-6': {
       name: 'Debrief de deal perdido',
       description: 'Cuando se pierde un deal, crea una tarea para capturar motivos y actualizar el pipeline.',
-      createActivitySubject: 'Debrief win/loss - actualizar CRM',
+      createActivitySubject: 'Debrief win/loss - actualizar Velo',
     },
     'auto-seed-7': {
       name: 'Alerta a manager - deal perdido',

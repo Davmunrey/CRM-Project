@@ -48,7 +48,7 @@ human_verification:
 | 7 | ForgotPassword page exists at src/pages/ForgotPassword.tsx | VERIFIED | File exists; calls `resetPasswordForEmail(email, { redirectTo: origin + '/reset-password' })` |
 | 8 | ResetPassword page exists at src/pages/ResetPassword.tsx | VERIFIED | File exists; calls `supabase.auth.updateUser({ password })` and navigates to `/` on success |
 | 9 | Routes for /forgot-password and /reset-password in App.tsx | VERIFIED | App.tsx:55-56 — both routes registered as public (no ProtectedRoute wrapper) |
-| 10 | console.warn when Supabase env vars absent in src/lib/supabase.ts | VERIFIED | supabase.ts:11-16 — `!isSupabaseConfigured && import.meta.env.DEV` guard with `[CRM]` prefix |
+| 10 | console.warn when Supabase env vars absent in src/lib/supabase.ts | VERIFIED | supabase.ts:11-16 — `!isSupabaseConfigured && import.meta.env.DEV` guard with `[Velo]` prefix |
 
 **Score:** 10/10 truths verified
 
@@ -58,7 +58,7 @@ human_verification:
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `src/lib/supabase.ts` | Supabase client factory + SEC-06 warning | VERIFIED | isSupabaseConfigured check; console.warn with [CRM] prefix; client is null when unconfigured |
+| `src/lib/supabase.ts` | Supabase client factory + SEC-06 warning | VERIFIED | isSupabaseConfigured check; console.warn with [Velo] prefix; client is null when unconfigured |
 | `src/store/authStore.ts` | initSupabaseAuth with onAuthStateChange; logout with signOut; isLoadingAuth: true | VERIFIED | All three present and substantive |
 | `src/pages/Register.tsx` | Calls supabase.auth.signUp() with dual-path (session vs. no-session) | VERIFIED | Dual-path: session → navigate('/'), no session → setSuccess(true) |
 | `src/pages/Login.tsx` | Calls supabase.auth.signInWithPassword(); link to /forgot-password | VERIFIED | Both present at lines 24 and 116 |
@@ -121,7 +121,7 @@ Not applicable for auth pages — these components receive no async data from a 
 | AUTH-04 | 02.4 | Session persists across browser refresh via onAuthStateChange + isLoadingAuth: true | SATISFIED | isLoadingAuth: true confirmed; onAuthStateChange is sole listener; ProtectedRoute returns null while loading |
 | AUTH-05 | 02.5 | User can log out and session is fully cleared | SATISFIED | logout() calls signOut() + clears 4 store fields; test verifies it |
 | SEC-01 | 02.5 | authStore weak djb2 hash replaced by Supabase Auth — passwords never stored locally | PARTIAL | Supabase code path never calls simpleHash. Mock/demo mode fallback retains simpleHash + persists passwords to localStorage (by deliberate design — passwords field included in partialize at line 415). Passwords are never stored when Supabase is configured. |
-| SEC-06 | 02.1 | Dev-mode console.warn when Supabase env vars absent | SATISFIED | supabase.ts lines 11-16; test verifies the [CRM] prefix warning fires |
+| SEC-06 | 02.1 | Dev-mode console.warn when Supabase env vars absent | SATISFIED | supabase.ts lines 11-16; test verifies the [Velo] prefix warning fires |
 
 ---
 

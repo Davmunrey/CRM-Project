@@ -4,6 +4,7 @@ import { hasPermission } from '../../utils/permissions'
 import { isSupabaseConfigured } from '../../lib/supabase'
 import type { Permission } from '../../types/auth'
 import { useTranslations } from '../../i18n'
+import { Button } from '../ui/Button'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -17,6 +18,9 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
   const currentUser = useAuthStore((s) => s.currentUser)
   const organizationId = useAuthStore((s) => s.organizationId)
   const tenantResolutionStatus = useAuthStore((s) => s.tenantResolutionStatus)
+  const workspaceHostResolutionPending = useAuthStore((s) => s.workspaceHostResolutionPending)
+  const workspaceHostMismatch = useAuthStore((s) => s.workspaceHostMismatch)
+  const logout = useAuthStore((s) => s.logout)
 
   // AUTH-04: Do NOT redirect until Supabase has fired the first auth event.
   // isLoadingAuth starts as true and is set to false inside onAuthStateChange.
@@ -29,7 +33,7 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
     return <Navigate to="/login" replace />
   }
 
-  // AUTH-06: Authenticated users without an org must create one before accessing the CRM.
+  // AUTH-06: Authenticated users without an org must create one before accessing Velo.
   // Skip this check for Supabase mock mode (isSupabaseConfigured = false) so demo/dev still works.
   if (isAuthenticated && !organizationId && isSupabaseConfigured) {
     if (tenantResolutionStatus === 'resolving' || tenantResolutionStatus === 'idle') {
@@ -39,6 +43,24 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
       return <Navigate to="/org-access-required" replace />
     }
     return <Navigate to="/org-setup" replace />
+  }
+
+  if (isAuthenticated && organizationId && isSupabaseConfigured && workspaceHostResolutionPending) {
+    return null
+  }
+
+  if (isAuthenticated && organizationId && isSupabaseConfigured && workspaceHostMismatch) {
+    return (
+      <div className="min-h-screen bg-surface-0 text-fg flex items-center justify-center p-8">
+        <div className="max-w-md rounded-2xl border border-danger/25 bg-danger/10 p-8 text-center">
+          <h1 className="text-lg font-semibold text-fg mb-2">{t.errors.workspaceHostMismatchTitle}</h1>
+          <p className="text-sm text-fg-muted mb-6">{t.errors.workspaceHostMismatch}</p>
+          <Button type="button" className="w-full rounded-xl" size="lg" onClick={() => void logout()}>
+            {t.auth.logout}
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   if (requiredPermission && currentUser && !hasPermission(currentUser.role, requiredPermission)) {

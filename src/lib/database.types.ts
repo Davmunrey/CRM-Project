@@ -378,6 +378,54 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['webhook_delivery_log']['Insert']> & Record<string, unknown>
         Relationships: []
       }
+      organization_api_keys: {
+        Row: {
+          id: string
+          created_at: string
+          organization_id: string
+          created_by: string | null
+          name: string
+          key_prefix: string
+          key_hash: string
+          revoked_at: string | null
+          last_used_at: string | null
+        } & Record<string, unknown>
+        Insert: {
+          id?: string
+          created_at?: string
+          organization_id: string
+          created_by?: string | null
+          name: string
+          key_prefix: string
+          key_hash: string
+          revoked_at?: string | null
+          last_used_at?: string | null
+        } & Record<string, unknown>
+        Update: Partial<Database['public']['Tables']['organization_api_keys']['Insert']> & Record<string, unknown>
+        Relationships: []
+      }
+      lead_capture_tokens: {
+        Row: {
+          id: string
+          created_at: string
+          organization_id: string
+          created_by: string | null
+          label: string
+          token_hash: string
+          enabled: boolean
+        } & Record<string, unknown>
+        Insert: {
+          id?: string
+          created_at?: string
+          organization_id: string
+          created_by?: string | null
+          label: string
+          token_hash: string
+          enabled?: boolean
+        } & Record<string, unknown>
+        Update: Partial<Database['public']['Tables']['lead_capture_tokens']['Insert']> & Record<string, unknown>
+        Relationships: []
+      }
       leads: {
         Row: {
           id: string
@@ -471,7 +519,7 @@ export interface Database {
         Relationships: []
       }
     }
-    Views: {}
+    Views: Record<string, never>
     Functions: {
       list_organization_members_with_identity: {
         Args: Record<string, never>
@@ -485,6 +533,13 @@ export interface Database {
           avatar_url: string | null
           is_active: boolean
           created_at: string
+        }[]
+      }
+      resolve_workspace_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          id: string
+          name: string
         }[]
       }
     }

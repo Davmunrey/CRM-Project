@@ -13,7 +13,7 @@ const SEED_PRODUCTS: Product[] = (() => {
     { id: 'prod-003', name: 'Soporte Premium 24/7', description: 'Soporte prioritario con SLA garantizado < 2h', sku: 'SUP-PREM-001', price: 800, currency: 'EUR', category: 'support', isActive: true, createdAt: now, updatedAt: now },
     { id: 'prod-004', name: 'Formación Equipos', description: 'Sesiones de formación presencial para equipos de ventas', sku: 'TRN-EQ-001', price: 1500, currency: 'EUR', category: 'service', isActive: true, createdAt: now, updatedAt: now },
     { id: 'prod-005', name: 'API Integration Pack', description: 'Pack de integraciones con sistemas externos via API REST', sku: 'API-INT-001', price: 2200, currency: 'EUR', category: 'software', isActive: true, createdAt: now, updatedAt: now },
-    { id: 'prod-006', name: 'Servidor On-Premise', description: 'Hardware dedicado para instalación local del CRM', sku: 'HW-SRV-001', price: 4800, currency: 'EUR', category: 'hardware', isActive: true, createdAt: now, updatedAt: now },
+    { id: 'prod-006', name: 'Servidor On-Premise', description: 'Hardware dedicado para instalación local de Velo', sku: 'HW-SRV-001', price: 4800, currency: 'EUR', category: 'hardware', isActive: true, createdAt: now, updatedAt: now },
   ]
 })()
 

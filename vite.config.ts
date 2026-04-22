@@ -29,7 +29,7 @@ export default defineConfig(({ command, mode }) => {
 
   if (command === 'build' && (channel === 'production' || channel === 'staging') && !isSupabaseEnvValid(env)) {
     throw new Error(
-      `[CRM] Build rejected: VITE_APP_CHANNEL is "${channel}" but VITE_SUPABASE_URL (https://…) and ` +
+      `[Velo] Build rejected: VITE_APP_CHANNEL is "${channel}" but VITE_SUPABASE_URL (https://…) and ` +
         'VITE_SUPABASE_ANON_KEY are missing or invalid. Use VITE_APP_CHANNEL=demo for offline demo bundles.',
     )
   }

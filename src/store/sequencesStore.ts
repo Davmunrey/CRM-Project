@@ -22,8 +22,8 @@ export const seedSequences: EmailSequence[] = [
     name: 'Outreach Inicial',
     description: 'Secuencia de prospección para nuevos leads.',
     steps: [
-      { id: 'step-001-1', order: 0, type: 'email', delayDays: 0, subject: 'Encantado de conectar, {{firstName}}', bodyTemplate: 'Hola {{firstName}},\n\nMe gustaría explorar si podemos colaborar.\n\nUn saludo,\nDavid' },
-      { id: 'step-001-2', order: 1, type: 'email', delayDays: 3, subject: 'Seguimiento - {{firstName}}', bodyTemplate: 'Hola {{firstName}},\n\nSolo quería hacer seguimiento.\n\nUn saludo,\nDavid' },
+      { id: 'step-001-1', order: 0, type: 'email', delayDays: 0, subject: 'Encantado de conectar, {{firstName}}', bodyTemplate: 'Hola {{firstName}},\n\nMe gustaría explorar si podemos colaborar.\n\nUn saludo,\nEquipo Demo' },
+      { id: 'step-001-2', order: 1, type: 'email', delayDays: 3, subject: 'Seguimiento - {{firstName}}', bodyTemplate: 'Hola {{firstName}},\n\nSolo quería hacer seguimiento.\n\nUn saludo,\nEquipo Demo' },
       { id: 'step-001-3', order: 2, type: 'call_task', delayDays: 7, taskDescription: 'Llamar al contacto para agendar una demo.' },
     ],
     createdBy: 'u1', createdAt: '2025-01-10T09:00:00Z', isActive: true, enrolledCount: 0,
@@ -33,8 +33,8 @@ export const seedSequences: EmailSequence[] = [
     name: 'Re-engagement',
     description: 'Recuperar contactos que llevan más de 60 días sin responder.',
     steps: [
-      { id: 'step-002-1', order: 0, type: 'email', delayDays: 0, subject: '¿Sigues interesado, {{firstName}}?', bodyTemplate: 'Hola {{firstName}},\n\nQuería retomar el contacto.\n\nUn saludo,\nDavid' },
-      { id: 'step-002-2', order: 1, type: 'email', delayDays: 5, subject: 'Último intento, {{firstName}}', bodyTemplate: 'Hola {{firstName}},\n\nEste será mi último email.\n\n¡Mucho éxito!\nDavid' },
+      { id: 'step-002-1', order: 0, type: 'email', delayDays: 0, subject: '¿Sigues interesado, {{firstName}}?', bodyTemplate: 'Hola {{firstName}},\n\nQuería retomar el contacto.\n\nUn saludo,\nEquipo Demo' },
+      { id: 'step-002-2', order: 1, type: 'email', delayDays: 5, subject: 'Último intento, {{firstName}}', bodyTemplate: 'Hola {{firstName}},\n\nEste será mi último email.\n\n¡Mucho éxito!\nEquipo Demo' },
     ],
     createdBy: 'u1', createdAt: '2025-01-15T09:00:00Z', isActive: true, enrolledCount: 0,
   },
@@ -50,7 +50,7 @@ export const seedSequences: EmailSequence[] = [
         delayDays: 0,
         subject: 'Thanks for the demo - {{firstName}}',
         bodyTemplate:
-          'Hi {{firstName}},\n\nThanks for the walkthrough. Here is a short recap of what we covered and the timeline we discussed.\n\nBest,\nDavid',
+          'Hi {{firstName}},\n\nThanks for the walkthrough. Here is a short recap of what we covered and the timeline we discussed.\n\nBest,\nDemo Team',
       },
       { id: 'step-003-2', order: 1, type: 'wait', delayDays: 2 },
       {
@@ -60,7 +60,7 @@ export const seedSequences: EmailSequence[] = [
         delayDays: 0,
         subject: 'Materials you asked for - {{company}}',
         bodyTemplate:
-          'Hi {{firstName}},\n\nSharing the references and security overview we promised. Happy to go deeper on any section.\n\nBest,\nDavid',
+          'Hi {{firstName}},\n\nSharing the references and security overview we promised. Happy to go deeper on any section.\n\nBest,\nDemo Team',
       },
       {
         id: 'step-003-4',
@@ -87,7 +87,7 @@ export const seedSequences: EmailSequence[] = [
         delayDays: 0,
         subject: 'Ideas for {{company}} this quarter',
         bodyTemplate:
-          'Hi {{firstName}},\n\nBased on how your team is using the product, here are three concrete wins we can unlock without a disruptive migration.\n\nBest,\nDavid',
+          'Hi {{firstName}},\n\nBased on how your team is using the product, here are three concrete wins we can unlock without a disruptive migration.\n\nBest,\nDemo Team',
       },
       {
         id: 'step-004-2',
@@ -103,7 +103,7 @@ export const seedSequences: EmailSequence[] = [
         delayDays: 7,
         subject: 'Expansion options - {{firstName}}',
         bodyTemplate:
-          'Hi {{firstName}},\n\nIf you are open to more seats or add-on modules, I can share options aligned to your renewal window.\n\nBest,\nDavid',
+          'Hi {{firstName}},\n\nIf you are open to more seats or add-on modules, I can share options aligned to your renewal window.\n\nBest,\nDemo Team',
       },
     ],
     createdBy: 'u1',
@@ -123,7 +123,7 @@ export const seedSequences: EmailSequence[] = [
         delayDays: 0,
         subject: 'Missed you today - want to reschedule?',
         bodyTemplate:
-          'Hi {{firstName}},\n\nWe had time blocked and I did not see you join. Here is my calendar link - pick anything that works.\n\nBest,\nDavid',
+          'Hi {{firstName}},\n\nWe had time blocked and I did not see you join. Here is my calendar link - pick anything that works.\n\nBest,\nDemo Team',
       },
       {
         id: 'step-005-2',
@@ -132,7 +132,7 @@ export const seedSequences: EmailSequence[] = [
         delayDays: 2,
         subject: 'One metric worth 5 minutes - {{firstName}}',
         bodyTemplate:
-          'Hi {{firstName}},\n\nQuick note with one benchmark peers in your space track closely. Happy to unpack it live.\n\nBest,\nDavid',
+          'Hi {{firstName}},\n\nQuick note with one benchmark peers in your space track closely. Happy to unpack it live.\n\nBest,\nDemo Team',
       },
       {
         id: 'step-005-3',
@@ -149,8 +149,63 @@ export const seedSequences: EmailSequence[] = [
   },
 ]
 
+function hydrateSeedSequences(sequences: EmailSequence[]): EmailSequence[] {
+  return sequences.map((sequence) => {
+    const flowDefinition = sequence.flowDefinition
+      ? parseFlowDefinition(sequence.flowDefinition)
+      : linearStepsToFlow(sequence.steps)
+    return {
+      ...sequence,
+      flowDefinition,
+      stopOnContactReply: sequence.stopOnContactReply !== false,
+      enrollmentStartDelayDays: Math.max(0, sequence.enrollmentStartDelayDays ?? 0),
+    }
+  })
+}
+
+const offlineSeedSequences = hydrateSeedSequences(seedSequences)
+
+function buildOfflineEnrollments(sequences: EmailSequence[]): SequenceEnrollment[] {
+  const now = Date.now()
+  const firstSeq = sequences.find((sequence) => sequence.id === 'seq-001')
+  const secondSeq = sequences.find((sequence) => sequence.id === 'seq-003')
+  if (!firstSeq || !secondSeq) return []
+
+  const firstStart = computeEnrollmentStart(firstSeq)
+  const secondStart = computeEnrollmentStart(secondSeq)
+
+  return [
+    {
+      id: 'enr-seed-1',
+      sequenceId: 'seq-001',
+      contactId: 'ct1',
+      contactName: 'Demo Contact 1',
+      currentStep: firstStart?.currentStep ?? 0,
+      currentNodeId: firstStart?.currentNodeId ?? null,
+      abVariant: firstStart?.abVariant ?? null,
+      status: 'active',
+      enrolledAt: new Date(now - 2 * 86_400_000).toISOString(),
+      nextStepAt: new Date(now + 86_400_000).toISOString(),
+    },
+    {
+      id: 'enr-seed-2',
+      sequenceId: 'seq-003',
+      contactId: 'ct5',
+      contactName: 'Demo Contact 2',
+      currentStep: secondStart?.currentStep ?? 0,
+      currentNodeId: secondStart?.currentNodeId ?? null,
+      abVariant: secondStart?.abVariant ?? null,
+      status: 'paused',
+      enrolledAt: new Date(now - 7 * 86_400_000).toISOString(),
+      nextStepAt: new Date(now + 3 * 86_400_000).toISOString(),
+    },
+  ]
+}
+
+const offlineSeedEnrollments = buildOfflineEnrollments(offlineSeedSequences)
+
 export function getBuiltInSequenceById(id: SeedSequenceId): EmailSequence | undefined {
-  return seedSequences.find((s) => s.id === id)
+  return offlineSeedSequences.find((s) => s.id === id)
 }
 
 // ─── Store interface ─────────────────────────────────────────────────────────
@@ -178,14 +233,14 @@ export interface SequencesStore {
 // ─── Store ───────────────────────────────────────────────────────────────────
 
 export const useSequencesStore = create<SequencesStore>()((set, get) => ({
-  sequences: seedSequences,
-  enrollments: [],
+  sequences: offlineSeedSequences,
+  enrollments: offlineSeedEnrollments,
   isLoading: false,
   error: null,
 
   fetchSequences: async () => {
     if (!isSupabaseConfigured || !supabase) {
-      set({ sequences: seedSequences, enrollments: [] })
+      set({ sequences: offlineSeedSequences, enrollments: offlineSeedEnrollments })
       return
     }
     set({ isLoading: true, error: null })

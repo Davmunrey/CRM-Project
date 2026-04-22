@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Trash2, FlaskConical, Sparkles, Link2, HelpCircle } from 'lucide-react'
+import { Trash2, FlaskConical, Sparkles, Link2, HelpCircle, RotateCcw } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/authStore'
 import { useTranslations } from '../../i18n'
@@ -56,6 +56,17 @@ type WebhookRow = {
   last_delivery_at: string | null
 }
 
+type FailedOutboxRow = {
+  id: string
+  created_at: string
+  event_key: string
+  entity_type: string
+  entity_id: string
+  attempts: number
+  last_error: string | null
+  status: string
+}
+
 export function SettingsWebhooksPanel() {
   const t = useTranslations()
   const organizationId = useAuthStore((s) => s.organizationId)
@@ -75,6 +86,8 @@ export function SettingsWebhooksPanel() {
   const [testingId, setTestingId] = useState<string | null>(null)
   const [rotateId, setRotateId] = useState<string | null>(null)
   const [rotateSecret, setRotateSecret] = useState('')
+  const [failedRows, setFailedRows] = useState<FailedOutboxRow[]>([])
+  const [replayingId, setReplayingId] = useState<string | null>(null)
   const loadGenerationRef = useRef(0)
 
   const load = useCallback(async () => {
@@ -82,24 +95,38 @@ export function SettingsWebhooksPanel() {
     if (!supabase || !organizationId) {
       if (snapshot === loadGenerationRef.current) {
         setRows([])
+        setFailedRows([])
         setLoading(false)
       }
       return
     }
     setLoading(true)
     setLoadError(null)
-    const { data, error } = await supabase
-      .from('webhook_subscriptions')
-      .select('id, name, target_url, enabled, event_filters, custom_headers, last_http_status, last_delivery_error, last_delivery_at')
-      .eq('organization_id', organizationId)
-      .order('created_at', { ascending: false })
+    const [subsRes, failedRes] = await Promise.all([
+      supabase
+        .from('webhook_subscriptions')
+        .select(
+          'id, name, target_url, enabled, event_filters, custom_headers, last_http_status, last_delivery_error, last_delivery_at',
+        )
+        .eq('organization_id', organizationId)
+        .order('created_at', { ascending: false }),
+      supabase.functions.invoke('webhook-subscriptions', {
+        body: { action: 'listFailedOutbox', organizationId, limit: 25 },
+      }),
+    ])
     if (snapshot !== loadGenerationRef.current) return
-    if (error) {
+    if (subsRes.error) {
       setLoadError(t.settings.webhooksLoadErrorInline)
       setRows([])
     } else {
       setLoadError(null)
-      setRows((data ?? []) as WebhookRow[])
+      setRows((subsRes.data ?? []) as WebhookRow[])
+    }
+    const fd = failedRes.data as { rows?: FailedOutboxRow[]; error?: string } | null
+    if (failedRes.error || fd?.error) {
+      setFailedRows([])
+    } else {
+      setFailedRows(fd?.rows ?? [])
     }
     setLoading(false)
   }, [organizationId, t])
@@ -211,6 +238,26 @@ export function SettingsWebhooksPanel() {
     const d = data as { success?: boolean; error?: string | null }
     if (d.success) toast.success(t.settings.webhooksTestOk)
     else toast.error(d.error || t.settings.webhooksTestFail)
+    void load()
+  }
+
+  const handleReplayFailed = async (outboxId: string) => {
+    if (!supabase || !organizationId || !canManage) return
+    setReplayingId(outboxId)
+    const { data, error } = await supabase.functions.invoke('webhook-subscriptions', {
+      body: { action: 'replayOutbox', organizationId, outboxId },
+    })
+    setReplayingId(null)
+    if (error) {
+      toast.error(error.message ?? t.settings.webhooksLoadFailed)
+      return
+    }
+    const d = data as { error?: string }
+    if (d.error) {
+      toast.error(d.error)
+      return
+    }
+    toast.success(t.settings.webhooksReplayed)
     void load()
   }
 
@@ -374,6 +421,47 @@ export function SettingsWebhooksPanel() {
           <Button type="button" size="sm" onClick={() => void handleCreate()} disabled={saving}>
             {t.settings.webhooksCreate}
           </Button>
+        </div>
+      )}
+
+      {canManage && (
+        <div className="space-y-3 rounded-xl border border-border-subtle bg-surface-1 p-4">
+          <p className="text-sm font-medium text-fg">{t.settings.webhooksFailedTitle}</p>
+          {loading ? (
+            <p className="text-xs text-fg-muted">{t.common.loading}</p>
+          ) : failedRows.length === 0 ? (
+            <p className="text-xs text-fg-subtle">{t.settings.webhooksFailedEmpty}</p>
+          ) : (
+            <ul className="space-y-2">
+              {failedRows.map((f) => (
+                <li
+                  key={f.id}
+                  className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-fg/8 px-3 py-2 text-xs"
+                >
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="font-mono text-fg truncate">{f.event_key}</p>
+                    <p className="text-fg-subtle">
+                      {t.settings.webhooksFailedEvent}: {f.entity_type} {f.entity_id.slice(0, 8)}… ·{' '}
+                      {t.settings.webhooksFailedAttempts}: {f.attempts}
+                    </p>
+                    {f.last_error ? (
+                      <p className="text-danger/90 line-clamp-2">{t.settings.webhooksFailedError}: {f.last_error}</p>
+                    ) : null}
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    disabled={replayingId === f.id}
+                    leftIcon={<RotateCcw size={14} aria-hidden />}
+                    onClick={() => void handleReplayFailed(f.id)}
+                  >
+                    {t.settings.webhooksReplay}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

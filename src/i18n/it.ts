@@ -188,7 +188,7 @@ export const it: Translations = {
     landingTagline: 'Pipeline, posta in arrivo e team in un unico spazio ordinato.',
     landingFeature1: 'Permessi pronti per la compliance e flussi adatti alle revisioni.',
     landingFeature2: 'Viste rapide per lead, trattative e follow-up.',
-    landingFeature3: 'Pensato per team piccoli che vogliono un CRM serio.',
+    landingFeature3: 'Pensato per team piccoli che vogliono uno spazio vendite serio.',
     demoCredentialsTitle: 'Credenziali demo',
   },
   errors: {
@@ -239,7 +239,7 @@ export const it: Translations = {
     dropSubtitle: 'oppure fai clic per selezionare',
     dropHint: 'Supporta file .csv con separatore virgola o punto e virgola',
     expectedFieldsFor: 'Campi previsti per',
-    mapColumns: 'Mappa le colonne del CSV ai campi del CRM',
+    mapColumns: 'Mappa le colonne del CSV ai campi di Velo',
     doNotMap: 'Non mappare',
     requiredFieldsWarning: 'Mappa tutti i campi obbligatori (*) per continuare',
     back: 'Indietro',
