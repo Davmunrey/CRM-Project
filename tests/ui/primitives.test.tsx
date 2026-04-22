@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { axe } from 'vitest-axe'
 import { EmptyState } from '../../src/components/ui/EmptyState'
 import { Tabs } from '../../src/components/ui/Tabs'
@@ -133,10 +134,11 @@ describe('UI primitives (a11y smoke)', () => {
   })
 
   it('LanguageSwitcher (open) has no critical axe violations', async () => {
+    const user = userEvent.setup()
     const { container } = render(<LanguageSwitcher variant="inline" />)
     const btn = container.querySelector('button[aria-haspopup="menu"]')
     expect(btn).toBeTruthy()
-    btn?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await user.click(btn as HTMLButtonElement)
     const results = await axe(container)
     expect(results).toHaveNoViolations()
   })
