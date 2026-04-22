@@ -10,8 +10,6 @@ import { getOrgId, runSupabaseWrite } from '../lib/supabaseHelpers'
 import { useAuthStore } from './authStore'
 import { useLeadsStore } from './leadsStore'
 import { getTranslations } from '../i18n'
-import { seedEmails } from '../utils/seedData'
-import { sanitizeDemoEmails } from '../utils/demoDataSanitizer'
 import type { Database } from '../lib/database.types'
 import { injectOpenPixel, normalizeBodyToHtml, rewriteLinksForTracking } from '../lib/emailTracking'
 import { buildCrmFromLabel } from '../utils/outboundEmailIdentity'
@@ -174,7 +172,7 @@ type GmailThreadLinkRow = Database['public']['Tables']['gmail_thread_links']['Ro
 export const useEmailStore = create<EmailStore>()(
   persist(
     (set, get) => ({
-      emails: isSupabaseConfigured ? [] : sanitizeDemoEmails(seedEmails),
+      emails: [],
       gmailAddress: null,
       threads: [],
       threadLinks: {},
@@ -936,15 +934,15 @@ export const useEmailStore = create<EmailStore>()(
         if (version < 2) {
           const s = persistedState as Record<string, unknown>
           delete s.gmailTokens
-          if (!isSupabaseConfigured && (!Array.isArray(s.emails) || s.emails.length === 0)) {
-            s.emails = sanitizeDemoEmails(seedEmails)
+          if (!Array.isArray(s.emails)) {
+            s.emails = []
           }
           return s
         }
         const s = persistedState as Record<string, unknown>
         if (version < 3) {
-          if (!isSupabaseConfigured && (!Array.isArray(s.emails) || s.emails.length === 0)) {
-            s.emails = sanitizeDemoEmails(seedEmails)
+          if (!Array.isArray(s.emails)) {
+            s.emails = []
           }
         }
         if (version < 4) {

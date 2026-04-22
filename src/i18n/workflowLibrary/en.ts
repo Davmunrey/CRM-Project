@@ -1,75 +1,10 @@
-import type { SeedDemoCatalog } from '../types'
-import { automationSeedRulesToDemoCatalog, createAutomationSeedRules } from './automationSeedRulesEn'
-import { demoEntityOverlaysEn } from './entityOverlaysEn'
+import type { WorkflowLibraryCatalog } from '../types'
+import { automationSeedRulesToDemoCatalog, createAutomationSeedRules } from '../seed/automationSeedRulesEn'
 
-/** Fixed timestamp so seed demo catalog stays stable across builds. */
-const AUTOMATION_SEED_DEMO_TS = '2020-01-01T00:00:00.000Z'
+const AUTO_TS = '2020-01-01T00:00:00.000Z'
 
-export const seedDemo: SeedDemoCatalog = {
-  products: {
-    'prod-001': {
-      name: 'Velo License',
-      description: 'Annual Velo license with support included',
-    },
-    'prod-002': {
-      name: 'Basic implementation',
-      description: 'Implementation and data migration service',
-    },
-    'prod-003': {
-      name: 'Premium 24/7 support',
-      description: 'Priority support with < 2h SLA',
-    },
-    'prod-004': {
-      name: 'Team training',
-      description: 'On-site training sessions for sales teams',
-    },
-    'prod-005': {
-      name: 'API integration pack',
-      description: 'Integrations with external systems via REST API',
-    },
-    'prod-006': {
-      name: 'On-premise server',
-      description: 'Dedicated hardware for local Velo installation',
-    },
-  },
-  emailTemplates: {
-    'tpl-001': {
-      name: 'First touch',
-      subject: 'Great to connect, {{firstName}}',
-      body: 'Hi {{firstName}},\n\nI would like to explore how we could work together.\n\nBest regards,\n{{senderName}}',
-    },
-    'tpl-002': {
-      name: 'Meeting follow-up',
-      subject: 'Summary of our meeting - {{dealTitle}}',
-      body: 'Hi {{firstName}},\n\nThanks for your time. I will send the proposal in the next few days.\n\nBest regards,\n{{senderName}}',
-    },
-    'tpl-003': {
-      name: 'Proposal send',
-      subject: 'Commercial proposal - {{dealTitle}}',
-      body: 'Hi {{firstName}},\n\nPlease find attached the commercial proposal for {{dealTitle}}.\n\nBest regards,\n{{senderName}}',
-    },
-    'tpl-004': {
-      name: 'Closing the deal',
-      subject: 'Next steps to close {{dealTitle}}',
-      body: 'Hi {{firstName}},\n\nI wanted to follow up on the proposal for {{dealTitle}}.\n\nBest regards,\n{{senderName}}',
-    },
-    'tpl-005': {
-      name: 'Nurture - value content',
-      subject: '{{firstName}}, a resource you may find useful',
-      body: 'Hi {{firstName}},\n\nWe published a study that may be relevant for {{company}}.\n\nBest regards,\n{{senderName}}',
-    },
-  },
-  quickReplies: {
-    'qr-1': {
-      title: 'Quick follow-up',
-      body: 'Hi {{firstName}},\n\nJust checking in on this.\n\nBest regards,',
-    },
-    'qr-2': {
-      title: 'Meeting summary',
-      body: 'Thanks for your time today.\n\nAs discussed, here are the next steps:\n1) \n2) \n3) \n\nBest,',
-    },
-  },
-  automations: automationSeedRulesToDemoCatalog(createAutomationSeedRules(AUTOMATION_SEED_DEMO_TS)),
+export const workflowLibraryEn: WorkflowLibraryCatalog = {
+  automations: automationSeedRulesToDemoCatalog(createAutomationSeedRules(AUTO_TS)),
   sequences: {
     'seq-001': {
       name: 'Initial outreach',
@@ -183,5 +118,4 @@ export const seedDemo: SeedDemoCatalog = {
     'cf-d-03': { label: 'Requires legal approval' },
     'cf-d-04': { label: 'Approved budget', placeholder: '0.00' },
   },
-  ...demoEntityOverlaysEn,
 }

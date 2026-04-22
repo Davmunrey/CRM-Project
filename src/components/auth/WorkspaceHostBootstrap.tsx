@@ -59,20 +59,22 @@ export function WorkspaceHostBootstrap() {
   }, [])
 
   const workspaceHostResolutionPending = useAuthStore((s) => s.workspaceHostResolutionPending)
-  const workspaceFromHost = useAuthStore((s) => s.workspaceFromHost)
+  /** Primitive deps only — `workspaceFromHost` object identity can change across unrelated store updates. */
+  const workspaceFromHostId = useAuthStore((s) => s.workspaceFromHost?.id ?? null)
   const organizationId = useAuthStore((s) => s.organizationId)
 
   useEffect(() => {
+    let nextMismatch: boolean
     if (workspaceHostResolutionPending) {
-      useAuthStore.setState({ workspaceHostMismatch: false })
-      return
+      nextMismatch = false
+    } else if (!organizationId || !workspaceFromHostId) {
+      nextMismatch = false
+    } else {
+      nextMismatch = workspaceFromHostId !== organizationId
     }
-    if (!organizationId || !workspaceFromHost) {
-      useAuthStore.setState({ workspaceHostMismatch: false })
-      return
-    }
-    useAuthStore.setState({ workspaceHostMismatch: workspaceFromHost.id !== organizationId })
-  }, [workspaceHostResolutionPending, workspaceFromHost, organizationId])
+    if (useAuthStore.getState().workspaceHostMismatch === nextMismatch) return
+    useAuthStore.setState({ workspaceHostMismatch: nextMismatch })
+  }, [workspaceHostResolutionPending, workspaceFromHostId, organizationId])
 
   return null
 }

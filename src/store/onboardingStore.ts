@@ -10,11 +10,14 @@ export interface OrgOnboardingFlags {
   homeBannerDismissedAt?: string
 }
 
-const empty: OrgOnboardingFlags = {
+/** Stable defaults; reuse for Zustand selectors (never return a fresh object from a selector each tick). */
+export const EMPTY_ORG_ONBOARDING: OrgOnboardingFlags = {
   importContacts: false,
   firstDeal: false,
   firstSequence: false,
 }
+
+const empty = EMPTY_ORG_ONBOARDING
 
 interface OnboardingState {
   byOrg: Record<string, OrgOnboardingFlags>

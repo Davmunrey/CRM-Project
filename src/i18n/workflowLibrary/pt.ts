@@ -1,70 +1,6 @@
-import type { SeedDemoCatalog } from '../types'
-import { demoEntityOverlaysPt } from './entityOverlaysPt'
+import type { WorkflowLibraryCatalog } from '../types'
 
-export const seedDemo: SeedDemoCatalog = {
-  products: {
-    'prod-001': {
-      name: 'Licença Velo',
-      description: 'Licença anual Velo com suporte incluído',
-    },
-    'prod-002': {
-      name: 'Implementação básica',
-      description: 'Serviço de implementação e migração de dados',
-    },
-    'prod-003': {
-      name: 'Suporte premium 24/7',
-      description: 'Suporte prioritário com SLA < 2h',
-    },
-    'prod-004': {
-      name: 'Treinamento de equipes',
-      description: 'Sessões presenciais de treinamento para equipes de vendas',
-    },
-    'prod-005': {
-      name: 'Pacote integração API',
-      description: 'Integrações com sistemas externos via API REST',
-    },
-    'prod-006': {
-      name: 'Servidor on-premise',
-      description: 'Hardware dedicado para instalação local do Velo',
-    },
-  },
-  emailTemplates: {
-    'tpl-001': {
-      name: 'Primeiro contato',
-      subject: 'Prazer em conectar, {{firstName}}',
-      body: 'Olá {{firstName}},\n\nGostaria de explorar como podemos colaborar.\n\nAtenciosamente,\n{{senderName}}',
-    },
-    'tpl-002': {
-      name: 'Acompanhamento pós-reunião',
-      subject: 'Resumo da nossa reunião - {{dealTitle}}',
-      body: 'Olá {{firstName}},\n\nObrigado pelo seu tempo. Enviarei a proposta nos próximos dias.\n\nAtenciosamente,\n{{senderName}}',
-    },
-    'tpl-003': {
-      name: 'Envio de proposta',
-      subject: 'Proposta comercial - {{dealTitle}}',
-      body: 'Olá {{firstName}},\n\nSegue em anexo a proposta comercial para {{dealTitle}}.\n\nAtenciosamente,\n{{senderName}}',
-    },
-    'tpl-004': {
-      name: 'Fechamento do negócio',
-      subject: 'Próximos passos para fechar {{dealTitle}}',
-      body: 'Olá {{firstName}},\n\nQueria retomar o contato sobre a proposta de {{dealTitle}}.\n\nAtenciosamente,\n{{senderName}}',
-    },
-    'tpl-005': {
-      name: 'Nutrição - conteúdo de valor',
-      subject: '{{firstName}}, um recurso que pode interessar',
-      body: 'Olá {{firstName}},\n\nPublicámos um estudo relevante para {{company}}.\n\nAtenciosamente,\n{{senderName}}',
-    },
-  },
-  quickReplies: {
-    'qr-1': {
-      title: 'Acompanhamento rápido',
-      body: 'Olá {{firstName}},\n\nSó passando para acompanhar.\n\nAtenciosamente,',
-    },
-    'qr-2': {
-      title: 'Resumo da reunião',
-      body: 'Obrigado pelo tempo hoje.\n\nConforme combinado, próximos passos:\n1) \n2) \n3) \n\nAtenciosamente,',
-    },
-  },
+export const workflowLibraryPt: WorkflowLibraryCatalog = {
   automations: {
     'auto-seed-1': {
       name: 'Enviar e-mail de acompanhamento',
@@ -232,14 +168,5 @@ export const seedDemo: SeedDemoCatalog = {
     },
     'cf-d-03': { label: 'Requer aprovação jurídica' },
     'cf-d-04': { label: 'Orçamento aprovado', placeholder: '0,00' },
-  },
-  ...demoEntityOverlaysPt,
-  demoAuth: {
-    organizationName: 'Velo Vendas',
-    users: {
-      u1: { jobTitle: 'Gestor de vendas' },
-      u2: { jobTitle: 'Executiva de contas' },
-      u3: { jobTitle: 'SDR' },
-    },
   },
 }

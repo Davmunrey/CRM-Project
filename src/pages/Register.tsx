@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react'
+import { User, Mail, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
-import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { workspaceNameFromEmail } from '../lib/workspaceFromEmail'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
-import { Tooltip } from '../components/ui/Tooltip'
 import { AuthLayout } from '../components/auth/AuthLayout'
+import { SecurePasswordField } from '../components/auth/SecurePasswordField'
+import { formatPasswordStrengthIssues, getPasswordStrengthIssues } from '../lib/securePassword'
 
 export function Register() {
   const t = useTranslations()
@@ -26,14 +27,21 @@ export function Register() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const register = useAuthStore((s) => s.register)
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    if (password.length < 6) {
-      setError(t.auth.passwordMinLength)
+    const strengthIssues = getPasswordStrengthIssues(password)
+    if (strengthIssues.length > 0) {
+      setError(
+        formatPasswordStrengthIssues(strengthIssues, {
+          length: t.errors.passwordWeakLength,
+          lower: t.errors.passwordWeakLower,
+          upper: t.errors.passwordWeakUpper,
+          digit: t.errors.passwordWeakDigit,
+          symbol: t.errors.passwordWeakSymbol,
+        }),
+      )
       return
     }
 
@@ -54,16 +62,6 @@ export function Register() {
       } else {
         setSuccess(true)
       }
-    } else if (isOfflineDemoMode) {
-      setTimeout(() => {
-        const result = register({ name, email, password })
-        setLoading(false)
-        if (result.success) {
-          navigate('/')
-        } else {
-          setError(result.error || t.auth.register)
-        }
-      }, 400)
     } else {
       setLoading(false)
       setError(t.errors.supabaseNotConfiguredDetail)
@@ -77,21 +75,6 @@ export function Register() {
         <>
           <h1 className="text-2xl font-bold text-fg">{t.auth.registerButton}</h1>
           <p className="text-sm text-fg-muted mt-1">{branding.appName}</p>
-          {isSupabaseConfigured ? (
-            <Tooltip content={t.auth.realAuthEnabled} side="bottom">
-              <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-success/10 border border-success/20 cursor-default">
-                <ShieldCheck size={11} className="text-success" aria-hidden />
-                <span className="text-[10px] font-medium text-success">{t.auth.realAuthEnabled}</span>
-              </div>
-            </Tooltip>
-          ) : isOfflineDemoMode ? (
-            <Tooltip content={t.auth.demoModeBadge} side="bottom">
-              <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-warning/10 border border-warning/20 cursor-default">
-                <ShieldCheck size={11} className="text-warning" aria-hidden />
-                <span className="text-[10px] font-medium text-warning">{t.auth.demoModeBadge}</span>
-              </div>
-            </Tooltip>
-          ) : null}
         </>
       )}
     >
@@ -134,15 +117,12 @@ export function Register() {
                 leftIcon={<Mail size={16} aria-hidden />}
               />
 
-              <Input
+              <SecurePasswordField
                 label={t.auth.password}
-                type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={setPassword}
                 placeholder={t.auth.password}
                 required
-                minLength={6}
-                leftIcon={<Lock size={16} aria-hidden />}
               />
 
               <Button

@@ -1,18 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Zap, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck, Users } from 'lucide-react'
+import { Zap, Mail, ArrowRight, ShieldCheck, Users } from 'lucide-react'
 import { Logo } from '../components/brand/Logo'
 import type { AppSettings } from '../types'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
-import { IconButton } from '../components/ui/IconButton'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
-import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { AuthLayout } from '../components/auth/AuthLayout'
-import { AuthSsoButtons } from '../components/auth/AuthSsoButtons'
+import { SecurePasswordField } from '../components/auth/SecurePasswordField'
 
 function LoginHero({ branding, t }: { branding: AppSettings['branding']; t: ReturnType<typeof useTranslations> }) {
   const items = [
@@ -55,36 +54,14 @@ function LoginHero({ branding, t }: { branding: AppSettings['branding']; t: Retu
   )
 }
 
-function AuthChannelBadge({ t }: { t: ReturnType<typeof useTranslations> }) {
-  if (isSupabaseConfigured) {
-    return (
-      <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-success/10 border border-success/20">
-        <ShieldCheck size={11} className="text-success" aria-hidden />
-        <span className="text-[10px] font-medium text-success">{t.auth.realAuthEnabled}</span>
-      </div>
-    )
-  }
-  if (isOfflineDemoMode) {
-    return (
-      <div className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-warning/10 border border-warning/20">
-        <ShieldCheck size={11} className="text-warning" aria-hidden />
-        <span className="text-[10px] font-medium text-warning">{t.auth.demoModeBadge}</span>
-      </div>
-    )
-  }
-  return null
-}
-
 export function Login() {
   const t = useTranslations()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
   const navigate = useNavigate()
-  const login = useAuthStore((s) => s.login)
   const workspaceFromHost = useAuthStore((s) => s.workspaceFromHost)
   const workspaceHostSlugNotFound = useAuthStore((s) => s.workspaceHostSlugNotFound)
   const workspaceSlugFromHost = useAuthStore((s) => s.workspaceSlugFromHost)
@@ -106,16 +83,6 @@ export function Login() {
       } else {
         navigate('/')
       }
-    } else if (isOfflineDemoMode) {
-      setTimeout(() => {
-        const result = login(email, password)
-        setLoading(false)
-        if (result.success) {
-          navigate('/')
-        } else {
-          setError(result.error || t.auth.login)
-        }
-      }, 400)
     } else {
       setLoading(false)
       setError(t.errors.supabaseNotConfiguredDetail)
@@ -143,7 +110,6 @@ export function Login() {
     <Card className="p-8">
       <div className="text-center mb-6 lg:hidden">
         <p className="text-sm text-fg-muted">{t.auth.login}</p>
-        <AuthChannelBadge t={t} />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -172,24 +138,15 @@ export function Login() {
           leftIcon={<Mail size={16} aria-hidden />}
         />
 
-        <Input
+        <SecurePasswordField
           label={t.auth.password}
-          type={showPassword ? 'text' : 'password'}
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={setPassword}
           placeholder={t.auth.password}
           required
-          leftIcon={<Lock size={16} aria-hidden />}
-          rightAction={(
-            <IconButton
-              type="button"
-              variant="subtle"
-              className="p-1.5"
-              aria-label={showPassword ? t.auth.passwordHideAria : t.auth.passwordShowAria}
-              icon={showPassword ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
-              onClick={() => setShowPassword((v) => !v)}
-            />
-          )}
+          showGenerator={false}
+          autoComplete="current-password"
+          enforceStrongPasswordMinLength={false}
         />
 
         <div className="text-right -mt-2">
@@ -210,8 +167,6 @@ export function Login() {
         </Button>
       </form>
 
-      {isSupabaseConfigured && <AuthSsoButtons email={email} onError={setError} />}
-
       <div className="mt-6 pt-5 border-t border-fg/6 text-center">
         <p className="text-sm text-fg-muted">
           {t.auth.noAccount}{' '}
@@ -221,7 +176,6 @@ export function Login() {
         </p>
       </div>
 
-      {/* Offline demo login remains available, but account hints are intentionally hidden. */}
     </Card>
   )
 
@@ -229,7 +183,6 @@ export function Login() {
     <AuthLayout variant="split" splitPanel={<LoginHero branding={branding} t={t} />} footer={footerLinks}>
       <div className="hidden lg:block text-center mb-6">
         <p className="text-sm text-fg-muted">{t.auth.login}</p>
-        <AuthChannelBadge t={t} />
       </div>
       {formCard}
     </AuthLayout>

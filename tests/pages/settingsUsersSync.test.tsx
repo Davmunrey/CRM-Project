@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { Settings } from '../../src/pages/Settings'
 import { useAuthStore } from '../../src/store/authStore'
 import { useSettingsStore } from '../../src/store/settingsStore'
-import { seedSettings } from '../../src/utils/seedData'
+import { defaultAppSettings } from '../../src/utils/defaultAppSettings'
 import { TestRouter } from '../utils/TestRouter'
 
 describe('Settings users sync', () => {
@@ -12,7 +12,7 @@ describe('Settings users sync', () => {
 
     useSettingsStore.setState({
       settings: {
-        ...seedSettings,
+        ...defaultAppSettings,
         users: [
           { id: 'seed-1', name: 'Seed User', email: 'seed@velo.es', role: 'Sales Manager' },
         ],

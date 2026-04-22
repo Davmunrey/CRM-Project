@@ -24,16 +24,6 @@ import { Tabs } from '../components/ui/Tabs'
 import { ConfirmDialog } from '../components/ui/Modal'
 import { Avatar } from '../components/ui/Avatar'
 import { toast } from '../store/toastStore'
-import { seedContacts } from '../utils/seedData'
-import { seedCompanies } from '../utils/seedData'
-import { seedDeals } from '../utils/seedData'
-import { seedActivities } from '../utils/seedData'
-import {
-  sanitizeDemoActivities,
-  sanitizeDemoCompanies,
-  sanitizeDemoContacts,
-  sanitizeDemoDeals,
-} from '../utils/demoDataSanitizer'
 import { initiateGmailOAuth } from '../services/gmailService'
 import { CSVImport } from '../components/import/CSVImport'
 import { PermissionGate } from '../components/auth/PermissionGate'
@@ -576,15 +566,10 @@ export function Settings() {
   }
 
   const handleReset = () => {
-    // Reset all stores to seed data
     contactsStore.bulkDelete(contactsStore.contacts.map((c) => c.id))
-    sanitizeDemoContacts(seedContacts).forEach((c) => contactsStore.addContact(c))
     companiesStore.companies.forEach((c) => companiesStore.deleteCompany(c.id))
-    sanitizeDemoCompanies(seedCompanies).forEach((c) => companiesStore.addCompany(c))
     dealsStore.deals.forEach((d) => dealsStore.deleteDeal(d.id))
-    sanitizeDemoDeals(seedDeals).forEach((d) => dealsStore.addDeal(d))
     activitiesStore.activities.forEach((a) => activitiesStore.deleteActivity(a.id))
-    sanitizeDemoActivities(seedActivities).forEach((a) => activitiesStore.addActivity(a))
     resetToDefaults()
     toast.success(t.settings.resetData + ' ✓')
   }

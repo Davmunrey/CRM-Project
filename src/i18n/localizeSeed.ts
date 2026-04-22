@@ -1,12 +1,4 @@
-import type {
-  Translations,
-  SeedAutomationId,
-  SeedDemoAuthUserId,
-  SeedProductId,
-  SeedQuickReplyId,
-  SeedSequenceId,
-  SeedTemplateId,
-} from './types'
+import type { Translations, SeedAutomationId, SeedSequenceId } from './types'
 import type {
   Activity,
   Company,
@@ -24,35 +16,10 @@ import type {
 import { isAbSplitPayload } from '../types'
 import type { AuthUser, Organization } from '../types/auth'
 
-function isSeedProductId(id: string): id is SeedProductId {
-  return (
-    id === 'prod-001' || id === 'prod-002' || id === 'prod-003' ||
-    id === 'prod-004' || id === 'prod-005' || id === 'prod-006'
-  )
-}
-
-export function localizedProduct(product: Product, t: Translations): Product {
-  if (!isSeedProductId(product.id)) return product
-  const row = t.seedDemo.products[product.id]
-  return { ...product, name: row.name, description: row.description }
-}
-
-export function localizedEmailTemplate(template: EmailTemplate, t: Translations): EmailTemplate {
-  if (!(template.id in t.seedDemo.emailTemplates)) return template
-  const row = t.seedDemo.emailTemplates[template.id as SeedTemplateId]
-  return { ...template, name: row.name, subject: row.subject, body: row.body }
-}
-
-export function localizedQuickReply(
-  qr: { id: string; title: string; body: string; createdAt: string; updatedAt: string },
-  t: Translations,
-): typeof qr {
-  if (!(qr.id in t.seedDemo.quickReplies)) return qr
-  const row = t.seedDemo.quickReplies[qr.id as SeedQuickReplyId]
-  return { ...qr, title: row.title, body: row.body }
-}
-
-function patchAutomationActions(actions: AutomationAction[], copy: Translations['seedDemo']['automations'][SeedAutomationId]): AutomationAction[] {
+function patchAutomationActions(
+  actions: AutomationAction[],
+  copy: Translations['workflowLibrary']['automations'][SeedAutomationId],
+): AutomationAction[] {
   return actions.map((a) => {
     if (a.type === 'create_activity' && copy.createActivitySubject) {
       return { ...a, activitySubject: copy.createActivitySubject }
@@ -68,18 +35,10 @@ function patchAutomationActions(actions: AutomationAction[], copy: Translations[
   })
 }
 
-export function localizedAutomationRule(rule: AutomationRule, t: Translations): AutomationRule {
-  if (!(rule.id in t.seedDemo.automations)) return rule
-  const copy = t.seedDemo.automations[rule.id as SeedAutomationId]
-  return {
-    ...rule,
-    name: copy.name,
-    description: copy.description,
-    actions: patchAutomationActions(rule.actions, copy),
-  }
-}
-
-function patchSequenceSteps(steps: SequenceStep[], stepCopy: Record<string, { subject?: string; bodyTemplate?: string; taskDescription?: string }>): SequenceStep[] {
+function patchSequenceSteps(
+  steps: SequenceStep[],
+  stepCopy: Record<string, { subject?: string; bodyTemplate?: string; taskDescription?: string }>,
+): SequenceStep[] {
   return steps.map((step: SequenceStep): SequenceStep => {
     const sc = stepCopy[step.id]
     if (!sc) return step
@@ -115,8 +74,8 @@ function patchFlowNodesFromStepCopy(
 }
 
 export function localizedEmailSequence(sequence: EmailSequence, t: Translations): EmailSequence {
-  if (!(sequence.id in t.seedDemo.sequences)) return sequence
-  const copy = t.seedDemo.sequences[sequence.id as SeedSequenceId]
+  if (!(sequence.id in t.workflowLibrary.sequences)) return sequence
+  const copy = t.workflowLibrary.sequences[sequence.id as SeedSequenceId]
   return {
     ...sequence,
     name: copy.name,
@@ -128,6 +87,32 @@ export function localizedEmailSequence(sequence: EmailSequence, t: Translations)
           nodes: patchFlowNodesFromStepCopy(sequence.flowDefinition.nodes, copy.steps),
         }
       : sequence.flowDefinition,
+  }
+}
+
+export function localizedProduct(product: Product, _t: Translations): Product {
+  return product
+}
+
+export function localizedEmailTemplate(template: EmailTemplate, _t: Translations): EmailTemplate {
+  return template
+}
+
+export function localizedQuickReply(
+  qr: { id: string; title: string; body: string; createdAt: string; updatedAt: string },
+  _t: Translations,
+): typeof qr {
+  return qr
+}
+
+export function localizedAutomationRule(rule: AutomationRule, t: Translations): AutomationRule {
+  if (!(rule.id in t.workflowLibrary.automations)) return rule
+  const copy = t.workflowLibrary.automations[rule.id as SeedAutomationId]
+  return {
+    ...rule,
+    name: copy.name,
+    description: copy.description,
+    actions: patchAutomationActions(rule.actions, copy),
   }
 }
 
@@ -151,17 +136,12 @@ export function localizedCRMEmail(email: CRMEmail, _t: Translations): CRMEmail {
   return email
 }
 
-export function localizedAuthUser(user: AuthUser, t: Translations): AuthUser {
-  const row = t.seedDemo.demoAuth?.users?.[user.id as SeedDemoAuthUserId]
-  if (!row?.jobTitle) return user
-  return { ...user, jobTitle: row.jobTitle }
+export function localizedAuthUser(user: AuthUser, _t: Translations): AuthUser {
+  return user
 }
 
-export function localizedOrganization(org: Organization | null, t: Translations): Organization | null {
-  if (!org) return org
-  const name = t.seedDemo.demoAuth?.organizationName
-  if (!name || org.id !== 'org-001') return org
-  return { ...org, name }
+export function localizedOrganization(org: Organization | null, _t: Translations): Organization | null {
+  return org
 }
 
 export function localizeContacts(contacts: Contact[], t: Translations): Contact[] {

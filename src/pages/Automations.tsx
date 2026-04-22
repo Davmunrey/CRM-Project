@@ -338,7 +338,7 @@ function RuleModal({
   )
 }
 
-// ─── Starter template library (same UI in demo / staging / production) ───────
+// ─── Starter template library ────────────────────────────────────────────────
 
 type AutomationRulePayload = Omit<AutomationRule, 'id' | 'executionCount' | 'createdAt' | 'updatedAt'>
 
@@ -358,7 +358,7 @@ function AutomationStarterLibrary({ onUseTemplate }: { onUseTemplate: (payload: 
       </div>
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
         {(AUTOMATION_SEED_TEMPLATE_IDS as readonly SeedAutomationId[]).map((templateId) => {
-          const copy = t.seedDemo.automations[templateId]
+          const copy = t.workflowLibrary.automations[templateId]
           const structural = AUTOMATION_SEED_STRUCTURAL_RULES.find((r) => r.id === templateId)
           if (!structural) return null
           return (

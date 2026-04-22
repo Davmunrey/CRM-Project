@@ -12,7 +12,6 @@ const { mockSignUp, mockNavigate } = vi.hoisted(() => ({
 vi.mock('../../src/lib/supabase', () => ({
   supabase: { auth: { signUp: mockSignUp } },
   isSupabaseConfigured: true,
-  isOfflineDemoMode: false,
   isBootstrapFatalError: false,
 }))
 
@@ -33,7 +32,7 @@ async function fillAndSubmit() {
   const user = userEvent.setup({ delay: null })
   await user.type(screen.getByPlaceholderText(/name|nombre/i), 'Test User')
   await user.type(screen.getByPlaceholderText(/you@company\.com|tu@empresa\.com/i), 'test@example.com')
-  await user.type(screen.getByPlaceholderText(/password|contraseña/i), 'password123')
+  await user.type(screen.getByPlaceholderText(/password|contraseña/i), 'Aa1!abcdefgh')
   await user.click(screen.getByRole('button', { name: /create account|crear cuenta/i }))
 }
 
@@ -50,7 +49,7 @@ describe('Register', () => {
     await waitFor(() => {
       expect(mockSignUp).toHaveBeenCalledWith({
         email: 'test@example.com',
-        password: 'password123',
+        password: 'Aa1!abcdefgh',
         options: { data: { full_name: 'Test User', org_name: 'example.com' } },
       })
     })

@@ -1,69 +1,6 @@
-import type { SeedDemoCatalog } from '../types'
+import type { WorkflowLibraryCatalog } from '../types'
 
-export const seedDemo: SeedDemoCatalog = {
-  products: {
-    'prod-001': {
-      name: 'Licencia Velo',
-      description: 'Licencia anual Velo con soporte incluido',
-    },
-    'prod-002': {
-      name: 'Implementación básica',
-      description: 'Servicio de implementación y migración de datos',
-    },
-    'prod-003': {
-      name: 'Soporte premium 24/7',
-      description: 'Soporte prioritario con SLA garantizado < 2h',
-    },
-    'prod-004': {
-      name: 'Formación de equipos',
-      description: 'Sesiones de formación presencial para equipos de ventas',
-    },
-    'prod-005': {
-      name: 'Pack integración API',
-      description: 'Integraciones con sistemas externos vía API REST',
-    },
-    'prod-006': {
-      name: 'Servidor on-premise',
-      description: 'Hardware dedicado para instalación local de Velo',
-    },
-  },
-  emailTemplates: {
-    'tpl-001': {
-      name: 'Primer contacto',
-      subject: 'Encantado de conectar, {{firstName}}',
-      body: 'Hola {{firstName}},\n\nMe gustaría explorar si podríamos colaborar.\n\nUn saludo,\n{{senderName}}',
-    },
-    'tpl-002': {
-      name: 'Seguimiento reunión',
-      subject: 'Resumen de nuestra reunión - {{dealTitle}}',
-      body: 'Hola {{firstName}},\n\nGracias por tu tiempo. Te enviaré la propuesta en los próximos días.\n\nUn saludo,\n{{senderName}}',
-    },
-    'tpl-003': {
-      name: 'Envío de propuesta',
-      subject: 'Propuesta comercial - {{dealTitle}}',
-      body: 'Hola {{firstName}},\n\nAdjunto encontrarás la propuesta comercial para {{dealTitle}}.\n\nUn saludo,\n{{senderName}}',
-    },
-    'tpl-004': {
-      name: 'Cierre de deal',
-      subject: 'Siguientes pasos para cerrar {{dealTitle}}',
-      body: 'Hola {{firstName}},\n\nQuería hacer seguimiento sobre la propuesta de {{dealTitle}}.\n\nUn saludo,\n{{senderName}}',
-    },
-    'tpl-005': {
-      name: 'Nurturing - contenido de valor',
-      subject: '{{firstName}}, un recurso que puede interesarte',
-      body: 'Hola {{firstName}},\n\nHemos publicado un estudio relevante para {{company}}.\n\nUn saludo,\n{{senderName}}',
-    },
-  },
-  quickReplies: {
-    'qr-1': {
-      title: 'Seguimiento rápido',
-      body: 'Hola {{firstName}},\n\nSolo quería hacer un seguimiento.\n\nUn saludo,',
-    },
-    'qr-2': {
-      title: 'Resumen de reunión',
-      body: 'Gracias por tu tiempo hoy.\n\nComo acordamos, próximos pasos:\n1) \n2) \n3) \n\nUn saludo,',
-    },
-  },
+export const workflowLibraryEs: WorkflowLibraryCatalog = {
   automations: {
     'auto-seed-1': {
       name: 'Enviar email de seguimiento',
@@ -231,13 +168,5 @@ export const seedDemo: SeedDemoCatalog = {
     },
     'cf-d-03': { label: 'Requiere aprobación legal' },
     'cf-d-04': { label: 'Presupuesto aprobado', placeholder: '0,00' },
-  },
-  demoAuth: {
-    organizationName: 'Velo Ventas',
-    users: {
-      u1: { jobTitle: 'Director comercial' },
-      u2: { jobTitle: 'Ejecutiva de cuentas' },
-      u3: { jobTitle: 'SDR' },
-    },
   },
 }

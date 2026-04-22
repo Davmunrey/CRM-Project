@@ -3,48 +3,6 @@ import { persist } from 'zustand/middleware'
 import { v4 as uuidv4 } from 'uuid'
 import type { SmartView, SmartViewFilter, CustomFieldEntityType, InboxSavedView, InboxAdvancedFilters } from '../types'
 
-// ─── Seed Views ──────────────────────────────────────────────────────────────
-
-const now = new Date().toISOString()
-
-const SEED_VIEWS: SmartView[] = [
-  {
-    id: 'sv-01', name: 'Prospectos activos', nameKey: 'sv01', entityType: 'contact',
-    filters: [{ field: 'status', operator: 'eq', value: 'prospect' }],
-    sortField: 'updatedAt', sortDirection: 'desc',
-    isPinned: true, icon: 'flame', color: 'orange',
-    createdBy: 'Demo Admin', createdAt: now, updatedAt: now,
-  },
-  {
-    id: 'sv-02', name: 'Clientes activos', nameKey: 'sv02', entityType: 'contact',
-    filters: [{ field: 'status', operator: 'eq', value: 'customer' }],
-    sortField: 'lastName', sortDirection: 'asc',
-    isPinned: true, icon: 'users', color: 'emerald',
-    createdBy: 'Demo Admin', createdAt: now, updatedAt: now,
-  },
-  {
-    id: 'sv-03', name: 'Deals en negociación', nameKey: 'sv03', entityType: 'deal',
-    filters: [{ field: 'stage', operator: 'eq', value: 'negotiation' }],
-    sortField: 'value', sortDirection: 'desc',
-    isPinned: true, icon: 'handshake', color: 'brand',
-    createdBy: 'Demo Admin', createdAt: now, updatedAt: now,
-  },
-  {
-    id: 'sv-04', name: 'Deals alto valor (>20k)', nameKey: 'sv04', entityType: 'deal',
-    filters: [{ field: 'value', operator: 'gte', value: 20000 }],
-    sortField: 'value', sortDirection: 'desc',
-    isPinned: false, icon: 'trending-up', color: 'purple',
-    createdBy: 'Demo Admin', createdAt: now, updatedAt: now,
-  },
-  {
-    id: 'sv-05', name: 'Empresas SaaS', nameKey: 'sv05', entityType: 'company',
-    filters: [{ field: 'industry', operator: 'eq', value: 'saas' }],
-    sortField: 'name', sortDirection: 'asc',
-    isPinned: true, icon: 'cloud', color: 'sky',
-    createdBy: 'Demo Admin', createdAt: now, updatedAt: now,
-  },
-]
-
 const LEGACY_NAMEKEY_BY_ID: Record<string, NonNullable<SmartView['nameKey']>> = {
   'sv-01': 'sv01',
   'sv-02': 'sv02',
@@ -208,11 +166,9 @@ export const useViewsStore = create<ViewsStore>()(
       name: 'crm_views',
       onRehydrateStorage: () => (state) => {
         if (!state) return
-        if (state.views.length === 0) {
-          state.views = SEED_VIEWS
-          return
+        if (state.views.length > 0) {
+          state.views = normalizeSeedViewLocalization(state.views)
         }
-        state.views = normalizeSeedViewLocalization(state.views)
       },
     }
   )

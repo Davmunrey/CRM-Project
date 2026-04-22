@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { Contact, ContactFilters } from '../types'
-import { seedContacts } from '../utils/seedData'
-import { sanitizeDemoContacts } from '../utils/demoDataSanitizer'
 import { useAuditStore } from './auditStore'
 import { getTranslations } from '../i18n'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
@@ -109,7 +107,7 @@ export const useContactsStore = create<ContactsState>()(
           if (error) throw error
           set({ contacts: (data ?? []).map((r) => rowToContact(r as unknown as Record<string, unknown>)), isLoading: false })
         } else {
-          set({ contacts: sanitizeDemoContacts(seedContacts), isLoading: false })
+          set({ contacts: [], isLoading: false })
         }
       } catch (e: unknown) {
         set({ error: (e as Error).message, isLoading: false })

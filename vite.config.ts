@@ -6,7 +6,7 @@ import { resolve } from 'path'
 /** Keep aligned with `src/lib/envChannel.ts` `resolveAppChannel` logic (no `test` mode in builds). */
 function resolveBuildChannel(mode: string, env: Record<string, string>): string {
   const explicit = (env.VITE_APP_CHANNEL ?? '').trim().toLowerCase()
-  if (explicit === 'production' || explicit === 'staging' || explicit === 'demo') return explicit
+  if (explicit === 'production' || explicit === 'staging') return explicit
   if (mode === 'staging') return 'staging'
   if (mode === 'production') return 'production'
   return 'development'
@@ -30,7 +30,7 @@ export default defineConfig(({ command, mode }) => {
   if (command === 'build' && (channel === 'production' || channel === 'staging') && !isSupabaseEnvValid(env)) {
     throw new Error(
       `[Velo] Build rejected: VITE_APP_CHANNEL is "${channel}" but VITE_SUPABASE_URL (https://…) and ` +
-        'VITE_SUPABASE_ANON_KEY are missing or invalid. Use VITE_APP_CHANNEL=demo for offline demo bundles.',
+        'VITE_SUPABASE_ANON_KEY are missing or invalid.',
     )
   }
 
@@ -74,7 +74,7 @@ export default defineConfig(({ command, mode }) => {
         provider: 'v8',
         reporter: ['text', 'lcov'],
         include: ['src/store/**', 'src/utils/**', 'src/lib/schemas/**'],
-        exclude: ['src/utils/seedData.ts'],
+        exclude: [],
       },
     },
   }

@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { Activity, ActivityFilters } from '../types'
-import { seedActivities } from '../utils/seedData'
-import { sanitizeDemoActivities } from '../utils/demoDataSanitizer'
 import { useAuditStore } from './auditStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
@@ -110,7 +108,7 @@ export const useActivitiesStore = create<ActivitiesState>()(
           if (error) throw error
           set({ activities: (data ?? []).map(rowToActivity), isLoading: false })
         } else {
-          set({ activities: sanitizeDemoActivities(seedActivities), isLoading: false })
+          set({ activities: [], isLoading: false })
         }
       } catch (e: unknown) {
         set({ error: (e as Error).message, isLoading: false })

@@ -7,14 +7,7 @@ import { useDealsStore } from './dealsStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
 import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
-import { createAutomationSeedRules } from '../i18n/seed/automationSeedRulesEn'
 import { getTranslations } from '../i18n'
-
-// ─── Seed Data ────────────────────────────────────────────────────────────────
-
-const _now = new Date().toISOString()
-
-const SEED_RULES: AutomationRule[] = createAutomationSeedRules(_now)
 
 // ─── Store Interface ──────────────────────────────────────────────────────────
 
@@ -45,7 +38,7 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
 
   fetchRules: async () => {
     if (!isSupabaseConfigured || !supabase) {
-      set({ rules: SEED_RULES })
+      set({ rules: [] })
       return
     }
     set({ isLoading: true, error: null })

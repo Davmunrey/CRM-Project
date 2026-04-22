@@ -1,11 +1,5 @@
 export type Language = 'en' | 'es' | 'pt' | 'fr' | 'de' | 'it'
 
-export type SeedProductId = 'prod-001' | 'prod-002' | 'prod-003' | 'prod-004' | 'prod-005' | 'prod-006'
-
-export type SeedTemplateId = 'tpl-001' | 'tpl-002' | 'tpl-003' | 'tpl-004' | 'tpl-005'
-
-export type SeedQuickReplyId = 'qr-1' | 'qr-2'
-
 export type SeedAutomationId =
   | 'auto-seed-1'
   | 'auto-seed-2'
@@ -46,58 +40,11 @@ export interface SeedSequenceDemoCopy {
   steps: Record<string, SeedSequenceStepCopy>
 }
 
-/** Optional i18n overlays for offline demo entities (keyed by stable seed ids). */
-export type SeedDemoAuthUserId = 'u1' | 'u2' | 'u3'
-
-export interface SeedDemoAuthOverlay {
-  organizationName: string
-  users: Partial<Record<SeedDemoAuthUserId, { jobTitle: string }>>
-}
-
-export interface SeedCompanyDemoOverlay {
-  name?: string
-  notes?: string
-  city?: string
-  country?: string
-}
-
-export interface SeedContactDemoOverlay {
-  firstName?: string
-  lastName?: string
-  jobTitle?: string
-  notes?: string
-}
-
-export interface SeedDealDemoOverlay {
-  title?: string
-  notes?: string
-}
-
-export interface SeedActivityDemoOverlay {
-  subject?: string
-  description?: string
-  outcome?: string
-}
-
-export interface SeedEmailDemoOverlay {
-  subject?: string
-  body?: string
-}
-
-export interface SeedDemoCatalog {
-  products: Record<SeedProductId, { name: string; description: string }>
-  emailTemplates: Record<SeedTemplateId, { name: string; subject: string; body: string }>
-  quickReplies: Record<SeedQuickReplyId, { title: string; body: string }>
+/** Built-in automation / sequence templates + starter custom-field labels (not tenant CRM data). */
+export interface WorkflowLibraryCatalog {
   automations: Record<SeedAutomationId, SeedAutomationDemoCopy>
   sequences: Record<SeedSequenceId, SeedSequenceDemoCopy>
   customFields: Record<string, SeedCustomFieldDemo>
-  /** Demo org + seed user job titles (names stay aligned with `assignedTo` in seed data). */
-  demoAuth?: SeedDemoAuthOverlay
-  demoCompanies?: Record<string, SeedCompanyDemoOverlay>
-  demoContacts?: Record<string, SeedContactDemoOverlay>
-  demoDeals?: Record<string, SeedDealDemoOverlay>
-  demoActivities?: Record<string, SeedActivityDemoOverlay>
-  demoEmails?: Record<string, SeedEmailDemoOverlay>
 }
 
 export interface Translations {
@@ -180,7 +127,6 @@ export interface Translations {
     loading: string
     skipToMain: string
     envBannerStaging: string
-    envBannerDemo: string
     export: string
     /** Short label for CSV download buttons (e.g. toolbar). */
     csv: string
@@ -926,8 +872,8 @@ export interface Translations {
     emailTrackingTitle: string
     emailTrackingSubtitle: string
     emailTrackingServerBadge: string
-    /** Same header slot as server badge when analytics run in local demo mode */
-    emailTrackingDemoBadge: string
+    /** Same header slot as server badge when Supabase is not configured */
+    emailTrackingUnconfiguredBadge: string
     emailTrackingOpens: string
     emailTrackingClicks: string
     emailTrackingPrivacyNote: string
@@ -1314,12 +1260,10 @@ export interface Translations {
     placeholderNewPassword: string
     // Toast messages
     toastFillRequired: string
-    toastPasswordMin: string
     toastUserCreated: string
     toastUserCreateError: string
     toastEnterEmail: string
     toastInviteSent: string
-    toastPasswordMin6: string
     toastPasswordReset: string
     toastInviteCancelled: string
     toastUserDeactivated: string
@@ -1483,13 +1427,18 @@ export interface Translations {
     checkEmailInstructions: string
     sendLink: string
     backToLogin: string
-    realAuthEnabled: string
-    /** Shown on login when offline demo channel (same pill slot as real auth). */
-    demoModeBadge: string
     emailPlaceholder: string
     checkEmailConfirmation: string
     passwordsDoNotMatch: string
     passwordMinLength: string
+    /** Button to fill a cryptographically random strong password */
+    generateSecurePassword: string
+    /** Shown under password fields that enforce the strong policy */
+    passwordStrengthHint: string
+    /** Heading above the live password requirement checklist */
+    passwordPolicyTitle: string
+    /** Shown under the checklist on login (current password is not validated against this list). */
+    passwordPolicyLoginHint: string
     savePassword: string
     sso: string
     saml: string
@@ -1497,12 +1446,10 @@ export interface Translations {
     useSaml: string
     connecting: string
     companyDomainRequired: string
-    demoLogin: string
     landingTagline: string
     landingFeature1: string
     landingFeature2: string
     landingFeature3: string
-    demoCredentialsTitle: string
     googleSsoUseCompanySso: string
     googleSsoUnavailable: string
     passwordShowAria: string
@@ -1574,7 +1521,7 @@ export interface Translations {
   // ─── Errors ──────────────────────────────────────────────────────────────────
   errors: {
     supabaseNotConfigured: string
-    /** Shown on auth screens when Supabase env is missing and demo mode is off */
+    /** Shown on auth screens when Supabase env is missing */
     supabaseNotConfiguredDetail: string
     generic: string
     gmailConnectionError: string
@@ -1586,6 +1533,11 @@ export interface Translations {
     userNotFound: string
     accountDeactivated: string
     wrongPassword: string
+    passwordWeakLength: string
+    passwordWeakLower: string
+    passwordWeakUpper: string
+    passwordWeakDigit: string
+    passwordWeakSymbol: string
     wrongCurrentPassword: string
     emailAlreadyExists: string
     notAuthenticated: string
@@ -1612,8 +1564,6 @@ export interface Translations {
     configurationBootstrapOr: string
     configurationBootstrapRequiresValid: string
     configurationBootstrapAnd: string
-    configurationBootstrapDemoIntro: string
-    configurationBootstrapDemoOutro: string
     configurationBootstrapFooter: string
   }
 
@@ -1818,7 +1768,7 @@ export interface Translations {
     probabilityShort: string
   }
 
-  seedDemo: SeedDemoCatalog
+  workflowLibrary: WorkflowLibraryCatalog
 
   // Additional inbox labels used by inbox views/actions
   // (kept here to preserve existing translation structure)

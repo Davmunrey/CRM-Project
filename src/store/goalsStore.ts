@@ -17,13 +17,6 @@ interface GoalsState {
   getActiveGoals: () => SalesGoal[]
 }
 
-const seedGoals: SalesGoal[] = [
-  { id: 'goal-001', userId: 'u1', type: 'revenue', target: 50000, current: 32500, period: 'monthly', startDate: '2026-03-01', endDate: '2026-03-31' },
-  { id: 'goal-002', userId: 'u1', type: 'deals_closed', target: 8, current: 5, period: 'monthly', startDate: '2026-03-01', endDate: '2026-03-31' },
-  { id: 'goal-003', userId: 'u1', type: 'activities', target: 60, current: 42, period: 'monthly', startDate: '2026-03-01', endDate: '2026-03-31' },
-  { id: 'goal-004', userId: 'u1', type: 'contacts_added', target: 20, current: 14, period: 'monthly', startDate: '2026-03-01', endDate: '2026-03-31' },
-]
-
 function rowToGoal(r: Record<string, unknown>): SalesGoal {
   return {
     id: r.id as string,
@@ -38,13 +31,13 @@ function rowToGoal(r: Record<string, unknown>): SalesGoal {
 }
 
 export const useGoalsStore = create<GoalsState>()((set, get) => ({
-  goals: seedGoals,
+  goals: [],
   isLoading: false,
   error: null,
 
   fetchGoals: async () => {
     if (!isSupabaseConfigured || !supabase) {
-      set({ goals: seedGoals })
+      set({ goals: [] })
       return
     }
     set({ isLoading: true, error: null })

@@ -16,7 +16,7 @@ import { AnimatedCounter } from '../components/ui/AnimatedCounter'
 import { formatCurrency, formatRelativeDate, formatDate } from '../utils/formatters'
 import { DEAL_STAGE_COLORS } from '../utils/constants'
 import { useAuthStore } from '../store/authStore'
-import { useOnboardingStore } from '../store/onboardingStore'
+import { EMPTY_ORG_ONBOARDING, useOnboardingStore } from '../store/onboardingStore'
 import { useNotificationsStore } from '../store/notificationsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import type { DealStage, CRMNotification } from '../types'
@@ -56,8 +56,14 @@ export function Dashboard() {
   const activities = useActivitiesStore((s) => s.activities)
   const companies = useCompaniesStore((s) => s.companies)
   const organizationId = useAuthStore((s) => s.organizationId)
-  const getOnboardingFlags = useOnboardingStore((s) => s.getFlags)
-  const onboardingFlags = getOnboardingFlags(organizationId ?? undefined)
+  /** Slice ref is stable in the store; `getFlags()` returns a new object every call and breaks Zustand + React (infinite updates). */
+  const onboardingSlice = useOnboardingStore(
+    useCallback((s) => (organizationId ? s.byOrg[organizationId] : undefined), [organizationId]),
+  )
+  const onboardingFlags = useMemo(
+    () => (onboardingSlice ? { ...EMPTY_ORG_ONBOARDING, ...onboardingSlice } : EMPTY_ORG_ONBOARDING),
+    [onboardingSlice],
+  )
   const dismissOnboardingBanner = useOnboardingStore((s) => s.dismissHomeBanner)
   const onboardingComplete =
     onboardingFlags.importContacts && onboardingFlags.firstDeal && onboardingFlags.firstSequence

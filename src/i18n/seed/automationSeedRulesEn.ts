@@ -17,7 +17,7 @@ export const AUTOMATION_SEED_TEMPLATE_IDS: readonly SeedAutomationId[] = [
 
 /**
  * Full automation rules in canonical English. Used by the offline store and as the
- * source for `seedDemo.automations` in `en.demo.ts`.
+ * source for `workflowLibrary.automations` in `workflowLibrary/en.ts`.
  */
 export function createAutomationSeedRules(isoNow: string): AutomationRule[] {
   return [

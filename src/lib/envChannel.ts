@@ -1,16 +1,15 @@
 /**
  * Deployment channel (set `VITE_APP_CHANNEL` in CI per environment).
  * - `production` - live customers; requires Supabase at build time.
- * - `staging` - pre-prod / preview; requires Supabase (staging project); never mock auth.
- * - `demo` - hosted static demo: offline seed/mock allowed without Supabase.
+ * - `staging` - pre-prod / preview; requires Supabase (staging project).
  * - `development` - local `npm run dev` when channel unset (default).
  */
-export type AppChannel = 'production' | 'staging' | 'demo' | 'development'
+export type AppChannel = 'production' | 'staging' | 'development'
 
 const explicit = (import.meta.env.VITE_APP_CHANNEL as string | undefined)?.trim().toLowerCase()
 
 function resolveAppChannel(): AppChannel {
-  if (explicit === 'production' || explicit === 'staging' || explicit === 'demo') return explicit
+  if (explicit === 'production' || explicit === 'staging') return explicit
   const mode = import.meta.env.MODE
   /** Vitest uses `MODE=test` with `PROD` sometimes true; treat as local dev for channel semantics. */
   if (mode === 'test') return 'development'
@@ -20,5 +19,3 @@ function resolveAppChannel(): AppChannel {
 }
 
 export const appChannel: AppChannel = resolveAppChannel()
-
-export const isHostedDemoChannel = appChannel === 'demo'

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Lock, ArrowRight } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
@@ -8,6 +8,8 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { AuthLayout } from '../components/auth/AuthLayout'
+import { SecurePasswordField } from '../components/auth/SecurePasswordField'
+import { formatPasswordStrengthIssues, getPasswordStrengthIssues } from '../lib/securePassword'
 
 export function ResetPassword() {
   const t = useTranslations()
@@ -28,8 +30,17 @@ export function ResetPassword() {
       setError(t.auth.passwordsDoNotMatch)
       return
     }
-    if (password.length < 6) {
-      setError(t.auth.passwordMinLength)
+    const strengthIssues = getPasswordStrengthIssues(password)
+    if (strengthIssues.length > 0) {
+      setError(
+        formatPasswordStrengthIssues(strengthIssues, {
+          length: t.errors.passwordWeakLength,
+          lower: t.errors.passwordWeakLower,
+          upper: t.errors.passwordWeakUpper,
+          digit: t.errors.passwordWeakDigit,
+          symbol: t.errors.passwordWeakSymbol,
+        }),
+      )
       return
     }
     if (!isSupabaseConfigured || !supabase) {
@@ -67,27 +78,28 @@ export function ResetPassword() {
             </div>
           )}
 
-          <Input
+          <SecurePasswordField
             label={t.auth.password}
-            type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={setPassword}
+            onGeneratedPassword={(p) => {
+              setPassword(p)
+              setConfirmPassword(p)
+            }}
             placeholder={t.auth.password}
             required
-            minLength={6}
             autoFocus
-            leftIcon={<Lock size={16} aria-hidden />}
           />
 
-          <Input
+          <SecurePasswordField
             label={t.auth.confirmPassword}
-            type="password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={setConfirmPassword}
+            showGenerator={false}
+            showPolicyHint={false}
+            showRequirementChecklist={false}
             placeholder={t.auth.confirmPassword}
             required
-            minLength={6}
-            leftIcon={<Lock size={16} aria-hidden />}
           />
 
           <Button

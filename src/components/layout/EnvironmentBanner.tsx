@@ -13,15 +13,5 @@ export function EnvironmentBanner() {
       </div>
     )
   }
-  if (appChannel === 'demo') {
-    return (
-      <div
-        role="status"
-        className="shrink-0 border-b border-accent-500/40 bg-accent-500/15 px-4 py-2 text-center text-xs font-medium text-accent-100"
-      >
-        {t.common.envBannerDemo}
-      </div>
-    )
-  }
   return null
 }

@@ -11,7 +11,6 @@ describe('authProviders Google discovery', () => {
     vi.stubEnv('PROD', 'true')
     vi.stubEnv('VITE_AUTH_GOOGLE_DISCOVERY_REQUIRED', 'true')
     vi.stubEnv('VITE_AUTH_GOOGLE_DISCOVERY_ENDPOINT', '')
-    vi.stubEnv('VITE_AUTH_SAML_DISCOVERY_ENDPOINT', '')
 
     const { resolveGoogleOAuthPolicy } = await import('../../src/config/authProviders')
 
@@ -24,7 +23,6 @@ describe('authProviders Google discovery', () => {
     vi.stubEnv('PROD', 'false')
     vi.stubEnv('VITE_AUTH_GOOGLE_DISCOVERY_REQUIRED', 'false')
     vi.stubEnv('VITE_AUTH_GOOGLE_DISCOVERY_ENDPOINT', '')
-    vi.stubEnv('VITE_AUTH_SAML_DISCOVERY_ENDPOINT', '')
 
     const { resolveGoogleOAuthPolicy } = await import('../../src/config/authProviders')
 

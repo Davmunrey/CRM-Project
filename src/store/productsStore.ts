@@ -5,18 +5,6 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 
-const SEED_PRODUCTS: Product[] = (() => {
-  const now = new Date().toISOString()
-  return [
-    { id: 'prod-001', name: 'Velo License', description: 'Annual Velo license with support included', sku: 'VELO-001', price: 1200, currency: 'EUR', category: 'software', isActive: true, createdAt: now, updatedAt: now },
-    { id: 'prod-002', name: 'Implementación Básica', description: 'Servicio de implementación y migración de datos', sku: 'SRV-IMP-001', price: 3500, currency: 'EUR', category: 'consulting', isActive: true, createdAt: now, updatedAt: now },
-    { id: 'prod-003', name: 'Soporte Premium 24/7', description: 'Soporte prioritario con SLA garantizado < 2h', sku: 'SUP-PREM-001', price: 800, currency: 'EUR', category: 'support', isActive: true, createdAt: now, updatedAt: now },
-    { id: 'prod-004', name: 'Formación Equipos', description: 'Sesiones de formación presencial para equipos de ventas', sku: 'TRN-EQ-001', price: 1500, currency: 'EUR', category: 'service', isActive: true, createdAt: now, updatedAt: now },
-    { id: 'prod-005', name: 'API Integration Pack', description: 'Pack de integraciones con sistemas externos via API REST', sku: 'API-INT-001', price: 2200, currency: 'EUR', category: 'software', isActive: true, createdAt: now, updatedAt: now },
-    { id: 'prod-006', name: 'Servidor On-Premise', description: 'Hardware dedicado para instalación local de Velo', sku: 'HW-SRV-001', price: 4800, currency: 'EUR', category: 'hardware', isActive: true, createdAt: now, updatedAt: now },
-  ]
-})()
-
 interface ProductsStore {
   products: Product[]
   isLoading: boolean
@@ -29,13 +17,13 @@ interface ProductsStore {
 }
 
 export const useProductsStore = create<ProductsStore>()((set, get) => ({
-  products: SEED_PRODUCTS,
+  products: [],
   isLoading: false,
   error: null,
 
   fetchProducts: async () => {
     if (!isSupabaseConfigured || !supabase) {
-      set({ products: SEED_PRODUCTS })
+      set({ products: [] })
       return
     }
     set({ isLoading: true, error: null })
@@ -47,7 +35,7 @@ export const useProductsStore = create<ProductsStore>()((set, get) => ({
         price: r.price, currency: r.currency, category: r.category,
         isActive: r.is_active, createdAt: r.created_at, updatedAt: r.updated_at,
       }))
-      set({ products: products.length > 0 ? products : SEED_PRODUCTS, isLoading: false })
+      set({ products, isLoading: false })
     } catch (e: any) {
       set({ error: e.message, isLoading: false })
     }

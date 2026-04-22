@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 vi.mock('../../src/lib/supabase', () => ({
   supabase: null,
   isSupabaseConfigured: false,
-  isOfflineDemoMode: false,
   isBootstrapFatalError: false,
 }))
 

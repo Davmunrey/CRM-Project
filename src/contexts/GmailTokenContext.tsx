@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useMemo, useState, useCallback, type ReactNode } from 'react'
 
 interface GmailTokenState {
   accessToken: string | null
@@ -28,8 +28,13 @@ export function GmailTokenProvider({ children }: { children: ReactNode }) {
     return !!state.accessToken && !!state.expiresAt && state.expiresAt > Date.now()
   }, [state])
 
+  const value = useMemo(
+    () => ({ ...state, setGmailToken, clearGmailToken, isTokenValid }),
+    [state, setGmailToken, clearGmailToken, isTokenValid],
+  )
+
   return (
-    <GmailTokenContext.Provider value={{ ...state, setGmailToken, clearGmailToken, isTokenValid }}>
+    <GmailTokenContext.Provider value={value}>
       {children}
     </GmailTokenContext.Provider>
   )

@@ -9,6 +9,8 @@ import { Avatar } from '../components/ui/Avatar'
 import { toast } from '../store/toastStore'
 import { useTranslations } from '../i18n'
 import { formatDateShort, formatDateTime } from '../utils/formatters'
+import { SecurePasswordField } from '../components/auth/SecurePasswordField'
+import { formatPasswordStrengthIssues, getPasswordStrengthIssues } from '../lib/securePassword'
 
 export function UserProfile() {
   const t = useTranslations()
@@ -16,7 +18,6 @@ export function UserProfile() {
   const [editing, setEditing] = useState(false)
   const [changingPw, setChangingPw] = useState(false)
   const [showCurrentPw, setShowCurrentPw] = useState(false)
-  const [showNewPw, setShowNewPw] = useState(false)
 
   const [form, setForm] = useState({
     name: currentUser?.name || '',
@@ -41,8 +42,17 @@ export function UserProfile() {
   }
 
   const handleChangePassword = () => {
-    if (pwForm.newPw.length < 6) {
-      toast.error(t.auth.passwordMinLength)
+    const strengthIssues = getPasswordStrengthIssues(pwForm.newPw)
+    if (strengthIssues.length > 0) {
+      toast.error(
+        formatPasswordStrengthIssues(strengthIssues, {
+          length: t.errors.passwordWeakLength,
+          lower: t.errors.passwordWeakLower,
+          upper: t.errors.passwordWeakUpper,
+          digit: t.errors.passwordWeakDigit,
+          symbol: t.errors.passwordWeakSymbol,
+        }),
+      )
       return
     }
     if (pwForm.newPw !== pwForm.confirm) {
@@ -209,36 +219,24 @@ export function UserProfile() {
                 </button>
               </div>
             </div>
-            <div>
-              <label className="velo-form-label">{t.auth.newPassword}</label>
-              <div className="relative">
-                <input
-                  type={showNewPw ? 'text' : 'password'}
-                  value={pwForm.newPw}
-                  onChange={(e) => setPwForm({ ...pwForm, newPw: e.target.value })}
-                  className={`${inputBase} px-4 pr-10`}
-                  autoComplete="new-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowNewPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 velo-input-icon hover:opacity-80"
-                  aria-label={showNewPw ? t.common.close : t.common.view}
-                >
-                  {showNewPw ? <EyeOff size={14} /> : <Eye size={14} />}
-                </button>
-              </div>
-            </div>
-            <div>
-              <label className="velo-form-label">{t.auth.confirmPassword}</label>
-              <input
-                type="password"
-                value={pwForm.confirm}
-                onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })}
-                className={`${inputBase} px-4 py-2.5`}
-                autoComplete="new-password"
-              />
-            </div>
+            <SecurePasswordField
+              label={t.auth.newPassword}
+              value={pwForm.newPw}
+              onChange={(newPw) => setPwForm((f) => ({ ...f, newPw }))}
+              onGeneratedPassword={(p) => setPwForm((f) => ({ ...f, newPw: p, confirm: p }))}
+              placeholder={t.auth.password}
+              autoComplete="new-password"
+            />
+            <SecurePasswordField
+              label={t.auth.confirmPassword}
+              value={pwForm.confirm}
+              onChange={(confirm) => setPwForm((f) => ({ ...f, confirm }))}
+              showGenerator={false}
+              showPolicyHint={false}
+              showRequirementChecklist={false}
+              placeholder={t.auth.confirmPassword}
+              autoComplete="new-password"
+            />
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"

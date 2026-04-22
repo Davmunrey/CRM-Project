@@ -22,7 +22,6 @@ vi.mock('../../src/lib/supabase', () => ({
     rpc: mockRpc,
   },
   isSupabaseConfigured: true,
-  isOfflineDemoMode: false,
   isBootstrapFatalError: false,
 }))
 

@@ -5,7 +5,6 @@ import { useI18nStore } from '../../src/i18n'
 vi.mock('../../src/lib/supabase', () => ({
   supabase: null,
   isSupabaseConfigured: false,
-  isOfflineDemoMode: false,
   isBootstrapFatalError: false,
 }))
 

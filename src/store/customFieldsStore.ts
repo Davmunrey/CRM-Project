@@ -7,24 +7,6 @@ import { getOrgId } from '../lib/supabaseHelpers'
 import { getTranslations, useI18nStore } from '../i18n'
 import type { Language } from '../i18n'
 
-// ─── Seed Definitions ────────────────────────────────────────────────────────
-
-const _now = new Date().toISOString()
-
-const SEED_DEFINITIONS: CustomFieldDefinition[] = [
-  { id: 'cf-c-01', entityType: 'contact', label: 'LinkedIn URL', fieldType: 'url', placeholder: 'https://linkedin.com/in/...', required: false, order: 1, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-c-02', entityType: 'contact', label: 'Departamento', fieldType: 'select', options: ['Ventas', 'Marketing', 'Tecnología', 'Finanzas', 'RRHH', 'Dirección', 'Operaciones', 'Otro'], required: false, order: 2, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-c-03', entityType: 'contact', label: 'NIF / CIF', fieldType: 'text', placeholder: 'B12345678', required: false, order: 3, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-c-04', entityType: 'contact', label: 'Fecha de cumpleaños', fieldType: 'date', required: false, order: 4, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-e-01', entityType: 'company', label: 'Año de fundación', fieldType: 'number', placeholder: '2020', required: false, order: 1, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-e-02', entityType: 'company', label: 'Tecnologías', fieldType: 'multiselect', options: ['React', 'Angular', 'Vue', 'Node.js', 'Python', 'Java', '.NET', 'AWS', 'Azure', 'GCP', 'Kubernetes'], required: false, order: 2, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-e-03', entityType: 'company', label: 'Página LinkedIn', fieldType: 'url', placeholder: 'https://linkedin.com/company/...', required: false, order: 3, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-d-01', entityType: 'deal', label: 'Competidor principal', fieldType: 'text', placeholder: 'Nombre del competidor', required: false, order: 1, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-d-02', entityType: 'deal', label: 'Tipo de proyecto', fieldType: 'select', options: ['Nuevo', 'Migración', 'Ampliación', 'Renovación', 'Consultoría'], required: false, order: 2, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-d-03', entityType: 'deal', label: 'Requiere aprobación legal', fieldType: 'checkbox', required: false, order: 3, isActive: true, createdAt: _now, updatedAt: _now },
-  { id: 'cf-d-04', entityType: 'deal', label: 'Presupuesto aprobado', fieldType: 'currency', placeholder: '0.00', required: false, order: 4, isActive: true, createdAt: _now, updatedAt: _now },
-]
-
 // ─── Store ───────────────────────────────────────────────────────────────────
 
 interface CustomFieldsStore {
@@ -48,7 +30,7 @@ interface CustomFieldsStore {
 }
 
 export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
-  definitions: SEED_DEFINITIONS,
+  definitions: [],
   translations: [],
   values: {},
   isLoading: false,
@@ -56,7 +38,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
 
   fetchCustomFields: async () => {
     if (!isSupabaseConfigured || !supabase) {
-      set({ definitions: SEED_DEFINITIONS, values: {} })
+      set({ definitions: [], values: {} })
       return
     }
     set({ isLoading: true, error: null })
@@ -91,7 +73,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
       }))
 
       set({
-        definitions: definitions.length > 0 ? definitions : SEED_DEFINITIONS,
+        definitions,
         translations,
         values,
         isLoading: false,
@@ -244,7 +226,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
             options: tx.options ?? def.options,
           }
         }
-        const seed = getTranslations().seedDemo.customFields[def.id]
+        const seed = getTranslations().workflowLibrary.customFields[def.id]
         if (seed) {
           return {
             ...def,

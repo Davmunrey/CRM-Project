@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { v4 as uuidv4 } from 'uuid'
 import type { AuthUser, Organization, Invitation, UserRole, Session } from '../types/auth'
-import { supabase, isSupabaseConfigured, isOfflineDemoMode } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
 import { useAuditStore } from './auditStore'
 import { toast } from './toastStore'
@@ -22,7 +22,7 @@ export interface OrgMemberIdentityRow {
   created_at: string
 }
 
-// Simple hash for demo purposes (in production, use bcrypt + backend)
+// Simple hash for legacy local-only auth paths (Supabase is the real auth).
 function simpleHash(str: string): string {
   let hash = 0
   for (let i = 0; i < str.length; i++) {
@@ -112,62 +112,6 @@ export interface AuthState {
   isAuthenticated: () => boolean
 }
 
-const SEED_ORG: Organization = {
-  id: 'org-001',
-  name: 'Demo Workspace',
-  domain: 'example.com',
-  plan: 'pro',
-  maxUsers: 25,
-  createdAt: '2024-01-01T00:00:00Z',
-}
-
-const SEED_USERS: AuthUser[] = [
-  {
-    id: 'u1',
-    email: 'demo.admin@example.com',
-    name: 'Demo Admin',
-    role: 'admin',
-    jobTitle: 'Sales Manager',
-    phone: '+34 612 345 678',
-    organizationId: 'org-001',
-    isActive: true,
-    lastLoginAt: '2026-03-23T07:00:00Z',
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2026-03-23T07:00:00Z',
-  },
-  {
-    id: 'u2',
-    email: 'demo.manager@example.com',
-    name: 'Demo Manager',
-    role: 'manager',
-    jobTitle: 'Account Executive',
-    phone: '+34 623 456 789',
-    organizationId: 'org-001',
-    isActive: true,
-    createdAt: '2024-02-15T00:00:00Z',
-    updatedAt: '2024-02-15T00:00:00Z',
-  },
-  {
-    id: 'u3',
-    email: 'demo.rep@example.com',
-    name: 'Demo Rep',
-    role: 'sales_rep',
-    jobTitle: 'SDR',
-    phone: '+34 634 567 890',
-    organizationId: 'org-001',
-    isActive: true,
-    createdAt: '2024-03-01T00:00:00Z',
-    updatedAt: '2024-03-01T00:00:00Z',
-  },
-]
-
-// Default passwords: all "demo123" for seed users
-const SEED_PASSWORDS: Record<string, string> = {
-  u1: simpleHash('demo123'),
-  u2: simpleHash('demo123'),
-  u3: simpleHash('demo123'),
-}
-
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -184,8 +128,8 @@ export const useAuthStore = create<AuthState>()(
       workspaceHostSlugNotFound: false,
       workspaceHostResolutionPending: false,
       workspaceHostMismatch: false,
-      users: isSupabaseConfigured ? [] : (isOfflineDemoMode ? SEED_USERS : []),
-      passwords: isSupabaseConfigured ? {} : (isOfflineDemoMode ? SEED_PASSWORDS : {}),
+      users: [],
+      passwords: {},
       invitations: [],
 
       setCurrentUser: (user) => {
@@ -341,6 +285,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       login: (email, password) => {
+        if (!isSupabaseConfigured) {
+          return { success: false, error: getTranslations().errors.supabaseNotConfiguredDetail }
+        }
         const user = get().users.find((u) => u.email.toLowerCase() === email.toLowerCase())
         const err = getTranslations().errors
         if (!user) return { success: false, error: err.userNotFound }
@@ -362,7 +309,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           currentUser: { ...user, lastLoginAt: now },
           session,
-          organization: get().organization || SEED_ORG,
+          organization: get().organization ?? null,
           users: get().users.map((u) =>
             u.id === user.id ? { ...u, lastLoginAt: now } : u
           ),
@@ -391,6 +338,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       register: (data) => {
+        if (!isSupabaseConfigured) {
+          return { success: false, error: getTranslations().errors.supabaseNotConfiguredDetail }
+        }
         const existing = get().users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())
         if (existing) return { success: false, error: getTranslations().errors.emailAlreadyExists }
 
@@ -721,9 +671,8 @@ export const useAuthStore = create<AuthState>()(
             passwords: {},
           }
         }
-        // Mock mode fallback: ensure demo users exist if persisted storage is stale/empty.
-        const users = (p.users && p.users.length > 0) ? p.users : SEED_USERS
-        const passwords = (p.passwords && Object.keys(p.passwords).length > 0) ? p.passwords : SEED_PASSWORDS
+        const users = (p.users && p.users.length > 0) ? p.users : []
+        const passwords = (p.passwords && Object.keys(p.passwords).length > 0) ? p.passwords : {}
         return { ...current, ...p, users, passwords }
       },
     }

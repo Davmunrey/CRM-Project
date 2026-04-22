@@ -76,9 +76,7 @@ function BootstrapFatalScreen() {
           <code className="text-accent-300">VITE_APP_CHANNEL=production</code> {t.errors.configurationBootstrapOr}{' '}
           <code className="text-accent-300">VITE_APP_CHANNEL=staging</code> {t.errors.configurationBootstrapRequiresValid}{' '}
           <code className="text-accent-300">VITE_SUPABASE_URL</code> {t.errors.configurationBootstrapAnd}{' '}
-          <code className="text-accent-300">VITE_SUPABASE_ANON_KEY</code>
-          {t.errors.configurationBootstrapDemoIntro} <code className="text-accent-300">VITE_APP_CHANNEL=demo</code>
-          {t.errors.configurationBootstrapDemoOutro}
+          <code className="text-accent-300">VITE_SUPABASE_ANON_KEY</code>.
         </p>
         <p className="text-xs text-fg-subtle">{t.errors.configurationBootstrapFooter}</p>
       </div>

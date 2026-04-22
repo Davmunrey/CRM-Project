@@ -15,6 +15,8 @@ import { localizedOrganization } from '../i18n/localizeSeed'
 import { supabase } from '../lib/supabase'
 import { formatDateShort } from '../utils/formatters'
 import { Select } from '../components/ui/Select'
+import { SecurePasswordField } from '../components/auth/SecurePasswordField'
+import { formatPasswordStrengthIssues, getPasswordStrengthIssues, isStrongPassword } from '../lib/securePassword'
 
 const ROLE_ICONS: Record<UserRole, React.ReactNode> = {
   admin: <Crown size={14} />,
@@ -84,13 +86,22 @@ export function TeamManagement() {
                       : usagePercent >= 10 ? 'w-[10%]'
                         : 'w-[2%]'
 
+  const passwordIssueLabels = {
+    length: t.errors.passwordWeakLength,
+    lower: t.errors.passwordWeakLower,
+    upper: t.errors.passwordWeakUpper,
+    digit: t.errors.passwordWeakDigit,
+    symbol: t.errors.passwordWeakSymbol,
+  } as const
+
   const handleAddUser = () => {
     if (!newUser.name || !newUser.email || !newUser.password) {
       toast.error(t.team.toastFillRequired)
       return
     }
-    if (newUser.password.length < 6) {
-      toast.error(t.team.toastPasswordMin)
+    const strengthIssues = getPasswordStrengthIssues(newUser.password)
+    if (strengthIssues.length > 0) {
+      toast.error(formatPasswordStrengthIssues(strengthIssues, passwordIssueLabels))
       return
     }
     const result = addUser(newUser)
@@ -150,7 +161,11 @@ export function TeamManagement() {
   }
 
   const handleResetPassword = (userId: string) => {
-    if (newPw.length < 6) { toast.error(t.team.toastPasswordMin6); return }
+    const strengthIssues = getPasswordStrengthIssues(newPw)
+    if (strengthIssues.length > 0) {
+      toast.error(formatPasswordStrengthIssues(strengthIssues, passwordIssueLabels))
+      return
+    }
     resetPassword(userId, newPw)
     toast.success(t.team.toastPasswordReset)
     setResetPwUser(null)
@@ -241,9 +256,14 @@ export function TeamManagement() {
               <label className="block text-xs text-fg-subtle mb-1">{t.team.labelEmail} *</label>
               <input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} placeholder={t.team.placeholderEmail} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
             </div>
-            <div>
-              <label className="block text-xs text-fg-subtle mb-1">{t.team.labelPassword} *</label>
-              <input type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} placeholder={t.team.placeholderMinPassword} className="w-full bg-surface-2 border border-fg/10 rounded-xl px-3 py-2 text-sm text-fg outline-none focus:border-accent-500/40 placeholder:text-fg-subtle" />
+            <div className="col-span-2">
+              <SecurePasswordField
+                label={t.team.labelPassword}
+                value={newUser.password}
+                onChange={(password) => setNewUser({ ...newUser, password })}
+                placeholder={t.team.placeholderMinPassword}
+                required
+              />
             </div>
             <div>
               <Select
@@ -441,18 +461,34 @@ export function TeamManagement() {
 
                 {/* Reset password inline */}
                 {resetPwUser === user.id && (
-                  <div className="absolute inset-x-0 top-full bg-surface-2 border border-fg/8 rounded-b-xl px-5 py-3 flex items-center gap-3 z-30">
-                    <Key size={14} className="text-warning flex-shrink-0" />
-                    <input
-                      type="text"
-                      value={newPw}
-                      onChange={(e) => setNewPw(e.target.value)}
-                      placeholder={t.team.placeholderNewPassword}
-                      className="flex-1 bg-surface-2 border border-fg/10 rounded-lg px-3 py-1.5 text-xs text-fg outline-none"
-                      autoFocus
-                    />
-                    <button type="button" onClick={() => handleResetPassword(user.id)} disabled={newPw.length < 6} className="px-3 py-1.5 rounded-lg btn-gradient text-xs text-fg font-medium disabled:opacity-40">{t.common.save}</button>
-                    <button type="button" onClick={() => setResetPwUser(null)} title={t.common.close} aria-label={t.common.close} className="p-1 text-fg-subtle hover:text-fg"><X size={14} /></button>
+                  <div className="absolute inset-x-0 top-full bg-surface-2 border border-fg/8 rounded-b-xl px-5 py-3 z-30 flex flex-col gap-2">
+                    <div className="flex items-start gap-2">
+                      <Key size={14} className="text-warning shrink-0 mt-1" aria-hidden />
+                      <SecurePasswordField
+                        className="min-w-0 flex-1"
+                        label={t.team.resetPassword}
+                        value={newPw}
+                        onChange={setNewPw}
+                        placeholder={t.team.placeholderNewPassword}
+                        autoFocus
+                        autoComplete="new-password"
+                        compactChecklist
+                        showPolicyHint={false}
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2 pl-6">
+                      <button
+                        type="button"
+                        onClick={() => handleResetPassword(user.id)}
+                        disabled={!isStrongPassword(newPw)}
+                        className="px-3 py-1.5 rounded-lg btn-gradient text-xs text-fg font-medium disabled:opacity-40"
+                      >
+                        {t.common.save}
+                      </button>
+                      <button type="button" onClick={() => { setResetPwUser(null); setNewPw('') }} title={t.common.close} aria-label={t.common.close} className="p-1.5 text-fg-subtle hover:text-fg">
+                        <X size={14} />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

@@ -2,7 +2,6 @@ import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { CRMNotification, NotificationType } from '../types'
 import { useAuthStore } from './authStore'
-import { getTranslations } from '../i18n'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
 
@@ -44,74 +43,6 @@ function notificationToRow(n: Partial<CRMNotification>): Record<string, unknown>
   if (n.triggeredBy !== undefined) row.triggered_by = n.triggeredBy
   if (n.isRead !== undefined) row.is_read = n.isRead
   return row
-}
-
-// ── Seed notifications ──────────────────────────────────────────────────────
-
-function getSeedNotifications(): CRMNotification[] {
-  const now = new Date()
-  const s = getTranslations().notificationSeeds
-  const sys = s.triggeredBySystem
-  return [
-    {
-      id: 'notif-seed-1',
-      type: 'deal_won',
-      title: s.dealWonTitle,
-      message: s.dealWonMessage,
-      entityType: 'deal',
-      entityId: 'd1',
-      userId: 'u1',
-      triggeredBy: 'Demo Admin',
-      isRead: false,
-      createdAt: new Date(now.getTime() - 2 * 3600000).toISOString(),
-    },
-    {
-      id: 'notif-seed-2',
-      type: 'deal_stage_changed',
-      title: s.dealStageTitle,
-      message: s.dealStageMessage,
-      entityType: 'deal',
-      entityId: 'd3',
-      userId: 'u1',
-      triggeredBy: 'Demo Manager',
-      isRead: false,
-      createdAt: new Date(now.getTime() - 5 * 3600000).toISOString(),
-    },
-    {
-      id: 'notif-seed-3',
-      type: 'activity_overdue',
-      title: s.activityOverdueTitle,
-      message: s.activityOverdueMessage,
-      entityType: 'activity',
-      entityId: 'a1',
-      userId: 'u1',
-      triggeredBy: sys,
-      isRead: false,
-      createdAt: new Date(now.getTime() - 24 * 3600000).toISOString(),
-    },
-    {
-      id: 'notif-seed-4',
-      type: 'goal_achieved',
-      title: s.goalAchievedTitle,
-      message: s.goalAchievedMessage,
-      entityType: 'goal',
-      entityId: 'goal-001',
-      userId: 'u1',
-      triggeredBy: sys,
-      isRead: true,
-      createdAt: new Date(now.getTime() - 48 * 3600000).toISOString(),
-    },
-    {
-      id: 'notif-seed-5',
-      type: 'system',
-      title: s.welcomeTitle,
-      message: s.welcomeMessage,
-      userId: 'u1',
-      triggeredBy: sys,
-      isRead: true,
-      createdAt: new Date(now.getTime() - 72 * 3600000).toISOString(),
-    },
-  ]
 }
 
 // ── Store ───────────────────────────────────────────────────────────────────
@@ -161,7 +92,7 @@ export const useNotificationsStore = create<NotificationsStore>()(
           if (error) throw error
           set({ notifications: (data ?? []).map(rowToNotification), isLoading: false })
         } else {
-          set({ notifications: getSeedNotifications(), isLoading: false })
+          set({ notifications: [], isLoading: false })
         }
       } catch (e: unknown) {
         set({ error: getErrorMessage(e), isLoading: false })

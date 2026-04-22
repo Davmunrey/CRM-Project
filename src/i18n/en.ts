@@ -1,5 +1,5 @@
 import type { Translations } from './types'
-import { seedDemo } from './seed/en.demo'
+import { workflowLibraryEn } from './workflowLibrary/en'
 
 export const en: Translations = {
   // ─── Navigation ──────────────────────────────────────────────────────────────
@@ -78,7 +78,6 @@ export const en: Translations = {
     loading: 'Loading...',
     skipToMain: 'Skip to main content',
     envBannerStaging: 'Staging - data is not production.',
-    envBannerDemo: 'Demo - mock accounts and sample data only.',
     export: 'Export',
     csv: 'CSV',
     import: 'Import',
@@ -833,7 +832,7 @@ export const en: Translations = {
     emailTrackingSubtitle:
       'Opens and clicks recorded when recipients load the tracking pixel or follow a rewritten link. Edge Functions `track-open` and `track-click` write to `email_tracking_events`.',
     emailTrackingServerBadge: 'Server-based',
-    emailTrackingDemoBadge: 'Local demo',
+    emailTrackingUnconfiguredBadge: 'Not connected',
     emailTrackingOpens: 'Opens',
     emailTrackingClicks: 'Clicks',
     emailTrackingPrivacyNote:
@@ -1180,17 +1179,15 @@ export const en: Translations = {
     labelJobTitle: 'Job title',
     placeholderFullName: 'Full name',
     placeholderEmail: 'email@company.com',
-    placeholderMinPassword: 'Minimum 6 characters',
+    placeholderMinPassword: '12+ characters, mixed types',
     placeholderPhoneExample: '+1 555 000 0000',
     placeholderJobTitle: 'e.g. Account Executive',
-    placeholderNewPassword: 'New password (min. 6 characters)',
+    placeholderNewPassword: 'New password',
     toastFillRequired: 'Please fill in all required fields',
-    toastPasswordMin: 'Password must be at least 6 characters',
     toastUserCreated: 'User {name} created',
     toastUserCreateError: 'Error creating user',
     toastEnterEmail: 'Enter an email address',
     toastInviteSent: 'Invitation sent to {email}',
-    toastPasswordMin6: 'Minimum 6 characters',
     toastPasswordReset: 'Password reset',
     toastInviteCancelled: 'Invitation cancelled',
     toastUserDeactivated: '{name} deactivated',
@@ -1347,12 +1344,16 @@ export const en: Translations = {
     checkEmailInstructions: "Enter your email and we'll send you a link to reset your password.",
     sendLink: 'Send link',
     backToLogin: 'Back to login',
-    realAuthEnabled: 'Real authentication enabled',
-    demoModeBadge: 'Demonstration environment',
     emailPlaceholder: 'you@company.com',
     checkEmailConfirmation: 'We sent a confirmation link to',
     passwordsDoNotMatch: 'Passwords do not match',
-    passwordMinLength: 'Password must be at least 6 characters',
+    passwordMinLength: 'Password must be at least 12 characters with upper & lower case, a number, and a symbol.',
+    generateSecurePassword: 'Generate secure password',
+    passwordStrengthHint:
+      'Use at least 12 characters including uppercase, lowercase, a number, and a symbol (!@#$%^&*-+=?).',
+    passwordPolicyTitle: 'Must meet all of the following:',
+    passwordPolicyLoginHint:
+      'Reference for new passwords. Sign in with your existing password even if this list is not all checked.',
     savePassword: 'Save Password',
     sso: 'SSO',
     saml: 'SAML 2.0',
@@ -1360,12 +1361,10 @@ export const en: Translations = {
     useSaml: 'Use SAML',
     connecting: 'Connecting',
     companyDomainRequired: 'Enter your company email or domain to continue with SAML SSO.',
-    demoLogin: 'Demo login',
     landingTagline: 'Pipeline, inbox, and team in one calm workspace.',
     landingFeature1: 'Enterprise-ready permissions and audit-friendly workflows.',
     landingFeature2: 'Fast views for leads, deals, and follow-ups.',
     landingFeature3: 'Built for small teams who still want a serious sales workspace.',
-    demoCredentialsTitle: 'Demo credentials',
     googleSsoUseCompanySso: 'Google SSO is disabled for this tenant. Use your company SSO.',
     googleSsoUnavailable: 'Google SSO is not available for this account.',
     passwordShowAria: 'Show password',
@@ -1435,7 +1434,7 @@ export const en: Translations = {
   errors: {
     supabaseNotConfigured: 'Supabase is not configured',
     supabaseNotConfiguredDetail:
-      'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, or enable VITE_ALLOW_DEMO_MODE=true for a local demo only.',
+      'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.',
     generic: 'An error occurred',
     gmailConnectionError: 'Error connecting Gmail',
     gmailThreadsLoadError: 'Could not load emails',
@@ -1446,6 +1445,11 @@ export const en: Translations = {
     userNotFound: 'User not found',
     accountDeactivated: 'Account deactivated. Contact your administrator.',
     wrongPassword: 'Incorrect password',
+    passwordWeakLength: 'At least 12 characters',
+    passwordWeakLower: 'One lowercase letter',
+    passwordWeakUpper: 'One uppercase letter',
+    passwordWeakDigit: 'One number',
+    passwordWeakSymbol: 'One symbol (!@#$%^&*-+=?)',
     wrongCurrentPassword: 'Current password is incorrect',
     emailAlreadyExists: 'A user with this email already exists',
     notAuthenticated: 'Not authenticated',
@@ -1471,8 +1475,6 @@ export const en: Translations = {
     configurationBootstrapOr: 'or',
     configurationBootstrapRequiresValid: 'and requires valid',
     configurationBootstrapAnd: 'and',
-    configurationBootstrapDemoIntro: '. For a static demo without Supabase, set',
-    configurationBootstrapDemoOutro: ' and rebuild.',
     configurationBootstrapFooter: 'Set environment variables and redeploy.',
   },
 
@@ -1665,5 +1667,5 @@ export const en: Translations = {
     probabilityShort: 'prob',
   },
 
-  seedDemo,
+  workflowLibrary: workflowLibraryEn,
 }

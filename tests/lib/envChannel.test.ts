@@ -26,11 +26,10 @@ describe('envChannel', () => {
     expect(appChannel).toBe('staging')
   })
 
-  it('respects explicit demo', async () => {
+  it('treats unknown VITE_APP_CHANNEL as development', async () => {
     vi.stubEnv('VITE_APP_CHANNEL', 'demo')
-    const { appChannel, isHostedDemoChannel } = await import('../../src/lib/envChannel')
-    expect(appChannel).toBe('demo')
-    expect(isHostedDemoChannel).toBe(true)
+    const { appChannel } = await import('../../src/lib/envChannel')
+    expect(appChannel).toBe('development')
   })
 
   it('uses MODE=staging when channel unset', async () => {

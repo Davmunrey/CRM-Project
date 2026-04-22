@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { Deal, DealFilters, DealStage, QuoteItem } from '../types'
-import { seedDeals } from '../utils/seedData'
-import { sanitizeDemoDeals } from '../utils/demoDataSanitizer'
 import { useAuditStore } from './auditStore'
 import { useNotificationsStore } from './notificationsStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
@@ -184,7 +182,7 @@ export const useDealsStore = create<DealsState>()(
           )
           set({ deals: merged, isLoading: false })
         } else {
-          set({ deals: [...readPendingDeals(), ...sanitizeDemoDeals(seedDeals)], isLoading: false })
+          set({ deals: [...readPendingDeals()], isLoading: false })
         }
       } catch (e: unknown) {
         set({ error: (e as Error).message, isLoading: false })

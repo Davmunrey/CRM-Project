@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import { v4 as uuidv4 } from 'uuid'
 import type { Company, CompanyFilters } from '../types'
-import { seedCompanies } from '../utils/seedData'
-import { sanitizeDemoCompanies } from '../utils/demoDataSanitizer'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 import { normalizeIndustryValue } from '../lib/industries'
@@ -94,7 +92,7 @@ export const useCompaniesStore = create<CompaniesState>()(
           if (error) throw error
           set({ companies: (data ?? []).map((r) => rowToCompany(r as unknown as Record<string, unknown>)), isLoading: false })
         } else {
-          set({ companies: sanitizeDemoCompanies(seedCompanies), isLoading: false })
+          set({ companies: [], isLoading: false })
         }
       } catch (e: unknown) {
         set({ error: (e as Error).message, isLoading: false })

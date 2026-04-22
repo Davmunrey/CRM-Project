@@ -20,16 +20,16 @@ type KindFilter = 'all' | 'automation' | 'sequence'
 
 function entryTitle(entry: WorkflowCatalogEntry, t: ReturnType<typeof useTranslations>): string {
   if (entry.kind === 'automation') {
-    return t.seedDemo.automations[entry.automationSeedId as SeedAutomationId].name
+    return t.workflowLibrary.automations[entry.automationSeedId as SeedAutomationId].name
   }
-  return t.seedDemo.sequences[entry.sequenceSeedId].name
+  return t.workflowLibrary.sequences[entry.sequenceSeedId].name
 }
 
 function entryDescription(entry: WorkflowCatalogEntry, t: ReturnType<typeof useTranslations>): string {
   if (entry.kind === 'automation') {
-    return t.seedDemo.automations[entry.automationSeedId as SeedAutomationId].description
+    return t.workflowLibrary.automations[entry.automationSeedId as SeedAutomationId].description
   }
-  return t.seedDemo.sequences[entry.sequenceSeedId].description
+  return t.workflowLibrary.sequences[entry.sequenceSeedId].description
 }
 
 export function WorkflowTemplateLibraryDialog({ onClose }: { onClose: () => void }) {

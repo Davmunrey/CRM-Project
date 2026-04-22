@@ -271,7 +271,7 @@ export function Reports() {
                 : 'bg-warning/10 text-warning border-warning/20'
             }`}
           >
-            {isSupabaseConfigured ? t.reports.emailTrackingServerBadge : t.reports.emailTrackingDemoBadge}
+            {isSupabaseConfigured ? t.reports.emailTrackingServerBadge : t.reports.emailTrackingUnconfiguredBadge}
           </span>
         </div>
         {!isSupabaseConfigured ? (

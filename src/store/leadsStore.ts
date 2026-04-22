@@ -36,89 +36,6 @@ const ACTIVITY_EVENT_WEIGHTS: Record<string, number> = {
   deal_created: 14,
 }
 
-const OFFLINE_SCORING_RULES: LeadsState['scoringRules'] = [
-  { id: 'rule-seed-email-open', key: 'email_open', points: 5, isEnabled: true },
-  { id: 'rule-seed-email-click', key: 'email_click', points: 12, isEnabled: true },
-  { id: 'rule-seed-email-reply', key: 'email_reply', points: 20, isEnabled: true },
-  { id: 'rule-seed-meeting-booked', key: 'meeting_booked', points: 30, isEnabled: true },
-]
-
-const OFFLINE_LEADS: Lead[] = [
-  {
-    id: 'lead-seed-1',
-    firstName: 'Demo',
-    lastName: 'Lead One',
-    email: 'lead.one@example.com',
-    phone: '+34 600 100 001',
-    companyName: 'Demo Company 1',
-    jobTitle: 'CTO',
-    source: 'website',
-    status: 'working',
-    lifecycleStage: 'mql',
-    score: 68,
-    assignedTo: 'u1',
-    ownerUserId: 'u1',
-    tags: ['Hot Lead'],
-    notes: 'Requested security and onboarding details.',
-    createdAt: '2026-03-10T09:00:00Z',
-    updatedAt: '2026-03-20T10:00:00Z',
-    lastEngagedAt: '2026-03-20T10:00:00Z',
-  },
-  {
-    id: 'lead-seed-2',
-    firstName: 'Demo',
-    lastName: 'Lead Two',
-    email: 'lead.two@example.com',
-    companyName: 'Demo Company 2',
-    jobTitle: 'Head of Ops',
-    source: 'linkedin',
-    status: 'open',
-    lifecycleStage: 'lead',
-    score: 41,
-    assignedTo: 'u2',
-    ownerUserId: 'u2',
-    tags: ['Follow Up'],
-    notes: 'Asked for pricing bands and implementation timeline.',
-    createdAt: '2026-03-05T11:00:00Z',
-    updatedAt: '2026-03-18T16:00:00Z',
-    lastEngagedAt: '2026-03-18T16:00:00Z',
-  },
-  {
-    id: 'lead-seed-3',
-    firstName: 'Demo',
-    lastName: 'Lead Three',
-    email: 'lead.three@example.com',
-    companyName: 'Demo Company 3',
-    source: 'event',
-    status: 'qualified',
-    lifecycleStage: 'sql',
-    score: 75,
-    assignedTo: 'u1',
-    ownerUserId: 'u1',
-    tags: ['Decision Maker'],
-    notes: 'Qualified after workshop and follow-up call.',
-    createdAt: '2026-02-25T10:00:00Z',
-    updatedAt: '2026-03-19T12:00:00Z',
-    lastEngagedAt: '2026-03-19T12:00:00Z',
-  },
-]
-
-const OFFLINE_LEAD_EVENTS: LeadsState['leadEventsByLeadId'] = {
-  'lead-seed-1': [
-    { id: 'lead-seed-1-e1', eventType: 'email_open', metadata: {}, createdAt: '2026-03-20T09:10:00Z' },
-    { id: 'lead-seed-1-e2', eventType: 'email_click', metadata: {}, createdAt: '2026-03-20T09:11:00Z' },
-    { id: 'lead-seed-1-e3', eventType: 'meeting_booked', metadata: {}, createdAt: '2026-03-20T10:00:00Z' },
-  ],
-  'lead-seed-2': [
-    { id: 'lead-seed-2-e1', eventType: 'email_open', metadata: {}, createdAt: '2026-03-18T15:40:00Z' },
-    { id: 'lead-seed-2-e2', eventType: 'note_added', metadata: {}, createdAt: '2026-03-18T16:00:00Z' },
-  ],
-  'lead-seed-3': [
-    { id: 'lead-seed-3-e1', eventType: 'email_reply', metadata: {}, createdAt: '2026-03-19T11:00:00Z' },
-    { id: 'lead-seed-3-e2', eventType: 'meeting_booked', metadata: {}, createdAt: '2026-03-19T12:00:00Z' },
-  ],
-}
-
 function daysSince(isoDate?: string): number {
   if (!isoDate) return Number.POSITIVE_INFINITY
   const ts = new Date(isoDate).getTime()
@@ -249,9 +166,9 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
     try {
       if (!isSupabaseConfigured || !supabase) {
         set({
-          leads: OFFLINE_LEADS,
-          leadEventsByLeadId: OFFLINE_LEAD_EVENTS,
-          scoringRules: OFFLINE_SCORING_RULES,
+          leads: [],
+          leadEventsByLeadId: {},
+          scoringRules: [],
           isLoading: false,
         })
         return
@@ -354,7 +271,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
 
   fetchScoringRules: async () => {
     if (!isSupabaseConfigured || !supabase) {
-      set({ scoringRules: OFFLINE_SCORING_RULES })
+      set({ scoringRules: [] })
       return
     }
     const { data, error } = await sb()
@@ -403,7 +320,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
       set((s) => ({
         leadEventsByLeadId: {
           ...s.leadEventsByLeadId,
-          [leadId]: OFFLINE_LEAD_EVENTS[leadId] ?? [],
+          [leadId]: [],
         },
       }))
       return

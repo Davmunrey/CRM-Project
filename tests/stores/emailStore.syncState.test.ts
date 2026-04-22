@@ -12,7 +12,6 @@ vi.mock('../../src/services/gmailService', () => ({
 vi.mock('../../src/lib/supabase', () => ({
   supabase: null,
   isSupabaseConfigured: false,
-  isOfflineDemoMode: false,
   isBootstrapFatalError: false,
 }))
 

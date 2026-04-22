@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AppSettings, DealCurrency, UiDensity } from '../types'
-import { seedSettings } from '../utils/seedData'
+import { defaultAppSettings } from '../utils/defaultAppSettings'
 import { LS_KEYS } from '../utils/constants'
 import type { Permission, UserRole } from '../types/auth'
 import { APP_NAME, LEGACY_COMPACT_APP_TITLE_BEFORE_REBRAND } from '../lib/appIdentity'
@@ -51,7 +51,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      settings: seedSettings,
+      settings: defaultAppSettings,
 
       updateThemePreference: (themePreference) => {
         set((state) => ({ settings: { ...state.settings, themePreference } }))
@@ -243,7 +243,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       resetToDefaults: () => {
-        set({ settings: seedSettings })
+        set({ settings: defaultAppSettings })
       },
     }),
     {
