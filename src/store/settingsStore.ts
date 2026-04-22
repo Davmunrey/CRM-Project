@@ -4,6 +4,18 @@ import type { AppSettings, DealCurrency, UiDensity } from '../types'
 import { seedSettings } from '../utils/seedData'
 import { LS_KEYS } from '../utils/constants'
 import type { Permission, UserRole } from '../types/auth'
+import { APP_NAME, LEGACY_COMPACT_APP_TITLE_BEFORE_REBRAND } from '../lib/appIdentity'
+
+/** Persisted settings may still use the pre-rebrand workspace title (localStorage). */
+function migrateLegacyBranding(branding: AppSettings['branding']): AppSettings['branding'] {
+  const appName = (branding.appName ?? '').trim()
+  if (!appName) return branding
+  const compact = appName.replace(/\s+/g, '').toLowerCase()
+  if (compact === LEGACY_COMPACT_APP_TITLE_BEFORE_REBRAND) {
+    return { ...branding, appName: APP_NAME }
+  }
+  return branding
+}
 
 interface SettingsState {
   settings: AppSettings
@@ -244,11 +256,16 @@ export const useSettingsStore = create<SettingsState>()(
         const partial = (obj.state && typeof obj.state === 'object' ? obj.state : obj) as Partial<SettingsState>
         if (!partial.settings) return cur
         const ps = partial.settings
+        const branding = migrateLegacyBranding({
+          ...cur.settings.branding,
+          ...(ps.branding ?? {}),
+        })
         return {
           ...cur,
           settings: {
             ...cur.settings,
             ...ps,
+            branding,
             uiDensity: ps.uiDensity === 'compact' || ps.uiDensity === 'comfortable' ? ps.uiDensity : 'comfortable',
           },
         }
