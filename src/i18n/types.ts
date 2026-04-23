@@ -73,6 +73,8 @@ export interface Translations {
     products: string
     automations: string
     settings: string
+    /** Settings → Integrations (Google) */
+    integrations: string
     audit: string
     collapse: string
     expand: string
@@ -715,6 +717,34 @@ export interface Translations {
     tabAdvanced: string
     tabWebhooks: string
     tabIntegrations: string
+    integrationsPageTitle: string
+    integrationsPageSubtitle: string
+    googleCardTitle: string
+    googleCardBlurb: string
+    googleCardFeatures: string
+    googleGmailStatus: string
+    googleCalendarCardTitle: string
+    googleCalendarCardBlurb: string
+    googleCalendarCardBlurbLocked: string
+    googleCalendarConnect: string
+    googleCalendarOpening: string
+    googleCalendarLocked: string
+    googleCalendarActive: string
+    googleConnect: string
+    googleOpening: string
+    googleConnected: string
+    googleDisconnect: string
+    googleDisconnectConfirm: string
+    googlePermissionsHeading: string
+    googlePermGmailRead: string
+    googlePermGmailSend: string
+    googlePermGmailCompose: string
+    googlePermGmailModify: string
+    googlePermCalendar: string
+    googlePermissionsRevokeHint: string
+    gmailConnectViaIntegrations: string
+    gmailOpenIntegrations: string
+    backToSettings: string
     tabOnboarding: string
     onboardingTitle: string
     onboardingIntro: string
@@ -1525,6 +1555,14 @@ export interface Translations {
     supabaseNotConfiguredDetail: string
     generic: string
     gmailConnectionError: string
+    googleIntegrationStartFailed: string
+    /**
+     * When functions.invoke fails (e.g. function not deployed, network) — not an OAuth rejection.
+     */
+    googleEdgeFunctionUnreachable: string
+    googleOAuthAccessDenied: string
+    googleOAuthStateInvalid: string
+    googleOAuthEmailMismatch: string
     gmailThreadsLoadError: string
     invitationSendError: string
     duplicateTag: string

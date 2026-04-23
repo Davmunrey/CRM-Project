@@ -7,6 +7,21 @@ import { supabase } from '../lib/supabase'
 import { toast } from '../store/toastStore'
 import { getGmailRedirectUri } from '../services/gmailService'
 import { useTranslations } from '../i18n'
+import { GOOGLE_OAUTH_MESSAGE_SOURCE, type GoogleOAuthMessagePayload } from '../services/googleIntegrationService'
+
+function postToOpener(payload: GoogleOAuthMessagePayload) {
+  try {
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(
+        { source: GOOGLE_OAUTH_MESSAGE_SOURCE, payload },
+        window.location.origin,
+      )
+    }
+  } catch {
+    // ignore
+  }
+  window.setTimeout(() => window.close(), 400)
+}
 
 export function GmailCallback() {
   const t = useTranslations()
@@ -21,57 +36,105 @@ export function GmailCallback() {
 
     async function exchange() {
       const params = new URLSearchParams(window.location.search)
+      const oauthError = params.get('error')
       const code = params.get('code')
       const returnedState = params.get('state')
+      const redirectUri = getGmailRedirectUri()
 
-      // CSRF check: state must match what we stored before the redirect
-      const storedState = sessionStorage.getItem('gmail_oauth_state')
-      const codeVerifier = sessionStorage.getItem('gmail_oauth_verifier')
+      if (oauthError) {
+        const errPayload: GoogleOAuthMessagePayload = {
+          ok: false,
+          error: oauthError,
+        }
+        if (window.opener) {
+          postToOpener(errPayload)
+          return
+        }
+        toast.error(t.errors.googleOAuthAccessDenied)
+        navigate('/settings/integrations', { replace: true })
+        return
+      }
 
-      if (!code || !returnedState || !storedState || !codeVerifier) {
+      if (!code) {
+        if (window.opener) {
+          postToOpener({ ok: false, error: 'missing_code' })
+          return
+        }
         toast.error(t.errors.gmailConnectionError)
         navigate('/inbox', { replace: true })
         return
       }
 
-      if (returnedState !== storedState) {
-        toast.error(t.errors.gmailConnectionError)
-        navigate('/inbox', { replace: true })
-        return
+      const legacyVerifier = sessionStorage.getItem('gmail_oauth_verifier')
+      const storedLegacyState = sessionStorage.getItem('gmail_oauth_state')
+      const isLegacy =
+        Boolean(legacyVerifier && storedLegacyState && returnedState && returnedState === storedLegacyState)
+
+      if (isLegacy) {
+        sessionStorage.removeItem('gmail_oauth_state')
+        sessionStorage.removeItem('gmail_oauth_verifier')
       }
 
-      // Clear sessionStorage - verifier + state are single-use
-      sessionStorage.removeItem('gmail_oauth_state')
-      sessionStorage.removeItem('gmail_oauth_verifier')
+      const body = isLegacy
+        ? { code, code_verifier: legacyVerifier!, redirect_uri: redirectUri }
+        : { code, state: returnedState, redirect_uri: redirectUri }
+
+      if (!isLegacy && !returnedState) {
+        if (window.opener) {
+          postToOpener({ ok: false, error: 'missing_state' })
+          return
+        }
+        toast.error(t.errors.googleOAuthStateInvalid)
+        navigate('/settings/integrations', { replace: true })
+        return
+      }
 
       try {
-        const { data, error } = await supabase!.functions.invoke('gmail-oauth-exchange', {
-          body: { code, code_verifier: codeVerifier, redirect_uri: getGmailRedirectUri() },
-        })
+        const { data, error } = await supabase!.functions.invoke('gmail-oauth-exchange', { body })
 
-        if (error || !data?.access_token) {
-          toast.error(t.errors.gmailConnectionError)
-          navigate('/inbox', { replace: true })
+        const errMsg =
+          error
+            ? (error as { message?: string }).message
+            : typeof (data as { error?: string } | null)?.error === 'string'
+              ? (data as { error: string }).error
+              : null
+
+        if (errMsg || !data || typeof (data as { access_token?: string }).access_token !== 'string') {
+          const raw = errMsg ?? (data as { error?: string })?.error
+          if (window.opener) {
+            postToOpener({ ok: false, error: raw ?? 'exchange_failed' })
+            return
+          }
+          toast.error(typeof raw === 'string' && raw.length < 200 ? raw : t.errors.gmailConnectionError)
+          navigate('/settings/integrations', { replace: true })
           return
         }
 
-        // Store access token in memory only (per D-08)
-        const expiresAt = Date.now() + (data.expires_in ?? 3600) * 1000
-        setGmailToken(data.access_token, expiresAt)
-
-        // Persist only the email address (per D-09)
-        if (data.email_address) {
-          setGmailAddress(data.email_address)
+        const d = data as { access_token: string; expires_in?: number; email_address?: string }
+        const expiresAt = Date.now() + (d.expires_in ?? 3600) * 1000
+        setGmailToken(d.access_token, expiresAt)
+        if (d.email_address) {
+          setGmailAddress(d.email_address)
         }
 
+        if (window.opener) {
+          postToOpener({ ok: true, email: d.email_address })
+          return
+        }
+
+        toast.success(t.settings.gmailConnectionActive)
         navigate('/inbox', { replace: true })
       } catch {
+        if (window.opener) {
+          postToOpener({ ok: false, error: 'network' })
+          return
+        }
         toast.error(t.errors.gmailConnectionError)
-        navigate('/inbox', { replace: true })
+        navigate('/settings/integrations', { replace: true })
       }
     }
 
-    exchange()
+    void exchange()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

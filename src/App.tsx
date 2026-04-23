@@ -43,6 +43,9 @@ const Companies = lazy(() => import('./pages/Companies').then((m) => ({ default:
 const Deals = lazy(() => import('./pages/Deals').then((m) => ({ default: m.Deals })))
 const Activities = lazy(() => import('./pages/Activities').then((m) => ({ default: m.Activities })))
 const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })))
+const SettingsIntegrations = lazy(() =>
+  import('./pages/SettingsIntegrations').then((m) => ({ default: m.SettingsIntegrations })),
+)
 const Inbox = lazy(() => import('./pages/Inbox').then((m) => ({ default: m.Inbox })))
 const EmailTemplates = lazy(() => import('./pages/EmailTemplates').then((m) => ({ default: m.EmailTemplates })))
 const Calendar = lazy(() => import('./pages/Calendar').then((m) => ({ default: m.Calendar })))
@@ -148,6 +151,14 @@ function AppRoutes() {
         />
         <Route path="/inbox" element={<ProtectedPage title={t.nav.inbox} requiredPermission="email:read"><Inbox /></ProtectedPage>} />
         <Route path="/settings" element={<ProtectedPage title={t.nav.settings} requiredPermission="settings:read"><Settings /></ProtectedPage>} />
+        <Route
+          path="/settings/integrations"
+          element={(
+            <ProtectedPage title={t.nav.integrations} requiredPermission="settings:read">
+              <SettingsIntegrations />
+            </ProtectedPage>
+          )}
+        />
         <Route path="/templates" element={<ProtectedPage title={t.nav.templates} requiredPermission="templates:read"><EmailTemplates /></ProtectedPage>} />
         <Route path="/follow-ups" element={<ProtectedPage title={t.nav.followUps} requiredPermission="contacts:read"><FollowUps /></ProtectedPage>} />
         <Route path="/audit" element={<ProtectedPage title={t.nav.audit} requiredPermission="audit:read"><AuditLog /></ProtectedPage>} />

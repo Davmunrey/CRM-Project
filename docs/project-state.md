@@ -32,7 +32,7 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 4. **Production pipeline** — deploy from protected `main` (or your release branch) with a recorded smoke pass — [`docs/smoke-checklist-production.md`](./smoke-checklist-production.md).
 5. **Custom domain + TLS** — DNS and certificate as required by your provider.
 
-**Gmail verification kickoff:** [`docs/google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md).
+**Google (Gmail/Calendar) operator setup + verification:** [`docs/google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md#operator-setup-google-oauth).
 
 Operational detail for env vars and schedulers overlaps [`master-release-qa.md` — Production handoff](./master-release-qa.md#production-handoff-checklist).
 
@@ -45,7 +45,7 @@ Track these explicitly until each is either implemented or moved into the right 
 
 | Gap | Why it matters | Where to track / fix |
 |-----|----------------|----------------------|
-| **Google Cloud: restricted-scope verification** (Gmail APIs for production users) | Long lead time (weeks); blocks trustworthy Gmail outside test users | [`.planning/STATE.md`](../.planning/STATE.md) Notes; **redirect checklist:** [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md) (Gmail callback URIs per origin); align Google Cloud OAuth client + Edge Functions `gmail-oauth-exchange` / refresh flow. |
+| **Google Cloud: restricted-scope verification** (Gmail APIs for production users) | Long lead time (weeks); blocks trustworthy Gmail outside test users. **Incremental OAuth (Gmail then Calendar)** is implemented in repo + Edge; remaining work is mostly **Console + verification + product features** that use Calendar after scopes are granted. | [`.planning/STATE.md`](../.planning/STATE.md) Notes; operator + engineering backlog: [`google-gmail-oauth-verification.md` — Outstanding work](./google-gmail-oauth-verification.md#outstanding-google-integration); redirect URIs per origin in same doc; align Google Cloud OAuth client + Edge secrets + `gmail-oauth-exchange` / refresh flow. |
 | **Org-wide member identity in UI** (email/name for peers) | Team pages and assignee pickers need an RLS-safe source beyond `organization_members` alone | **Shipped:** RPC `list_organization_members_with_identity` (migration `20260415120000_*`) + [`authStore.fetchOrgUsers`](../src/store/authStore.ts). Planning context: [`.planning/codebase/CONCERNS.md`](../.planning/codebase/CONCERNS.md). UX: [`master-design-ui.md` — User profile](./master-design-ui.md#user-profile-display-names). |
 | **Email open/click “truth” for analytics** | Server path: Edge `track-open` / `track-click` → `email_tracking_events` (RLS per sender). **Reports** surfaces server counts for the signed-in user; org-wide manager rollups still future work. | [`.planning/codebase/CONCERNS.md`](../.planning/codebase/CONCERNS.md); [`master-implementation-history.md`](./master-implementation-history.md) Part A §6 + Part B §15–17; Reports UI + [`master-email-operations.md`](./master-email-operations.md). |
 | **Residual research docs naming one host** | Older notes used a single vendor while `DEPLOY-*` intent is neutral | `.planning/research/deploy-testing.md` was **neutralized** (2026-04-16) and points to [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md). Canonical DEPLOY wording remains `.planning/REQUIREMENTS.md` + Phase 10 in `ROADMAP.md`. |
@@ -99,7 +99,7 @@ The app ships **EN** (source), **ES**, and **PT** with full catalogs. **FR, DE, 
 
 ---
 
-*Last updated: 2026-04-22 — Doc bridge: Part B range §13–28; deploy channel wording aligned with Supabase-only runtime (`envChannel`, `supabase.ts`, `deployment-spa-and-env.md`).*
+*Last updated: 2026-04-22 — Doc bridge: Part B range §13–28; deploy channel wording aligned with Supabase-only runtime (`envChannel`, `supabase.ts`, `deployment-spa-and-env.md`). Google gaps row points at [`google-gmail-oauth-verification.md#outstanding-google-integration`](./google-gmail-oauth-verification.md#outstanding-google-integration).*
 
 ---
 

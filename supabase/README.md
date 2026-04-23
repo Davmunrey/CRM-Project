@@ -42,7 +42,7 @@ If you cannot run a shell locally, use the manual workflow **[`.github/workflows
    - *(Recommended)* `WEBHOOK_WORKER_SECRET` — long random string for the `webhook-worker` Edge function
 2. **Actions → “Supabase remote deploy” → Run workflow**.
 
-That applies `supabase/migrations/` to the linked project and deploys **all** Edge Functions used by the app: `webhook-subscriptions`, `webhook-worker`, `api-keys`, `crm-public-api`, `lead-capture`, and `lead-capture-tokens`.
+That applies `supabase/migrations/` to the linked project and deploys Edge Functions used by the app, including webhooks, public API, lead capture, **and** Google/Gmail functions (`google-oauth-start`, `google-integration-status`, `gmail-oauth-exchange`, `gmail-refresh-token`, `gmail-disconnect`) — see the workflow file for the full list.
 
 ### On your machine (CLI)
 
@@ -54,10 +54,11 @@ From the repo root after `npm install` (installs the `supabase` dev dependency):
 4. **Once per project:** `npm run supabase:secrets:set-webhook-worker` — sets Edge secret `WEBHOOK_WORKER_SECRET`. If the env var `WEBHOOK_WORKER_SECRET` is unset, a new random value is generated and printed; save it for GitHub Actions / cron.
 5. `npm run supabase:deploy:webhooks` — deploys `webhook-subscriptions` and `webhook-worker`.
 6. `npm run supabase:deploy:integrations` — deploys `api-keys`, `crm-public-api`, `lead-capture`, and `lead-capture-tokens`.
+7. **Google / Gmail (Settings → Integrations):** `npm run supabase:deploy:google` — deploys `google-oauth-start`, `google-integration-status`, and the Gmail token functions. Operator runbook: [`docs/google-gmail-oauth-verification.md`](../docs/google-gmail-oauth-verification.md#operator-setup-google-oauth). **Open tasks (Console, verification, product):** [`#outstanding-google-integration`](../docs/google-gmail-oauth-verification.md#outstanding-google-integration).
 
 Shortcut for steps 3 + 5 after the first secret setup: `npm run supabase:webhooks:push`.
 
-To deploy **all** Edge Functions (webhooks + integrations): `npm run supabase:deploy:all-edge`.
+To deploy **all** Edge Functions (webhooks + integrations): `npm run supabase:deploy:all-edge` (add `supabase:deploy:google` separately if you use Google connect).
 
 ## API & capture troubleshooting runbook
 

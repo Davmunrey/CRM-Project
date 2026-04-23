@@ -11,10 +11,10 @@ import { useDealsStore } from '../store/dealsStore'
 import { useCompaniesStore } from '../store/companiesStore'
 import { useActivitiesStore } from '../store/activitiesStore'
 import { useAuthStore } from '../store/authStore'
-import { initiateGmailOAuth, GmailApiError, downloadGmailAttachment, modifyGmailThreadLabels, trashGmailThread } from '../services/gmailService'
+import { GmailApiError, downloadGmailAttachment, modifyGmailThreadLabels, trashGmailThread } from '../services/gmailService'
+import { fetchGoogleOAuthStartUrl } from '../services/googleIntegrationService'
 import { useGmailToken } from '../contexts/GmailTokenContext'
 import { supabase } from '../lib/supabase'
-import { useSettingsStore } from '../store/settingsStore'
 import { useViewsStore } from '../store/viewsStore'
 import { EmailComposer } from '../components/email/EmailComposer'
 import { toast } from '../store/toastStore'
@@ -703,8 +703,6 @@ export function Inbox() {
   const companies = useCompaniesStore((s) => s.companies)
   const orgUsers = useAuthStore((s) => s.users)
   const addActivity = useActivitiesStore((s) => s.addActivity)
-  const { settings } = useSettingsStore()
-
   const [folder, setFolder] = useState<'inbox' | 'sent' | 'scheduled' | 'drafts' | 'snoozed'>('inbox')
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null)
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null)
@@ -835,18 +833,13 @@ export function Inbox() {
   }, [listQuery, connected, folder])
 
   const handleConnectGmail = async () => {
-    const clientId = settings.googleClientId
-    if (!clientId) {
-      toast.error(`${t.settings.gmailIntegration} ${t.settings.apiKey}`)
-      return
-    }
     setConnecting(true)
     try {
-      await initiateGmailOAuth(clientId)
-      // Browser will redirect - no further action needed here
+      const url = await fetchGoogleOAuthStartUrl('primary')
+      window.location.assign(url)
     } catch (err) {
       setConnecting(false)
-      toast.error(err instanceof Error ? err.message : t.errors.gmailConnectionError)
+      toast.error(err instanceof Error ? err.message : t.errors.googleIntegrationStartFailed)
     }
   }
 

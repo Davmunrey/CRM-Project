@@ -11,7 +11,7 @@
 | Need **who closes which `[ ]`** (code vs ops vs legal vs evidence) | [`project-state.md` — Checkbox ownership](./project-state.md#checkbox-ownership) |
 | Ship **static hosting** (SPA rewrites, `VITE_APP_CHANNEL`, `VITE_*` Supabase vars, optional API E2E smoke) | [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) |
 | Sequences **flow editor**, `flow_definition` JSON, enrollments, worker stub | [`sequences-flow.md`](./sequences-flow.md) |
-| Start **Google Gmail** restricted-scope verification | [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md) |
+| **Google** OAuth (Client ID/Secret, Supabase Edge, deploy) + Gmail **restricted-scope** verification + **pending checklist** | Setup: [`google-gmail-oauth-verification.md#operator-setup-google-oauth`](./google-gmail-oauth-verification.md#operator-setup-google-oauth) · Pending: [`#outstanding-google-integration`](./google-gmail-oauth-verification.md#outstanding-google-integration) |
 | Run **production smoke** after deploy | [`smoke-checklist-production.md`](./smoke-checklist-production.md) |
 | Own **roadmap / backlog** (30–60–90, GTM matrix) | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
 | Compare **Pipedrive vs Velo**, webhooks parity, group priorities | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) |

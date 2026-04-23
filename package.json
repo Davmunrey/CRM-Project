@@ -36,6 +36,7 @@
     "supabase:secrets:set-webhook-worker": "node scripts/supabase-set-webhook-worker-secret.mjs",
     "supabase:deploy:webhooks": "supabase functions deploy webhook-subscriptions && supabase functions deploy webhook-worker",
     "supabase:deploy:integrations": "supabase functions deploy api-keys && supabase functions deploy crm-public-api && supabase functions deploy lead-capture && supabase functions deploy lead-capture-tokens",
+    "supabase:deploy:google": "supabase functions deploy google-oauth-start && supabase functions deploy google-integration-status && supabase functions deploy gmail-oauth-exchange && supabase functions deploy gmail-refresh-token && supabase functions deploy gmail-disconnect",
     "supabase:deploy:all-edge": "npm run supabase:deploy:webhooks && npm run supabase:deploy:integrations",
     "supabase:webhooks:push": "npm run supabase:db:push && npm run supabase:deploy:webhooks",
     "audit:unused": "npx -y knip --no-progress --exclude exports,nsExports,types,nsTypes,enumMembers,namespaceMembers,duplicates --no-config-hints"

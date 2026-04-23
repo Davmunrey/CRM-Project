@@ -9,7 +9,7 @@
 # Optional (recommended for webhook-worker):
 #   WEBHOOK_WORKER_SECRET   — long random string; same value as cron / WEBHOOK_WORKER_INVOKE_URL consumer
 #
-# This workflow also deploys: api-keys, crm-public-api, lead-capture, lead-capture-tokens (see supabase/README.md).
+# This workflow also deploys: api-keys, crm-public-api, lead-capture, lead-capture-tokens, Google/Gmail functions (see supabase/README.md).
 
 name: Supabase remote deploy
 
@@ -60,3 +60,8 @@ jobs:
           supabase functions deploy crm-public-api
           supabase functions deploy lead-capture
           supabase functions deploy lead-capture-tokens
+          supabase functions deploy google-oauth-start
+          supabase functions deploy google-integration-status
+          supabase functions deploy gmail-oauth-exchange
+          supabase functions deploy gmail-refresh-token
+          supabase functions deploy gmail-disconnect

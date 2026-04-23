@@ -64,6 +64,8 @@ References: [Resend: email authentication for developers](https://resend.com/blo
 
 CRM-specific outbound and inbox behavior (complements the Resend DNS checklist above). Gmail OAuth users still need **SPF, DKIM, and DMARC** on the sending domain (see [Email deliverability (Resend)](#email-deliverability-resend)).
 
+**Operator setup (Google Cloud OAuth client, Supabase Edge secrets, deploy, troubleshooting):** [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md#operator-setup-google-oauth). **What is still to do (Console, verification, Calendar product work):** [`Outstanding work`](./google-gmail-oauth-verification.md#outstanding-google-integration) in the same file.
+
 ### What the app does
 
 - **Gmail API sends** build MIME with `multipart/alternative` (plain + HTML) when HTML is present, which improves compatibility with spam filters compared with HTML-only payloads.

@@ -85,7 +85,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 # VITE_RESEND_SEND_FUNCTION=resend-send-email
 ```
 
-**Deploy:** SPA rewrites, `VITE_APP_CHANNEL`, and Supabase vars per environment are documented in [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md). Gmail OAuth verification: [`docs/google-gmail-oauth-verification.md`](docs/google-gmail-oauth-verification.md). Post-deploy smoke: [`docs/smoke-checklist-production.md`](docs/smoke-checklist-production.md).
+**Deploy:** SPA rewrites, `VITE_APP_CHANNEL`, and Supabase vars per environment are documented in [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md). **Google (Gmail/Calendar) operator setup** (OAuth client, Edge secrets, deploy): [`docs/google-gmail-oauth-verification.md`](docs/google-gmail-oauth-verification.md#operator-setup-google-oauth). Google verification / redirect matrix: same file. Post-deploy smoke: [`docs/smoke-checklist-production.md`](docs/smoke-checklist-production.md).
 Supabase-only runtime (legacy “offline demo” anchor retained for bookmarks): [`docs/deployment-spa-and-env.md#offline-demo-mode`](docs/deployment-spa-and-env.md#offline-demo-mode).
 
 When `VITE_EMAIL_PROVIDER=resend`, deploy Supabase Edge Function `resend-send-email` and set server-side secrets in Supabase:

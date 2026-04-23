@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getPlainRefreshToken } from '../_shared/gmail-refresh-read.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,17 +12,16 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // Verify calling user holds a valid Supabase session
     const callerClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } }
+      { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } },
     )
     const { data: { user }, error: authErr } = await callerClient.auth.getUser()
     if (authErr || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -29,11 +29,10 @@ Deno.serve(async (req: Request) => {
     if (orgErr || !orgId) {
       return new Response(
         JSON.stringify({ error: 'Organization context not found' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
-    // Read the stored refresh token for this user (admin client bypasses RLS for server reads)
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -41,24 +40,34 @@ Deno.serve(async (req: Request) => {
 
     const { data: tokenRow, error: fetchErr } = await adminClient
       .from('gmail_tokens')
-      .select('refresh_token, email_address')
+      .select('refresh_token, refresh_token_cipher, email_address')
       .eq('user_id', user.id)
       .eq('organization_id', orgId)
+      .eq('is_active', true)
       .single()
 
     if (fetchErr || !tokenRow) {
       return new Response(
         JSON.stringify({ error: 'No Gmail connection found for this user' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
-    // Refresh the access token at Google's token endpoint
+    let refreshPlain: string
+    try {
+      refreshPlain = await getPlainRefreshToken(tokenRow)
+    } catch {
+      return new Response(
+        JSON.stringify({ error: 'No Gmail connection found for this user' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
     const refreshRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        refresh_token: tokenRow.refresh_token,
+        refresh_token: refreshPlain,
         client_id: Deno.env.get('GOOGLE_CLIENT_ID')!,
         client_secret: Deno.env.get('GOOGLE_CLIENT_SECRET')!,
         grant_type: 'refresh_token',
@@ -66,11 +75,17 @@ Deno.serve(async (req: Request) => {
     })
 
     if (!refreshRes.ok) {
-      const errBody = await refreshRes.json().catch(() => ({}))
-      // 400 with error=invalid_grant means refresh token was revoked by user
+      const errBody = await refreshRes.json().catch(() => ({})) as { error?: string; error_description?: string }
+      if (errBody.error === 'invalid_grant') {
+        await adminClient
+          .from('gmail_tokens')
+          .update({ is_active: false, revoked_at: new Date().toISOString() })
+          .eq('user_id', user.id)
+          .eq('organization_id', orgId)
+      }
       return new Response(
         JSON.stringify({ error: errBody.error_description ?? 'Token refresh failed', code: errBody.error }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -92,19 +107,18 @@ Deno.serve(async (req: Request) => {
       .eq('user_id', user.id)
       .eq('organization_id', orgId)
 
-    // Return ONLY the new short-lived access token - refresh token stays in the DB
     return new Response(
       JSON.stringify({
         access_token: refreshed.access_token,
         expires_in: refreshed.expires_in,
         email_address: tokenRow.email_address,
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (err) {
     return new Response(
       JSON.stringify({ error: (err as Error).message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   }
 })

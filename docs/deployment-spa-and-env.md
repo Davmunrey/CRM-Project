@@ -46,7 +46,7 @@ Local template: [`.env.example`](../.env.example).
 - Set **`VITE_APP_CHANNEL=staging`** on staging / UAT builds so the UI banner and build-time checks match a non-production Supabase project.
 - Point **staging** builds at a **staging** Supabase project (or isolated branch DB), not production anon keys.
 - Add every **staging and production origin** you use (your real hostnames, e.g. `https://crm-staging.example.com`) to **Supabase Auth → URL configuration** redirect allowlist as needed.
-- Align Gmail OAuth and Edge Function **CORS** with the same origins (see [`.planning/research/gmail-ai-features.md`](../.planning/research/gmail-ai-features.md) if present).
+- Align Gmail OAuth and Edge Function **CORS** with the same origins. **Google OAuth client + Supabase Edge** (secrets, deploy, redirect list): [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md#operator-setup-google-oauth). Optional research context: [`.planning/research/gmail-ai-features.md`](../.planning/research/gmail-ai-features.md) if present.
 
 ## Pipeline and smoke (DEPLOY-04)
 

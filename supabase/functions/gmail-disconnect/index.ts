@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getPlainRefreshToken } from '../_shared/gmail-refresh-read.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,18 +41,27 @@ Deno.serve(async (req: Request) => {
 
     const { data: tokenRow } = await adminClient
       .from('gmail_tokens')
-      .select('access_token, refresh_token')
+      .select('access_token, refresh_token, refresh_token_cipher')
       .eq('user_id', user.id)
       .eq('organization_id', orgId)
       .maybeSingle()
 
-    const revokeToken = tokenRow?.refresh_token ?? tokenRow?.access_token
-    if (revokeToken) {
-      await fetch('https://oauth2.googleapis.com/revoke', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ token: revokeToken }),
-      }).catch(() => null)
+    if (tokenRow) {
+      let revokeToken: string | null = tokenRow.access_token
+      if (!revokeToken) {
+        try {
+          revokeToken = await getPlainRefreshToken(tokenRow)
+        } catch {
+          revokeToken = null
+        }
+      }
+      if (revokeToken) {
+        await fetch('https://oauth2.googleapis.com/revoke', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ token: revokeToken }),
+        }).catch(() => null)
+      }
     }
 
     const { error: deleteErr } = await adminClient

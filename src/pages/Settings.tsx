@@ -24,7 +24,6 @@ import { Tabs } from '../components/ui/Tabs'
 import { ConfirmDialog } from '../components/ui/Modal'
 import { Avatar } from '../components/ui/Avatar'
 import { toast } from '../store/toastStore'
-import { initiateGmailOAuth } from '../services/gmailService'
 import { CSVImport } from '../components/import/CSVImport'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { useNotificationsStore, ALL_NOTIFICATION_TYPES } from '../store/notificationsStore'
@@ -83,7 +82,7 @@ export function Settings() {
   ]
   const { language, setLanguage, languageMode, setLanguageMode } = useI18nStore()
   const resolvedLanguageMode = languageMode ?? 'manual'
-  const { settings, updateThemePreference, updateUiDensity, updateCurrency, updateLeadSlaHours, updatePermissionProfile, updateBranding, updateGoogleClientId, addTag, removeTag, resetToDefaults, reorderStages, addPipelineStage, updateEmailIdentity } = useSettingsStore()
+  const { settings, updateThemePreference, updateUiDensity, updateCurrency, updateLeadSlaHours, updatePermissionProfile, updateBranding, addTag, removeTag, resetToDefaults, reorderStages, addPipelineStage, updateEmailIdentity } = useSettingsStore()
   const { disabledTypes, toggleType } = useNotificationsStore()
   const contactsStore = useContactsStore()
   const companiesStore = useCompaniesStore()
@@ -221,8 +220,6 @@ export function Settings() {
 
   const [newTag, setNewTag] = useState('')
   const [showResetConfirm, setShowResetConfirm] = useState(false)
-  const [googleClientId, setGoogleClientId] = useState(() => settings.googleClientId ?? '')
-  const [connectingGmail, setConnectingGmail] = useState(false)
   const [disconnectingGmail, setDisconnectingGmail] = useState(false)
   const [showCSVImport, setShowCSVImport] = useState(false)
   const [pipelineDraft, setPipelineDraft] = useState<PipelineStage[]>(settings.pipelineStages)
@@ -529,20 +526,6 @@ export function Settings() {
       reader.readAsText(file)
     }
     input.click()
-  }
-
-  const handleConnectGmail = async () => {
-    if (!googleClientId.trim()) { toast.error(t.settings.gmailEnterClientId); return }
-    // Persist client ID via typed settings action.
-    updateGoogleClientId(googleClientId)
-    setConnectingGmail(true)
-    try {
-      await initiateGmailOAuth(googleClientId.trim())
-      // Browser will redirect - no further action needed here
-    } catch (err) {
-      setConnectingGmail(false)
-      toast.error(err instanceof Error ? err.message : t.errors.gmailConnectionError)
-    }
   }
 
   const handleDisconnectGmail = async () => {
@@ -885,27 +868,15 @@ export function Settings() {
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            <Input
-              label={t.email.googleClientIdLabel}
-              value={googleClientId}
-              onChange={(e) => setGoogleClientId(e.target.value)}
-              placeholder={t.settings.placeholderGoogleOAuthClientId}
-            />
-            <Button
-              leftIcon={connectingGmail ? undefined : <Mail size={14} />}
-              loading={connectingGmail}
-              onClick={handleConnectGmail}
+          <div className="space-y-3 max-w-lg">
+            <p className="text-sm text-fg">{t.settings.gmailConnectViaIntegrations}</p>
+            <Link
+              to="/settings/integrations"
+              className="inline-flex items-center justify-center gap-1.5 btn-gradient text-fg font-semibold px-3.5 py-1.5 text-sm rounded-full min-h-control"
             >
-              {t.settings.connect} Gmail
-            </Button>
-            <div className="text-xs text-fg-subtle space-y-1">
-              <p>{t.settings.gmailSetupTitle}</p>
-              <p>{t.settings.gmailSetupStep1} <span className="text-accent-400">console.cloud.google.com</span></p>
-              <p>{t.settings.gmailSetupStep2}</p>
-              <p>{t.settings.gmailSetupStep3}</p>
-              <p>{t.settings.gmailSetupStep4.replace('{origin}', '')} <span className="text-accent-400">http://localhost:5174</span></p>
-            </div>
+              <Mail size={14} className="shrink-0" aria-hidden />
+              {t.settings.gmailOpenIntegrations}
+            </Link>
           </div>
         )}
       </section>

@@ -233,10 +233,19 @@ export interface Database {
           organization_id: string
           email_address: string
           access_token: string | null
-          refresh_token: string
+          refresh_token: string | null
+          refresh_token_cipher: string | null
           token_type: string
           scope: string
           expires_at: string | null
+          google_sub: string | null
+          name: string | null
+          avatar_url: string | null
+          is_active: boolean
+          revoked_at: string | null
+          calendar_sync_token: string | null
+          gmail_history_id: string | null
+          last_synced_at: string | null
           created_at: string
           updated_at: string
         } & Record<string, unknown>
