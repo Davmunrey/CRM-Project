@@ -49,7 +49,7 @@ In the **same** Supabase project as `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KE
 | `GOOGLE_CLIENT_SECRET` | Web client secret |
 | `TOKEN_ENCRYPTION_KEY` | **64 hex characters** (32 bytes). Generate: `openssl rand -hex 32` |
 | `GOOGLE_OAUTH_REDIRECT_URIS` | Comma-separated list of **every** allowed redirect URL (each full `https://…/auth/gmail/callback`), **or** a single `GOOGLE_OAUTH_REDIRECT_URI` if only one origin exists |
-| `EDGE_CORS_ORIGINS` | *(Optional)* Comma-separated **exact** SPA origins allowed to call browser-facing Edge functions with credentials-style CORS (e.g. `https://app.example.com,http://localhost:5173`). When unset, Edge still allows `*` for backward compatibility. Align with every origin where users open Settings → Integrations. Documented in [`.env.example`](../.env.example) and [`master-security-compliance.md`](./master-security-compliance.md#supabase-external-hardening-checklist). |
+| `EDGE_CORS_ORIGINS` | *(Recommended in production)* Comma-separated **exact** browser origins (`scheme://host:port`) allowed to call Google/Gmail Edge functions and other CORS-aware surfaces. When set, a disallowed `Origin` receives **403** `cors_origin_not_allowed`. When unset, `Access-Control-Allow-Origin: *`. Align with every origin where users open Settings → Integrations. Documented in [`.env.example`](../.env.example) and [`master-security-compliance.md`](./master-security-compliance.md#supabase-external-hardening-checklist). |
 
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are provided to Edge at runtime.
 

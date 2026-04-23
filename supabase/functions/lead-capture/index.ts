@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { clientIpFromRequest, rateLimitHit } from '../_shared/edge-rate-limit.ts'
-import { corsHeadersForRequest } from '../_shared/cors-allowlist.ts'
+import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
 
 const MAX_BODY_BYTES = 65_536
 const RATE_MAX = 40
@@ -38,6 +38,18 @@ function respond(
 Deno.serve(async (req: Request) => {
   const requestId = req.headers.get('x-request-id')?.trim() || crypto.randomUUID()
   const startedAt = Date.now()
+  if (isCorsOriginBlocked(req)) {
+    logEvent('warn', requestId, 'cors_blocked', { origin: req.headers.get('Origin') ?? '' })
+    return new Response(
+      JSON.stringify({
+        error: 'Origin not allowed',
+        code: 'cors_origin_not_allowed',
+        status: 403,
+        request_id: requestId,
+      }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
   const cors = corsHeadersForRequest(req, '')
   if (req.method === 'OPTIONS') {
     return new Response('ok', {

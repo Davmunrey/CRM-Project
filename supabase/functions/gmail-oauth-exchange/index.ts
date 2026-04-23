@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { mergeScopeLists, parseScopeString } from '../_shared/google-scopes.ts'
 import { encryptToken, requireTokenEncryptionKey } from '../_shared/token-cipher.ts'
-import { corsHeadersForRequest } from '../_shared/cors-allowlist.ts'
+import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
 
 function decodeJwtPayload(idToken: string): Record<string, unknown> {
   const parts = idToken.split('.')
@@ -28,6 +28,13 @@ type GmailTokenRow = {
 }
 
 Deno.serve(async (req: Request) => {
+  if (isCorsOriginBlocked(req)) {
+    console.warn('gmail-oauth-exchange cors_blocked', { origin: req.headers.get('Origin') ?? '' })
+    return new Response(JSON.stringify({ error: 'Origin not allowed', code: 'cors_origin_not_allowed' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
   const cors = corsHeadersForRequest(req)
   if (req.method === 'OPTIONS') {
     return new Response('ok', {

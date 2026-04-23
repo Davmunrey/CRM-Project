@@ -6,7 +6,7 @@ import {
   scopesIndicateGmail,
   type GoogleScopeBundle,
 } from '../_shared/google-scopes.ts'
-import { corsHeadersForRequest } from '../_shared/cors-allowlist.ts'
+import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
 
 function base64urlEncode(bytes: Uint8Array): string {
   let s = ''
@@ -23,6 +23,13 @@ function getAllowedRedirectUris(): string[] {
 }
 
 Deno.serve(async (req: Request) => {
+  if (isCorsOriginBlocked(req)) {
+    console.warn('google-oauth-start cors_blocked', { origin: req.headers.get('Origin') ?? '' })
+    return new Response(JSON.stringify({ error: 'Origin not allowed', code: 'cors_origin_not_allowed' }), {
+      status: 403,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
   const cors = corsHeadersForRequest(req)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: { ...cors, 'Access-Control-Allow-Methods': 'POST, OPTIONS' } })
