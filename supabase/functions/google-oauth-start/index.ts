@@ -6,11 +6,7 @@ import {
   scopesIndicateGmail,
   type GoogleScopeBundle,
 } from '../_shared/google-scopes.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeadersForRequest } from '../_shared/cors-allowlist.ts'
 
 function base64urlEncode(bytes: Uint8Array): string {
   let s = ''
@@ -27,14 +23,15 @@ function getAllowedRedirectUris(): string[] {
 }
 
 Deno.serve(async (req: Request) => {
+  const cors = corsHeadersForRequest(req)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: { ...cors, 'Access-Control-Allow-Methods': 'POST, OPTIONS' } })
   }
 
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 
@@ -48,7 +45,7 @@ Deno.serve(async (req: Request) => {
     if (authErr || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
@@ -56,7 +53,7 @@ Deno.serve(async (req: Request) => {
     if (orgErr || !orgId) {
       return new Response(JSON.stringify({ error: 'Organization context not found' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
@@ -65,7 +62,7 @@ Deno.serve(async (req: Request) => {
     if (!redirectUri) {
       return new Response(JSON.stringify({ error: 'redirect_uri is required' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
@@ -73,7 +70,7 @@ Deno.serve(async (req: Request) => {
     if (bundleRaw !== 'primary' && bundleRaw !== 'calendar') {
       return new Response(JSON.stringify({ error: 'Invalid bundle (use primary or calendar)' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
     const bundle = bundleRaw as GoogleScopeBundle
@@ -82,13 +79,13 @@ Deno.serve(async (req: Request) => {
     if (allowed.length === 0) {
       return new Response(
         JSON.stringify({ error: 'Server missing GOOGLE_OAUTH_REDIRECT_URI or GOOGLE_OAUTH_REDIRECT_URIS' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
     if (!allowed.includes(redirectUri)) {
       return new Response(JSON.stringify({ error: 'redirect_uri is not allowed' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
@@ -96,7 +93,7 @@ Deno.serve(async (req: Request) => {
     if (!clientId) {
       return new Response(JSON.stringify({ error: 'Server missing GOOGLE_CLIENT_ID' }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
@@ -122,13 +119,13 @@ Deno.serve(async (req: Request) => {
       if (!hasActiveGmail) {
         return new Response(
           JSON.stringify({ error: 'Connect Google (Gmail) first before enabling Calendar.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       if (hasActiveCalendar) {
         return new Response(
           JSON.stringify({ error: 'Calendar is already connected for this account.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
     }
@@ -161,9 +158,10 @@ Deno.serve(async (req: Request) => {
       bundle,
     })
     if (insErr) {
-      return new Response(JSON.stringify({ error: insErr.message }), {
+      console.error(JSON.stringify({ event: 'google_oauth_state_insert', error: insErr.message }))
+      return new Response(JSON.stringify({ error: 'Could not start OAuth' }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
@@ -188,11 +186,12 @@ Deno.serve(async (req: Request) => {
     }
 
     const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
-    return new Response(JSON.stringify({ url }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    return new Response(JSON.stringify({ url }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } })
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), {
+    console.error(JSON.stringify({ event: 'google_oauth_start_unhandled', error: (err as Error).message }))
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
     })
   }
 })

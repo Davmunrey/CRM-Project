@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { v4 as uuidv4 } from 'uuid'
 import type { Attachment } from '../types'
 
 interface AttachmentsStore {
@@ -19,7 +18,7 @@ export const useAttachmentsStore = create<AttachmentsStore>()(
       addAttachment: (data) => {
         const attachment: Attachment = {
           ...data,
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           uploadedAt: new Date().toISOString(),
         }
         set((s) => ({ attachments: [...s.attachments, attachment] }))

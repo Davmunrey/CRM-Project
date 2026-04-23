@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { v4 as uuidv4 } from 'uuid'
 
 export type DistributionListEntity = 'contact' | 'company'
 
@@ -28,7 +27,7 @@ export const useDistributionListsStore = create<DistributionListsStore>()(
 
       addList: (data) => {
         const ts = new Date().toISOString()
-        const list: DistributionList = { ...data, id: uuidv4(), createdAt: ts, updatedAt: ts }
+        const list: DistributionList = { ...data, id: crypto.randomUUID(), createdAt: ts, updatedAt: ts }
         set((s) => ({ lists: [...s.lists, list] }))
         return list
       },

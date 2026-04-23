@@ -1,11 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { mergeScopeLists, parseScopeString } from '../_shared/google-scopes.ts'
 import { encryptToken, requireTokenEncryptionKey } from '../_shared/token-cipher.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeadersForRequest } from '../_shared/cors-allowlist.ts'
 
 function decodeJwtPayload(idToken: string): Record<string, unknown> {
   const parts = idToken.split('.')
@@ -32,8 +28,11 @@ type GmailTokenRow = {
 }
 
 Deno.serve(async (req: Request) => {
+  const cors = corsHeadersForRequest(req)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', {
+      headers: { ...cors, 'Access-Control-Allow-Methods': 'POST, OPTIONS' },
+    })
   }
 
   try {
@@ -48,7 +47,7 @@ Deno.serve(async (req: Request) => {
     if (!code || !redirect_uri) {
       return new Response(
         JSON.stringify({ error: 'code and redirect_uri are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -61,7 +60,7 @@ Deno.serve(async (req: Request) => {
     if (authErr || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -69,7 +68,7 @@ Deno.serve(async (req: Request) => {
     if (orgErr || !orgId) {
       return new Response(
         JSON.stringify({ error: 'Organization context not found' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -100,26 +99,26 @@ Deno.serve(async (req: Request) => {
       if (stErr || !st) {
         return new Response(
           JSON.stringify({ error: 'Invalid or expired OAuth state. Please try again.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       if (st.user_id !== user.id) {
         return new Response(
           JSON.stringify({ error: 'state_mismatch' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       if (st.redirect_uri !== redirect_uri) {
         return new Response(
           JSON.stringify({ error: 'redirect_uri_mismatch' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       if (new Date(st.expires_at) < new Date()) {
         await adminClient.from('google_oauth_states').delete().eq('state', body.state)
         return new Response(
           JSON.stringify({ error: 'OAuth state expired. Please try again.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       codeVerifier = st.code_verifier
@@ -129,7 +128,7 @@ Deno.serve(async (req: Request) => {
     if (!codeVerifier) {
       return new Response(
         JSON.stringify({ error: 'code_verifier or state is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -150,7 +149,7 @@ Deno.serve(async (req: Request) => {
       const errBody = await tokenRes.json().catch(() => ({})) as { error_description?: string }
       return new Response(
         JSON.stringify({ error: errBody.error_description ?? 'Google token exchange failed' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -169,7 +168,7 @@ Deno.serve(async (req: Request) => {
         JSON.stringify({
           error: 'No refresh_token returned. Try again from Settings, or revoke Velo at myaccount.google.com/permissions and reconnect.',
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -184,7 +183,7 @@ Deno.serve(async (req: Request) => {
     } else {
       return new Response(
         JSON.stringify({ error: 'No refresh_token available' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -206,21 +205,21 @@ Deno.serve(async (req: Request) => {
       if (aud !== clientId) {
         return new Response(
           JSON.stringify({ error: 'id_token audience mismatch' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       const iss = String(payload.iss ?? '')
       if (iss !== 'https://accounts.google.com' && iss !== 'accounts.google.com') {
         return new Response(
           JSON.stringify({ error: 'id_token issuer invalid' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       const exp = Number(payload.exp ?? 0)
       if (exp * 1000 < Date.now() - 60_000) {
         return new Response(
           JSON.stringify({ error: 'id_token expired' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       const sub = String(payload.sub ?? '')
@@ -228,7 +227,7 @@ Deno.serve(async (req: Request) => {
       if (!sub || !em) {
         return new Response(
           JSON.stringify({ error: 'identity_missing' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       const veloEmail = (user.email ?? '').toLowerCase()
@@ -237,7 +236,7 @@ Deno.serve(async (req: Request) => {
           JSON.stringify({
             error: 'Google account email must match your Velo login email. Use the Google account for ' + user.email,
           }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
         )
       }
       googleSub = sub
@@ -262,7 +261,7 @@ Deno.serve(async (req: Request) => {
               JSON.stringify({
                 error: 'Google account email must match your Velo login email. Use the Google account for ' + user.email,
               }),
-              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+              { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
             )
           }
           googleSub = uj.sub
@@ -284,7 +283,7 @@ Deno.serve(async (req: Request) => {
               JSON.stringify({
                 error: 'Google account email must match your Velo login email. Use the Google account for ' + user.email,
               }),
-              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+              { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
             )
           }
           email = profile.emailAddress
@@ -301,7 +300,7 @@ Deno.serve(async (req: Request) => {
         } else {
           return new Response(
             JSON.stringify({ error: 'Could not resolve Google identity (no id_token). Try primary connect again.' }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+            { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
           )
         }
       }
@@ -310,7 +309,7 @@ Deno.serve(async (req: Request) => {
     if (!email || !googleSub) {
       return new Response(
         JSON.stringify({ error: 'identity_missing' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -338,9 +337,10 @@ Deno.serve(async (req: Request) => {
       )
 
     if (upsertErr) {
+      console.error('gmail-oauth-exchange upsert', upsertErr)
       return new Response(
-        JSON.stringify({ error: upsertErr.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ error: 'Internal server error' }),
+        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -350,19 +350,26 @@ Deno.serve(async (req: Request) => {
         expires_in: tokens.expires_in,
         email_address: email,
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } },
     )
   } catch (err) {
-    const msg = (err as Error).message
+    console.error('gmail-oauth-exchange', err)
+    const msg = (err as Error).message ?? ''
     if (msg.includes('TOKEN_ENCRYPTION_KEY')) {
       return new Response(
-        JSON.stringify({ error: msg }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ error: 'Server misconfigured' }),
+        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
+      )
+    }
+    if (msg === 'invalid_id_token') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid request' }),
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
     return new Response(
-      JSON.stringify({ error: msg }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
     )
   }
 })

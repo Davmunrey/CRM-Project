@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { EmailSequence, SequenceEnrollment, EnrollmentStatus, SequenceFlowDefinition, SequenceStep } from '../types'
 import { computeEnrollmentStart } from '../features/sequences-flow/sequenceFlowEnrollment'
 import {
@@ -265,7 +264,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
       ...data,
       steps,
       flowDefinition: flow,
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       createdAt: now,
       enrolledCount: 0,
       stopOnContactReply: data.stopOnContactReply !== false,
@@ -331,7 +330,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
     d.setDate(d.getDate() + totalDelayDays)
     const nextStepAt = d.toISOString()
     const enrollment: SequenceEnrollment = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       sequenceId,
       contactId,
       contactName,

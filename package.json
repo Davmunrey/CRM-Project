@@ -37,7 +37,8 @@
     "supabase:deploy:webhooks": "supabase functions deploy webhook-subscriptions && supabase functions deploy webhook-worker",
     "supabase:deploy:integrations": "supabase functions deploy api-keys && supabase functions deploy crm-public-api && supabase functions deploy lead-capture && supabase functions deploy lead-capture-tokens",
     "supabase:deploy:google": "supabase functions deploy google-oauth-start && supabase functions deploy google-integration-status && supabase functions deploy gmail-oauth-exchange && supabase functions deploy gmail-refresh-token && supabase functions deploy gmail-disconnect",
-    "supabase:deploy:all-edge": "npm run supabase:deploy:webhooks && npm run supabase:deploy:integrations",
+    "supabase:deploy:all-functions": "supabase functions deploy api-keys && supabase functions deploy create-org && supabase functions deploy crm-public-api && supabase functions deploy ensure-tenant && supabase functions deploy gmail-disconnect && supabase functions deploy gmail-oauth-exchange && supabase functions deploy gmail-refresh-token && supabase functions deploy google-integration-status && supabase functions deploy google-oauth-start && supabase functions deploy invite-member && supabase functions deploy lead-capture && supabase functions deploy lead-capture-tokens && supabase functions deploy lead-score-maintenance && supabase functions deploy promote-lead && supabase functions deploy resend-send-email && supabase functions deploy sequence-advance && supabase functions deploy track-click && supabase functions deploy track-open && supabase functions deploy webhook-subscriptions && supabase functions deploy webhook-worker",
+    "supabase:deploy:all-edge": "npm run supabase:deploy:all-functions",
     "supabase:webhooks:push": "npm run supabase:db:push && npm run supabase:deploy:webhooks",
     "audit:unused": "npx -y knip --no-progress --exclude exports,nsExports,types,nsTypes,enumMembers,namespaceMembers,duplicates --no-config-hints"
   },
@@ -47,6 +48,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/dompurify": "^3.0.5",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^6.0.1",
@@ -72,9 +74,9 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@supabase/supabase-js": "^2.100.1",
-    "@types/uuid": "^10.0.0",
     "@xyflow/react": "^12.10.2",
     "date-fns": "^4.1.0",
+    "dompurify": "^3.4.1",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.577.0",
@@ -83,7 +85,6 @@
     "react-hook-form": "^7.71.2",
     "react-router-dom": "^6.30.3",
     "recharts": "^3.8.0",
-    "uuid": "^13.0.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   }

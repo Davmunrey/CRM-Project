@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { CRMNotification, NotificationType } from '../types'
 import { useAuthStore } from './authStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
@@ -104,7 +103,7 @@ export const useNotificationsStore = create<NotificationsStore>()(
       if (get().disabledTypes.has(type)) return
       const currentUser = useAuthStore.getState().currentUser
       const notification: CRMNotification = {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         type,
         title,
         message,

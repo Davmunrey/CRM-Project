@@ -86,6 +86,8 @@ try {
 }
 
 for (const name of mdOnDisk) {
+  /** Optional local-only audits; gitignored — see `.gitignore` `docs/security-audit-*.md`. */
+  if (name.startsWith('security-audit-')) continue
   if (!DOCS_MD_ALLOWLIST.has(name)) {
     errors.push(
       `Unexpected docs/*.md: docs/${name}. Either merge into a master, add to DOCS_MD_ALLOWLIST in scripts/verify-docs-consolidation.mjs, or remove it.`,

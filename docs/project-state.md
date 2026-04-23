@@ -28,7 +28,7 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 
 1. **SPA routing** — every client-side route must resolve to the built `index.html` on cold load (configure the static host or reverse proxy accordingly). **Repo examples:** [`vercel.json`](../vercel.json), [`public/_redirects`](../public/_redirects) — explained in [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md).
 2. **Build-time env** — `VITE_APP_CHANNEL` when set is **`production`** or **`staging`** (otherwise inferred from Vite `MODE`; local dev → `development`); plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for real hosted builds. See [`src/lib/envChannel.ts`](../src/lib/envChannel.ts), [`src/lib/supabase.ts`](../src/lib/supabase.ts), and [`vite.config.ts`](../vite.config.ts). Canonical copy: [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md) and [`.env.example`](../.env.example).
-3. **Preview ↔ Supabase** — set **`VITE_APP_CHANNEL=staging`** on preview builds and point keys at a **non-production** Supabase project; add preview origins and OAuth redirects to Supabase Auth allowlists and Edge Function CORS (see research in `.planning/research/` if present).
+3. **Preview ↔ Supabase** — set **`VITE_APP_CHANNEL=staging`** on preview builds and point keys at a **non-production** Supabase project; add preview origins and OAuth redirects to Supabase Auth allowlists; optionally set Edge secret **`EDGE_CORS_ORIGINS`** so Edge CORS matches those origins (see [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) · [`master-security-compliance.md` §3](./master-security-compliance.md#supabase-external-hardening-checklist)).
 4. **Production pipeline** — deploy from protected `main` (or your release branch) with a recorded smoke pass — [`docs/smoke-checklist-production.md`](./smoke-checklist-production.md).
 5. **Custom domain + TLS** — DNS and certificate as required by your provider.
 
@@ -79,6 +79,7 @@ The app ships **EN** (source), **ES**, and **PT** with full catalogs. **FR, DE, 
 
 - Deploy intent (vendor-neutral): [`deployment-spa-and-env.md`](./deployment-spa-and-env.md)
 - Milestones: [`.planning/ROADMAP.md`](../.planning/ROADMAP.md) · [`.planning/STATE.md`](../.planning/STATE.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md)
+- **Internal security audit snapshots** (optional, **gitignored** — do not publish): filename pattern `docs/security-audit-*.md` (see `.gitignore`). Latest example generated in-repo: `docs/security-audit-2026-04.md` — keep on disk for operators or store outside git if policy requires.
 
 ---
 

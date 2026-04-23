@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { Lead, LeadLifecycleStage } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getOrgId } from '../lib/supabaseHelpers'
@@ -184,7 +183,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
   addLead: (leadData) => {
     const now = new Date().toISOString()
     const optimistic: Lead = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       firstName: leadData.firstName,
       lastName: leadData.lastName,
       email: leadData.email,
@@ -460,7 +459,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
           ...s.leadEventsByLeadId,
           [leadId]: [
             {
-              id: uuidv4(),
+              id: crypto.randomUUID(),
               eventType,
               metadata,
               createdAt: now,

@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { AutomationExecutionLog, AutomationRule, AutomationTriggerType, Deal, DealStage } from '../types'
 import { useActivitiesStore } from './activitiesStore'
 import { useNotificationsStore } from './notificationsStore'
@@ -95,7 +94,7 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
 
   addRule: (ruleData) => {
     const ts = new Date().toISOString()
-    const rule: AutomationRule = { ...ruleData, id: uuidv4(), executionCount: 0, createdAt: ts, updatedAt: ts }
+    const rule: AutomationRule = { ...ruleData, id: crypto.randomUUID(), executionCount: 0, createdAt: ts, updatedAt: ts }
     set((s) => ({ rules: [...s.rules, rule] }))
     if (isSupabaseConfigured && supabase) {
       runSupabaseWrite(
@@ -233,7 +232,7 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
         )
       }
       const localLog: AutomationExecutionLog = {
-        id: uuidv4(),
+        id: crypto.randomUUID(),
         ruleId: rule.id,
         triggerType,
         status,

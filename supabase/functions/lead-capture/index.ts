@@ -1,9 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { clientIpFromRequest, rateLimitHit } from '../_shared/edge-rate-limit.ts'
+import { corsHeadersForRequest } from '../_shared/cors-allowlist.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type',
-}
+const MAX_BODY_BYTES = 65_536
+const RATE_MAX = 40
+const RATE_WINDOW_MS = 3_600_000
 
 async function sha256Hex(message: string): Promise<string> {
   const data = new TextEncoder().encode(message)
@@ -26,27 +27,33 @@ function respond(
   requestId: string,
   status: number,
   payload: Record<string, unknown>,
+  cors: Record<string, string>,
 ): Response {
   return new Response(JSON.stringify({ ...payload, status, request_id: requestId }), {
     status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    headers: { ...cors, 'Content-Type': 'application/json' },
   })
 }
 
 Deno.serve(async (req: Request) => {
   const requestId = req.headers.get('x-request-id')?.trim() || crypto.randomUUID()
   const startedAt = Date.now()
+  const cors = corsHeadersForRequest(req, '')
   if (req.method === 'OPTIONS') {
     return new Response('ok', {
-      headers: { ...corsHeaders, 'Access-Control-Allow-Methods': 'POST, OPTIONS' },
+      headers: { ...cors, 'Access-Control-Allow-Methods': 'POST, OPTIONS' },
     })
   }
   if (req.method !== 'POST') {
-    return respond(requestId, 405, { error: 'Method not allowed', code: 'method_not_allowed' })
+    return respond(requestId, 405, { error: 'Method not allowed', code: 'method_not_allowed' }, cors)
   }
 
   try {
-    const body = (await req.json()) as {
+    const rawBody = await req.text()
+    if (rawBody.length > MAX_BODY_BYTES) {
+      return respond(requestId, 413, { error: 'Payload too large', code: 'payload_too_large' }, cors)
+    }
+    let body: {
       token?: string
       first_name?: string
       last_name?: string
@@ -56,16 +63,21 @@ Deno.serve(async (req: Request) => {
       notes?: string
       website?: string
     }
+    try {
+      body = JSON.parse(rawBody || '{}') as typeof body
+    } catch {
+      return respond(requestId, 400, { error: 'Invalid JSON', code: 'validation_error' }, cors)
+    }
 
     const rawToken = (body.token ?? '').trim()
     if (!rawToken.startsWith('lct_')) {
       logEvent('warn', requestId, 'token_validation_failed', { reason: 'invalid_token_format' })
-      return respond(requestId, 401, { error: 'Invalid token', code: 'unauthorized' })
+      return respond(requestId, 401, { error: 'Invalid token', code: 'unauthorized' }, cors)
     }
 
     if (body.website && String(body.website).trim() !== '') {
       logEvent('log', requestId, 'honeypot_triggered', { result: 'ignored' })
-      return respond(requestId, 200, { ok: true })
+      return respond(requestId, 200, { ok: true }, cors)
     }
 
     const first = (body.first_name ?? '').trim()
@@ -75,10 +87,30 @@ Deno.serve(async (req: Request) => {
       return respond(requestId, 400, {
         error: 'first_name, last_name, and email are required',
         code: 'validation_error',
-      })
+      }, cors)
     }
 
     const tokenHash = await sha256Hex(rawToken)
+    const ip = clientIpFromRequest(req)
+    const rlKey = `lead_capture:${tokenHash}:${ip}`
+    const retry = rateLimitHit(rlKey, RATE_MAX, RATE_WINDOW_MS)
+    if (retry !== null) {
+      logEvent('warn', requestId, 'rate_limited', { retry_after_s: retry })
+      return new Response(
+        JSON.stringify({
+          error: 'Too many requests',
+          code: 'rate_limited',
+          status: 429,
+          request_id: requestId,
+          retry_after_s: retry,
+        }),
+        {
+          status: 429,
+          headers: { ...cors, 'Content-Type': 'application/json', 'Retry-After': String(retry) },
+        },
+      )
+    }
+
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -92,7 +124,7 @@ Deno.serve(async (req: Request) => {
 
     if (tErr || !tok || !tok.enabled) {
       logEvent('warn', requestId, 'token_validation_failed', { reason: 'invalid_or_disabled_token' })
-      return respond(requestId, 401, { error: 'Invalid or disabled token', code: 'unauthorized' })
+      return respond(requestId, 401, { error: 'Invalid or disabled token', code: 'unauthorized' }, cors)
     }
 
     const orgId = tok.organization_id as string
@@ -121,10 +153,10 @@ Deno.serve(async (req: Request) => {
           status: 200,
           latency_ms: Date.now() - startedAt,
         })
-        return respond(requestId, 200, { ok: true, duplicate: true })
+        return respond(requestId, 200, { ok: true, duplicate: true }, cors)
       }
       logEvent('error', requestId, 'lead_insert_failed', { organization_id: orgId, error: msg })
-      return respond(requestId, 400, { error: msg, code: 'insert_failed' })
+      return respond(requestId, 400, { error: 'Could not create lead', code: 'insert_failed' }, cors)
     }
 
     logEvent('log', requestId, 'lead_insert_success', {
@@ -135,10 +167,10 @@ Deno.serve(async (req: Request) => {
       latency_ms: Date.now() - startedAt,
       lead_id: lead?.id ?? null,
     })
-    return respond(requestId, 200, { ok: true, leadId: lead?.id })
+    return respond(requestId, 200, { ok: true, leadId: lead?.id }, cors)
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     logEvent('error', requestId, 'unhandled_exception', { error: msg })
-    return respond(requestId, 500, { error: msg, code: 'internal_error' })
+    return respond(requestId, 500, { error: 'Internal error', code: 'internal_error' }, cors)
   }
 })

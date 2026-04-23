@@ -20,13 +20,16 @@ import {
   List,
   ListOrdered,
 } from 'lucide-react'
+import DOMPurify from 'dompurify'
 import { useTranslations } from '../../i18n'
 import { Button } from '../ui/Button'
 
-function stripDangerousHtml(html: string): string {
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/\son\w+\s*=/gi, ' data-removed=')
+/** Rich-text signature preview / persistence: strip XSS while keeping links, lists, and data-URL images. */
+function sanitizeSignatureHtml(html: string): string {
+  return DOMPurify.sanitize(html ?? '', {
+    USE_PROFILES: { html: true },
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+  })
 }
 
 function hasPreviewableSignature(html: string): boolean {
@@ -73,13 +76,13 @@ export const SignatureRichEditor = forwardRef<SignatureRichEditorHandle, Signatu
     const [empty, setEmpty] = useState(() => !value?.trim())
     const [focused, setFocused] = useState(false)
 
-    const previewHtml = useMemo(() => stripDangerousHtml(value ?? ''), [value])
+    const previewHtml = useMemo(() => sanitizeSignatureHtml(value ?? ''), [value])
     const showPreview = useMemo(() => hasPreviewableSignature(value ?? ''), [value])
 
     const emit = useCallback(() => {
       const el = editorRef.current
       if (!el) return
-      let html = stripDangerousHtml(el.innerHTML)
+      let html = sanitizeSignatureHtml(el.innerHTML)
       const text = el.innerText?.replace(/\u00a0/g, ' ').trim() ?? ''
       const hasImg = Boolean(el.querySelector('img'))
       if (!text && !hasImg) {

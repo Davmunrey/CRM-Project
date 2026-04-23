@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { Activity, ActivityFilters } from '../types'
 import { useAuditStore } from './auditStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
@@ -117,7 +116,7 @@ export const useActivitiesStore = create<ActivitiesState>()(
 
     addActivity: (activityData) => {
       const now = new Date().toISOString()
-      const id = uuidv4()
+      const id = crypto.randomUUID()
       const activity: Activity = { ...activityData, id, createdAt: now }
       set((state) => ({ activities: [activity, ...state.activities] }))
       useAuditStore.getState().logAction('activity_created', 'activity', activity.id, activity.subject, getTranslations().auditMessages.activityCreated)

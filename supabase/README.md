@@ -42,7 +42,7 @@ If you cannot run a shell locally, use the manual workflow **[`.github/workflows
    - *(Recommended)* `WEBHOOK_WORKER_SECRET` — long random string for the `webhook-worker` Edge function
 2. **Actions → “Supabase remote deploy” → Run workflow**.
 
-That applies `supabase/migrations/` to the linked project and deploys Edge Functions used by the app, including webhooks, public API, lead capture, **and** Google/Gmail functions (`google-oauth-start`, `google-integration-status`, `gmail-oauth-exchange`, `gmail-refresh-token`, `gmail-disconnect`) — see the workflow file for the full list.
+That applies `supabase/migrations/` to the linked project and deploys **all** Edge Functions via `npm run supabase:deploy:all-functions` (same list as root `package.json`: webhooks, public API, lead capture, Google/Gmail, email, tracking, org/tenant helpers, sequences, maintenance — see [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml)).
 
 ### On your machine (CLI)
 
@@ -52,13 +52,17 @@ From the repo root after `npm install` (installs the `supabase` dev dependency):
 2. `npm run supabase:link -- --project-ref <your-project-ref>` — links the repo to the project (creates local config under `.supabase/`, gitignored).
 3. `npm run supabase:db:push` — applies pending SQL in `supabase/migrations/` to the linked remote database (review with `supabase db diff` if you use a branching workflow).
 4. **Once per project:** `npm run supabase:secrets:set-webhook-worker` — sets Edge secret `WEBHOOK_WORKER_SECRET`. If the env var `WEBHOOK_WORKER_SECRET` is unset, a new random value is generated and printed; save it for GitHub Actions / cron.
-5. `npm run supabase:deploy:webhooks` — deploys `webhook-subscriptions` and `webhook-worker`.
-6. `npm run supabase:deploy:integrations` — deploys `api-keys`, `crm-public-api`, `lead-capture`, and `lead-capture-tokens`.
-7. **Google / Gmail (Settings → Integrations):** `npm run supabase:deploy:google` — deploys `google-oauth-start`, `google-integration-status`, and the Gmail token functions. Operator runbook: [`docs/google-gmail-oauth-verification.md`](../docs/google-gmail-oauth-verification.md#operator-setup-google-oauth). **Open tasks (Console, verification, product):** [`#outstanding-google-integration`](../docs/google-gmail-oauth-verification.md#outstanding-google-integration).
+5. **Deploy Edge Functions** — pick one:
+   - **Everything (recommended after pulling security or infra changes):** `npm run supabase:deploy:all-functions` — deploys all functions in the repo (`api-keys`, `create-org`, `crm-public-api`, `ensure-tenant`, Gmail/Google suite, `invite-member`, `lead-capture`, `lead-capture-tokens`, `lead-score-maintenance`, `promote-lead`, `resend-send-email`, `sequence-advance`, `track-click`, `track-open`, `webhook-subscriptions`, `webhook-worker`).
+   - **Partial bundles:** `npm run supabase:deploy:webhooks` · `npm run supabase:deploy:integrations` · `npm run supabase:deploy:google` (same names as in `package.json`).
 
-Shortcut for steps 3 + 5 after the first secret setup: `npm run supabase:webhooks:push`.
+Operator runbook (Google secrets + redirect matrix): [`docs/google-gmail-oauth-verification.md`](../docs/google-gmail-oauth-verification.md#operator-setup-google-oauth). **Open tasks (Console, verification, product):** [`#outstanding-google-integration`](../docs/google-gmail-oauth-verification.md#outstanding-google-integration).
 
-To deploy **all** Edge Functions (webhooks + integrations): `npm run supabase:deploy:all-edge` (add `supabase:deploy:google` separately if you use Google connect).
+Optional Edge secret **`EDGE_CORS_ORIGINS`:** comma-separated exact browser origins for tightened CORS on browser-called functions — see [`.env.example`](../.env.example) and [`docs/master-security-compliance.md`](../docs/master-security-compliance.md#supabase-external-hardening-checklist).
+
+Shortcut for steps 3 + webhooks after the first secret setup: `npm run supabase:webhooks:push`.
+
+`npm run supabase:deploy:all-edge` is an **alias** for `supabase:deploy:all-functions` (full deploy, not only webhooks + integrations).
 
 ## API & capture troubleshooting runbook
 
@@ -128,4 +132,4 @@ If either secret is missing, the job exits successfully without calling the work
 
 ---
 
-*Last updated (git): **2026-04-21***
+*Last updated (git): **2026-04-22** — full-function deploy script, `EDGE_CORS_ORIGINS`, GitHub remote deploy uses `npm run supabase:deploy:all-functions`.*

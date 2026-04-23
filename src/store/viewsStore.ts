@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { v4 as uuidv4 } from 'uuid'
 import type { SmartView, SmartViewFilter, CustomFieldEntityType, InboxSavedView, InboxAdvancedFilters } from '../types'
 
 const LEGACY_NAMEKEY_BY_ID: Record<string, NonNullable<SmartView['nameKey']>> = {
@@ -87,7 +86,7 @@ export const useViewsStore = create<ViewsStore>()(
 
       addView: (viewData) => {
         const ts = new Date().toISOString()
-        const view: SmartView = { ...viewData, id: uuidv4(), createdAt: ts, updatedAt: ts }
+        const view: SmartView = { ...viewData, id: crypto.randomUUID(), createdAt: ts, updatedAt: ts }
         set((s) => ({ views: [...s.views, view] }))
         return view
       },
@@ -139,7 +138,7 @@ export const useViewsStore = create<ViewsStore>()(
       addInboxView: (name, query, filters) => {
         const ts = new Date().toISOString()
         const view: InboxSavedView = {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           name: name.trim(),
           query,
           filters,

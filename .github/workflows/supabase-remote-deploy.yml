@@ -9,7 +9,7 @@
 # Optional (recommended for webhook-worker):
 #   WEBHOOK_WORKER_SECRET   — long random string; same value as cron / WEBHOOK_WORKER_INVOKE_URL consumer
 #
-# This workflow also deploys: api-keys, crm-public-api, lead-capture, lead-capture-tokens, Google/Gmail functions (see supabase/README.md).
+# After DB push, deploys all Edge Functions via `npm run supabase:deploy:all-functions` (see package.json + supabase/README.md).
 
 name: Supabase remote deploy
 
@@ -30,6 +30,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install npm dependencies
+        run: npm ci
 
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
@@ -52,16 +61,5 @@ jobs:
           fi
           supabase secrets set "WEBHOOK_WORKER_SECRET=${WEBHOOK_WORKER_SECRET}"
 
-      - name: Deploy Edge Functions (webhooks + integrations)
-        run: |
-          supabase functions deploy webhook-subscriptions
-          supabase functions deploy webhook-worker
-          supabase functions deploy api-keys
-          supabase functions deploy crm-public-api
-          supabase functions deploy lead-capture
-          supabase functions deploy lead-capture-tokens
-          supabase functions deploy google-oauth-start
-          supabase functions deploy google-integration-status
-          supabase functions deploy gmail-oauth-exchange
-          supabase functions deploy gmail-refresh-token
-          supabase functions deploy gmail-disconnect
+      - name: Deploy Edge Functions (full set)
+        run: npm run supabase:deploy:all-functions

@@ -1,14 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getPlainRefreshToken } from '../_shared/gmail-refresh-read.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeadersForRequest } from '../_shared/cors-allowlist.ts'
 
 Deno.serve(async (req: Request) => {
+  const cors = corsHeadersForRequest(req)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', {
+      headers: { ...cors, 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' },
+    })
   }
 
   try {
@@ -22,7 +21,7 @@ Deno.serve(async (req: Request) => {
     if (authErr || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -30,7 +29,7 @@ Deno.serve(async (req: Request) => {
     if (orgErr || !orgId) {
       return new Response(
         JSON.stringify({ error: 'Organization context not found' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -71,20 +70,22 @@ Deno.serve(async (req: Request) => {
       .eq('organization_id', orgId)
 
     if (deleteErr) {
+      console.error('gmail-disconnect delete', deleteErr)
       return new Response(
-        JSON.stringify({ error: deleteErr.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        JSON.stringify({ error: 'Internal server error' }),
+        { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
     return new Response(
       JSON.stringify({ ok: true }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } },
     )
   } catch (err) {
+    console.error('gmail-disconnect', err)
     return new Response(
-      JSON.stringify({ error: (err as Error).message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
     )
   }
 })

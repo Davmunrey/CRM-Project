@@ -19,7 +19,8 @@ Optional checked-in artifacts (use only if they match a host you actually use):
 | Artifact | Host / CDN |
 |----------|------------|
 | [`public/_redirects`](../public/_redirects) (`/*` → `/index.html` `200`) | Netlify; copied to `dist/` by Vite |
-| [`vercel.json`](../vercel.json) (`rewrites` → `index.html`) | Legacy reference only — **not** required for private deploys |
+| [`public/_headers`](../public/_headers) | Netlify (and similar) — baseline security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`); copied to `dist/` by Vite |
+| [`vercel.json`](../vercel.json) | SPA **rewrites** to `index.html` when you host on Vercel; also sets the **same baseline security headers** for HTML/asset responses on that platform. For fully private static hosting, mirror the header intent in nginx/Caddy (see [Supabase external checklist — SPA transport](./master-security-compliance.md#supabase-external-hardening-checklist)). |
 
 **Verify after deploy:** open `/deals` and `/settings` in a new tab (hard refresh). You should see the app shell or auth redirect, never a raw `404` HTML page from the CDN.
 
@@ -46,7 +47,7 @@ Local template: [`.env.example`](../.env.example).
 - Set **`VITE_APP_CHANNEL=staging`** on staging / UAT builds so the UI banner and build-time checks match a non-production Supabase project.
 - Point **staging** builds at a **staging** Supabase project (or isolated branch DB), not production anon keys.
 - Add every **staging and production origin** you use (your real hostnames, e.g. `https://crm-staging.example.com`) to **Supabase Auth → URL configuration** redirect allowlist as needed.
-- Align Gmail OAuth and Edge Function **CORS** with the same origins. **Google OAuth client + Supabase Edge** (secrets, deploy, redirect list): [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md#operator-setup-google-oauth). Optional research context: [`.planning/research/gmail-ai-features.md`](../.planning/research/gmail-ai-features.md) if present.
+- Align Gmail OAuth and Edge Function **CORS** with the same origins. **Google OAuth client + Supabase Edge** (secrets, deploy, redirect list): [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md#operator-setup-google-oauth). Optional: set Edge secret **`EDGE_CORS_ORIGINS`** (comma-separated exact browser origins) so authenticated Edge calls from the SPA use a tightened CORS policy instead of `*` — see [`.env.example`](../.env.example) and [`master-security-compliance.md` §3](./master-security-compliance.md#supabase-external-hardening-checklist). Optional research context: [`.planning/research/gmail-ai-features.md`](../.planning/research/gmail-ai-features.md) if present.
 
 ## Pipeline and smoke (DEPLOY-04)
 

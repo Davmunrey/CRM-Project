@@ -1,5 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { OUTBOUND_WEBHOOK_SIGNATURE_HEADER } from '../_shared/outboundWebhookSignature.ts'
+import { applySafeCustomHeaders } from '../_shared/webhook-safe-headers.ts'
+import { validateWebhookTargetUrl } from '../_shared/webhook-url-safety.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -141,17 +143,26 @@ Deno.serve(async (req: Request) => {
           [OUTBOUND_WEBHOOK_SIGNATURE_HEADER]: signature,
         })
         const ch = sub.custom_headers as Record<string, string> | null
-        if (ch && typeof ch === 'object') {
-          for (const [k, v] of Object.entries(ch)) {
-            if (k && typeof v === 'string') headers.set(k, v)
-          }
+        const headerErr = applySafeCustomHeaders(headers, ch)
+        if (headerErr) {
+          anyFailure = true
+          lastErr = headerErr
+          continue
+        }
+
+        const targetUrl = String(sub.target_url ?? '').trim()
+        const urlErr = validateWebhookTargetUrl(targetUrl)
+        if (urlErr) {
+          anyFailure = true
+          lastErr = `blocked_url:${urlErr}`
+          continue
         }
 
         const t0 = Date.now()
         let httpStatus = 0
         let errMsg: string | null = null
         try {
-          const res = await fetch(sub.target_url as string, {
+          const res = await fetch(targetUrl, {
             method: 'POST',
             headers,
             body: rawBody,

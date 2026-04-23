@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { CustomFieldDefinition, CustomFieldDefinitionI18n, CustomFieldEntityType, CustomFieldValue } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
@@ -86,7 +85,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
   addDefinition: (defData) => {
     const ts = new Date().toISOString()
     const existing = get().definitions.filter((d) => d.entityType === defData.entityType)
-    const def: CustomFieldDefinition = { ...defData, id: uuidv4(), order: existing.length + 1, createdAt: ts, updatedAt: ts }
+    const def: CustomFieldDefinition = { ...defData, id: crypto.randomUUID(), order: existing.length + 1, createdAt: ts, updatedAt: ts }
     set((s) => ({ definitions: [...s.definitions, def] }))
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('custom_field_definitions').insert({

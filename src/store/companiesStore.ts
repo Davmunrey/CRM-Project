@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { Company, CompanyFilters } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
@@ -101,7 +100,7 @@ export const useCompaniesStore = create<CompaniesState>()(
 
     addCompany: (companyData) => {
       const now = new Date().toISOString()
-      const id = uuidv4()
+      const id = crypto.randomUUID()
       const company: Company = { ...companyData, id, createdAt: now, updatedAt: now }
       set((state) => ({ companies: [company, ...state.companies] }))
 

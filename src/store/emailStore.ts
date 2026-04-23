@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { v4 as uuid } from 'uuid'
 import type { CRMEmail, GmailThread } from '../types'
 import { getGmailProfile, listGmailThreads } from '../services/gmailService'
 import { getEmailProvider, resolveEmailProviderName } from '../services/emailProviders'
@@ -188,7 +187,7 @@ export const useEmailStore = create<EmailStore>()(
       threadWorkspace: {},
 
       addEmail: (data) => {
-        const email: CRMEmail = { ...data, id: uuid(), createdAt: new Date().toISOString() }
+        const email: CRMEmail = { ...data, id: crypto.randomUUID(), createdAt: new Date().toISOString() }
         set((s) => ({ emails: [email, ...s.emails] }))
         return email
       },
@@ -253,7 +252,7 @@ export const useEmailStore = create<EmailStore>()(
         let gmailMessageId: string | undefined
         let gmailThreadId: string | undefined
         let providerMessageId: string | undefined
-        const emailId = uuid()
+        const emailId = crypto.randomUUID()
 
         const shouldUseProvider = providerName !== 'gmail' || get().isGmailConnected()
         if (
@@ -434,7 +433,7 @@ export const useEmailStore = create<EmailStore>()(
         })
 
         const job: ScheduledEmailJob = {
-          id: uuid(),
+          id: crypto.randomUUID(),
           emailId: email.id,
           runAt: params.runAt,
           payload: {
@@ -461,7 +460,7 @@ export const useEmailStore = create<EmailStore>()(
       saveDraft: (params) => {
         const currentUserId = useAuthStore.getState().currentUser?.id
         const baseFrom = get().gmailAddress ?? 'me@crm.local'
-        const targetDraftId = params.draftId ?? uuid()
+        const targetDraftId = params.draftId ?? crypto.randomUUID()
         const existing = get().emails.find((e) => e.id === targetDraftId)
         const draft: CRMEmail = {
           id: targetDraftId,

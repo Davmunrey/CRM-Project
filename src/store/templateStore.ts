@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { EmailTemplate } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
@@ -79,7 +78,7 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
 
   addTemplate: (template) => {
     const ts = new Date().toISOString()
-    const newTemplate: EmailTemplate = { ...template, id: uuidv4(), createdAt: ts, updatedAt: ts, usageCount: 0 }
+    const newTemplate: EmailTemplate = { ...template, id: crypto.randomUUID(), createdAt: ts, updatedAt: ts, usageCount: 0 }
     set((s) => ({ templates: [...s.templates, newTemplate] }))
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('email_templates').insert({
@@ -116,7 +115,7 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
 
   addQuickReply: (input) => {
     const ts = new Date().toISOString()
-    const item = { id: uuidv4(), title: input.title.trim(), body: input.body, createdAt: ts, updatedAt: ts }
+    const item = { id: crypto.randomUUID(), title: input.title.trim(), body: input.body, createdAt: ts, updatedAt: ts }
     set((s) => ({ quickReplies: [item, ...s.quickReplies] }))
     if (isSupabaseConfigured && supabase) {
       const currentUserId = useAuthStore.getState().currentUser?.id

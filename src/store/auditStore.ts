@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { AuditAction, AuditEntry } from '../types'
 import { useAuthStore } from './authStore'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
@@ -51,7 +50,7 @@ export const useAuditStore = create<AuditStore>()((set, get) => ({
 
   logAction: (action, entityType, entityId, entityName, details) => {
     const entry: AuditEntry = {
-      id: uuidv4(), action, entityType, entityId, entityName, details,
+      id: crypto.randomUUID(), action, entityType, entityId, entityName, details,
       userId: useAuthStore.getState().currentUser?.name || 'system',
       timestamp: new Date().toISOString(),
     }

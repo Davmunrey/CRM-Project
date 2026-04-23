@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { Product } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
@@ -43,7 +42,7 @@ export const useProductsStore = create<ProductsStore>()((set, get) => ({
 
   addProduct: (data) => {
     const now = new Date().toISOString()
-    const product: Product = { ...data, id: uuidv4(), createdAt: now, updatedAt: now }
+    const product: Product = { ...data, id: crypto.randomUUID(), createdAt: now, updatedAt: now }
     set((s) => ({ products: [...s.products, product] }))
     if (isSupabaseConfigured && supabase) {
       ;(supabase as any).from('products').insert({

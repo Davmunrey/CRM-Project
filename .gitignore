@@ -31,3 +31,6 @@ coverage/
 test-results/
 verify-smoke.txt
 .cursor-verify-tsc.txt
+
+# Internal security assessments (roadmap for attackers; keep local or private fork only)
+docs/security-audit-*.md

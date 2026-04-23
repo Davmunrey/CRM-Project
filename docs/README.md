@@ -92,5 +92,5 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-22 (Supabase-only deploy narrative, security master password + Zustand section, roadmap Part B range, Gitea CI `vite build --mode development`)  
+- **Last updated:** 2026-04-22 (Supabase-only deploy narrative; Edge full deploy script `supabase:deploy:all-functions`; `EDGE_CORS_ORIGINS`; security master §3 Edge + SPA transport; `deployment-spa-and-env` headers table; password + Zustand section; roadmap Part B range; Gitea CI `vite build --mode development`)  
 - **Canonical:** Yes  

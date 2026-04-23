@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { Contact, ContactFilters } from '../types'
 import { useAuditStore } from './auditStore'
 import { getTranslations } from '../i18n'
@@ -116,7 +115,7 @@ export const useContactsStore = create<ContactsState>()(
 
     addContact: (contactData) => {
       const now = new Date().toISOString()
-      const tempId = uuidv4()
+      const tempId = crypto.randomUUID()
       const optimistic: Contact = { ...contactData, id: tempId, createdAt: now, updatedAt: now }
       set((s) => ({ contacts: [optimistic, ...s.contacts] }))
       useAuditStore.getState().logAction('contact_created', 'contact', tempId, contactData.firstName + ' ' + contactData.lastName, getTranslations().auditMessages.contactCreated)

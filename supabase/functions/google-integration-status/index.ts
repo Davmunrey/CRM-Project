@@ -1,14 +1,13 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { parseScopeString, scopesIndicateCalendar, scopesIndicateGmail } from '../_shared/google-scopes.ts'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeadersForRequest } from '../_shared/cors-allowlist.ts'
 
 Deno.serve(async (req: Request) => {
+  const cors = corsHeadersForRequest(req)
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', {
+      headers: { ...cors, 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS' },
+    })
   }
 
   try {
@@ -21,7 +20,7 @@ Deno.serve(async (req: Request) => {
     if (authErr || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 401, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -34,7 +33,7 @@ Deno.serve(async (req: Request) => {
           calendarConnected: false,
           account: null,
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -53,7 +52,7 @@ Deno.serve(async (req: Request) => {
           calendarConnected: false,
           account: null,
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -70,7 +69,7 @@ Deno.serve(async (req: Request) => {
           calendarConnected,
           account: null,
         }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
 
@@ -88,12 +87,13 @@ Deno.serve(async (req: Request) => {
           createdAt: row.created_at,
         },
       }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } },
     )
   } catch (err) {
+    console.error('google-integration-status', err)
     return new Response(
-      JSON.stringify({ error: (err as Error).message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      JSON.stringify({ error: 'Internal server error' }),
+      { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
     )
   }
 })

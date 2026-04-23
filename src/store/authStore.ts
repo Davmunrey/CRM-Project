@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { v4 as uuidv4 } from 'uuid'
 import type { AuthUser, Organization, Invitation, UserRole, Session } from '../types/auth'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
@@ -301,7 +300,7 @@ export const useAuthStore = create<AuthState>()(
         const now = new Date().toISOString()
         const session: Session = {
           userId: user.id,
-          token: uuidv4(),
+          token: crypto.randomUUID(),
           expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24h
           createdAt: now,
         }
@@ -344,8 +343,8 @@ export const useAuthStore = create<AuthState>()(
         const existing = get().users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())
         if (existing) return { success: false, error: getTranslations().errors.emailAlreadyExists }
 
-        const orgId = uuidv4()
-        const userId = uuidv4()
+        const orgId = crypto.randomUUID()
+        const userId = crypto.randomUUID()
         const now = new Date().toISOString()
         const orgDisplayName = workspaceNameFromEmail(data.email)
 
@@ -372,7 +371,7 @@ export const useAuthStore = create<AuthState>()(
 
         const session: Session = {
           userId: user.id,
-          token: uuidv4(),
+          token: crypto.randomUUID(),
           expiresAt: Date.now() + 24 * 60 * 60 * 1000,
           createdAt: now,
         }
@@ -404,7 +403,7 @@ export const useAuthStore = create<AuthState>()(
 
         const now = new Date().toISOString()
         const user: AuthUser = {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           email: data.email,
           name: data.name,
           role: data.role,
@@ -571,7 +570,7 @@ export const useAuthStore = create<AuthState>()(
         const state = get()
         const now = new Date()
         const invitation: Invitation = {
-          id: uuidv4(),
+          id: crypto.randomUUID(),
           email,
           role,
           invitedBy: state.currentUser?.id || '',

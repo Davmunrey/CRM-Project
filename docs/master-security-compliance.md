@@ -1,6 +1,6 @@
 # Security & Compliance (master)
 
-> Consolidated **2026-04-15**; password policy and selector hygiene added **2026-04-22**. Single reference for auth/SSO contracts, hardening matrix, sell-ready evidence index, Supabase external checklist, SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
+> Consolidated **2026-04-15**; password policy and selector hygiene **2026-04-22**; Edge/public-surface hardening narrative **2026-04-22** (rate limits, CORS allowlist env, webhook SSRF guards — see [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist)). Single reference for auth/SSO contracts, hardening matrix, sell-ready evidence index, Supabase external checklist, SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
 
 **Replaces:** auth-sso-backend-handoff, hardening-matrix, sell-ready-security-evidence-index, supabase-external-hardening-checklist, compliance-mapping, dsar-playbook, gitea-operations.
 
@@ -42,7 +42,7 @@ The shipped SPA shell is **email/password + magic link** against Supabase; OAuth
 
 - Status: Active
 - Owner: Backend/Auth
-- Last updated: 2026-04-22
+- Last updated: 2026-04-22 (Edge §3 checklist: CORS env, public API/lead limits, webhook SSRF, SPA headers/sanitizer)
 - Canonical: Yes
 
 ## Frontend contract already implemented
@@ -249,7 +249,10 @@ References: [Supabase RLS](https://supabase.com/docs/guides/auth/auth-deep-dive/
 - [ ] **No** `service_role` key in client bundles; only server-side function env.
 - [ ] Each HTTP function validates `Authorization` (user JWT) where appropriate.
 - [ ] Outbound integrations (e.g. Resend) enforce rate limits and payload caps — see `supabase/functions/resend-send-email/index.ts`.
-- [ ] CORS and allowed origins restricted if functions are called from non-app origins.
+- [ ] **CORS:** optional allowlist via Edge secret **`EDGE_CORS_ORIGINS`** (comma-separated exact `Origin` values, e.g. `https://app.example.com,http://localhost:5173`). Implemented in `supabase/functions/_shared/cors-allowlist.ts`; used by `crm-public-api`, `lead-capture`, Google/Gmail functions, and related surfaces. When unset, functions still respond with `Access-Control-Allow-Origin: *` for backward compatibility — tighten in production.
+- [ ] **Public read API / lead capture:** `crm-public-api` and `lead-capture` use explicit column selects (no `select('*')`), per-key or per-token rate limits, bounded request bodies, and generic client error bodies (details in logs only). Deploy with `npm run supabase:deploy:integrations` or full `npm run supabase:deploy:all-functions` (see [`../supabase/README.md`](../supabase/README.md)).
+- [ ] **Outbound webhooks:** `webhook-worker` resolves subscriber URLs with SSRF defenses (`_shared/webhook-url-safety.ts`) and applies a safe custom-header allowlist (`_shared/webhook-safe-headers.ts`) before `fetch`.
+- [ ] **SPA transport hygiene:** static responses include baseline security headers where the static host supports them ([`../vercel.json`](../vercel.json), [`../public/_headers`](../public/_headers)); email **signature preview** uses DOMPurify (`SignatureRichEditor.tsx`); client IDs use `crypto.randomUUID()` (no `uuid` npm dependency).
 
 ## 4. Backups and recovery
 

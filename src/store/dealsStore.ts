@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { Deal, DealFilters, DealStage, QuoteItem } from '../types'
 import { useAuditStore } from './auditStore'
 import { useNotificationsStore } from './notificationsStore'
@@ -191,7 +190,7 @@ export const useDealsStore = create<DealsState>()(
 
     addDeal: (dealData) => {
       const now = new Date().toISOString()
-      const id = uuidv4()
+      const id = crypto.randomUUID()
       const deal: Deal = { ...dealData, id, createdAt: now, updatedAt: now }
       set((state) => ({ deals: [deal, ...state.deals] }))
       useAuditStore.getState().logAction('deal_created', 'deal', deal.id, deal.title, getTranslations().auditMessages.dealCreated)

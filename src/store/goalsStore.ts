@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { v4 as uuidv4 } from 'uuid'
 import type { SalesGoal } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { devConsole } from '../lib/devConsole'
@@ -53,7 +52,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
   addGoal: async (goalData) => {
     const currentUserId = useAuthStore.getState().currentUser?.id
     const effectiveUserId = goalData.userId || currentUserId || 'unknown-user'
-    const goal: SalesGoal = { ...goalData, id: uuidv4() }
+    const goal: SalesGoal = { ...goalData, id: crypto.randomUUID() }
     goal.userId = effectiveUserId
     set((s) => ({ goals: [...s.goals, goal] }))
     if (isSupabaseConfigured && supabase) {
