@@ -1,9 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
 
 async function getOrgMembershipRole(
   adminClient: ReturnType<typeof createClient>,
@@ -42,17 +38,6 @@ function logEvent(
   console[level](JSON.stringify({ level, request_id: requestId, event, ...meta }))
 }
 
-function respond(
-  requestId: string,
-  status: number,
-  payload: Record<string, unknown>,
-): Response {
-  return new Response(JSON.stringify({ ...payload, status, request_id: requestId }), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-  })
-}
-
 function randomBytes(n: number): Uint8Array {
   const b = new Uint8Array(n)
   crypto.getRandomValues(b)
@@ -77,9 +62,37 @@ async function sha256Hex(message: string): Promise<string> {
 Deno.serve(async (req: Request) => {
   const requestId = req.headers.get('x-request-id')?.trim() || crypto.randomUUID()
   const startedAt = Date.now()
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+
+  if (isCorsOriginBlocked(req)) {
+    logEvent('warn', requestId, 'cors_blocked', { origin: req.headers.get('Origin') ?? '' })
+    return new Response(
+      JSON.stringify({
+        error: 'Origin not allowed',
+        code: 'cors_origin_not_allowed',
+        status: 403,
+        request_id: requestId,
+      }),
+      { status: 403, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
+  const cors = corsHeadersForRequest(req, '')
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      headers: { ...cors, 'Access-Control-Allow-Methods': 'POST, OPTIONS' },
+    })
+  }
   if (req.method !== 'POST') {
-    return respond(requestId, 405, { error: 'Method not allowed', code: 'method_not_allowed' })
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed', code: 'method_not_allowed', status: 405, request_id: requestId }),
+      { status: 405, headers: { ...cors, 'Content-Type': 'application/json' } },
+    )
+  }
+
+  function respond(requestId: string, status: number, payload: Record<string, unknown>): Response {
+    return new Response(JSON.stringify({ ...payload, status, request_id: requestId }), {
+      status,
+      headers: { ...cors, 'Content-Type': 'application/json' },
+    })
   }
 
   try {
