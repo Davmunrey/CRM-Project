@@ -1,6 +1,19 @@
 # Supabase CLI project config (minimal). See https://supabase.com/docs/guides/cli/config
 # `webhook-worker` is invoked by cron or automation with a shared secret — no end-user JWT.
 
+[auth]
+site_url = "https://velo-crm-two.vercel.app"
+additional_redirect_urls = [
+  "https://velo-crm-two.vercel.app/login",
+  "https://velo-crm-two.vercel.app/reset-password",
+  "https://velo-crm-two.vercel.app/accept-invite",
+  "https://velo-crm-two.vercel.app/auth/gmail/callback",
+  "http://localhost:5173/login",
+  "http://localhost:5173/reset-password",
+  "http://localhost:5173/accept-invite",
+  "http://localhost:5173/auth/gmail/callback",
+]
+
 [functions.webhook-worker]
 verify_jwt = false
 
