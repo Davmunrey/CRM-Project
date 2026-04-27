@@ -57,7 +57,6 @@ export function Register() {
       if (sbError) {
         setError(sbError.message)
       } else if (data.session) {
-        await useAuthStore.getState().ensureTenantForCurrentUser()
         navigate('/')
       } else {
         setSuccess(true)

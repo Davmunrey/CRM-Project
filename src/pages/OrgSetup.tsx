@@ -33,6 +33,46 @@ export function OrgSetup() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!supabase) return
+    const sb = supabase
+    let cancelled = false
+
+    const redirectIfAlreadyMember = async () => {
+      const { data: authData, error: authError } = await sb.auth.getUser()
+      if (cancelled || authError || !authData.user) return
+
+      const existingOrgId =
+        (authData.user.app_metadata?.organization_id as string | undefined) ??
+        authData.user.user_metadata?.org_id
+
+      if (!existingOrgId) return
+
+      setCurrentUser({
+        id: authData.user.id,
+        name: authData.user.user_metadata?.full_name ?? authData.user.email?.split('@')[0] ?? t.auth.profile,
+        email: authData.user.email ?? '',
+        role: (authData.user.app_metadata?.user_role as 'admin' | 'manager' | 'sales_rep' | 'viewer') ?? 'admin',
+        jobTitle: authData.user.user_metadata?.job_title ?? '',
+        organizationId: existingOrgId,
+        isActive: true,
+        createdAt: authData.user.created_at,
+        updatedAt: authData.user.updated_at ?? authData.user.created_at,
+      })
+
+      void useAuthStore.getState().fetchOrgUsers(existingOrgId).catch(() => {
+        /* non-critical */
+      })
+      navigate('/', { replace: true })
+    }
+
+    void redirectIfAlreadyMember()
+
+    return () => {
+      cancelled = true
+    }
+  }, [navigate, setCurrentUser, t.auth.profile])
+
+  useEffect(() => {
     if (!workspaceSlugFromHost) return
     setSlug((prev) => (prev ? prev : workspaceSlugFromHost))
     setSlugTiedToSubdomain(true)
@@ -110,7 +150,36 @@ export function OrgSetup() {
 
       navigate('/', { replace: true })
     } catch (err) {
-      setError((err as Error).message)
+      const message = (err as Error).message
+      const isAlreadyMember = /already a member of an organization/i.test(message)
+      if (isAlreadyMember) {
+        const { data: refreshedUserData, error: refreshedUserError } = await sb.auth.getUser()
+        const existingOrgId =
+          !refreshedUserError && refreshedUserData.user
+            ? ((refreshedUserData.user.app_metadata?.organization_id as string | undefined) ??
+              refreshedUserData.user.user_metadata?.org_id)
+            : undefined
+
+        if (existingOrgId && refreshedUserData.user) {
+          setCurrentUser({
+            id: refreshedUserData.user.id,
+            name: refreshedUserData.user.user_metadata?.full_name ?? refreshedUserData.user.email?.split('@')[0] ?? t.auth.profile,
+            email: refreshedUserData.user.email ?? '',
+            role: (refreshedUserData.user.app_metadata?.user_role as 'admin' | 'manager' | 'sales_rep' | 'viewer') ?? 'admin',
+            jobTitle: refreshedUserData.user.user_metadata?.job_title ?? '',
+            organizationId: existingOrgId,
+            isActive: true,
+            createdAt: refreshedUserData.user.created_at,
+            updatedAt: refreshedUserData.user.updated_at ?? refreshedUserData.user.created_at,
+          })
+          void useAuthStore.getState().fetchOrgUsers(existingOrgId).catch(() => {
+            /* non-critical */
+          })
+          navigate('/', { replace: true })
+          return
+        }
+      }
+      setError(message)
     } finally {
       setIsLoading(false)
     }

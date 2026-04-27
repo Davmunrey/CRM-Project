@@ -732,9 +732,9 @@ export function initSupabaseAuth(): (() => void) | undefined {
           /* non-critical */
         })
       } else {
-        useAuthStore.getState().ensureTenantForCurrentUser().catch(() => {
-          /* non-critical */
-        })
+        // Option A onboarding: never auto-create tenants.
+        // Authenticated users without org are routed to /org-setup.
+        useAuthStore.getState().setTenantResolution('error', null)
       }
     } else {
       useAuthStore.getState().setCurrentUser(null)

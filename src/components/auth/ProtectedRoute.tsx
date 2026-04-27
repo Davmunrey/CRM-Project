@@ -36,9 +36,6 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
   // AUTH-06: Authenticated users without an org must create one before accessing Velo.
   // When Supabase is not configured, org resolution is skipped (unconfigured runtime).
   if (isAuthenticated && !organizationId && isSupabaseConfigured) {
-    if (tenantResolutionStatus === 'resolving' || tenantResolutionStatus === 'idle') {
-      return null
-    }
     if (tenantResolutionStatus === 'needs_invitation') {
       return <Navigate to="/org-access-required" replace />
     }
