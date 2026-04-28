@@ -14,12 +14,54 @@
 ## Table of contents
 
 - [Sell-ready release checklist](#sell-ready-release-checklist)
+- [Cross-doc checklist closure plan](#cross-doc-checklist-closure-plan)
 - [Translation QA checklist (per release)](#translation-qa-checklist-per-release)
 - [Onboarding UAT (workspace checklist)](#onboarding-uat-workspace-checklist)
 - [QA evidence — sell-ready baseline](#qa-evidence-sell-ready-baseline)
 - [QA evidence template](#qa-evidence-template)
 - [Go / No-Go — sell-ready baseline](#go-no-go-sell-ready-baseline)
 - [Production handoff checklist](#production-handoff-checklist)
+
+---
+
+
+<a id="cross-doc-checklist-closure-plan"></a>
+## Cross-doc checklist closure plan
+
+Use this operational plan to close unchecked items across `docs/**/*.md`, `.planning/**/*.md`, and other markdown files without creating false positives.
+
+### 1) Weekly checklist inventory
+
+- Build a single inventory of all `- [ ]` and `- [x]` items.
+- Group each check as one of:
+  - **repo-evidence** (code/workflow/test evidence exists in git),
+  - **runtime-evidence** (needs deployed env proof),
+  - **human-signoff** (ops/product/security approval).
+
+### 2) Strict marking policy
+
+- Mark `[x]` only when evidence is attached in the same PR/release ticket.
+- Keep `[ ]` when the check depends on Supabase/Google dashboard state, DNS records, or manual sign-off.
+- If partially complete, keep `[ ]` and append a short blocker note in the related section.
+
+### 3) Closure order (high to low leverage)
+
+1. `master-security-compliance` (external hardening + advisor-zero controls)
+2. `master-release-qa` and `smoke-checklist-production` (release gates)
+3. `master-email-operations` and `master-lead-management` (ops runbooks)
+4. `.planning/ROADMAP.md` and `.planning/REQUIREMENTS.md` (phase traceability)
+
+### 4) Release gate integration
+
+- No release is closed until `smoke-checklist-production` has dated evidence.
+- Every deployment records: commit SHA, channel, environment URL, smoke result, operator.
+- Runtime/human checks remain unchecked until evidence is archived.
+
+### 5) Monthly hygiene pass
+
+- Remove stale or duplicate checklist items and link to the canonical master section.
+- Revalidate checks that are sensitive to infra drift (OAuth redirects, CORS, RLS, secrets).
+- Publish a short “checks closed / checks pending / blockers” summary in release notes.
 
 ---
 
@@ -408,7 +450,7 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 
 ## 4) Rollback and Recovery
 
-- [ ] Recovery path documented in [`master-lead-management` — runbook](./master-lead-management.md#lead-maintenance-runbook)
+- [x] Recovery path documented in [`master-lead-management` — runbook](./master-lead-management.md#lead-maintenance-runbook)
 - [ ] Last known good deployment references stored
 - [ ] Database backup/restore process validated
 
