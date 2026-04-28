@@ -128,8 +128,28 @@ jobs:
           fi
           supabase secrets set "WEBHOOK_WORKER_SECRET=${WEBHOOK_WORKER_SECRET}"
 
-      - name: Deploy Edge Functions (full set)
-        run: npm run supabase:deploy:all-functions
+      - name: Deploy Edge Functions (full set, with retry)
+        run: |
+          max_attempts=3
+          attempt=1
+
+          while [ "$attempt" -le "$max_attempts" ]; do
+            echo "Deploy attempt ${attempt}/${max_attempts}"
+            if npm run supabase:deploy:all-functions; then
+              exit 0
+            fi
+
+            if [ "$attempt" -lt "$max_attempts" ]; then
+              backoff=$((attempt * 20))
+              echo "Deploy failed on attempt ${attempt}. Retrying in ${backoff}s..."
+              sleep "$backoff"
+            fi
+
+            attempt=$((attempt + 1))
+          done
+
+          echo "Deploy failed after ${max_attempts} attempts."
+          exit 1
 
       - name: Smoke check Google/Gmail Edge functions
         run: npm run supabase:smoke:google-edge
