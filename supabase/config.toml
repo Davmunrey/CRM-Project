@@ -28,3 +28,6 @@ verify_jwt = false
 
 [functions.lead-capture-tokens]
 verify_jwt = false
+
+[functions.resolve-workspace-slug]
+verify_jwt = false

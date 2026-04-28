@@ -8,7 +8,7 @@ import { toast } from './toastStore'
 import { getTranslations } from '../i18n'
 import { workspaceNameFromEmail } from '../lib/workspaceFromEmail'
 
-/** Row shape from `list_organization_members_with_identity` RPC (see supabase migration). */
+/** Row shape from the `list-org-members-with-identity` Edge Function response. */
 export interface OrgMemberIdentityRow {
   user_id: string
   email: string
@@ -203,11 +203,11 @@ export const useAuthStore = create<AuthState>()(
         const current = get().currentUser
         if (current?.organizationId && organizationId !== current.organizationId) return
 
-        const { data, error } = await supabase.rpc('list_organization_members_with_identity')
+        const { data, error } = await supabase.functions.invoke('list-org-members-with-identity')
         if (error) return
 
         const byId = new Map(get().users.map((u) => [u.id, u]))
-        const rows = (data ?? []) as OrgMemberIdentityRow[]
+        const rows = ((data as { members?: OrgMemberIdentityRow[] } | null)?.members ?? [])
 
         const users: AuthUser[] = rows.map((m) => {
           const existing = byId.get(m.user_id)

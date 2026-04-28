@@ -53,7 +53,7 @@ From the repo root after `npm install` (installs the `supabase` dev dependency):
 3. `npm run supabase:db:push` — applies pending SQL in `supabase/migrations/` to the linked remote database (review with `supabase db diff` if you use a branching workflow).
 4. **Once per project:** `npm run supabase:secrets:set-webhook-worker` — sets Edge secret `WEBHOOK_WORKER_SECRET`. If the env var `WEBHOOK_WORKER_SECRET` is unset, a new random value is generated and printed; save it for GitHub Actions / cron.
 5. **Deploy Edge Functions** — pick one:
-   - **Everything (recommended after pulling security or infra changes):** `npm run supabase:deploy:all-functions` — includes `data-export`, `ux-metrics-ingest`, `purge-soft-deleted` (set secrets below), `api-keys`, `create-org`, `crm-public-api`, `ensure-tenant`, Gmail/Google suite, `invite-member`, `lead-capture`, `lead-capture-tokens`, `lead-score-maintenance`, `promote-lead`, `resend-send-email`, `sequence-advance`, `track-click`, `track-open`, `webhook-subscriptions`, `webhook-worker`.
+  - **Everything (recommended after pulling security or infra changes):** `npm run supabase:deploy:all-functions` — includes `data-export`, `ux-metrics-ingest`, `purge-soft-deleted` (set secrets below), `api-keys`, `backfill-email-tracking-user`, `create-org`, `crm-public-api`, `ensure-tenant`, Gmail/Google suite, `invite-member`, `lead-capture`, `lead-capture-tokens`, `lead-score-maintenance`, `list-org-members-with-identity`, `promote-lead`, `resend-send-email`, `resolve-workspace-slug`, `sequence-advance`, `track-click`, `track-open`, `webhook-subscriptions`, `webhook-worker`.
    - **Partial bundles:** `npm run supabase:deploy:webhooks` · `npm run supabase:deploy:integrations` · `npm run supabase:deploy:google` (same names as in `package.json`).
 
 **Data retention (soft-delete purge):** set Edge secrets `PURGE_SOFT_DELETED_SECRET` (and optional `PURGE_RETENTION_DAYS`, default 90), then call `purge-soft-deleted` with header `x-purge-secret` — see [`.github/workflows/data-retention-purge.yml`](../.github/workflows/data-retention-purge.yml).
@@ -82,6 +82,17 @@ Operator reminders:
 - Keep auth domains aligned with [`supabase/config.toml`](./config.toml) `site_url` and `additional_redirect_urls`.
 - Verify SPF, DKIM, DMARC before production rollout.
 
+## Auth security hardening (dashboard-required)
+
+Some Supabase advisor checks are controlled at the **Auth project level** (not through SQL migrations). For production:
+
+1. Open `Authentication -> Providers / Security`.
+2. Enable **Leaked password protection** (HaveIBeenPwned integration).
+3. Enable at least one additional **MFA factor** beyond your current baseline (typically TOTP, optionally WebAuthn).
+4. Save and re-run Supabase advisors.
+
+Record evidence (screenshot + date + operator) in `docs/master-security-compliance.md` under the external hardening checklist.
+
 ## API & capture troubleshooting runbook
 
 Use this checklist when `Settings > Integrations` shows API key/token errors.
@@ -107,9 +118,10 @@ Use this checklist when `Settings > Integrations` shows API key/token errors.
 - Migration filenames are timestamped and should be applied in ascending order.
 - Never edit an already applied migration; create a new migration for follow-up changes.
 - Keep migration behavior aligned with related docs in `docs/` (runbooks/contracts).
-- `20260415120000_list_organization_members_with_identity.sql` — `list_organization_members_with_identity()` RPC (org-scoped member email + display name for the app directory); grant `EXECUTE` to `authenticated` only.
+- `20260415120000_list_organization_members_with_identity.sql` — `list_organization_members_with_identity()` helper RPC for backend/Edge use.
 - `20260420140000_webhooks_outbound.sql` — outbound webhooks: `webhook_subscriptions`, `webhook_subscription_secrets`, `webhook_outbox`, `webhook_delivery_log`, triggers on deals/contacts/companies/activities.
 - `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` — DELETE webhook payload shape (JSON null `data`), `organization_api_keys`, `lead_capture_tokens`, failed-outbox index.
+- `20260428101000_security_definer_rpc_lockdown.sql` — revokes `anon`/`authenticated` execute access for high-privilege definer RPCs and routes public/authenticated access through Edge Functions (`resolve-workspace-slug`, `list-org-members-with-identity`, `backfill-email-tracking-user`, `create-org`).
 
 ## Edge Functions: outbound webhooks
 

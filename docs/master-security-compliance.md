@@ -249,6 +249,8 @@ Use this checklist when validating a **production** Supabase project backing Vel
 - [ ] Refresh token rotation enabled where supported.
 - [ ] JWT expiry aligned with product risk (shorter for high-sensitivity tenants).
 - [ ] Rate limits and bot protection reviewed in Supabase Auth settings.
+- [ ] **Leaked password protection** enabled (Supabase Auth password security).
+- [ ] MFA has at least two enabled options for the project risk profile (for example TOTP + WebAuthn).
 
 ## 2. Row Level Security (RLS)
 

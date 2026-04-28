@@ -104,13 +104,15 @@ export function OrgSetup() {
     setError(null)
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- RPC not in generated types
-      const { data, error: rpcErr } = await (sb as any).rpc('create_org_self_service', {
-        p_org_name: orgName.trim(),
-        p_slug: slug.trim(),
+      const { data, error: invokeErr } = await sb.functions.invoke('create-org', {
+        body: {
+          orgName: orgName.trim(),
+          slug: slug.trim(),
+        },
       })
-      if (rpcErr) throw new Error(rpcErr.message)
-      if (!data || (Array.isArray(data) && data.length === 0)) throw new Error(t.errors.generic)
+      if (invokeErr) throw new Error(invokeErr.message)
+      const createdOrgId = (data as { org?: { id?: string } } | null)?.org?.id
+      if (!createdOrgId) throw new Error(t.errors.generic)
 
       const { error: refreshErr } = await sb.auth.refreshSession()
       if (refreshErr) throw new Error(refreshErr.message)

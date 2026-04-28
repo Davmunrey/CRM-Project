@@ -35,9 +35,11 @@ export function WorkspaceHostBootstrap() {
     })
 
     void (async () => {
-      const { data, error } = await supabase.rpc('resolve_workspace_slug', { p_slug: slug })
+      const { data, error } = await supabase.functions.invoke('resolve-workspace-slug', {
+        body: { slug },
+      })
       if (error) {
-        devConsole.warn('[workspaceHost] resolve_workspace_slug', error.message)
+        devConsole.warn('[workspaceHost] resolve-workspace-slug', error.message)
         useAuthStore.getState().setWorkspaceHostContext({
           slug,
           pending: false,
@@ -46,9 +48,7 @@ export function WorkspaceHostBootstrap() {
         })
         return
       }
-      const row = Array.isArray(data) && data[0]
-        ? (data[0] as { id: string; name: string })
-        : null
+      const row = (data as { organization?: { id: string; name: string } | null } | null)?.organization ?? null
       useAuthStore.getState().setWorkspaceHostContext({
         slug,
         pending: false,

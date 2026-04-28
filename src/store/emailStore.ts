@@ -825,8 +825,8 @@ export const useEmailStore = create<EmailStore>()(
           .filter((e) => !e.ownerUserId && e.trackingEnabled)
           .map((e) => e.id)
         if (currentUserId && legacyOwnedCandidates.length > 0) {
-          await (supabase as any).rpc('backfill_email_tracking_user', {
-            p_email_ids: legacyOwnedCandidates,
+          await supabase.functions.invoke('backfill-email-tracking-user', {
+            body: { emailIds: legacyOwnedCandidates },
           })
           set((s) => ({
             emails: s.emails.map((email) => (
