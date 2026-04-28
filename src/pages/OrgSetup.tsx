@@ -12,6 +12,12 @@ import { Card } from '../components/ui/Card'
 import { AuthLayout } from '../components/auth/AuthLayout'
 import { trackUxAction } from '../lib/uxMetrics'
 
+function normalizeClaimValue(value: string | undefined): string | undefined {
+  if (!value) return undefined
+  const normalized = value.replace(/^"+|"+$/g, '').trim()
+  return normalized || undefined
+}
+
 export function OrgSetup() {
   const navigate = useNavigate()
   const t = useTranslations()
@@ -108,9 +114,11 @@ export function OrgSetup() {
       const { data: authData, error: authError } = await sb.auth.getUser()
       if (cancelled || authError || !authData.user) return
 
-      const existingOrgId =
-        (authData.user.app_metadata?.organization_id as string | undefined) ??
-        authData.user.user_metadata?.org_id
+      const existingOrgId = normalizeClaimValue(
+        ((authData.user.app_metadata?.organization_id as string | undefined) ?? authData.user.user_metadata?.org_id) as
+          | string
+          | undefined,
+      )
 
       if (!existingOrgId) return
 
@@ -193,7 +201,9 @@ export function OrgSetup() {
         billingEmail: billingEmail.trim(),
         billingPhone: billingPhone.trim() || undefined,
       })
-      const newOrgId = (u.app_metadata?.organization_id as string | undefined) ?? u.user_metadata?.org_id
+      const newOrgId = normalizeClaimValue(
+        ((u.app_metadata?.organization_id as string | undefined) ?? u.user_metadata?.org_id) as string | undefined,
+      )
       setCurrentUser({
         id: u.id,
         name: u.user_metadata?.full_name ?? u.email?.split('@')[0] ?? t.auth.profile,
@@ -221,8 +231,10 @@ export function OrgSetup() {
         const { data: refreshedUserData, error: refreshedUserError } = await sb.auth.getUser()
         const existingOrgId =
           !refreshedUserError && refreshedUserData.user
-            ? ((refreshedUserData.user.app_metadata?.organization_id as string | undefined) ??
-              refreshedUserData.user.user_metadata?.org_id)
+            ? normalizeClaimValue(
+                ((refreshedUserData.user.app_metadata?.organization_id as string | undefined) ??
+                  refreshedUserData.user.user_metadata?.org_id) as string | undefined,
+              )
             : undefined
 
         if (existingOrgId && refreshedUserData.user) {

@@ -684,9 +684,15 @@ export const useAuthStore = create<AuthState>()(
  * Any unrecognized string falls back to 'sales_rep' (least-privilege default).
  */
 function normalizeRole(raw: string | undefined): UserRole {
-  if (raw === 'owner') return 'admin'
+  const normalizedRaw = normalizeClaimString(raw)
+  if (normalizedRaw === 'owner') return 'admin'
   const valid: UserRole[] = ['admin', 'manager', 'sales_rep', 'viewer']
-  return valid.includes(raw as UserRole) ? (raw as UserRole) : 'sales_rep'
+  return valid.includes(normalizedRaw as UserRole) ? (normalizedRaw as UserRole) : 'sales_rep'
+}
+
+function normalizeClaimString(value: string | undefined): string {
+  if (!value) return ''
+  return value.replace(/^"+|"+$/g, '').trim()
 }
 
 export function initSupabaseAuth(): (() => void) | undefined {
@@ -714,12 +720,16 @@ export function initSupabaseAuth(): (() => void) | undefined {
 
     if (session?.user) {
       const sbUser = session.user
-      const organizationId = (sbUser.app_metadata?.organization_id as string | undefined) ?? sbUser.user_metadata?.org_id
+      const organizationId = normalizeClaimString(
+        ((sbUser.app_metadata?.organization_id as string | undefined) ?? sbUser.user_metadata?.org_id) as
+          | string
+          | undefined,
+      )
       useAuthStore.getState().setCurrentUser({
         id: sbUser.id,
         name: sbUser.user_metadata?.full_name ?? sbUser.email?.split('@')[0] ?? 'User',
         email: sbUser.email ?? '',
-        role: normalizeRole(sbUser.app_metadata?.user_role ?? sbUser.user_metadata?.role),
+        role: normalizeRole((sbUser.app_metadata?.user_role as string | undefined) ?? sbUser.user_metadata?.role),
         jobTitle: sbUser.user_metadata?.job_title ?? '',
         organizationId,
         isActive: true,
