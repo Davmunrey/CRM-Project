@@ -34,3 +34,5 @@ verify-smoke.txt
 
 # Internal security assessments (roadmap for attackers; keep local or private fork only)
 docs/security-audit-*.md
+
+.vercel
