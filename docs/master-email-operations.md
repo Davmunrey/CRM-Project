@@ -71,7 +71,7 @@ References: [Resend: email authentication for developers](https://resend.com/blo
 
 ## 3. Content and reputation
 
-- [ ] Send both **text** and **html** where possible (Velo sends `body` + `htmlBody` when provided).
+- [x] Send both **text** and **html** where possible (Velo sends `body` + `htmlBody` when provided).
 - [ ] Bounce and complaint handling process defined (who monitors Resend dashboard).
 - [ ] Warm-up plan for new dedicated IPs (if applicable — Resend shared infra is typical).
 
@@ -252,15 +252,15 @@ Reproducible steps live in **[15-minute smoke test](#email-smoke-test-15min)** (
 
 ## QA/verification checks
 
-- [ ] Targeted regression tests pass:
+- [x] Targeted regression tests pass:
   - `tests/stores/emailStore.trackingBatch.test.ts`
-- [ ] Production build passes:
+- [x] Production build passes:
   - `npm run build`
 - [ ] No new lint issues in touched files.
 
 ## Support readiness
 
-- [ ] Support team has runbook: [#email-mailbox-privacy-runbook](#email-mailbox-privacy-runbook)
+- [x] Support team has runbook: [#email-mailbox-privacy-runbook](#email-mailbox-privacy-runbook)
 - [ ] Ops knows expected mailbox behavior and escalation data required.
 
 ---
