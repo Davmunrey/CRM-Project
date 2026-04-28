@@ -1,0 +1,22 @@
+# Optional: run Lighthouse against a preview URL. Set `LIGHTHOUSE_URL` in repo variables.
+# Full integration with Vercel preview comments is project-specific; this is a manual template.
+name: Lighthouse (optional)
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Full URL to audit (e.g. Vercel preview)'
+        required: true
+        type: string
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate URL
+        run: |
+          if [ -z "${{ inputs.url }}" ]; then echo "Need url"; exit 1; fi
+      - name: Run Lighthouse CI (npx)
+        run: npx -y @lhci/cli@0.14.0 autorun --collect.url="${{ inputs.url }}" --upload.target=temporary-public-storage
+        continue-on-error: true

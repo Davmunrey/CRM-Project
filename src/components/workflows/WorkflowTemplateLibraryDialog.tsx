@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { X, Library, Sparkles } from 'lucide-react'
 import { useTranslations, getTranslations } from '../../i18n'
-import { localizedAutomationRule, localizedEmailSequence } from '../../i18n/localizeSeed'
+import { localizedEmailSequence } from '../../i18n/localizeSeed'
 import { getAutomationTemplateRulePayload } from '../../i18n/seed/automationSeedRulesEn'
 import type { SeedAutomationId } from '../../i18n/types'
 import {

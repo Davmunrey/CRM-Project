@@ -42,7 +42,7 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 ## By role (quick paths)
 
 - **Product / PM** — [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) · [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) · [`project-state.md`](./project-state.md#gaps-not-fully-owned-by-a-single-master-today)
-- **Engineering (feature work)** — [`master-implementation-history.md`](./master-implementation-history.md) Part B · [`master-design-ui.md`](./master-design-ui.md#design-system-and-layout) · [`.planning/codebase/CONVENTIONS.md`](../.planning/codebase/CONVENTIONS.md)
+- **Engineering (feature work)** — [`master-implementation-history.md`](./master-implementation-history.md) Part B · [`master-design-ui.md`](./master-design-ui.md#design-system-and-layout) · [`.planning/CODEBASE.md` (Conventions)](../.planning/CODEBASE.md#coding-conventions)
 - **Ops / SRE / release** — [`master-release-qa.md`](./master-release-qa.md#production-handoff-checklist) · [`master-security-compliance.md`](./master-security-compliance.md#supabase-external-hardening-checklist) · [`master-lead-management.md`](./master-lead-management.md#lead-maintenance-runbook)
 - **Security / buyer reviews** — [`master-security-compliance.md`](./master-security-compliance.md#sell-ready-security-evidence-index) · [`master-email-operations.md`](./master-email-operations.md#email-deliverability-resend)
 
@@ -78,6 +78,17 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 - Cross-links inside masters use relative paths: `./master-….md#anchor-id`.
 - Avoid duplicating long “done” narratives in the roadmap master; point to [`master-implementation-history.md`](./master-implementation-history.md) instead.
 - **Language:** prose in `docs/` is **English** engineering narrative. End-user UI strings are localized via [`src/i18n`](../src/i18n) (`useTranslations` / `getTranslations`); see [`design-system-reference.md`](./design-system-reference.md) (*i18n guardrails* / `i18n:lint`) — do not mirror locale catalogs in Markdown.
+
+### Formatting standard (applies to all Markdown in this repo)
+
+- **One canonical home:** before adding a new file, prefer extending an existing **master** or a single allowlisted doc. Consolidate; do not duplicate narratives.
+- **Heading structure:** exactly one `#` title; use `##` / `###` for sections; no skipped levels.
+- **Links:** use **relative** links inside the repo (e.g. `./file.md#anchor`), and avoid linking to deleted or renamed planning artifacts.
+- **“Last updated” metadata:** every doc must have either:
+  - a `## Document control` block with `- **Last updated:** YYYY-MM-DD`, or
+  - a git footer `*Last updated (git): **YYYY-MM-DD***` (maintained by `node scripts/md-chronology.mjs apply-footers`).
+- **Tables:** include a header row + separator row; keep date columns ISO (`YYYY-MM-DD`).
+- **Checklists:** use `- [ ]` only for items that have a clear owner and closure evidence path; otherwise use bullets.
 
 ---
 

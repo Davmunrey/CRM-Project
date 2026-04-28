@@ -4,6 +4,7 @@ import reactPlugin from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import importPlugin from 'eslint-plugin-import'
 import globals from 'globals'
+import eslintConfigPrettier from 'eslint-config-prettier'
 
 export default tseslint.config(
   {
@@ -86,4 +87,5 @@ export default tseslint.config(
       'no-console': 'off',
     },
   },
+  eslintConfigPrettier,
 )

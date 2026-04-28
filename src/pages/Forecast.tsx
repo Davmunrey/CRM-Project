@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useTranslations } from '../i18n'
 import { useDateLocale } from '../hooks/useDateLocale'
 import {
@@ -6,9 +6,7 @@ import {
   Line, ComposedChart, Area,
 } from 'recharts'
 import { useDealsStore } from '../store/dealsStore'
-import { useContactsStore } from '../store/contactsStore'
 import { useActivitiesStore } from '../store/activitiesStore'
-import { useCompaniesStore } from '../store/companiesStore'
 import { formatCurrency, formatDate } from '../utils/formatters'
 import {
   subMonths, format, startOfMonth, endOfMonth, parseISO,

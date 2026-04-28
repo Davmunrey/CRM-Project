@@ -43,8 +43,8 @@ export const useAuditStore = create<AuditStore>()((set, get) => ({
         timestamp: r.created_at,
       }))
       set({ entries, isLoading: false })
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false })
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false })
     }
   },
 
@@ -64,7 +64,7 @@ export const useAuditStore = create<AuditStore>()((set, get) => ({
         entity_id: entry.entityId, entity_name: entry.entityName,
         details: entry.details, user_id: entry.userId,
         organization_id: getOrgId(),
-      }).then(({ error }: any) => { if (error) devConsole.error('[auditStore] insert error', error) })
+      }).then(({ error }: { error: Error | null }) => { if (error) devConsole.error('[auditStore] insert error', error) })
     }
   },
 

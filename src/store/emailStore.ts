@@ -821,7 +821,6 @@ export const useEmailStore = create<EmailStore>()(
       refreshTrackingMetrics: async () => {
         if (!isSupabaseConfigured || !supabase) return
         const currentUserId = useAuthStore.getState().currentUser?.id
-        const scopedEmails = get().emails.filter((e) => e.ownerUserId && e.ownerUserId === currentUserId)
         const legacyOwnedCandidates = get().emails
           .filter((e) => !e.ownerUserId && e.trackingEnabled)
           .map((e) => e.id)

@@ -8,7 +8,7 @@ This master document compares **Pipedrive** (the group’s reference CRM) with *
 
 - **Pipedrive’s moat for integrators** is a mature **push model** (webhooks v2 with retries, meta payloads, visibility-aware delivery) alongside a **pull model** (documented REST API, marketplace). Teams that run ERP, billing, or RevOps stacks around the CRM depend on that contract.
 - **Velo** already ships a strong **in-app** sales stack (deals, contacts, companies, activities, Gmail inbox links, automations, sequences, reports, multi-tenant RLS, audit, products/quotes)—see [`../README.md`](../README.md) and [§ Velo capability map](#velo-capability-map).
-- The **largest structural gap** for “group-level” parity is **programmatic integration**: **no product outbound webhooks** today (see [`.planning/codebase/INTEGRATIONS.md`](../.planning/codebase/INTEGRATIONS.md)); the roadmap already tracks **API + Webhooks** and **Webhooks v1 (signed payloads, retries)** in [`./master-roadmap-backlog.md`](./master-roadmap-backlog.md).
+- The **largest structural gap** for “group-level” parity is **programmatic integration**: **no product outbound webhooks** today (see [`.planning/CODEBASE.md` — External integrations](../.planning/CODEBASE.md#external-integrations-audit)); the roadmap already tracks **API + Webhooks** and **Webhooks v1 (signed payloads, retries)** in [`./master-roadmap-backlog.md`](./master-roadmap-backlog.md).
 - **Recommended lift (three steps):** (1) **Integration fabric** — outbound webhooks with **multi-endpoint subscriptions**, **flexible auth (headers + signing)**, retries/DLQ; (2) **public REST + idempotency**; (3) **enterprise governance** (SSO/SCIM, field visibility, expanded audit) so integrations are controlled.
 
 ---
@@ -56,6 +56,24 @@ See also [§ Velo webhooks — v1 scope](#webhooks-v1-scope).
 ### Product intent
 
 Stakeholders want **webhooks with strong connection potential**: a **platform hook**, not one hard-coded integration—so **Zapier, Make, n8n, internal microservices, ERP**, and custom stacks can subscribe with **configuration**, not per-vendor code paths.
+
+### Delivery flow (outbox → worker → DLQ)
+
+```mermaid
+sequenceDiagram
+  participant App as CRM App
+  participant DB as Postgres webhook_outbox
+  participant W as Edge webhook-worker
+  participant Ext as Customer URL
+  App->>DB: insert outbox row
+  Note over W: Scheduled worker / cron
+  W->>DB: claim pending
+  W->>Ext: POST signed payload (X-Velo-Signature)
+  Ext-->>W: 2xx / 4xx / 5xx / timeout
+  W->>DB: update status or mark dead
+```
+
+- Retries use backoff; after max attempts the row is marked **`dead`** (DLQ). Operators can replay from Settings → Webhooks (subscription test / replay actions) via `webhook-subscriptions` actions (`listFailedOutbox` / `replayOutbox`).
 
 ### v1 (ship first)
 
@@ -116,7 +134,7 @@ When code ships, record architecture, migrations, and Edge Functions in [`./mast
 <a id="velo-capability-map"></a>
 ## Velo — capability map
 
-Aligned to [`../README.md`](../README.md) feature table and [`.planning/codebase/STRUCTURE.md`](../.planning/codebase/STRUCTURE.md).
+Aligned to [`../README.md`](../README.md) feature table and [`.planning/CODEBASE.md` — Codebase structure](../.planning/CODEBASE.md#codebase-structure).
 
 | Domain | Velo coverage (summary) | Primary code / doc pointers |
 |--------|----------------------------|----------------------------|
@@ -197,7 +215,7 @@ Scoring: **A** adoption / dependency, **R** revenue cycle, **I** integration rel
 |-------|------|
 | Routes / lazy pages | `src/App.tsx` |
 | Deal mutations / automations hook | `src/store/dealsStore.ts`, `src/store/automationsStore.ts` |
-| Integration audit | `.planning/codebase/INTEGRATIONS.md` |
+| Integration audit | `.planning/CODEBASE.md#external-integrations-audit` |
 | Schema | `supabase/migrations/` |
 | Roadmap API/Webhooks | `./master-roadmap-backlog.md` |
 | Implementation history (do not duplicate here) | `./master-implementation-history.md` |

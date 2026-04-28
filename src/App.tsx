@@ -5,33 +5,15 @@ import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/layout/ErrorBoundary'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { WorkspaceHostBootstrap } from './components/auth/WorkspaceHostBootstrap'
-import { ContactDetail } from './pages/ContactDetail'
-import { CompanyDetail } from './pages/CompanyDetail'
-import { FollowUps } from './pages/FollowUps'
-import { AuditLog } from './pages/AuditLog'
-import { SalesGoals } from './pages/SalesGoals'
-import { Login } from './pages/Login'
-import { Register } from './pages/Register'
-import { ForgotPassword } from './pages/ForgotPassword'
-import { ResetPassword } from './pages/ResetPassword'
-import { OrgSetup } from './pages/OrgSetup'
-import { OrgAccessRequired } from './pages/OrgAccessRequired'
-import { AcceptInvite } from './pages/AcceptInvite'
-import { TeamManagement } from './pages/TeamManagement'
-import { UserProfile } from './pages/UserProfile'
-import { Notifications } from './pages/Notifications'
-import { PipelineTimeline } from './pages/PipelineTimeline'
-import { Automations } from './pages/Automations'
-import { Products } from './pages/Products'
 import { useTranslations, useI18nStore } from './i18n'
 import { useDataInit } from './hooks/useDataInit'
 import { GmailTokenProvider } from './contexts/GmailTokenContext'
-import { GmailCallback } from './pages/GmailCallback'
 import { useSettingsStore } from './store/settingsStore'
 import { applyTheme, applyUiDensity } from './lib/theme'
 import { applyBrandingAccentToDocument } from './lib/brandingAccent'
 import { isBootstrapFatalError } from './lib/supabase'
 import { loadDateFnsLocale } from './lib/dateFnsLocale'
+import { flushUxMetricsToServer } from './lib/uxMetrics'
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })))
 const Reports = lazy(() => import('./pages/Reports').then((m) => ({ default: m.Reports })))
@@ -50,6 +32,25 @@ const Inbox = lazy(() => import('./pages/Inbox').then((m) => ({ default: m.Inbox
 const EmailTemplates = lazy(() => import('./pages/EmailTemplates').then((m) => ({ default: m.EmailTemplates })))
 const Calendar = lazy(() => import('./pages/Calendar').then((m) => ({ default: m.Calendar })))
 const Sequences = lazy(() => import('./pages/Sequences').then((m) => ({ default: m.Sequences })))
+const ContactDetail = lazy(() => import('./pages/ContactDetail').then((m) => ({ default: m.ContactDetail })))
+const CompanyDetail = lazy(() => import('./pages/CompanyDetail').then((m) => ({ default: m.CompanyDetail })))
+const FollowUps = lazy(() => import('./pages/FollowUps').then((m) => ({ default: m.FollowUps })))
+const AuditLog = lazy(() => import('./pages/AuditLog').then((m) => ({ default: m.AuditLog })))
+const SalesGoals = lazy(() => import('./pages/SalesGoals').then((m) => ({ default: m.SalesGoals })))
+const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })))
+const Register = lazy(() => import('./pages/Register').then((m) => ({ default: m.Register })))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then((m) => ({ default: m.ForgotPassword })))
+const ResetPassword = lazy(() => import('./pages/ResetPassword').then((m) => ({ default: m.ResetPassword })))
+const OrgSetup = lazy(() => import('./pages/OrgSetup').then((m) => ({ default: m.OrgSetup })))
+const OrgAccessRequired = lazy(() => import('./pages/OrgAccessRequired').then((m) => ({ default: m.OrgAccessRequired })))
+const AcceptInvite = lazy(() => import('./pages/AcceptInvite').then((m) => ({ default: m.AcceptInvite })))
+const TeamManagement = lazy(() => import('./pages/TeamManagement').then((m) => ({ default: m.TeamManagement })))
+const UserProfile = lazy(() => import('./pages/UserProfile').then((m) => ({ default: m.UserProfile })))
+const Notifications = lazy(() => import('./pages/Notifications').then((m) => ({ default: m.Notifications })))
+const PipelineTimeline = lazy(() => import('./pages/PipelineTimeline').then((m) => ({ default: m.PipelineTimeline })))
+const Automations = lazy(() => import('./pages/Automations').then((m) => ({ default: m.Automations })))
+const Products = lazy(() => import('./pages/Products').then((m) => ({ default: m.Products })))
+const GmailCallback = lazy(() => import('./pages/GmailCallback').then((m) => ({ default: m.GmailCallback })))
 
 function ProtectedPage({ title, children, requiredPermission }: { title: string; children: React.ReactNode; requiredPermission?: import('./types/auth').Permission }) {
   return (
@@ -104,6 +105,21 @@ function AppRoutes() {
     return unsub
   }, [])
 
+  useEffect(() => {
+    const tick = () => {
+      void flushUxMetricsToServer()
+    }
+    const id = window.setInterval(tick, 5 * 60 * 1000)
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') tick()
+    }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [])
+
   return (
     <Suspense fallback={lazyFallback}>
       <Routes>
@@ -151,6 +167,54 @@ function AppRoutes() {
         />
         <Route path="/inbox" element={<ProtectedPage title={t.nav.inbox} requiredPermission="email:read"><Inbox /></ProtectedPage>} />
         <Route path="/settings" element={<ProtectedPage title={t.nav.settings} requiredPermission="settings:read"><Settings /></ProtectedPage>} />
+        <Route
+          path="/settings/general"
+          element={(
+            <ProtectedPage title={t.nav.settings} requiredPermission="settings:read">
+              <Navigate to="/settings?tab=general" replace />
+            </ProtectedPage>
+          )}
+        />
+        <Route
+          path="/settings/team"
+          element={(
+            <ProtectedPage title={t.nav.settings} requiredPermission="settings:read">
+              <Navigate to="/settings?tab=permissions" replace />
+            </ProtectedPage>
+          )}
+        />
+        <Route
+          path="/settings/security"
+          element={(
+            <ProtectedPage title={t.nav.settings} requiredPermission="settings:read">
+              <Navigate to="/settings?tab=security" replace />
+            </ProtectedPage>
+          )}
+        />
+        <Route
+          path="/settings/billing"
+          element={(
+            <ProtectedPage title={t.nav.settings} requiredPermission="settings:read">
+              <Navigate to="/settings?tab=advanced" replace />
+            </ProtectedPage>
+          )}
+        />
+        <Route
+          path="/settings/privacy"
+          element={(
+            <ProtectedPage title={t.nav.settings} requiredPermission="settings:read">
+              <Navigate to="/settings?tab=data" replace />
+            </ProtectedPage>
+          )}
+        />
+        <Route
+          path="/settings/sso"
+          element={(
+            <ProtectedPage title={t.nav.settings} requiredPermission="settings:read">
+              <Navigate to="/settings?tab=security" replace />
+            </ProtectedPage>
+          )}
+        />
         <Route
           path="/settings/integrations"
           element={(

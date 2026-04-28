@@ -244,7 +244,7 @@ export const useAuthStore = create<AuthState>()(
 
       ensureTenantForCurrentUser: async () => {
         if (!isSupabaseConfigured || !supabase) return
-        if (!(supabase as any).functions?.invoke) return
+        if (!supabase?.functions?.invoke) return
         const state = get()
         if (!state.currentUser || state.organizationId) {
           if (state.organizationId) set({ tenantResolutionStatus: 'ready', tenantResolutionMessage: null })

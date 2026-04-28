@@ -172,6 +172,40 @@ All previously listed “in progress” packs (automations v1, scoring v2, lead 
 
 ## Next
 
+### Founder-led category strategy (90-day execution lock)
+
+This section is the operating reference for the founder-led push to "top-tier" execution quality without scaling headcount.
+
+#### 1) ICP and battlefield
+
+- **Primary ICP:** founder-led and small revenue teams (2-20 seats) that need faster outbound execution and simpler workflows than heavy CRMs.
+- **Secondary ICP:** SMB teams graduating from spreadsheets/notion-style pipelines that need process discipline without enterprise overhead.
+- **Competitive stance:** beat HubSpot/Salesforce on speed-to-value, beat Pipedrive on execution intelligence and trust posture.
+
+#### 2) Killer promise
+
+- **Promise:** "From first login to first predictable pipeline action in under 10 minutes, with enterprise-grade trust defaults."
+
+#### 3) Anti-roadmap (explicit NO list for this quarter)
+
+- No horizontal "platform rebuild" work that does not improve activation, retention, or trust evidence.
+- No broad integration matrix expansion before core journey reliability and onboarding conversion targets are hit.
+- No generic AI assistant: only workflow-linked recommendations with measurable impact.
+
+#### 4) Priority scorecard (must pass to enter sprint)
+
+Score each candidate initiative from 1-5:
+
+| Dimension | Description |
+|---|---|
+| Revenue impact | Expected effect on conversion, expansion, or retention |
+| User pain relief | Severity/frequency of current friction |
+| Trust leverage | Security/compliance/reliability improvement visible to buyers |
+| Founder effort | Total implementation + ops burden for solo-founder execution |
+| Time to evidence | How fast we can measure success/failure after shipping |
+
+Execution rule: only initiatives with high combined score and low founder burden enter active sprint.
+
 <a id="i18n-regionalization-execution-waves"></a>
 ### i18n / regionalization — execution waves
 
@@ -223,6 +257,25 @@ Ship **incrementally** after the 0–30 manager + onboarding focus; do not block
 - [ ] Governance and field-level security
 - [ ] AI copilot v2
 - [ ] Forecasting intelligence
+
+## Differentiation wedge and growth loop (founder-led)
+
+### Wedge definition
+
+- **Wedge product:** Revenue Execution Copilot
+  - next-best-action prompts from current pipeline context,
+  - contextual email draft starters linked to the exact stage/task,
+  - manager-facing operational forecast cues (slippage and attention risk).
+
+### Growth loop
+
+- Weekly cycle:
+  - collect top friction and top "aha" from active users,
+  - ship one conversion-focused improvement and one retention-focused improvement,
+  - review onboarding completion, first-value time, and WAU delta.
+- Packaging cycle (bi-weekly):
+  - refine plan tiers around trust and execution outcomes,
+  - update demo narrative from real shipped value (no aspirational sales deck claims).
 
 ## Sell-Readiness Matrix (Go-To-Market)
 

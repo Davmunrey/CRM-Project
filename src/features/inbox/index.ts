@@ -1,3 +1,5 @@
+export { InboxThreadItem } from './components/InboxThreadItem'
+export { InboxTrackingBadges } from './components/InboxTrackingBadges'
 export { extractEmail, parseEmails } from './emailParsing'
 export {
   type ThreadMatch,

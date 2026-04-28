@@ -240,8 +240,8 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
         lastSentMessageId: r.last_sent_message_id ?? null,
       }))
       set({ sequences, enrollments, isLoading: false })
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false })
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false })
     }
   },
 

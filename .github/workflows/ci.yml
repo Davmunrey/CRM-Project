@@ -34,11 +34,25 @@ jobs:
       - name: i18n guardrails
         run: npm run i18n:lint
 
+      - name: i18n key parity (all locales vs en)
+        run: npm run i18n:coverage
+
+      - name: ESLint (full)
+        run: npm run lint:ci
+
       - name: Type check
         run: npx tsc --noEmit
 
       - name: Run tests
         run: npx vitest run
+
+      - name: Vite build (CI, development mode)
+        run: npm run build -- --mode development
+
+      - name: Bundle size budget (gzip, largest JS chunk)
+        run: npm run bundle:check
+        env:
+          BUNDLE_MAX_GZIP_KB: '250'
 
       - name: Install Playwright (Chromium, API smoke only)
         if: ${{ env.E2E_SUPABASE_URL != '' && env.E2E_SUPABASE_ANON_KEY != '' && env.E2E_USER_EMAIL != '' && env.E2E_USER_PASSWORD != '' && env.E2E_ORGANIZATION_ID != '' }}

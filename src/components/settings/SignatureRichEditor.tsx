@@ -28,7 +28,7 @@ import { Button } from '../ui/Button'
 function sanitizeSignatureHtml(html: string): string {
   return DOMPurify.sanitize(html ?? '', {
     USE_PROFILES: { html: true },
-    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|data):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+    ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|data):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
   })
 }
 

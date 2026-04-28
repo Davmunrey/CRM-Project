@@ -3,7 +3,7 @@ import type { Deal } from '../../types'
 import { formatCurrency, formatDate } from '../../utils/formatters'
 import { DEAL_PRIORITY_COLORS } from '../../utils/constants'
 import { Avatar } from '../ui/Avatar'
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { useContactsStore } from '../../store/contactsStore'
 import { useCompaniesStore } from '../../store/companiesStore'
 import { useActivitiesStore } from '../../store/activitiesStore'
@@ -28,7 +28,7 @@ function getAgingColor(days: number): { bg: string; text: string } {
   return { bg: 'bg-danger/15', text: 'text-danger' }
 }
 
-export function DealCard({ deal, index, onClick }: DealCardProps) {
+function DealCardInner({ deal, index, onClick }: DealCardProps) {
   const language = useI18nStore((s) => s.language)
   const contactRaw = useContactsStore((s) => s.contacts.find((c) => c.id === deal.contactId))
   const companyRaw = useCompaniesStore((s) => s.companies.find((c) => c.id === deal.companyId))
@@ -123,3 +123,5 @@ export function DealCard({ deal, index, onClick }: DealCardProps) {
     </Draggable>
   )
 }
+
+export const DealCard = memo(DealCardInner)

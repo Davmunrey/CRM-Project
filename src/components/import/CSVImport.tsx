@@ -7,6 +7,7 @@ import { toast } from '../../store/toastStore'
 import type { ContactStatus, ContactSource } from '../../types'
 import { useTranslations } from '../../i18n'
 import { normalizeIndustryValue } from '../../lib/industries'
+import { parseContactSource, parseContactStatus, safeParseCompanyRow, safeParseContactRow } from '../../lib/csvRowSchemas'
 import { Select } from '../ui/Select'
 
 interface CSVImportProps {
@@ -230,46 +231,50 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
         }
 
         if (entityType === 'contacts') {
-          if (!record.firstName || !record.email) {
+          const parsed = safeParseContactRow(record)
+          if (!parsed.success) {
             errors++
             continue
           }
+          const c = parsed.data
           addContact({
-            firstName: record.firstName,
-            lastName: record.lastName || '',
-            email: record.email,
-            phone: record.phone || '',
-            jobTitle: record.jobTitle || '',
+            firstName: c.firstName,
+            lastName: c.lastName,
+            email: c.email,
+            phone: c.phone,
+            jobTitle: c.jobTitle,
             companyId: '',
-            status: (['lead', 'prospect', 'customer', 'churned'].includes(record.status) ? record.status : 'lead') as ContactStatus,
-            source: (['website', 'referral', 'outbound', 'event', 'linkedin', 'other'].includes(record.source) ? record.source : 'other') as ContactSource,
+            status: parseContactStatus(c.status) as ContactStatus,
+            source: parseContactSource(c.source) as ContactSource,
             tags: [],
             assignedTo: 'u1',
-            notes: record.notes || '',
+            notes: c.notes,
             linkedDeals: [],
             lastContactedAt: '',
           })
           imported++
         } else {
-          if (!record.name) {
+          const parsed = safeParseCompanyRow(record)
+          if (!parsed.success) {
             errors++
             continue
           }
+          const row = parsed.data
           addCompany({
-            name: record.name,
-            domain: record.domain || '',
-            industry: normalizeIndustryValue(record.industry || ''),
-            size: record.size || '',
-            country: record.country || '',
-            city: record.city || '',
-            website: record.website || '',
-            phone: record.phone || '',
+            name: row.name,
+            domain: row.domain,
+            industry: normalizeIndustryValue(row.industry),
+            size: row.size,
+            country: row.country,
+            city: row.city,
+            website: row.website,
+            phone: row.phone,
             status: 'prospect',
             contacts: [],
             deals: [],
             tags: [],
-            notes: record.notes || '',
-          } as any)
+            notes: row.notes,
+          })
           imported++
         }
       } catch {

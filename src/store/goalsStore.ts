@@ -44,8 +44,8 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
       const { data, error } = await (supabase as any).from('sales_goals').select('*').order('created_at', { ascending: false })
       if (error) throw error
       set({ goals: (data ?? []).map(rowToGoal), isLoading: false })
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false })
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false })
     }
   },
 
@@ -83,7 +83,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
       if (updates.startDate !== undefined) row.start_date = updates.startDate
       if (updates.endDate !== undefined) row.end_date = updates.endDate
       ;(supabase as any).from('sales_goals').update(row).eq('id', id)
-        .then(({ error }: any) => { if (error) devConsole.error('[goalsStore] update error', error) })
+        .then(({ error }: { error: Error | null }) => { if (error) devConsole.error('[goalsStore] update error', error) })
     }
   },
 

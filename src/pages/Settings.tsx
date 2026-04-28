@@ -31,18 +31,19 @@ import { useTranslations, useI18nStore, LANGUAGE_LABELS, LANGUAGE_FLAGS } from '
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import { useOnboardingStore } from '../store/onboardingStore'
-import { trackUxAction } from '../lib/uxMetrics'
+import { getUxActionCount, trackUxAction } from '../lib/uxMetrics'
 import { useAuditStore } from '../store/auditStore'
 import { useNavigationPrefsStore } from '../store/navigationPrefsStore'
-import type { NavigationPreferences, SidebarBuiltinItemId, SidebarCustomGroup, SidebarIconKey, SidebarSectionId } from '../types/navigation'
+import type { SidebarBuiltinItemId, SidebarCustomGroup, SidebarIconKey, SidebarSectionId } from '../types/navigation'
 import { createDefaultNavigationPreferences } from '../config/navigationDefaults'
 import type { Language } from '../i18n'
 import type { DealCurrency, CustomFieldEntityType, CustomFieldType, PipelineStage } from '../types'
-import type { NotificationType } from '../types'
 import type { Permission, UserRole } from '../types/auth'
 import { ALL_PERMISSIONS } from '../utils/permissionProfiles'
 import { SettingsWebhooksPanel } from '../components/settings/SettingsWebhooksPanel'
 import { SettingsIntegrationsPanel } from '../components/settings/SettingsIntegrationsPanel'
+import { SettingsMfaPanel } from '../components/settings/SettingsMfaPanel'
+import { SettingsSsoScimPanel } from '../components/settings/SettingsSsoScimPanel'
 import { SignatureRichEditor } from '../components/settings/SignatureRichEditor'
 const ENTITY_TABS: CustomFieldEntityType[] = ['contact', 'company', 'deal']
 
@@ -58,6 +59,7 @@ type SettingsTab =
   | 'pipeline'
   | 'email'
   | 'permissions'
+  | 'security'
   | 'data'
   | 'navigation'
   | 'webhooks'
@@ -74,6 +76,7 @@ export function Settings() {
     { id: 'pipeline', label: t.settings.tabPipeline },
     { id: 'email', label: t.settings.tabEmail },
     { id: 'permissions', label: t.settings.tabPermissions },
+    { id: 'security', label: t.settings.tabSecurity },
     { id: 'data', label: t.settings.tabData },
     { id: 'navigation', label: t.settings.tabNavigation },
     { id: 'webhooks', label: t.settings.tabWebhooks },
@@ -106,7 +109,7 @@ export function Settings() {
   }
 
   // ── Custom Fields state (manual subscription - persisted store) ────────────
-  const [cfDefinitions, setCfDefinitions] = useState(() => useCustomFieldsStore.getState().definitions)
+  const [, setCfDefinitions] = useState(() => useCustomFieldsStore.getState().definitions)
   useEffect(() => useCustomFieldsStore.subscribe((s) => setCfDefinitions(s.definitions)), [])
 
   const [cfActiveEntity, setCfActiveEntity] = useState<CustomFieldEntityType>('contact')
@@ -603,6 +606,23 @@ export function Settings() {
   }
 
   const tabVisible = (...tabs: SettingsTab[]) => tabs.includes(activeTab)
+  const authLoginAttempts = getUxActionCount('auth_login_attempt')
+  const authLoginSuccesses = getUxActionCount('auth_login_success')
+  const orgSetupAttempts = getUxActionCount('onboarding_org_setup_submit_attempt')
+  const orgSetupSuccesses = getUxActionCount('onboarding_org_setup_submit_success')
+  const resetCompleteAttempts = getUxActionCount('auth_password_reset_complete_attempt')
+  const resetCompleteSuccesses = getUxActionCount('auth_password_reset_complete_success')
+
+  const pct = (ok: number, total: number) => (total > 0 ? Math.round((ok / total) * 100) : 0)
+  const loginRate = pct(authLoginSuccesses, authLoginAttempts)
+  const orgSetupRate = pct(orgSetupSuccesses, orgSetupAttempts)
+  const resetRate = pct(resetCompleteSuccesses, resetCompleteAttempts)
+
+  const activationInputs = [authLoginAttempts, orgSetupAttempts, resetCompleteAttempts]
+  const activationCompletions = [authLoginSuccesses, orgSetupSuccesses, resetCompleteSuccesses]
+  const totalAttempts = activationInputs.reduce((sum, item) => sum + item, 0)
+  const totalSuccesses = activationCompletions.reduce((sum, item) => sum + item, 0)
+  const activationHealth = pct(totalSuccesses, totalAttempts)
 
   const sectionOptions: Array<{ id: SidebarSectionId; label: string }> = [
     { id: 'main', label: t.navSections.main },
@@ -753,6 +773,46 @@ export function Settings() {
           >
             {t.settings.onboardingReset}
           </Button>
+        </div>
+        <div className={`mt-5 p-4 ${innerSurface}`}>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div>
+              <p className="text-sm font-semibold text-fg">{t.settings.activationFunnelTitle}</p>
+              <p className="text-xs text-fg-subtle">{t.settings.activationFunnelSubtitle}</p>
+            </div>
+            <span
+              className={`text-xs px-2 py-1 rounded-full border ${
+                activationHealth >= 80
+                  ? 'bg-success/15 text-success border-success/30'
+                  : activationHealth >= 60
+                    ? 'bg-warning/15 text-warning border-warning/30'
+                    : 'bg-danger/15 text-danger border-danger/30'
+              }`}
+            >
+              {t.settings.activationHealthLabel}: {activationHealth}%
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className={`${innerSurface} p-3`}>
+              <p className="text-xs text-fg-subtle mb-1">{t.settings.activationLoginLabel}</p>
+              <p className="text-sm text-fg">
+                {authLoginSuccesses}/{authLoginAttempts} - {loginRate}%
+              </p>
+            </div>
+            <div className={`${innerSurface} p-3`}>
+              <p className="text-xs text-fg-subtle mb-1">{t.settings.activationOrgSetupLabel}</p>
+              <p className="text-sm text-fg">
+                {orgSetupSuccesses}/{orgSetupAttempts} - {orgSetupRate}%
+              </p>
+            </div>
+            <div className={`${innerSurface} p-3`}>
+              <p className="text-xs text-fg-subtle mb-1">{t.settings.activationResetLabel}</p>
+              <p className="text-sm text-fg">
+                {resetCompleteSuccesses}/{resetCompleteAttempts} - {resetRate}%
+              </p>
+            </div>
+          </div>
+          <p className="mt-3 text-[11px] text-fg-subtle">{t.settings.activationFunnelHint}</p>
         </div>
       </section>
 
@@ -1462,6 +1522,13 @@ export function Settings() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className={`crm-surface-section p-6 ${tabVisible('security') ? '' : 'hidden'}`}>
+        <SettingsMfaPanel />
+        <div className="mt-6">
+          <SettingsSsoScimPanel />
         </div>
       </section>
 

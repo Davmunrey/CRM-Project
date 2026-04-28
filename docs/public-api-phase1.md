@@ -20,6 +20,14 @@ This document describes the Velo public REST surface after the API & capture har
 - Rows are filtered by the key’s `organization_id`. Successful requests update `last_used_at` on the key row.
 - Error payload includes `request_id` so support can map UI errors to Edge logs.
 
+### v1 path form (preferred)
+
+The function also supports a versioned path form:
+
+- **GET** `.../functions/v1/crm-public-api/v1/<collection>?limit=<1–100>`
+
+The query-style `collection=...` form remains supported for compatibility during migration.
+
 ## Operational troubleshooting
 
 - `401` + `code: unauthorized`: expired JWT for management endpoints, missing Bearer key for `crm-public-api`, or revoked/deleted API key.
@@ -40,3 +48,6 @@ This document describes the Velo public REST surface after the API & capture har
 ## Automated regression (E2E)
 
 - See [`deployment-spa-and-env.md` — E2E integrations smoke](./deployment-spa-and-env.md#e2e-integrations-smoke) for env vars, CI secrets, and `npm run test:e2e:integrations:local`.
+---
+
+*Last updated (git): **2026-04-22***

@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslations, useUiLanguage } from '../i18n'
 import {
   ArrowLeft, Edit2, Plus, Globe, Phone, Users, TrendingUp,
-  DollarSign, Activity as ActivityIcon, Building2, Mail, Calendar, Percent,
+  DollarSign, Activity as ActivityIcon, Building2, Mail, Percent,
 } from 'lucide-react'
 import { useCompaniesStore } from '../store/companiesStore'
 import { useContactsStore } from '../store/contactsStore'
@@ -21,12 +21,15 @@ import { ContactStatusBadge } from '../components/contacts/ContactStatusBadge'
 import { EmailComposer } from '../components/email/EmailComposer'
 import { toast } from '../store/toastStore'
 import { formatDate, formatCurrency, formatRelativeDate } from '../utils/formatters'
-import { DEAL_STAGE_COLORS, ACTIVITY_TYPE_COLORS } from '../utils/constants'
+import { ACTIVITY_TYPE_COLORS } from '../utils/constants'
 import { getIndustryLabel } from '../lib/industries'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import type { Company, Deal, Contact, Activity, CRMEmail, DealStage } from '../types'
 import { CustomFieldsDisplay } from '../components/shared/CustomFieldRenderer'
 import { StatCard } from '../components/ui/StatCard'
+import { useAuthStore } from '../store/authStore'
+import { usePresence } from '../hooks/usePresence'
+import { PresenceBadges } from '../components/shared/PresenceBadges'
 
 type TabId = 'overview' | 'contacts' | 'deals' | 'activities' | 'emails'
 
@@ -50,6 +53,8 @@ export function CompanyDetail() {
   const t = useTranslations()
   const uiLang = useUiLanguage()
   const { id } = useParams<{ id: string }>()
+  const currentUser = useAuthStore((s) => s.currentUser)
+  const { members } = usePresence(`company:${id ?? 'none'}`, currentUser ? { userId: currentUser.id, name: currentUser.name } : null)
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -182,6 +187,7 @@ export function CompanyDetail() {
               <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${statusCfg.bg} ${statusCfg.color}`}>
                 {t.companies.statusLabels[company.status as keyof typeof t.companies.statusLabels] ?? company.status}
               </span>
+              <PresenceBadges users={members.map((m) => ({ userId: m.userId, name: m.name }))} />
               {company.city && (
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-fg/6 text-fg-muted">{company.city}, {company.country}</span>
               )}

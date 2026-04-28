@@ -1,4 +1,18 @@
-type UxActionName =
+import { isSupabaseConfigured, supabase } from './supabase'
+
+export type UxActionName =
+  | 'auth_login_attempt'
+  | 'auth_login_success'
+  | 'auth_login_error'
+  | 'auth_password_reset_request_attempt'
+  | 'auth_password_reset_request_success'
+  | 'auth_password_reset_request_error'
+  | 'auth_password_reset_complete_attempt'
+  | 'auth_password_reset_complete_success'
+  | 'auth_password_reset_complete_error'
+  | 'onboarding_org_setup_submit_attempt'
+  | 'onboarding_org_setup_submit_success'
+  | 'onboarding_org_setup_submit_error'
   | 'quick_create_contact'
   | 'quick_create_deal'
   | 'quick_create_activity'
@@ -11,7 +25,7 @@ type UxActionName =
   | 'onboarding_banner_dismiss'
   | 'onboarding_checklist_reset'
 
-interface UxMetricEvent {
+export interface UxMetricEvent {
   action: UxActionName
   timestamp: string
   meta?: Record<string, string | number | boolean | null>
@@ -31,6 +45,46 @@ export function trackUxAction(action: UxActionName, meta?: UxMetricEvent['meta']
     localStorage.setItem(LS_KEY, JSON.stringify(next))
   } catch {
     // Non-blocking telemetry helper.
+  }
+}
+
+export function getUxEvents(): UxMetricEvent[] {
+  try {
+    const raw = localStorage.getItem(LS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as UxMetricEvent[]
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((event) => typeof event?.action === 'string' && typeof event?.timestamp === 'string')
+      .slice(-MAX_EVENTS)
+  } catch {
+    return []
+  }
+}
+
+export function getUxActionCount(action: UxActionName): number {
+  return getUxEvents().reduce((acc, event) => acc + (event.action === action ? 1 : 0), 0)
+}
+
+/** Post queued UX events to the Edge Function (no-op if offline / no session / no Supabase). */
+export async function flushUxMetricsToServer(): Promise<void> {
+  try {
+    if (!isSupabaseConfigured || !supabase) return
+    const events = getUxEvents()
+    if (events.length === 0) return
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return
+    const { error } = await supabase.functions.invoke('ux-metrics-ingest', {
+      body: { events },
+    })
+    if (error) return
+    try {
+      localStorage.removeItem(LS_KEY)
+    } catch {
+      // ignore
+    }
+  } catch {
+    // Non-blocking
   }
 }
 

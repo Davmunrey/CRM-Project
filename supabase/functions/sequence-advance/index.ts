@@ -1,6 +1,6 @@
 /**
- * Stub for future sequence execution: advance active enrollments along `flow_definition`.
- * Deploy with `supabase functions deploy sequence-advance` and invoke on a schedule (pg_cron, external worker).
+ * Placeholder: automatic sequence execution is not implemented yet.
+ * Schedulers should treat HTTP 501 as "not implemented" (do not assume success).
  * See docs/sequences-flow.md (Execution worker section).
  */
 const corsHeaders = {
@@ -13,10 +13,11 @@ Deno.serve(async (req) => {
 
   return new Response(
     JSON.stringify({
-      ok: true,
+      ok: false,
+      error: 'not_implemented',
       message:
-        'sequence-advance stub: implement enrollment traversal, sends (respect SequenceStep.emailThreadMode and enrollment last_sent_* ids), stop_on_contact_reply / markEnrollmentReplied on inbound reply, and sequence_step_events before scheduling this function.',
+        'sequence-advance: implement enrollment traversal, sends (SequenceStep.emailThreadMode, last_sent_* ids), stop_on_contact_reply, and sequence_step_events; then return 200.',
     }),
-    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    { status: 501, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   )
 })

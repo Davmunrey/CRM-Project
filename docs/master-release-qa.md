@@ -1,3 +1,10 @@
+## SLO Baseline (Phase 2)
+
+- Public API p95 latency `< 500ms`, error rate `< 0.1%`.
+- Login success rate `> 99%`.
+- Inbox sync p95 `< 3s` for connected Gmail accounts.
+- Alert routing: Sentry issue alerts + weekly trend review in release QA.
+
 # Release & QA (master)
 
 > Consolidated **2026-04-15**. Sell-ready checklists, QA evidence, go/no-go records, and production handoff.
@@ -63,6 +70,32 @@ Use this checklist before shipping a "sell-ready" baseline release.
 - [x] Monitoring/alerts reviewed for release window.
 - [x] Support handoff notes delivered.
 - [x] Go/No-Go decision recorded.
+
+## Founder-speed weekly shipping cadence (solo + AI)
+
+Use this cadence when operating with a single engineering owner:
+
+- **Monday:** choose one strategic initiative + one stability initiative from the scorecard in [`master-roadmap-backlog.md`](./master-roadmap-backlog.md).
+- **Wednesday:** shipping checkpoint (scope trim allowed; quality gates not negotiable).
+- **Friday:** production release + smoke + KPI review + retro notes.
+
+Non-negotiable merge/release gates:
+
+- `npm run ui:lint`
+- `npm run i18n:lint`
+- `npm run lint:ci` (full ESLint on `src/`)
+- `npx tsc --noEmit`
+- `npm run test:run` (or `npx vitest run` in CI)
+- `npm run build -- --mode development` (Vite compile gate; production deploys use `VITE_APP_CHANNEL` + Supabase secrets)
+- Release smoke from [`smoke-checklist-production.md`](./smoke-checklist-production.md)
+
+### Branch protection (Gitea / GitHub)
+
+When enabling **required status checks** on the default branch (`master`):
+
+- Require all jobs from **`.github/workflows/ci.yml`** (or the equivalent Gitea workflow): **ui:lint**, **i18n:lint**, **ESLint (full)**, **Type check**, **Run tests**, **Vite build (CI)**, plus **Dependency audit (critical+)**.
+- Optional: add **`build-production.yml`** / deploy workflow as an additional check only if that pipeline is always green on `master`.
+- Document the policy owner in [`master-security-compliance` — Gitea](./master-security-compliance.md#gitea-operations).
 
 ## Security and compliance baseline (Apr 2026)
 

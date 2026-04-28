@@ -25,7 +25,7 @@
 }
 
 @layer base {
-  /* Legacy surface vars live in src/styles/tokens.css (single source of truth). */
+  /* Design tokens: `src/styles/tokens.css`. Remove one-off utilities here only when a token exists. */
 
   * {
     box-sizing: border-box;

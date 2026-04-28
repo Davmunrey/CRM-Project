@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { captureEdgeException } from '../_shared/sentryEdge.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,6 +44,20 @@ Deno.serve(async (req: Request) => {
     if (leadErr || !lead) {
       return new Response(JSON.stringify({ error: 'Lead not found' }), {
         status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Idempotent replay: already converted — return existing ids (no duplicate contacts/deals)
+    if (lead.status === 'converted' && lead.converted_contact_id) {
+      return new Response(JSON.stringify({
+        success: true,
+        idempotent: true,
+        contactId: lead.converted_contact_id,
+        companyId: lead.converted_company_id ?? null,
+        dealId: lead.converted_deal_id ?? null,
+      }), {
+        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
@@ -158,6 +173,7 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {
+    captureEdgeException(err, { function: 'promote-lead' })
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

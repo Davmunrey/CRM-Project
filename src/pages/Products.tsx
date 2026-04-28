@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Package, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Search, Boxes, Euro } from 'lucide-react'
+import { Package, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Boxes, Euro } from 'lucide-react'
 import { useProductsStore } from '../store/productsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { toast } from '../store/toastStore'

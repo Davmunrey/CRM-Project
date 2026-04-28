@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import {
-  Mail, Send, Inbox as InboxIcon, Loader2, RefreshCw, Wifi, WifiOff, User, Clock, Reply, Plus, Eye, MousePointerClick,
+  Mail, Send, Inbox as InboxIcon, Loader2, RefreshCw, Wifi, WifiOff, User, Clock, Reply, Plus,
   Paperclip, Download, Search, ChevronLeft, ChevronRight, Archive, Trash2, CheckCheck, ListChecks, X,
 } from 'lucide-react'
-import { Spinner } from '../components/ui/Spinner'
 import { Link } from 'react-router-dom'
 import { useEmailStore } from '../store/emailStore'
 import { useContactsStore } from '../store/contactsStore'
@@ -31,117 +31,14 @@ import { Skeleton } from '../components/ui/Skeleton'
 import { Select } from '../components/ui/Select'
 import { Button } from '../components/ui/Button'
 import {
-  extractEmail,
   parseEmails,
   type ThreadMatch,
   buildAutoThreadMatchMap,
   buildPersistedThreadMatchMap,
   buildReplySubject,
+  InboxThreadItem,
+  InboxTrackingBadges,
 } from '../features/inbox'
-
-// ─── Thread item ──────────────────────────────────────────────────────────────
-
-function ThreadItem({
-  thread,
-  selected,
-  bulkSelected,
-  onClick,
-  onToggleBulk,
-  contactByEmail,
-}: {
-  thread: GmailThread
-  selected: boolean
-  bulkSelected: boolean
-  onClick: () => void
-  onToggleBulk: () => void
-  contactByEmail: Map<string, { id: string; name: string }>
-}) {
-  const t = useTranslations()
-  const lastMsg = thread.messages[thread.messages.length - 1]
-  const isUnread = lastMsg?.labelIds?.includes('UNREAD')
-  const senderEmail = extractEmail(lastMsg?.from ?? '')
-  const matchedContact = contactByEmail.get(senderEmail)
-
-  return (
-    <div
-      onClick={onClick}
-      className={`group px-3 py-2.5 border-b border-fg/[0.06] cursor-pointer transition-colors motion-reduce:transition-none ${
-        selected ? 'bg-accent-600/[0.12] border-l-[3px] border-l-accent-500 shadow-[inset_0_0_0_1px_rgba(99,102,241,0.12)]' : 'hover:bg-fg/[0.04]'
-      }`}
-    >
-      <div className="flex items-start gap-2.5">
-        <input
-          type="checkbox"
-          checked={bulkSelected}
-          onChange={(e) => {
-            e.stopPropagation()
-            onToggleBulk()
-          }}
-          onClick={(e) => e.stopPropagation()}
-          className={`mt-1 rounded border-fg/12 bg-fg/6 text-accent-500 focus:ring-accent-500 transition-opacity ${
-            bulkSelected ? 'opacity-100' : 'opacity-35 group-hover:opacity-100'
-          }`}
-          aria-label={t.inbox.selectThread}
-          title={t.inbox.selectThread}
-        />
-        <div className="w-9 h-9 rounded-full bg-accent-600/18 flex items-center justify-center flex-shrink-0 text-sm font-semibold text-accent-400">
-          {(lastMsg?.from?.charAt(0) ?? '?').toUpperCase()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline justify-between gap-2 mb-0.5">
-            <p className={`text-sm leading-tight truncate ${isUnread ? 'font-semibold text-fg' : 'font-medium text-fg-muted'}`}>
-              {lastMsg?.from?.replace(/<.*>/, '').trim() || t.inbox.unknownSender}
-            </p>
-            <span className="text-xs text-fg-subtle tabular-nums flex-shrink-0">
-              {lastMsg?.date ? formatRelativeDate(lastMsg.date) : ''}
-            </span>
-          </div>
-          <p className={`text-sm truncate leading-snug ${isUnread ? 'text-fg font-medium' : 'text-fg-muted'}`}>{lastMsg?.subject ?? ''}</p>
-          <p className="text-xs text-fg-subtle truncate mt-0.5 leading-snug">{thread.snippet}</p>
-          {matchedContact && (
-            <Link
-              to={`/contacts/${matchedContact.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-2xs px-2 py-0.5 rounded-full bg-accent-600/20 text-accent-300 border border-accent-500/30 hover:bg-accent-600/30 transition-colors mt-1"
-            >
-              <User size={12} />
-              {matchedContact.name}
-            </Link>
-          )}
-        </div>
-        {isUnread && <div className="w-2 h-2 rounded-full bg-accent-500 flex-shrink-0 mt-1" />}
-      </div>
-    </div>
-  )
-}
-
-// ─── Tracking badges ──────────────────────────────────────────────────────────
-function TrackingBadges({ email }: { email: CRMEmail }) {
-  const t = useTranslations()
-  if (!email.trackingEnabled && !email.openCount && !email.clickCount) return null
-
-  return (
-    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-      {(email.openCount ?? 0) > 0 ? (
-        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/20">
-          <Eye size={9} />
-          {t.common.view} {email.openCount}x &middot; {formatRelativeDate(email.lastOpenedAt!)}
-        </span>
-      ) : email.trackingEnabled ? (
-        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-fg/8 text-fg-subtle border border-fg/10">
-          <Eye size={9} />
-          {t.common.noResults}
-        </span>
-      ) : null}
-      {(email.clickCount ?? 0) > 0 && (
-        <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-info/15 text-info border border-info/20">
-          <MousePointerClick size={9} />
-          {t.inbox.clicks} {email.clickCount}x
-        </span>
-      )}
-    </div>
-  )
-}
 
 // ─── Local email item ─────────────────────────────────────────────────────────
 function LocalEmailItem({
@@ -210,7 +107,7 @@ function LocalEmailItem({
               {email.scheduledFor ? formatDateTime(email.scheduledFor) : t.inbox.scheduled}
             </span>
           )}
-          <TrackingBadges email={email} />
+          <InboxTrackingBadges email={email} />
           {email.trackingEnabled && (
             <div className="flex items-center gap-1.5 mt-1.5" onClick={(e) => e.stopPropagation()}>
               <button type="button"
@@ -659,7 +556,7 @@ function LocalEmailView({
                   <span className="ml-2 text-success">{t.settings.connected} Gmail</span>
                 )}
               </p>
-              <TrackingBadges email={email} />
+              <InboxTrackingBadges email={email} />
               {email.trackingEnabled && (
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <button type="button"
@@ -1037,6 +934,14 @@ export function Inbox() {
     if (advancedFilters.mineOnly && !mine) return false
     if (advancedFilters.hasAttachments && !hasAttachment) return false
     return true
+  })
+
+  const threadListScrollRef = useRef<HTMLDivElement>(null)
+  const inboxThreadVirtualizer = useVirtualizer({
+    count: folder === 'inbox' ? inboxThreadsVisible.length : 0,
+    getScrollElement: () => threadListScrollRef.current,
+    estimateSize: () => 78,
+    overscan: 10,
   })
 
   const applyEmailQuickFilter = (items: CRMEmail[]) => items.filter((email) => {
@@ -1784,7 +1689,7 @@ export function Inbox() {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div ref={threadListScrollRef} className="flex-1 overflow-y-auto min-h-0">
           {folder === 'inbox' && connected && inboxThreadsVisible.length > 0 && (
             <div className="sticky top-0 z-10 hidden sm:flex items-center gap-2 px-3 py-1.5 border-b border-fg/10 text-[10px] font-semibold uppercase tracking-wider text-fg-subtle bg-surface-2/95 backdrop-blur-sm shadow-sm">
               <span className="w-7 flex-shrink-0" aria-hidden />
@@ -1844,21 +1749,38 @@ export function Inbox() {
                   {threadsError}
                 </div>
               )}
-              {connected && inboxThreadsVisible.map((thread) => (
-                <ThreadItem
-                  key={thread.id}
-                  thread={thread}
-                  selected={selectedThreadId === thread.id}
-                  bulkSelected={selectedThreadIds.has(thread.id)}
-                  onClick={() => {
-                    setSelectedThreadId(thread.id)
-                    setSelectedEmailId(null)
-                    setComposerOpen(false)
-                  }}
-                  onToggleBulk={() => toggleBulkThread(thread.id)}
-                  contactByEmail={contactByEmail}
-                />
-              ))}
+              {connected && !threadsLoading && inboxThreadsVisible.length > 0 && (
+                <div
+                  className="relative w-full"
+                  style={{ height: inboxThreadVirtualizer.getTotalSize() }}
+                >
+                  {inboxThreadVirtualizer.getVirtualItems().map((vi) => {
+                    const thread = inboxThreadsVisible[vi.index]
+                    return (
+                      <div
+                        key={thread.id}
+                        className="absolute top-0 left-0 w-full"
+                        data-index={vi.index}
+                        ref={inboxThreadVirtualizer.measureElement}
+                        style={{ transform: `translateY(${vi.start}px)` }}
+                      >
+                        <InboxThreadItem
+                          thread={thread}
+                          selected={selectedThreadId === thread.id}
+                          bulkSelected={selectedThreadIds.has(thread.id)}
+                          onClick={() => {
+                            setSelectedThreadId(thread.id)
+                            setSelectedEmailId(null)
+                            setComposerOpen(false)
+                          }}
+                          onToggleBulk={() => toggleBulkThread(thread.id)}
+                          contactByEmail={contactByEmail}
+                        />
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
               {connected && !threadsLoading && !!threadsNextPageToken && (
                 <div className="p-3 border-t border-fg/6">
                   <button type="button"

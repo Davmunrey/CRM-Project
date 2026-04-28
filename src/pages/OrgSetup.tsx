@@ -10,6 +10,7 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { AuthLayout } from '../components/auth/AuthLayout'
+import { trackUxAction } from '../lib/uxMetrics'
 
 export function OrgSetup() {
   const navigate = useNavigate()
@@ -87,6 +88,7 @@ export function OrgSetup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    trackUxAction('onboarding_org_setup_submit_attempt')
     if (!orgName.trim()) { setError(t.orgSetup.errorNameRequired); return }
     if (!slug.trim()) { setError(t.orgSetup.errorSlugRequired); return }
     if (!legalName.trim() || !taxId.trim() || !addressLine1.trim() || !city.trim() || !country.trim() || !billingEmail.trim()) {
@@ -149,6 +151,7 @@ export function OrgSetup() {
       }
 
       navigate('/', { replace: true })
+      trackUxAction('onboarding_org_setup_submit_success')
     } catch (err) {
       const message = (err as Error).message
       const isAlreadyMember = /already a member of an organization/i.test(message)
@@ -176,9 +179,11 @@ export function OrgSetup() {
             /* non-critical */
           })
           navigate('/', { replace: true })
+          trackUxAction('onboarding_org_setup_submit_success', { reason: 'already_member' })
           return
         }
       }
+      trackUxAction('onboarding_org_setup_submit_error', { reason: message.slice(0, 120) })
       setError(message)
     } finally {
       setIsLoading(false)

@@ -212,7 +212,7 @@ Deno.serve(async (req: Request) => {
           await admin
             .from('webhook_outbox')
             .update({
-              status: 'failed',
+              status: 'dead',
               attempts: nextAttempts,
               next_retry_at: null,
               last_error: lastErr ?? 'delivery failed',

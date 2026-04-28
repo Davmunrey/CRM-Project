@@ -22,6 +22,7 @@ import { useTranslations } from '../../i18n'
 import type { Translations } from '../../i18n'
 import type { UserRole } from '../../types/auth'
 import type { SidebarBuiltinItemId, SidebarCustomItem, SidebarIconKey, SidebarSectionId } from '../../types/navigation'
+import { preloadAppRoute } from '../../lib/routePreload'
 import { useNavigationPrefsStore } from '../../store/navigationPrefsStore'
 import { createDefaultNavigationPreferences } from '../../config/navigationDefaults'
 
@@ -121,6 +122,7 @@ function SidebarNavItem({ item, collapsed, nested = false }: SidebarNavItemProps
       <NavLink
         to={item.to}
         end={item.to === '/'}
+        onMouseEnter={() => preloadAppRoute(item.to)}
         aria-label={collapsed ? item.label : undefined}
         title={collapsed ? item.label : undefined}
         className={({ isActive }) => `

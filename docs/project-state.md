@@ -38,6 +38,39 @@ Operational detail for env vars and schedulers overlaps [`master-release-qa.md` 
 
 ---
 
+## System context (high level)
+
+```mermaid
+flowchart LR
+  Browser[Browser / SPA]
+  Host[Static host]
+  SupaAuth[Supabase Auth]
+  Postgres[Postgres + RLS]
+  Edge[Edge Functions]
+  Browser --> Host
+  Browser --> SupaAuth
+  Browser --> Postgres
+  Browser --> Edge
+  Edge --> Postgres
+```
+
+- **Frontend:** React 18 + Vite + React Router + Zustand; hosted as a static SPA (rewrites to `index.html`).
+- **Backend:** Supabase (Postgres + RLS, Auth, Realtime). **Edge Functions** (Deno) for webhooks, public API, lead capture, email/Gmail glue, etc.
+- **Auth (summary):** `signInWithPassword` → session JWT; optional MFA challenge/verify via Supabase MFA.
+
+---
+
+## Key decisions (rolled up; Apr 2026)
+
+- **Observability (browser):** Sentry initializes when `VITE_SENTRY_DSN` is set; UI error boundary captures exceptions; Edge uses structured request logging and can be extended with Edge Sentry when needed (`src/lib/sentry.ts`, `supabase/functions/_shared/requestLog.ts`).
+- **MFA:** TOTP via `supabase.auth.mfa`; Settings → Security manages enrollment; login challenges when a second factor is required (`src/pages/Login.tsx`, `src/components/settings/SettingsMfaPanel.tsx`).
+- **DSR / export:** `data-export` Edge function supports export summary and can queue ZIP/CSV jobs (`supabase/functions/data-export`).
+- **Soft delete + retention:** core tables carry `deleted_at`; operators run scheduled purges via `purge-soft-deleted` (`.github/workflows/data-retention-purge.yml`, `supabase/functions/purge-soft-deleted`).
+- **Outbound webhooks:** deliveries are outboxed; failures reach terminal **`dead`** state (DLQ semantics) after max retries (`supabase/functions/webhook-worker`).
+- **Public API versioning:** `crm-public-api` responds with `X-API-Version: 1` and supports explicit v1 routing; idempotency is reserved for future write endpoints (`docs/public-api-phase1.md`, `supabase/functions/crm-public-api`).
+- **Org roles:** custom roles tables exist but `has_org_permission()` is not yet wired to JWT claims; avoid depending on it in RLS until implemented (`supabase/migrations/20260427250000_organization_roles.sql`).
+- **Email provider interface (SPA):** client-side provider contract may exist for composition/UI, but real sends remain server-side (Edge) for credential safety.
+
 <a id="gaps-not-fully-owned-by-a-single-master-today"></a>
 ## Gaps (not fully owned by a single master today)
 
@@ -46,8 +79,8 @@ Track these explicitly until each is either implemented or moved into the right 
 | Gap | Why it matters | Where to track / fix |
 |-----|----------------|----------------------|
 | **Google Cloud: restricted-scope verification** (Gmail APIs for production users) | Long lead time (weeks); blocks trustworthy Gmail outside test users. **Incremental OAuth (Gmail then Calendar)** is implemented in repo + Edge; remaining work is mostly **Console + verification + product features** that use Calendar after scopes are granted. | [`.planning/STATE.md`](../.planning/STATE.md) Notes; operator + engineering backlog: [`google-gmail-oauth-verification.md` — Outstanding work](./google-gmail-oauth-verification.md#outstanding-google-integration); redirect URIs per origin in same doc; align Google Cloud OAuth client + Edge secrets + `gmail-oauth-exchange` / refresh flow. |
-| **Org-wide member identity in UI** (email/name for peers) | Team pages and assignee pickers need an RLS-safe source beyond `organization_members` alone | **Shipped:** RPC `list_organization_members_with_identity` (migration `20260415120000_*`) + [`authStore.fetchOrgUsers`](../src/store/authStore.ts). Planning context: [`.planning/codebase/CONCERNS.md`](../.planning/codebase/CONCERNS.md). UX: [`master-design-ui.md` — User profile](./master-design-ui.md#user-profile-display-names). |
-| **Email open/click “truth” for analytics** | Server path: Edge `track-open` / `track-click` → `email_tracking_events` (RLS per sender). **Reports** surfaces server counts for the signed-in user; org-wide manager rollups still future work. | [`.planning/codebase/CONCERNS.md`](../.planning/codebase/CONCERNS.md); [`master-implementation-history.md`](./master-implementation-history.md) Part A §6 + Part B §15–17; Reports UI + [`master-email-operations.md`](./master-email-operations.md). |
+| **Org-wide member identity in UI** (email/name for peers) | Team pages and assignee pickers need an RLS-safe source beyond `organization_members` alone | **Shipped:** RPC `list_organization_members_with_identity` (migration `20260415120000_*`) + [`authStore.fetchOrgUsers`](../src/store/authStore.ts). Planning context: [`.planning/CODEBASE.md` (Concerns)](../.planning/CODEBASE.md#codebase-concerns). UX: [`master-design-ui.md` — User profile](./master-design-ui.md#user-profile-display-names). |
+| **Email open/click “truth” for analytics** | Server path: Edge `track-open` / `track-click` → `email_tracking_events` (RLS per sender). **Reports** surfaces server counts for the signed-in user; org-wide manager rollups still future work. | [`.planning/CODEBASE.md` (Concerns)](../.planning/CODEBASE.md#codebase-concerns); [`master-implementation-history.md`](./master-implementation-history.md) Part A §6 + Part B §15–17; Reports UI + [`master-email-operations.md`](./master-email-operations.md). |
 | **Residual research docs naming one host** | Older notes used a single vendor while `DEPLOY-*` intent is neutral | `.planning/research/deploy-testing.md` was **neutralized** (2026-04-16) and points to [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md). Canonical DEPLOY wording remains `.planning/REQUIREMENTS.md` + Phase 10 in `ROADMAP.md`. |
 | **Pipedrive / group integration parity** (outbound webhooks shipped; public REST phase 1 + Settings UI completion in flight) | Outbound webhooks + replay are in Supabase; public API keys / read API / lead capture need Edge deploy + UI wiring — see [`public-api-phase1.md`](./public-api-phase1.md), [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md), [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md). |
 | **Open checklists without a clear owner** | Same `[ ]` interpreted as “dev debt” when it is ops or legal | **Matrix:** [Checkbox ownership](#checkbox-ownership) (below) |
@@ -57,7 +90,7 @@ Track these explicitly until each is either implemented or moved into the right 
 <a id="checkbox-ownership"></a>
 ## Checkbox ownership matrix
 
-This section maps **unchecked `- [ ]` clusters** across `docs/master-*.md`, `.planning/phases/*`, and `.planning/REQUIREMENTS.md` to **who closes them** and **what kind of work** is required (code, dashboard, evidence, or legal). Use it so engineering does not chase ops-only rows, and ops does not wait on code for human evidence.
+This section maps **unchecked `- [ ]` clusters** across `docs/master-*.md`, `.planning/ROADMAP.md` (phase “Done when”), and `.planning/REQUIREMENTS.md` to **who closes them** and **what kind of work** is required (code, dashboard, evidence, or legal). Use it so engineering does not chase ops-only rows, and ops does not wait on code for human evidence.
 
 | Cluster / document | Typical IDs or rows | Owner | Close requires |
 |--------------------|---------------------|-------|----------------|
@@ -68,7 +101,7 @@ This section maps **unchecked `- [ ]` clusters** across `docs/master-*.md`, `.pl
 | `docs/master-security-compliance.md` | DSAR, SOC mapping, buyer checklist | Security / Legal + Ops | **Runbooks + evidence**; many rows are not repo code |
 | `docs/master-email-operations.md` | DNS, Resend, deliverability | Ops | **Dashboard + DNS**; link evidence in masters when done |
 | `docs/google-gmail-oauth-verification.md` | Google Cloud verification | Product + Ops + Eng | **Google Cloud / OAuth** console work + app updates |
-| `.planning/phases/*-VALIDATION.md` | “Done when” SQL, `nyquist_compliant` | Engineering + DBA | One-time **verify** then tick or mark **archived / not blocking** |
+| `.planning/ROADMAP.md` — “Done when” blocks | Manual SQL / verification expectations | Engineering + DBA | One-time **verify** then tick or mark **archived / not blocking** |
 | `docs/master-roadmap-backlog.md` | SSO, webhooks v1, DSR, enterprise | Product | **Roadmap slices**; do not flatten into one sprint |
 
 ### FR / DE / IT locales
@@ -91,7 +124,7 @@ The app ships **EN** (source), **ES**, and **PT** with full catalogs. **FR, DE, 
 - Chart theming (CSS variables → Recharts): `src/lib/chartTheme.ts`.
 - Deploy channel + Supabase client gate: `src/lib/envChannel.ts`, `src/lib/supabase.ts`.
 - Build splitting: `vite.config.ts` (`manualChunks` for heavy chart/date libraries).
-- Planning artifacts: `.planning/PROJECT.md`, `.planning/codebase/STRUCTURE.md`, `.planning/codebase/CONVENTIONS.md` (UI canon points at `master-design-ui`).
+- Planning artifacts: `.planning/PROJECT.md`, `.planning/CODEBASE.md` (structure + conventions; UI canon points at `master-design-ui`).
 - Automations: `src/pages/Automations.tsx`, `src/store/automationsStore.ts`, canonical English seed rules `src/i18n/seed/automationSeedRulesEn.ts` (runtime labels via `getTranslations()`).
 - Entity lists (saved filters + distribution lists): `src/components/shared/EntityListsToolbar.tsx`, `src/store/distributionListsStore.ts`, merge helpers `src/lib/entityListFilters.ts`; `SmartViewBar` + `viewsStore` on Contacts, Companies, Deals.
 - Company duplicate detection: `findDuplicateCompanies` in `src/utils/duplicateDetection.ts`.

@@ -77,8 +77,8 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
         values,
         isLoading: false,
       })
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false })
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false })
     }
   },
 

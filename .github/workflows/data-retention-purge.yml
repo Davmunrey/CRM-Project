@@ -1,0 +1,26 @@
+# Hard-delete rows where `deleted_at` is older than retention (see `purge-soft-deleted` Edge Function).
+# Secrets: PURGE_SOFT_DELETED_INVOKE_URL, PURGE_SOFT_DELETED_SECRET (same value as Supabase secret PURGE_SOFT_DELETED_SECRET).
+name: Data retention — purge soft-deleted
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 6 1 * *' # monthly 06:00 UTC
+
+jobs:
+  invoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: POST purge-soft-deleted
+        env:
+          PURGE_SOFT_DELETED_INVOKE_URL: ${{ secrets.PURGE_SOFT_DELETED_INVOKE_URL }}
+          PURGE_SOFT_DELETED_SECRET: ${{ secrets.PURGE_SOFT_DELETED_SECRET }}
+        run: |
+          if [ -z "$PURGE_SOFT_DELETED_INVOKE_URL" ] || [ -z "$PURGE_SOFT_DELETED_SECRET" ]; then
+            echo "Skip: set PURGE_SOFT_DELETED_INVOKE_URL and PURGE_SOFT_DELETED_SECRET in repo secrets."
+            exit 0
+          fi
+          curl -sS -f -X POST "$PURGE_SOFT_DELETED_INVOKE_URL" \
+            -H "x-purge-secret: $PURGE_SOFT_DELETED_SECRET" \
+            -H "Content-Type: application/json" \
+            -d "{}"

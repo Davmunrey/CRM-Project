@@ -46,8 +46,8 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
         createdAt: r.created_at, updatedAt: r.updated_at, usageCount: r.usage_count ?? 0,
       }))
       set({ templates, isLoading: false })
-    } catch (e: any) {
-      set({ error: e.message, isLoading: false })
+    } catch (e: unknown) {
+      set({ error: (e as Error).message, isLoading: false })
     }
   },
 

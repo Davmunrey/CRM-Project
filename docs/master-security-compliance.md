@@ -174,6 +174,22 @@ This matrix tracks production hardening posture across security, reliability, op
 3. Define and document secret rotation cadence for maintenance system mode.
 4. Confirm SMTP production path and fallback owner.
 
+## Advisor-zero policy (operational)
+
+Use this rule for Supabase advisor findings:
+
+- **Security WARN (external-facing):** treat as release-blocking unless explicitly documented as intentional exposure with owner/date.
+- **INFO findings:** allowed only with documented rationale and follow-up target.
+- **Re-check cadence:** at minimum once per release candidate and after schema/function changes.
+
+Required evidence fields per finding:
+
+- finding id/title,
+- decision (`fix_now` | `accepted_risk` | `defer_with_date`),
+- owner,
+- remediation link,
+- proof of fix (SQL/migration/PR reference).
+
 ## 30-Day Hardening Target
 
 - No unresolved P0 items.

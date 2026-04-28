@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import {
   Users, Plus, Shield, ShieldCheck, ShieldAlert, Eye,
-  MoreVertical, Mail, UserPlus, UserMinus, Edit2, X, Check,
-  Key, Clock, Building2, Crown,
+  MoreVertical, Mail, UserPlus, UserMinus, X, Check,
+  Key, Building2, Crown,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { hasPermission } from '../utils/permissions'
@@ -63,7 +63,6 @@ export function TeamManagement() {
 
   if (!currentUser) return null
 
-  const isAdmin = currentUser.role === 'admin'
   const canManageUsers = hasPermission(currentUser.role, 'users:manage_roles')
   const canCreateUsers = hasPermission(currentUser.role, 'users:create')
   const canInviteUsers = hasPermission(currentUser.role, 'users:invite')

@@ -59,7 +59,7 @@ Automatic step advancement is **not** implemented in the app runtime. A schedule
 2. Walk `flow_definition` from `current_node_id` (or entry), respecting waits and recorded `ab_variant`.
 3. Queue email sends / create tasks and append `sequence_step_events`.
 
-**Stub Edge Function:** `supabase/functions/sequence-advance/index.ts` returns HTTP 200 with a JSON message until the above is implemented. Deploy with `supabase functions deploy sequence-advance` and attach to **pg_cron** or an external scheduler when ready.
+**Edge Function (not implemented):** `supabase/functions/sequence-advance/index.ts` returns **HTTP 501** with JSON `{ ok: false, error: 'not_implemented', ... }` until the worker is built. Schedulers must not treat 501 as success. Deploy with `supabase functions deploy sequence-advance` and attach to **pg_cron** or an external scheduler when ready.
 
 ## Related code
 

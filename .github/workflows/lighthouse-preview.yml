@@ -1,0 +1,28 @@
+name: Lighthouse Preview
+
+on:
+  pull_request:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Resolve preview URL
+        run: echo "LIGHTHOUSE_TARGET=${{ vars.LIGHTHOUSE_URL }}" >> $GITHUB_ENV
+      - name: Run LHCI on preview
+        if: env.LIGHTHOUSE_TARGET != ''
+        run: |
+          npx -y @lhci/cli@0.14.0 collect \
+            --url="${LIGHTHOUSE_TARGET}/login" \
+            --url="${LIGHTHOUSE_TARGET}/" \
+            --url="${LIGHTHOUSE_TARGET}/inbox" \
+            --url="${LIGHTHOUSE_TARGET}/deals"
+          npx -y @lhci/cli@0.14.0 assert \
+            --assertions.categories:performance=error:>=0.9 \
+            --assertions.categories:accessibility=error:>=0.95 \
+            --assertions.categories:best-practices=error:>=0.9

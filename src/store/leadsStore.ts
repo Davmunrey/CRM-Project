@@ -10,6 +10,7 @@ import { useAuthStore } from './authStore'
 import { getTranslations } from '../i18n'
 import { normalizeIndustryValue } from '../lib/industries'
 import { toast } from './toastStore'
+import type { ContactSource } from '../types'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sb = () => supabase as any
@@ -660,7 +661,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
         jobTitle: lead.jobTitle ?? '',
         companyId,
         status: 'prospect',
-        source: (lead.source as any) ?? 'other',
+        source: ((lead.source as string) ?? 'other') as ContactSource,
         tags: lead.tags,
         assignedTo: lead.assignedTo ?? '',
         lastContactedAt: '',

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { User, Mail, ArrowRight, ShieldCheck } from 'lucide-react'
-import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'

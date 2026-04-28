@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { SmartView, SmartViewFilter, CustomFieldEntityType, InboxSavedView, InboxAdvancedFilters } from '../types'
+import type { SmartView, CustomFieldEntityType, InboxSavedView, InboxAdvancedFilters } from '../types'
 
 const LEGACY_NAMEKEY_BY_ID: Record<string, NonNullable<SmartView['nameKey']>> = {
   'sv-01': 'sv01',

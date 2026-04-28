@@ -1,11 +1,11 @@
 import { create } from 'zustand'
 import type { Company, CompanyFilters } from '../types'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { requireSupabase } from '../lib/requireSupabase'
 import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
 import { normalizeIndustryValue } from '../lib/industries'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sb = () => supabase as any
+const sb = requireSupabase
 
 function rowToCompany(row: Record<string, unknown>): Company {
   return {

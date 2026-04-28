@@ -6,7 +6,7 @@ import { DragDropContext } from '@hello-pangea/dnd'
 import type { DropResult } from '@hello-pangea/dnd'
 import {
   Plus, KanbanSquare, LayoutList, Filter, X,
-  Trophy, XCircle, Edit2, Trash2, Loader2, Mail,
+  Trophy, XCircle, Edit2, Trash2, Mail,
 } from 'lucide-react'
 import { useDealsStore } from '../store/dealsStore'
 import { useContactsStore } from '../store/contactsStore'
@@ -18,14 +18,13 @@ import { ActivityForm } from '../components/activities/ActivityForm'
 import { ActivityItem } from '../components/activities/ActivityItem'
 import { Button } from '../components/ui/Button'
 import { Badge, type BadgeVariant } from '../components/ui/Badge'
-import { Avatar } from '../components/ui/Avatar'
 import { SearchBar } from '../components/shared/SearchBar'
 import { SmartViewBar } from '../components/shared/SmartViewBar'
 import { SlideOver, ConfirmDialog } from '../components/ui/Modal'
 import { Select } from '../components/ui/Select'
 import { EmptyState } from '../components/shared/EmptyState'
 import { toast } from '../store/toastStore'
-import { formatCurrency, formatDate, formatDateShort, formatRelativeDate } from '../utils/formatters'
+import { formatCurrency, formatDate, formatDateShort } from '../utils/formatters'
 import { computeDealHealth, healthStatusColor } from '../utils/dealHealth'
 import { DEAL_PRIORITY_COLORS } from '../utils/constants'
 
@@ -1146,7 +1145,6 @@ export function Deals() {
                 <tbody className="divide-y divide-border-subtle">
                   {filtered.map((deal) => {
                     const locDeal = localizedDeal(deal, t)
-                    const contact = getContact(deal.contactId)
                     const company = getCompany(deal.companyId)
                     const ageDays = getDealAgeDays(deal.createdAt)
                     const aging = getAgingColor(ageDays)

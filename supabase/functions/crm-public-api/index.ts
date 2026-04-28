@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sha256Hex } from '../_shared/edgeHttp.ts'
 import { clientIpFromRequest, rateLimitHit } from '../_shared/edge-rate-limit.ts'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
 
@@ -19,14 +20,6 @@ const SELECT_BY_COLLECTION: Record<(typeof COLLECTIONS)[number], string> = {
 const RATE_MAX = 120
 const RATE_WINDOW_MS = 60_000
 
-async function sha256Hex(message: string): Promise<string> {
-  const data = new TextEncoder().encode(message)
-  const hash = await crypto.subtle.digest('SHA-256', data)
-  return Array.from(new Uint8Array(hash))
-    .map((x) => x.toString(16).padStart(2, '0'))
-    .join('')
-}
-
 function logEvent(
   level: 'log' | 'warn' | 'error',
   requestId: string,
@@ -41,10 +34,11 @@ function respond(
   status: number,
   payload: Record<string, unknown>,
   cors: Record<string, string>,
+  extraHeaders: Record<string, string> = {},
 ): Response {
   return new Response(JSON.stringify({ ...payload, status, request_id: requestId }), {
     status,
-    headers: { ...cors, 'Content-Type': 'application/json' },
+    headers: { ...cors, 'Content-Type': 'application/json', ...extraHeaders },
   })
 }
 
@@ -116,8 +110,15 @@ Deno.serve(async (req: Request) => {
   }
 
   const orgId = keyRow.organization_id as string
+  const idempotencyKey = (req.headers.get('Idempotency-Key') ?? req.headers.get('idempotency-key') ?? '').trim()
   const url = new URL(req.url)
-  const collection = url.searchParams.get('collection') ?? ''
+  /** API evolution: pass `v=1` for versioned responses; same read contract as phase-1. */
+  const apiVersion = url.searchParams.get('v') === '1' ? 1 : 0
+  const pathParts = url.pathname.split('/').filter(Boolean)
+  const v1PathCollection = pathParts.length >= 2 && pathParts[pathParts.length - 2] === 'v1'
+    ? pathParts[pathParts.length - 1]
+    : ''
+  const collection = (v1PathCollection || url.searchParams.get('collection') || '') as string
   if (!COLLECTIONS.includes(collection as (typeof COLLECTIONS)[number])) {
     return respond(requestId, 400, {
       error: 'collection must be one of: ' + COLLECTIONS.join(', '),
@@ -129,12 +130,15 @@ Deno.serve(async (req: Request) => {
   const table = collection as (typeof COLLECTIONS)[number]
   const selectCols = SELECT_BY_COLLECTION[table]
 
-  const { data: rows, error: qErr } = await admin
+  let q = admin
     .from(table)
     .select(selectCols)
     .eq('organization_id', orgId)
+    .is('deleted_at', null)
     .order('updated_at', { ascending: false })
     .limit(limit)
+
+  const { data: rows, error: qErr } = await q
 
   if (qErr) {
     logEvent('error', requestId, 'query_failed', {
@@ -163,5 +167,24 @@ Deno.serve(async (req: Request) => {
     collection,
     limit,
   })
-  return respond(requestId, 200, { data: rows ?? [], meta: { collection, limit } }, cors)
+  const versionHeaders: Record<string, string> = {}
+  if (apiVersion === 1) {
+    versionHeaders['X-API-Version'] = '1'
+  }
+
+  return respond(
+    requestId,
+    200,
+    {
+      data: rows ?? [],
+      meta: {
+        collection,
+        limit,
+        api: apiVersion === 1 ? 'v1' : 'phase1',
+        ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}),
+      },
+    },
+    cors,
+    versionHeaders,
+  )
 })

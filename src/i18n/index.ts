@@ -24,6 +24,21 @@ export type { Language, Translations }
 export type LanguageMode = 'manual' | 'browser'
 
 const translations: Record<Language, Translations> = { en, es, pt, fr, de, it }
+const pseudoEnabled = import.meta.env.VITE_I18N_PSEUDO === '1'
+
+function pseudoize(value: unknown): unknown {
+  if (!pseudoEnabled) return value
+  if (typeof value === 'string') return `[!! ${value} !!]`
+  if (Array.isArray(value)) return value.map((v) => pseudoize(v))
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[k] = pseudoize(v)
+    }
+    return out
+  }
+  return value
+}
 
 export const LANGUAGE_LABELS: Record<Language, string> = {
   en: 'English',
@@ -105,7 +120,7 @@ export function useTranslations(): Translations {
   return useMemo(() => {
     void browserTick
     const effective = languageMode === 'browser' ? detectBrowserLanguage() : language
-    return translations[effective]
+    return pseudoize(translations[effective]) as Translations
   }, [language, languageMode, browserTick])
 }
 

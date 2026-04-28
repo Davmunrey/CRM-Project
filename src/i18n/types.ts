@@ -712,6 +712,19 @@ export interface Translations {
     tabPipeline: string
     tabEmail: string
     tabPermissions: string
+    tabSecurity: string
+    mfaTitle: string
+    mfaDescription: string
+    mfaEnroll: string
+    mfaUnenroll: string
+    mfaFactorName: string
+    mfaScanQr: string
+    mfaEnterCode: string
+    mfaEnrolled: string
+    mfaNotEnrolled: string
+    mfaConfirmEnroll: string
+    mfaToastEnrolled: string
+    mfaToastUnenrolled: string
     tabData: string
     tabNavigation: string
     tabAdvanced: string
@@ -757,6 +770,13 @@ export interface Translations {
     onboardingGoContacts: string
     onboardingGoDeals: string
     onboardingGoSequences: string
+    activationFunnelTitle: string
+    activationFunnelSubtitle: string
+    activationHealthLabel: string
+    activationLoginLabel: string
+    activationOrgSetupLabel: string
+    activationResetLabel: string
+    activationFunnelHint: string
     webhooksTitle: string
     webhooksIntro: string
     webhooksTagline: string
@@ -1484,6 +1504,10 @@ export interface Translations {
     googleSsoUnavailable: string
     passwordShowAria: string
     passwordHideAria: string
+    mfaRequiredTitle: string
+    mfaCodeLabel: string
+    mfaVerify: string
+    mfaInvalidCode: string
   }
 
   // ─── Org Setup ───────────────────────────────────────────────────────────────

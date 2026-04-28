@@ -3,6 +3,7 @@ import type { ReactNode, ErrorInfo } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { getTranslations } from '../../i18n'
+import { Sentry } from '../../lib/sentry'
 
 interface Props {
   children: ReactNode
@@ -24,9 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // In production this would log to an error tracking service (Sentry, etc.)
-    void error
-    void info
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } })
   }
 
   render() {

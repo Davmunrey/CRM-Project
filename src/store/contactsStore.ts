@@ -3,15 +3,16 @@ import type { Contact, ContactFilters } from '../types'
 import { useAuditStore } from './auditStore'
 import { getTranslations } from '../i18n'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { requireSupabase } from '../lib/requireSupabase'
 import { getOrgId, sbDelete, sbBulkDelete } from '../lib/supabaseHelpers'
 import { toast } from './toastStore'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const sb = () => supabase as any
+const sb = requireSupabase
 
 // ── Snake / Camel mappers ───────────────────────────────────────────────────
 
-function rowToContact(row: Record<string, unknown>): Contact {
+/** Maps a Supabase contact row to the domain model. */
+export function mapContactFromSupabaseRow(row: Record<string, unknown>): Contact {
   return {
     id: row.id as string,
     firstName: (row.first_name as string) ?? '',
@@ -34,6 +35,10 @@ function rowToContact(row: Record<string, unknown>): Contact {
     marketingOptInAt: (row.marketing_opt_in_at as string) ?? undefined,
     marketingOptInSource: (row.marketing_opt_in_source as string) ?? undefined,
   }
+}
+
+function rowToContact(row: Record<string, unknown>): Contact {
+  return mapContactFromSupabaseRow(row)
 }
 
 function contactToRow(c: Partial<Contact>): Record<string, unknown> {

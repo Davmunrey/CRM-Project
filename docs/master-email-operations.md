@@ -7,6 +7,7 @@
 ## Table of contents
 
 - [Email deliverability (Resend)](#email-deliverability-resend)
+- [Supabase auth emails branding](#supabase-auth-emails-branding)
 - [In-app outbound and Gmail](#in-app-outbound-and-gmail)
 - [Email mailbox privacy runbook](#email-mailbox-privacy-runbook)
 - [Email release checklist](#email-release-checklist)
@@ -14,6 +15,35 @@
 
 ---
 
+
+<a id="supabase-auth-emails-branding"></a>
+## Supabase auth emails branding
+
+Scope: emails sent by Supabase Auth (`confirm signup`, `magic link`, `reset password`, `invite`).
+
+### Source of truth
+
+- Template kit: [`supabase/auth-email-templates/`](../supabase/auth-email-templates/)
+- Rollout guide + suggested subjects: [`supabase/auth-email-templates/README.md`](../supabase/auth-email-templates/README.md)
+- Domain redirects: [`supabase/config.toml`](../supabase/config.toml)
+
+### Operator checklist
+
+- [ ] Sender identity configured in Supabase `Authentication -> SMTP Settings`.
+- [ ] Each auth template updated from the repo kit.
+- [ ] Test email received for all four auth flows.
+- [ ] CTA buttons and fallback links open approved domains only.
+- [ ] Copy includes "ignore if you did not request this" language for security.
+- [ ] SPF/DKIM/DMARC verified for sender domain.
+
+### Acceptance criteria
+
+- Emails render cleanly in Gmail and Outlook web clients.
+- Brand consistency: same app naming and tone across all auth flows.
+- No stale domains (old preview/staging hosts) in email links.
+- Password reset and invite flows complete without manual URL edits.
+
+---
 
 <a id="email-deliverability-resend"></a>
 ## Email deliverability (Resend)
@@ -155,7 +185,7 @@ This runbook helps support and operations teams validate and troubleshoot per-us
 |-------|------------------|-----------|
 | **Outbound HTML** | Rewrite links + inject open pixel | [`src/lib/emailTracking.ts`](../src/lib/emailTracking.ts) (`rewriteLinksForTracking`, `injectOpenPixel`, `normalizeBodyToHtml`) consumed when sending tracked mail from [`emailStore`](../src/store/emailStore.ts). |
 | **Ingestion** | Stateless open/click endpoints | Supabase Edge `track-open`, `track-click` → `email_tracking_events` (see migrations + RLS in repo). |
-| **Persistence** | Per-message/link rows + events | `email_tracking_messages`, `email_tracking_links`, `email_tracking_events` (user-scoped RLS — see [`CONCERNS.md`](../.planning/codebase/CONCERNS.md)). |
+| **Persistence** | Per-message/link rows + events | `email_tracking_messages`, `email_tracking_links`, `email_tracking_events` (user-scoped RLS — see [`.planning/CODEBASE.md` (Concerns)](../.planning/CODEBASE.md#codebase-concerns)). |
 | **UI — Reports** | Shows **server** counts for the signed-in user’s sends | [`src/pages/Reports.tsx`](../src/pages/Reports.tsx); copy includes reliability note where applicable. |
 | **Demo / mock** | Simulated opens/clicks | Contact detail actions in non-Supabase mode only — **not** recipient truth. |
 

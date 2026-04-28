@@ -5,11 +5,11 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
 import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { AuthLayout } from '../components/auth/AuthLayout'
 import { SecurePasswordField } from '../components/auth/SecurePasswordField'
 import { formatPasswordStrengthIssues, getPasswordStrengthIssues } from '../lib/securePassword'
+import { trackUxAction } from '../lib/uxMetrics'
 
 export function ResetPassword() {
   const t = useTranslations()
@@ -26,12 +26,15 @@ export function ResetPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    trackUxAction('auth_password_reset_complete_attempt')
     if (password !== confirmPassword) {
+      trackUxAction('auth_password_reset_complete_error', { reason: 'password_mismatch' })
       setError(t.auth.passwordsDoNotMatch)
       return
     }
     const strengthIssues = getPasswordStrengthIssues(password)
     if (strengthIssues.length > 0) {
+      trackUxAction('auth_password_reset_complete_error', { reason: 'password_strength' })
       setError(
         formatPasswordStrengthIssues(strengthIssues, {
           length: t.errors.passwordWeakLength,
@@ -44,6 +47,7 @@ export function ResetPassword() {
       return
     }
     if (!isSupabaseConfigured || !supabase) {
+      trackUxAction('auth_password_reset_complete_success', { mode: 'unconfigured_runtime' })
       navigate('/')
       return
     }
@@ -52,8 +56,10 @@ export function ResetPassword() {
     const { error: sbError } = await supabase.auth.updateUser({ password })
     setLoading(false)
     if (sbError) {
+      trackUxAction('auth_password_reset_complete_error', { reason: sbError.message.slice(0, 120) })
       setError(sbError.message)
     } else {
+      trackUxAction('auth_password_reset_complete_success')
       navigate('/')
     }
   }

@@ -3,7 +3,7 @@
  * Run from repo root: node scripts/fix-phase-note-headers.mjs [--dry-run]
  */
 import { execSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const ROOT = process.cwd()
@@ -68,6 +68,7 @@ function main() {
   let changed = 0
   for (const rel of rels) {
     const abs = absFromRel(rel)
+    if (!existsSync(abs)) continue
     const before = readFileSync(abs, 'utf8')
     const after = normalizePhaseHeader(before)
     if (after === before) continue

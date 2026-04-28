@@ -53,8 +53,10 @@ From the repo root after `npm install` (installs the `supabase` dev dependency):
 3. `npm run supabase:db:push` — applies pending SQL in `supabase/migrations/` to the linked remote database (review with `supabase db diff` if you use a branching workflow).
 4. **Once per project:** `npm run supabase:secrets:set-webhook-worker` — sets Edge secret `WEBHOOK_WORKER_SECRET`. If the env var `WEBHOOK_WORKER_SECRET` is unset, a new random value is generated and printed; save it for GitHub Actions / cron.
 5. **Deploy Edge Functions** — pick one:
-   - **Everything (recommended after pulling security or infra changes):** `npm run supabase:deploy:all-functions` — deploys all functions in the repo (`api-keys`, `create-org`, `crm-public-api`, `ensure-tenant`, Gmail/Google suite, `invite-member`, `lead-capture`, `lead-capture-tokens`, `lead-score-maintenance`, `promote-lead`, `resend-send-email`, `sequence-advance`, `track-click`, `track-open`, `webhook-subscriptions`, `webhook-worker`).
+   - **Everything (recommended after pulling security or infra changes):** `npm run supabase:deploy:all-functions` — includes `data-export`, `ux-metrics-ingest`, `purge-soft-deleted` (set secrets below), `api-keys`, `create-org`, `crm-public-api`, `ensure-tenant`, Gmail/Google suite, `invite-member`, `lead-capture`, `lead-capture-tokens`, `lead-score-maintenance`, `promote-lead`, `resend-send-email`, `sequence-advance`, `track-click`, `track-open`, `webhook-subscriptions`, `webhook-worker`.
    - **Partial bundles:** `npm run supabase:deploy:webhooks` · `npm run supabase:deploy:integrations` · `npm run supabase:deploy:google` (same names as in `package.json`).
+
+**Data retention (soft-delete purge):** set Edge secrets `PURGE_SOFT_DELETED_SECRET` (and optional `PURGE_RETENTION_DAYS`, default 90), then call `purge-soft-deleted` with header `x-purge-secret` — see [`.github/workflows/data-retention-purge.yml`](../.github/workflows/data-retention-purge.yml).
 
 Operator runbook (Google secrets + redirect matrix): [`docs/google-gmail-oauth-verification.md`](../docs/google-gmail-oauth-verification.md#operator-setup-google-oauth). **Open tasks (Console, verification, product):** [`#outstanding-google-integration`](../docs/google-gmail-oauth-verification.md#outstanding-google-integration).
 
@@ -63,6 +65,22 @@ Optional Edge secret **`EDGE_CORS_ORIGINS`:** comma-separated exact browser orig
 Shortcut for steps 3 + webhooks after the first secret setup: `npm run supabase:webhooks:push`.
 
 `npm run supabase:deploy:all-edge` is an **alias** for `supabase:deploy:all-functions` (full deploy, not only webhooks + integrations).
+
+## Auth email branding (Supabase)
+
+To brand and harden Supabase Auth emails (signup confirmation, magic link, reset password, invite):
+
+1. Open templates in [`supabase/auth-email-templates/`](./auth-email-templates/).
+2. In Supabase Dashboard, go to `Authentication -> Email Templates`.
+3. Paste the corresponding HTML for each template.
+4. Use the recommended subjects from [`supabase/auth-email-templates/README.md`](./auth-email-templates/README.md).
+5. Send test emails for each flow and verify links open your production domain.
+
+Operator reminders:
+
+- Configure sender identity in `Authentication -> SMTP Settings` (name + sender email).
+- Keep auth domains aligned with [`supabase/config.toml`](./config.toml) `site_url` and `additional_redirect_urls`.
+- Verify SPF, DKIM, DMARC before production rollout.
 
 ## API & capture troubleshooting runbook
 
