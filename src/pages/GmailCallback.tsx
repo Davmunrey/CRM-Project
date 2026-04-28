@@ -8,6 +8,7 @@ import { toast } from '../store/toastStore'
 import { getGmailRedirectUri } from '../services/gmailService'
 import { useTranslations } from '../i18n'
 import { GOOGLE_OAUTH_MESSAGE_SOURCE, type GoogleOAuthMessagePayload } from '../services/googleIntegrationService'
+import { useAuthStore } from '../store/authStore'
 
 function postToOpener(payload: GoogleOAuthMessagePayload) {
   try {
@@ -67,6 +68,7 @@ export function GmailCallback() {
 
       const legacyVerifier = sessionStorage.getItem('gmail_oauth_verifier')
       const storedLegacyState = sessionStorage.getItem('gmail_oauth_state')
+      const organizationId = useAuthStore.getState().currentUser?.organizationId
       const isLegacy =
         Boolean(legacyVerifier && storedLegacyState && returnedState && returnedState === storedLegacyState)
 
@@ -76,8 +78,8 @@ export function GmailCallback() {
       }
 
       const body = isLegacy
-        ? { code, code_verifier: legacyVerifier!, redirect_uri: redirectUri }
-        : { code, state: returnedState, redirect_uri: redirectUri }
+        ? { code, code_verifier: legacyVerifier!, redirect_uri: redirectUri, organizationId }
+        : { code, state: returnedState, redirect_uri: redirectUri, organizationId }
 
       if (!isLegacy && !returnedState) {
         if (window.opener) {

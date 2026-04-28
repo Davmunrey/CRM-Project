@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { parseScopeString, scopesIndicateCalendar, scopesIndicateGmail } from '../_shared/google-scopes.ts'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
+import { resolveOrgId } from '../_shared/resolve-org-id.ts'
 
 Deno.serve(async (req: Request) => {
   if (isCorsOriginBlocked(req)) {
@@ -31,8 +32,17 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const { data: orgId, error: orgErr } = await callerClient.rpc('get_org_id')
-    if (orgErr || !orgId) {
+    const body = (await req.json().catch(() => ({}))) as { organizationId?: string }
+    const requestedOrgId = typeof body.organizationId === 'string'
+      ? body.organizationId.replace(/^"+|"+$/g, '').trim()
+      : ''
+
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
+    const orgId = (await resolveOrgId(callerClient, adminClient, user)) ?? requestedOrgId
+    if (!orgId) {
       return new Response(
         JSON.stringify({
           connected: false,

@@ -7,6 +7,7 @@ import {
   type GoogleScopeBundle,
 } from '../_shared/google-scopes.ts'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
+import { resolveOrgId } from '../_shared/resolve-org-id.ts'
 
 function base64urlEncode(bytes: Uint8Array): string {
   let s = ''
@@ -56,15 +57,24 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const { data: orgId, error: orgErr } = await callerClient.rpc('get_org_id')
-    if (orgErr || !orgId) {
+    const body = (await req.json().catch(() => ({}))) as { redirect_uri?: string; bundle?: string }
+    const requestedOrgId = typeof (body as { organizationId?: string }).organizationId === 'string'
+      ? (body as { organizationId?: string }).organizationId.replace(/^"+|"+$/g, '').trim()
+      : ''
+
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
+
+    const orgId = (await resolveOrgId(callerClient, adminClient, user)) ?? requestedOrgId
+    if (!orgId) {
       return new Response(JSON.stringify({ error: 'Organization context not found' }), {
         status: 400,
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
 
-    const body = (await req.json().catch(() => ({}))) as { redirect_uri?: string; bundle?: string }
     const redirectUri = typeof body.redirect_uri === 'string' ? body.redirect_uri.trim() : ''
     if (!redirectUri) {
       return new Response(JSON.stringify({ error: 'redirect_uri is required' }), {
@@ -103,11 +113,6 @@ Deno.serve(async (req: Request) => {
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
     }
-
-    const adminClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
 
     const { data: existing } = await adminClient
       .from('gmail_tokens')

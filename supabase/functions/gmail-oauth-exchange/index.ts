@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { mergeScopeLists, parseScopeString } from '../_shared/google-scopes.ts'
 import { encryptToken, requireTokenEncryptionKey } from '../_shared/token-cipher.ts'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
+import { resolveOrgId } from '../_shared/resolve-org-id.ts'
 
 function decodeJwtPayload(idToken: string): Record<string, unknown> {
   const parts = idToken.split('.')
@@ -48,6 +49,7 @@ Deno.serve(async (req: Request) => {
       code_verifier?: string
       redirect_uri?: string
       state?: string
+      organizationId?: string
     }
 
     const { code, redirect_uri } = body
@@ -71,18 +73,20 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const { data: orgId, error: orgErr } = await callerClient.rpc('get_org_id')
-    if (orgErr || !orgId) {
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
+    const requestedOrgId = typeof body.organizationId === 'string'
+      ? body.organizationId.replace(/^"+|"+$/g, '').trim()
+      : ''
+    const orgId = (await resolveOrgId(callerClient, adminClient, user)) ?? requestedOrgId
+    if (!orgId) {
       return new Response(
         JSON.stringify({ error: 'Organization context not found' }),
         { status: 400, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
-
-    const adminClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    )
 
     const { data: existing } = await adminClient
       .from('gmail_tokens')
