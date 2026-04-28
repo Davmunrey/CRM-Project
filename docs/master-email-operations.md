@@ -256,7 +256,7 @@ Reproducible steps live in **[15-minute smoke test](#email-smoke-test-15min)** (
   - `tests/stores/emailStore.trackingBatch.test.ts`
 - [x] Production build passes:
   - `npm run build`
-- [ ] No new lint issues in touched files.
+- [x] No new lint issues in touched files.
 
 ## Support readiness
 

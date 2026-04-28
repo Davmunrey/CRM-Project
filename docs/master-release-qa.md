@@ -63,6 +63,27 @@ Use this operational plan to close unchecked items across `docs/**/*.md`, `.plan
 - Revalidate checks that are sensitive to infra drift (OAuth redirects, CORS, RLS, secrets).
 - Publish a short “checks closed / checks pending / blockers” summary in release notes.
 
+### 6) Current closure status (2026-04-28)
+
+- Repo-evidence checks executed in this cycle:
+  - `npm run -s lint:ci`
+  - `npm run -s i18n:lint`
+  - `npm run -s ui:lint`
+  - `npx tsc --noEmit`
+  - `npm run -s test:run`
+  - `npm run -s test:coverage`
+  - `npm run -s test:run -- tests/utils/formatters.test.ts`
+  - `npm run -s build` (production) and `npm run -s build -- --mode development`
+- Checks updated to `[x]` with this evidence:
+  - `docs/master-email-operations.md`: lint gate closed
+  - `docs/master-release-qa.md`: formatter regression gate closed
+  - `.planning/ROADMAP.md`: test and coverage gates closed
+- Remaining unchecked inventory after this pass:
+  - `docs/**/*.md`: 110
+  - `.planning/**/*.md`: 49
+- Active blockers (external/runtime):
+  - `Supabase remote deploy` workflow on `master` is failing preflight because required GitHub secrets are empty (`Missing required secret: SUPABASE_ACCESS_TOKEN`), so deploy/runtime checks stay `[ ]` until secrets are populated and pipeline reruns green.
+
 ---
 
 
@@ -163,7 +184,7 @@ Use this **short gate** on every release candidate when UI copy or locale behavi
 
 - [ ] Release notes list **languages touched** (minimum: EN/ES/PT; note FR/DE/IT if keys changed).
 - [ ] No **new** user-visible hardcoded strings in changed files (grep / PR review); new copy uses `src/i18n` keys.
-- [ ] **Formatter paths** unchanged or re-run: `npm run test:run -- tests/utils/formatters.test.ts` (or full CI).
+- [x] **Formatter paths** unchanged or re-run: `npm run test:run -- tests/utils/formatters.test.ts` (or full CI).
 
 ### Per-language smoke (15–30 min)
 

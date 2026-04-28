@@ -276,8 +276,8 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 ### Done When
 
-- [ ] `npm run test:run` exits 0 with all tests passing from a clean clone
-- [ ] `npm run test:coverage` shows coverage report
+- [x] `npm run test:run` exits 0 with all tests passing from a clean clone
+- [x] `npm run test:coverage` shows coverage report
 - [ ] Opening a merge request on **Gitea** (e.g. `gitea.apps.privateprompt.tech`) triggers CI and shows test + type check results on the MR
 - [ ] A deliberate type error in `src/types/index.ts` causes the CI `tsc --noEmit` step to fail
 - [ ] A deliberate logic error in a utility causes at least one test to fail
