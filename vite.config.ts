@@ -15,7 +15,7 @@ function resolveBuildChannel(mode: string, env: Record<string, string>): string 
 
 function isSupabaseEnvValid(env: Record<string, string>): boolean {
   const url = env.VITE_SUPABASE_URL
-  const key = env.VITE_SUPABASE_ANON_KEY
+  const key = env.VITE_SUPABASE_ANON_KEY ?? env.VITE_SUPABASE_PUBLISHABLE_KEY
   return (
     typeof url === 'string' &&
     url.startsWith('https://') &&
@@ -31,7 +31,7 @@ export default defineConfig(({ command, mode }) => {
   if (command === 'build' && (channel === 'production' || channel === 'staging') && !isSupabaseEnvValid(env)) {
     throw new Error(
       `[Velo] Build rejected: VITE_APP_CHANNEL is "${channel}" but VITE_SUPABASE_URL (https://…) and ` +
-        'VITE_SUPABASE_ANON_KEY are missing or invalid.',
+        'VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY) are missing or invalid.',
     )
   }
 
