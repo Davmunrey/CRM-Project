@@ -64,22 +64,39 @@ export function OrgSetup() {
       throw new Error(t.orgSetup.errorNotConfigured)
     }
 
-    const res = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/create-org`, {
+    const requestBody = {
+      orgName: orgNameValue,
+      slug: slugValue,
+    }
+
+    const directRes = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/create-org`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         apikey: anonOrPublishableKey,
         Authorization: `Bearer ${sessionData.session.access_token}`,
       },
-      body: JSON.stringify({
-        orgName: orgNameValue,
-        slug: slugValue,
-      }),
-    })
+      body: JSON.stringify(requestBody),
+    }).catch(() => null)
 
-    const payload = (await res.json().catch(() => null)) as { error?: string; org?: { id?: string } } | null
-    if (!res.ok) throw new Error(payload?.error ?? t.errors.generic)
-    return payload
+    if (directRes) {
+      const payload = (await directRes.json().catch(() => null)) as { error?: string; org?: { id?: string } } | null
+      if (!directRes.ok) throw new Error(payload?.error ?? t.errors.generic)
+      return payload
+    }
+
+    // Final fallback: same-origin Vercel API proxy to bypass browser/network blocks to supabase.co.
+    const proxyRes = await fetch('/api/create-org', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+      body: JSON.stringify(requestBody),
+    })
+    const proxyPayload = (await proxyRes.json().catch(() => null)) as { error?: string; org?: { id?: string } } | null
+    if (!proxyRes.ok) throw new Error(proxyPayload?.error ?? t.errors.generic)
+    return proxyPayload
   }
 
   useEffect(() => {
