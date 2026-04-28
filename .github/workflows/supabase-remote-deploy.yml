@@ -1,19 +1,31 @@
-# Apply remote DB migrations + deploy webhook Edge Functions from GitHub (no local terminal).
-# Configure repository secrets (Settings → Secrets and variables → Actions), then run this workflow manually.
+# Apply remote DB migrations + deploy full Supabase Edge set from GitHub (no local terminal).
+# Runs on push to master (auto) and supports manual trigger.
 #
 # Required secrets:
 #   SUPABASE_ACCESS_TOKEN   — https://supabase.com/dashboard/account/tokens
 #   SUPABASE_PROJECT_ID     — project ref from dashboard URL …/project/<ref>
 #   SUPABASE_DB_PASSWORD    — Database password (Settings → Database; reset if unknown)
+#   SUPABASE_URL            — project URL, e.g. https://<project-ref>.supabase.co
+#   SUPABASE_ANON_KEY       — anon key used by post-deploy smoke checks
+#   GOOGLE_CLIENT_ID
+#   GOOGLE_CLIENT_SECRET
+#   TOKEN_ENCRYPTION_KEY    — 64 hex chars
+#   GOOGLE_OAUTH_REDIRECT_URIS
 #
 # Optional (recommended for webhook-worker):
 #   WEBHOOK_WORKER_SECRET   — long random string; same value as cron / WEBHOOK_WORKER_INVOKE_URL consumer
+# Optional (recommended in production):
+#   EDGE_CORS_ORIGINS       — comma-separated exact origins (scheme://host:port)
 #
-# After DB push, deploys all Edge Functions via `npm run supabase:deploy:all-functions` (see package.json + supabase/README.md).
+# After DB push, deploys all Edge Functions via `npm run supabase:deploy:all-functions`
+# and runs Google/Gmail endpoint smoke checks (`npm run supabase:smoke:google-edge`).
 
 name: Supabase remote deploy
 
 on:
+  push:
+    branches:
+      - master
   workflow_dispatch: {}
 
 concurrency:
@@ -27,6 +39,13 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      TOKEN_ENCRYPTION_KEY: ${{ secrets.TOKEN_ENCRYPTION_KEY }}
+      GOOGLE_OAUTH_REDIRECT_URIS: ${{ secrets.GOOGLE_OAUTH_REDIRECT_URIS }}
+      EDGE_CORS_ORIGINS: ${{ secrets.EDGE_CORS_ORIGINS }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,6 +59,42 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Preflight required secrets and project alignment
+        run: |
+          required=(
+            "SUPABASE_ACCESS_TOKEN"
+            "SUPABASE_DB_PASSWORD"
+            "SUPABASE_PROJECT_ID"
+            "SUPABASE_URL"
+            "SUPABASE_ANON_KEY"
+            "GOOGLE_CLIENT_ID"
+            "GOOGLE_CLIENT_SECRET"
+            "TOKEN_ENCRYPTION_KEY"
+            "GOOGLE_OAUTH_REDIRECT_URIS"
+          )
+
+          for key in "${required[@]}"; do
+            if [ -z "${!key}" ]; then
+              echo "Missing required secret: ${key}"
+              exit 1
+            fi
+          done
+
+          expected_url="https://${SUPABASE_PROJECT_ID}.supabase.co"
+          if [ "${SUPABASE_URL}" != "${expected_url}" ]; then
+            echo "SUPABASE_URL mismatch. Expected ${expected_url}, got ${SUPABASE_URL}"
+            exit 1
+          fi
+
+          if [[ ! "${TOKEN_ENCRYPTION_KEY}" =~ ^[0-9a-fA-F]{64}$ ]]; then
+            echo "TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters"
+            exit 1
+          fi
+
+          if [ -z "${EDGE_CORS_ORIGINS}" ]; then
+            echo "EDGE_CORS_ORIGINS is empty (allowed, but not recommended for production)"
+          fi
+
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
@@ -50,6 +105,18 @@ jobs:
 
       - name: Push database migrations
         run: supabase db push
+
+      - name: Set Google OAuth Edge secrets
+        run: |
+          supabase secrets set \
+            "GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}" \
+            "GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}" \
+            "TOKEN_ENCRYPTION_KEY=${TOKEN_ENCRYPTION_KEY}" \
+            "GOOGLE_OAUTH_REDIRECT_URIS=${GOOGLE_OAUTH_REDIRECT_URIS}"
+
+          if [ -n "${EDGE_CORS_ORIGINS}" ]; then
+            supabase secrets set "EDGE_CORS_ORIGINS=${EDGE_CORS_ORIGINS}"
+          fi
 
       - name: Set WEBHOOK_WORKER_SECRET (optional)
         env:
@@ -63,3 +130,6 @@ jobs:
 
       - name: Deploy Edge Functions (full set)
         run: npm run supabase:deploy:all-functions
+
+      - name: Smoke check Google/Gmail Edge functions
+        run: npm run supabase:smoke:google-edge

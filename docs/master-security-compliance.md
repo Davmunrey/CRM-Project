@@ -271,6 +271,7 @@ References: [Supabase RLS](https://supabase.com/docs/guides/auth/auth-deep-dive/
 - [ ] **Public read API / lead capture:** `crm-public-api` and `lead-capture` use explicit column selects (no `select('*')`), per-key or per-token rate limits, bounded request bodies, and generic client error bodies (details in logs only). Deploy with `npm run supabase:deploy:integrations` or full `npm run supabase:deploy:all-functions` (see [`../supabase/README.md`](../supabase/README.md)).
 - [ ] **Outbound webhooks:** `webhook-worker` resolves subscriber URLs with SSRF defenses (`_shared/webhook-url-safety.ts`) and applies a safe custom-header allowlist (`_shared/webhook-safe-headers.ts`) before `fetch`.
 - [ ] **SPA transport hygiene:** static responses include baseline security headers where the static host supports them ([`../vercel.json`](../vercel.json), [`../public/_headers`](../public/_headers)); email **signature preview** uses DOMPurify (`SignatureRichEditor.tsx`); client IDs use `crypto.randomUUID()` (no `uuid` npm dependency).
+- [ ] **Google OAuth deploy gate on `master`:** [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml) runs on push, validates required secrets (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `GOOGLE_OAUTH_REDIRECT_URIS`, Supabase credentials), deploys full Edge set, then executes `npm run supabase:smoke:google-edge` (script: [`../scripts/verify-google-edge-health.mjs`](../scripts/verify-google-edge-health.mjs)).
 
 ## 4. Backups and recovery
 

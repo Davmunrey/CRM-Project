@@ -33,16 +33,19 @@ When Supabase is configured, the app uses real authentication and PostgreSQL. Wi
 
 ### Without a local terminal (GitHub Actions)
 
-If you cannot run a shell locally, use the manual workflow **[`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml)**:
+If you cannot run a shell locally, use **[`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml)** (auto on `master` push, plus manual trigger):
 
 1. In GitHub: **Settings → Secrets and variables → Actions**, add:
    - `SUPABASE_ACCESS_TOKEN` — [Account tokens](https://supabase.com/dashboard/account/tokens)
    - `SUPABASE_PROJECT_ID` — project ref from the dashboard URL (`…/project/<ref>`)
    - `SUPABASE_DB_PASSWORD` — **Settings → Database** (reset if you do not have it)
+   - `SUPABASE_URL` and `SUPABASE_ANON_KEY` — used by post-deploy smoke checks
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `GOOGLE_OAUTH_REDIRECT_URIS` — synced into Supabase Edge secrets during deploy
    - *(Recommended)* `WEBHOOK_WORKER_SECRET` — long random string for the `webhook-worker` Edge function
-2. **Actions → “Supabase remote deploy” → Run workflow**.
+   - *(Recommended)* `EDGE_CORS_ORIGINS` — production browser-origin allowlist
+2. Optional manual run: **Actions → “Supabase remote deploy” → Run workflow**.
 
-That applies `supabase/migrations/` to the linked project and deploys **all** Edge Functions via `npm run supabase:deploy:all-functions` (same list as root `package.json`: webhooks, public API, lead capture, Google/Gmail, email, tracking, org/tenant helpers, sequences, maintenance — see [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml)).
+That applies `supabase/migrations/`, syncs required Google OAuth Edge secrets, deploys **all** Edge Functions via `npm run supabase:deploy:all-functions`, and then runs `npm run supabase:smoke:google-edge` to verify Google/Gmail endpoints are reachable.
 
 ### On your machine (CLI)
 

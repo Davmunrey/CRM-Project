@@ -96,6 +96,12 @@ CRM-specific outbound and inbox behavior (complements the Resend DNS checklist a
 
 **Operator setup (Google Cloud OAuth client, Supabase Edge secrets, deploy, troubleshooting):** [`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md#operator-setup-google-oauth). **What is still to do (Console, verification, Calendar product work):** [`Outstanding work`](./google-gmail-oauth-verification.md#outstanding-google-integration) in the same file.
 
+### Production reliability gate (Google)
+
+- On every push to `master`, [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml) now applies DB migrations, sets required Google OAuth Edge secrets, deploys the full function set, and runs `npm run supabase:smoke:google-edge`.
+- Smoke check script [`../scripts/verify-google-edge-health.mjs`](../scripts/verify-google-edge-health.mjs) verifies that `google-oauth-start`, `google-integration-status`, `gmail-oauth-exchange`, `gmail-refresh-token`, and `gmail-disconnect` are reachable at `functions/v1/*`.
+- If required secrets are missing or endpoint checks fail, the workflow fails hard (release-blocking).
+
 ### What the app does
 
 - **Gmail API sends** build MIME with `multipart/alternative` (plain + HTML) when HTML is present, which improves compatibility with spam filters compared with HTML-only payloads.

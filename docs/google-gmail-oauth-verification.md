@@ -70,7 +70,7 @@ From the linked project:
 npm run supabase:deploy:google
 ```
 
-This deploys `google-oauth-start`, `google-integration-status`, `gmail-oauth-exchange`, `gmail-refresh-token`, and `gmail-disconnect`. The GitHub workflow [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml) includes these; run it after updating the repo if you use that path. See also [`supabase/README.md`](../supabase/README.md).
+This deploys `google-oauth-start`, `google-integration-status`, `gmail-oauth-exchange`, `gmail-refresh-token`, and `gmail-disconnect`. The GitHub workflow [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml) includes these and now runs automatically on `master` pushes (plus manual trigger), with a preflight secret gate and post-deploy smoke check (`npm run supabase:smoke:google-edge`). See also [`supabase/README.md`](../supabase/README.md).
 
 ### 7. Smoke test (operator)
 
