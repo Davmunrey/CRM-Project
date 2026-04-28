@@ -10,7 +10,9 @@ import { devConsole } from './devConsole'
 export type DataRuntime = 'supabase' | 'unconfigured'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
+const supabaseAnonKey =
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ??
+  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)
 
 export const isSupabaseConfigured =
   typeof supabaseUrl === 'string' &&
@@ -27,7 +29,7 @@ const isVitest = import.meta.env.MODE === 'test'
 
 if (dataRuntime === 'unconfigured' && import.meta.env.DEV && !isVitest) {
   devConsole.warn(
-    '[Velo] Supabase env vars missing or invalid. Auth and data are disabled until you set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+    '[Velo] Supabase env vars missing or invalid. Auth and data are disabled until you set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY).',
   )
 }
 

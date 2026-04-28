@@ -76,6 +76,8 @@ Create a `.env.local` file in the project root (see also [`.env.example`](.env.e
 
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Alternative naming used by some providers:
+# VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
 
 # Optional outbound provider (defaults to gmail)
 # VITE_EMAIL_PROVIDER=gmail
