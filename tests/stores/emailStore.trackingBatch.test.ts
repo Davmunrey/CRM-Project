@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const recomputeLeadScore = vi.fn().mockResolvedValue(undefined)
 const leadEventInsert = vi.fn().mockResolvedValue({ data: null, error: null })
-const rpcMock = vi.fn().mockResolvedValue({ data: { success: true }, error: null })
+const invokeMock = vi.fn().mockResolvedValue({ data: { success: true }, error: null })
 
 const trackedEvents = [
   { id: 'evt-1', email_id: 'mail-1', event_type: 'open', created_at: '2026-04-13T10:00:00.000Z' },
@@ -55,7 +55,7 @@ const fromMock = vi.fn((table: string) => {
 vi.mock('../../src/lib/supabase', () => ({
   isSupabaseConfigured: true,
   isBootstrapFatalError: false,
-  supabase: { from: fromMock, rpc: rpcMock },
+  supabase: { from: fromMock, functions: { invoke: invokeMock } },
 }))
 
 vi.mock('../../src/lib/supabaseHelpers', () => ({
@@ -172,7 +172,7 @@ describe('emailStore tracking ingestion', () => {
     expect(recomputeLeadScore).toHaveBeenCalledTimes(1)
   })
 
-  it('claims legacy tracked emails via rpc backfill for current user', async () => {
+  it('claims legacy tracked emails via edge function backfill for current user', async () => {
     const { useEmailStore } = await import('../../src/store/emailStore')
     useEmailStore.setState({
       emails: [
@@ -233,8 +233,8 @@ describe('emailStore tracking ingestion', () => {
 
     await useEmailStore.getState().refreshTrackingMetrics()
 
-    expect(rpcMock).toHaveBeenCalledWith('backfill_email_tracking_user', {
-      p_email_ids: ['legacy-mail-1'],
+    expect(invokeMock).toHaveBeenCalledWith('backfill-email-tracking-user', {
+      body: { emailIds: ['legacy-mail-1'] },
     })
   })
 })
