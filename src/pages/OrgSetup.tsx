@@ -33,6 +33,55 @@ export function OrgSetup() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const invokeCreateOrgWithFallback = async (orgNameValue: string, slugValue: string) => {
+    if (!supabase) throw new Error(t.orgSetup.errorNotConfigured)
+    const sb = supabase
+
+    const primary = await sb.functions.invoke('create-org', {
+      body: {
+        orgName: orgNameValue,
+        slug: slugValue,
+      },
+    })
+
+    if (!primary.error) return primary.data as { org?: { id?: string } } | null
+
+    // Browser-level fetch failures from supabase.functions.invoke can happen despite healthy backend.
+    if (!/Failed to send a request to the Edge Function/i.test(primary.error.message)) {
+      throw new Error(primary.error.message)
+    }
+
+    const { data: sessionData, error: sessionErr } = await sb.auth.getSession()
+    if (sessionErr || !sessionData.session?.access_token) {
+      throw new Error(sessionErr?.message ?? t.orgSetup.errorNotAuthenticated)
+    }
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
+    const anonOrPublishableKey =
+      (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ??
+      (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)
+    if (!supabaseUrl || !anonOrPublishableKey) {
+      throw new Error(t.orgSetup.errorNotConfigured)
+    }
+
+    const res = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/create-org`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: anonOrPublishableKey,
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+      body: JSON.stringify({
+        orgName: orgNameValue,
+        slug: slugValue,
+      }),
+    })
+
+    const payload = (await res.json().catch(() => null)) as { error?: string; org?: { id?: string } } | null
+    if (!res.ok) throw new Error(payload?.error ?? t.errors.generic)
+    return payload
+  }
+
   useEffect(() => {
     if (!supabase) return
     const sb = supabase
@@ -104,13 +153,7 @@ export function OrgSetup() {
     setError(null)
 
     try {
-      const { data, error: invokeErr } = await sb.functions.invoke('create-org', {
-        body: {
-          orgName: orgName.trim(),
-          slug: slug.trim(),
-        },
-      })
-      if (invokeErr) throw new Error(invokeErr.message)
+      const data = await invokeCreateOrgWithFallback(orgName.trim(), slug.trim())
       const createdOrgId = (data as { org?: { id?: string } } | null)?.org?.id
       if (!createdOrgId) throw new Error(t.errors.generic)
 
