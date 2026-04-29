@@ -34,6 +34,8 @@ interface ScheduledEmailJob {
   id: string
   emailId: string
   runAt: string
+  attempts: number
+  nextAttemptAt: string
   payload: {
     to: string[]
     cc?: string[]
@@ -436,6 +438,8 @@ export const useEmailStore = create<EmailStore>()(
           id: crypto.randomUUID(),
           emailId: email.id,
           runAt: params.runAt,
+          attempts: 0,
+          nextAttemptAt: params.runAt,
           payload: {
             to: params.to,
             cc: params.cc,
@@ -512,7 +516,9 @@ export const useEmailStore = create<EmailStore>()(
 
       processScheduledEmails: async (accessToken) => {
         const now = Date.now()
-        const dueJobs = get().scheduledQueue.filter((j) => new Date(j.runAt).getTime() <= now)
+        const dueJobs = get().scheduledQueue.filter(
+          (j) => new Date(j.nextAttemptAt ?? j.runAt).getTime() <= now
+        )
         if (!dueJobs.length) return
 
         for (const job of dueJobs) {
@@ -532,7 +538,7 @@ export const useEmailStore = create<EmailStore>()(
                 const bodyHtml = job.payload.htmlBody ?? normalizeBodyToHtml(job.payload.body)
                 const rewritten = rewriteLinksForTracking(bodyHtml, clickBaseUrl)
                 trackedHtmlBody = injectOpenPixel(rewritten.htmlBody, openUrl)
-                const { data: trackingMessage } = await (supabase as any)
+                const { data: trackingMessage, error: trackingInsertError } = await (supabase as any)
                   .from('email_tracking_messages')
                   .insert({
                     email_id: job.emailId,
@@ -545,8 +551,11 @@ export const useEmailStore = create<EmailStore>()(
                   })
                   .select('id')
                   .single()
-                if (trackingMessage?.id && rewritten.links.length > 0) {
-                  await (supabase as any)
+                if (trackingInsertError) {
+                  console.error('[emailStore] tracking_messages insert failed', trackingInsertError.message)
+                  // No insertar tracking_links para evitar phantom opens — continuar sin tracking
+                } else if (trackingMessage?.id && rewritten.links.length > 0) {
+                  const { error: linksInsertError } = await (supabase as any)
                     .from('email_tracking_links')
                     .insert(rewritten.links.map((link) => ({
                       tracking_message_id: trackingMessage.id,
@@ -557,6 +566,9 @@ export const useEmailStore = create<EmailStore>()(
                       original_url: link.original_url,
                       click_token: link.click_token,
                     })))
+                  if (linksInsertError) {
+                    console.error('[emailStore] tracking_links insert failed', linksInsertError.message)
+                  }
                 }
               }
             }
@@ -614,8 +626,25 @@ export const useEmailStore = create<EmailStore>()(
               htmlBody: trackedHtmlBody,
             })
             set((s) => ({ scheduledQueue: s.scheduledQueue.filter((q) => q.id !== job.id) }))
-          } catch {
-            // Keep in queue for next processing attempt.
+          } catch (err) {
+            const MAX_ATTEMPTS = 5
+            const BACKOFF_MINUTES = [1, 5, 30, 120, 720] // 1m, 5m, 30m, 2h, 12h
+            set((s) => ({
+              scheduledQueue: s.scheduledQueue.map((q) => {
+                if (q.id !== job.id) return q
+                const newAttempts = (q.attempts ?? 0) + 1
+                if (newAttempts >= MAX_ATTEMPTS) {
+                  get().updateEmail(job.emailId, { status: 'failed', sendError: err instanceof Error ? err.message : 'Max retries exceeded' })
+                  return null
+                }
+                const delayMs = (BACKOFF_MINUTES[newAttempts - 1] ?? 720) * 60_000
+                return {
+                  ...q,
+                  attempts: newAttempts,
+                  nextAttemptAt: new Date(Date.now() + delayMs).toISOString(),
+                }
+              }).filter((q): q is ScheduledEmailJob => q !== null),
+            }))
           }
         }
       },
@@ -676,8 +705,9 @@ export const useEmailStore = create<EmailStore>()(
             }
           }
           set({ threadLinks: links })
-        } catch {
-          // Non-critical: link hydration can silently fail without blocking Inbox
+        } catch (err) {
+          // Non-critical: link hydration failure does not block Inbox
+          console.error('[emailStore] fetchThreadLinks failed', err instanceof Error ? err.message : err)
         }
       },
 
@@ -705,8 +735,9 @@ export const useEmailStore = create<EmailStore>()(
             }
           }
           set({ threadWorkspace: workspace })
-        } catch {
-          // Non-critical: local state is still available.
+        } catch (err) {
+          // Non-critical: local state is still available
+          console.error('[emailStore] fetchThreadWorkspace failed', err instanceof Error ? err.message : err)
         }
       },
 

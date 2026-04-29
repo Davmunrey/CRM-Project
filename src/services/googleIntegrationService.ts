@@ -67,25 +67,13 @@ async function invokeEdgeWithFallback<T>(functionName: string, body: Record<stri
     return directPayload as T
   }
 
-  const proxyRes = await fetch(`/api/${functionName}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    },
-    body: JSON.stringify(body),
-  })
-
-  const proxyPayload = (await proxyRes.json().catch(() => null)) as { error?: string } | null
-  if (!proxyRes.ok || proxyPayload?.error) {
-    throw new Error(proxyPayload?.error ?? primary.error.message)
-  }
-  return proxyPayload as T
+  throw new Error(primary.error.message)
 }
 
 export async function fetchGoogleOAuthStartUrl(bundle: GoogleOAuthBundle = 'primary'): Promise<string> {
   const data = await invokeEdgeWithFallback<{ url?: string }>('google-oauth-start', {
     redirect_uri: getGmailRedirectUri(),
+    original_origin: window.location.origin,
     bundle,
     organizationId: getCurrentOrganizationId(),
   })

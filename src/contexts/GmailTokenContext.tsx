@@ -24,8 +24,11 @@ export function GmailTokenProvider({ children }: { children: ReactNode }) {
     setState({ accessToken: null, expiresAt: null })
   }, [])
 
+  const TOKEN_EXPIRY_BUFFER_MS = 60_000
   const isTokenValid = useCallback(() => {
-    return !!state.accessToken && !!state.expiresAt && state.expiresAt > Date.now()
+    return !!state.accessToken
+      && !!state.expiresAt
+      && state.expiresAt > Date.now() + TOKEN_EXPIRY_BUFFER_MS
   }, [state])
 
   const value = useMemo(

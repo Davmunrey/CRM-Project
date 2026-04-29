@@ -37,3 +37,10 @@ Uses Playwright against the dev server by default. For an optional **hosted** UR
 ---
 
 *Last updated (git): **2026-04-21***
+
+### Google OAuth — Vercel previews + production
+
+- [ ] Preview deploy: connect Gmail → popup opens Google → production callback redirects to preview → exchange completes
+- [ ] Production: connect Gmail → OAuth completes directly (no intermediate redirect)
+- [ ] Revoke Google access from Google Account → next Gmail action shows reconnect message (not raw 401)
+- [ ] Scheduled email with expired token → auto-refreshes and delivers

@@ -11,7 +11,8 @@ import { useDealsStore } from '../store/dealsStore'
 import { useCompaniesStore } from '../store/companiesStore'
 import { useActivitiesStore } from '../store/activitiesStore'
 import { useAuthStore } from '../store/authStore'
-import { GmailApiError, downloadGmailAttachment, modifyGmailThreadLabels, trashGmailThread } from '../services/gmailService'
+import { downloadGmailAttachment, modifyGmailThreadLabels, trashGmailThread } from '../services/gmailService'
+import { withGmailToken } from '../services/gmailTokenRefresh'
 import { fetchGoogleOAuthStartUrl } from '../services/googleIntegrationService'
 import { useGmailToken } from '../contexts/GmailTokenContext'
 import { supabase } from '../lib/supabase'
@@ -658,34 +659,10 @@ export function Inbox() {
     })
   }, [refreshTrackingMetrics, emails.length])
 
-  async function refreshAccessToken(): Promise<string> {
-    const { data, error } = await supabase!.functions.invoke('gmail-refresh-token')
-    if (error || !data?.access_token) {
-      throw new Error('Token refresh failed - please reconnect Gmail')
-    }
-    const newExpiry = Date.now() + (data.expires_in ?? 3600) * 1000
-    setGmailToken(data.access_token, newExpiry)
-    return data.access_token as string
-  }
-
-  // 401 refresh+retry wrapper
-  async function refreshAndRetry<T>(fn: (token: string) => Promise<T>): Promise<T> {
-    const activeToken = accessToken ?? await refreshAccessToken()
-    try {
-      return await fn(activeToken)
-    } catch (err) {
-      if (err instanceof GmailApiError && err.status === 401) {
-        const refreshedToken = await refreshAccessToken()
-        return await fn(refreshedToken)
-      }
-      throw err
-    }
-  }
-
   const handleLoadThreads = async (query = '', options: { silent?: boolean } = {}) => {
     try {
       const gmailQuery = toGmailThreadsListQuery(query)
-      await refreshAndRetry((token) => useEmailStore.getState().loadThreads(token, gmailQuery))
+      await withGmailToken(accessToken, setGmailToken, (token) => useEmailStore.getState().loadThreads(token, gmailQuery))
       if (query.trim()) trackUxAction('inbox_search', { queryLength: query.trim().length })
     } catch (err) {
       if (!options.silent) toast.error(err instanceof Error ? err.message : t.errors.generic)
@@ -695,7 +672,7 @@ export function Inbox() {
   const handleLoadMoreThreads = async () => {
     if (!threadsNextPageToken) return
     try {
-      await refreshAndRetry((token) =>
+      await withGmailToken(accessToken, setGmailToken, (token) =>
         useEmailStore.getState().loadThreads(token, toGmailThreadsListQuery(listQuery.trim()), {
           append: true,
           pageToken: threadsNextPageToken,
@@ -744,7 +721,7 @@ export function Inbox() {
     if (!connected) return
     const run = async () => {
       try {
-        await refreshAndRetry(async (token) => processScheduledEmails(token))
+        await withGmailToken(accessToken, setGmailToken, async (token) => processScheduledEmails(token))
       } catch {
         // ignore periodic scheduler errors
       }
@@ -1150,7 +1127,7 @@ export function Inbox() {
     if (!selectedThreadIds.size) return
     try {
       const ids = [...selectedThreadIds]
-      await refreshAndRetry(async (token) => {
+      await withGmailToken(accessToken, setGmailToken, async (token) => {
         await Promise.all(ids.map((threadId) => {
           if (action === 'mark_read') {
             return modifyGmailThreadLabels(token, threadId, { removeLabelIds: ['UNREAD'] })
@@ -1188,7 +1165,7 @@ export function Inbox() {
 
   const runThreadAction = async (thread: GmailThread, action: 'mark_read' | 'mark_unread' | 'archive' | 'trash') => {
     try {
-      await refreshAndRetry(async (token) => {
+      await withGmailToken(accessToken, setGmailToken, async (token) => {
         if (action === 'mark_read') {
           await modifyGmailThreadLabels(token, thread.id, { removeLabelIds: ['UNREAD'] })
           return
@@ -1281,7 +1258,7 @@ export function Inbox() {
 
   const handleDownloadAttachment = async (messageId: string, attachmentId: string, filename: string) => {
     try {
-      await refreshAndRetry(async (token) => {
+      await withGmailToken(accessToken, setGmailToken, async (token) => {
         const { data } = await downloadGmailAttachment(token, messageId, attachmentId)
         const bytes = atob(data.replace(/-/g, '+').replace(/_/g, '/'))
         const arr = new Uint8Array(bytes.length)

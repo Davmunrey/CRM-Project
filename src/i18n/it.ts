@@ -195,6 +195,11 @@ export const it: Translations = {
     gmailConnectionError: 'Errore durante la connessione a Gmail',
     invitationSendError: "Errore durante l'invio dell'invito",
     duplicateTag: 'Tag duplicato',
+    gmailMissingScopeSend: 'Manca il permesso di invio Gmail. Riconnetti il tuo account e accetta tutte le autorizzazioni richieste.',
+    gmailMissingScopeRead: 'Manca il permesso di lettura Gmail. Riconnetti il tuo account e accetta tutte le autorizzazioni richieste.',
+    gmailScheduledFailedAfterRetries: 'Un\'email pianificata è fallita dopo più tentativi ed è stata annullata.',
+    gmailOriginNotAllowed: 'Questa origine non è consentita per Google OAuth.',
+    gmailReconnectRequired: 'La connessione al tuo account Google è scaduta. Effettua nuovamente la connessione.',
   },
   acceptInvite: {
     ...en.acceptInvite,

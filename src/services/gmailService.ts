@@ -18,7 +18,10 @@ function base64urlEncode(bytes: Uint8Array): string {
 // ─── Auth Code + PKCE initiation ─────────────────────────────────────────────
 
 export function getGmailRedirectUri(): string {
-  // Always honor current origin (works with localhost:5173, :5174, preview, prod, etc.)
+  const fromEnv = import.meta.env.VITE_GMAIL_REDIRECT_URI as string | undefined
+  // Validate it looks like a full callback URL before trusting it
+  if (fromEnv && /^https?:\/\/.+\/auth\/gmail\/callback$/.test(fromEnv)) return fromEnv
+  // Fallback: current origin (works for local dev without the env var)
   return `${window.location.origin}/auth/gmail/callback`
 }
 
@@ -467,4 +470,31 @@ export async function trashGmailThread(
   await gmailFetch(`/threads/${threadId}/trash`, accessToken, {
     method: 'POST',
   })
+}
+
+// ─── Scope validation ─────────────────────────────────────────────────────────
+
+export class GmailScopeError extends Error {
+  constructor(public readonly i18nKey: 'gmailMissingScopeSend' | 'gmailMissingScopeRead') {
+    super(i18nKey)
+    this.name = 'GmailScopeError'
+  }
+}
+
+/**
+ * Checks that the stored Gmail token has `requiredScope` granted.
+ * Throws GmailScopeError (with i18n key) if not.
+ * Pass `grantedScopes` from fetchGoogleIntegrationStatus().account?.scopes.
+ */
+export function assertGmailScope(
+  grantedScopes: string[] | null | undefined,
+  requiredScope: 'gmail.send' | 'gmail.readonly',
+): void {
+  if (!grantedScopes || grantedScopes.length === 0) return // can't validate — skip
+  const has = grantedScopes.some((s) => s.includes(requiredScope))
+  if (!has) {
+    const key: 'gmailMissingScopeSend' | 'gmailMissingScopeRead' =
+      requiredScope === 'gmail.send' ? 'gmailMissingScopeSend' : 'gmailMissingScopeRead'
+    throw new GmailScopeError(key)
+  }
 }

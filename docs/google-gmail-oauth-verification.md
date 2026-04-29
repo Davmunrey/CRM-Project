@@ -178,3 +178,25 @@ These are **not** finished just because Settings → Integrations shows “Conne
 *Operational detail only; not legal advice. Keep privacy policy and in-product disclosures aligned with actual data processing.*
 
 *Last updated (git): **2026-04-22***
+
+## OAuth on Vercel preview deployments
+
+Google OAuth requires pre-registered `redirect_uri` values. Vercel preview URLs are dynamic and cannot be pre-registered. The solution is a **production-domain redirect**:
+
+1. All deployments send `redirect_uri = VITE_GMAIL_REDIRECT_URI` (production) and `original_origin = window.location.origin` to `google-oauth-start`.
+2. Edge function stores `original_origin` in `google_oauth_states` (validated against `GOOGLE_OAUTH_ORIGIN_ALLOWLIST`).
+3. Google redirects to the production callback.
+4. `GmailCallback.tsx` on prod calls `google-oauth-state-origin?state=<state>` to get `original_origin`.
+5. If `original_origin !== prod`, it redirects to `${original_origin}/auth/gmail/callback?code=...&state=...`.
+6. The preview's callback runs `gmail-oauth-exchange` — the user's session lives there.
+
+### `GOOGLE_OAUTH_ORIGIN_ALLOWLIST`
+
+CSV of regex patterns for allowed origins:
+```
+^https://velo-crm-[a-z0-9-]+-davmunreys-projects\.vercel\.app$,^https://your-prod-domain\.com$
+```
+
+### `TOKEN_ENCRYPTION_KEY` rotation
+
+⚠️ Rotating this key invalidates all AES-256-GCM encrypted refresh tokens. All users must reconnect their Google account. Plan a maintenance window and notify users before rotating.

@@ -10,6 +10,16 @@ import { useTranslations } from '../i18n'
 import { GOOGLE_OAUTH_MESSAGE_SOURCE, type GoogleOAuthMessagePayload } from '../services/googleIntegrationService'
 import { useAuthStore } from '../store/authStore'
 
+function isAllowedRedirectOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin)
+    // Permite localhost (dev) y cualquier https
+    return url.protocol === 'https:' || (url.protocol === 'http:' && url.hostname === 'localhost')
+  } catch {
+    return false
+  }
+}
+
 function postToOpener(payload: GoogleOAuthMessagePayload) {
   try {
     if (window.opener && !window.opener.closed) {
@@ -37,9 +47,36 @@ export function GmailCallback() {
 
     async function exchange() {
       const params = new URLSearchParams(window.location.search)
-      const oauthError = params.get('error')
+
+      // ── Redirector: si venimos del callback de producción pero el OAuth fue iniciado en otra origin, reenviar
+      const expectedProdUri = import.meta.env.VITE_GMAIL_REDIRECT_URI as string | undefined
+      const expectedProdOrigin = expectedProdUri ? new URL(expectedProdUri).origin : null
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
+      const currentOrigin = window.location.origin
       const code = params.get('code')
       const returnedState = params.get('state')
+
+      if (expectedProdOrigin && currentOrigin === expectedProdOrigin && returnedState && code && supabaseUrl) {
+        try {
+          const res = await fetch(
+            `${supabaseUrl.replace(/\/+$/, '')}/functions/v1/google-oauth-state-origin?state=${encodeURIComponent(returnedState)}`,
+            { headers: { apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string ?? '' } }
+          )
+          if (res.ok) {
+            const payload = (await res.json().catch(() => null)) as { original_origin?: string } | null
+            const originalOrigin = payload?.original_origin
+            if (originalOrigin && originalOrigin !== expectedProdOrigin && isAllowedRedirectOrigin(originalOrigin)) {
+              const qs = new URLSearchParams({ code, state: returnedState }).toString()
+              window.location.replace(`${originalOrigin}/auth/gmail/callback?${qs}`)
+              return // stop — full page redirect in progress
+            }
+          }
+        } catch {
+          // network error → proceed with normal exchange on prod domain
+        }
+      }
+
+      const oauthError = params.get('error')
       const redirectUri = getGmailRedirectUri()
 
       if (oauthError) {

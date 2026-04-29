@@ -131,3 +131,31 @@ Failures usually mean: wrong org id, user not privileged, functions not deployed
 ---
 
 *Last updated (git): **2026-04-22***
+
+## Vercel deployment (`davmunreys-projects/velo-crm`)
+
+This project deploys as a **pure static SPA** on Vercel. There are no serverless functions — the `/api/` directory has been removed. `vercel.json` only contains SPA rewrites and security headers.
+
+### Environment variables (Project → Settings → Environment Variables)
+
+Set for all three environments (Production, Preview, Development):
+
+| Variable | Value |
+|---|---|
+| `VITE_SUPABASE_URL` | `https://<project>.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon key |
+| `VITE_GMAIL_REDIRECT_URI` | `https://<PROD_DOMAIN>/auth/gmail/callback` |
+
+> **Important:** `VITE_GMAIL_REDIRECT_URI` must always point to the **production domain**. Vercel preview deployments work via a redirect through the production callback — see `docs/google-gmail-oauth-verification.md`.
+
+### Supabase Edge Function secrets
+
+These go in Supabase Dashboard → Edge Functions → Secrets:
+
+| Secret | Notes |
+|---|---|
+| `GOOGLE_CLIENT_ID` | Google Cloud OAuth Web client ID |
+| `GOOGLE_CLIENT_SECRET` | Google Cloud OAuth Web client secret |
+| `TOKEN_ENCRYPTION_KEY` | 64 hex chars. Do not rotate without migration — rotating invalidates all stored refresh tokens. |
+| `GOOGLE_OAUTH_REDIRECT_URIS` | CSV: production callback URL (+ localhost for dev) |
+| `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` | CSV of regexes for allowed preview origins (see `docs/google-gmail-oauth-verification.md`) |

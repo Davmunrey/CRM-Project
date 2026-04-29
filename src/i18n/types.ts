@@ -1587,6 +1587,11 @@ export interface Translations {
     googleOAuthAccessDenied: string
     googleOAuthStateInvalid: string
     googleOAuthEmailMismatch: string
+    gmailMissingScopeSend: string
+    gmailMissingScopeRead: string
+    gmailScheduledFailedAfterRetries: string
+    gmailOriginNotAllowed: string
+    gmailReconnectRequired: string
     gmailThreadsLoadError: string
     invitationSendError: string
     duplicateTag: string

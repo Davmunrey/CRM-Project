@@ -195,6 +195,11 @@ export const de: Translations = {
     gmailConnectionError: 'Fehler beim Verbinden mit Gmail',
     invitationSendError: 'Fehler beim Senden der Einladung',
     duplicateTag: 'Doppeltes Tag',
+    gmailMissingScopeSend: 'Gmail-Sendeberechtigung fehlt. Verbinde dein Konto erneut und stimme allen angeforderten Berechtigungen zu.',
+    gmailMissingScopeRead: 'Gmail-Leseberechtigung fehlt. Verbinde dein Konto erneut und stimme allen angeforderten Berechtigungen zu.',
+    gmailScheduledFailedAfterRetries: 'Eine geplante E-Mail ist nach mehreren Versuchen fehlgeschlagen und wurde storniert.',
+    gmailOriginNotAllowed: 'Dieser Ursprung ist für Google OAuth nicht zulässig.',
+    gmailReconnectRequired: 'Die Verbindung zu deinem Google-Konto ist abgelaufen. Bitte verbinde dich erneut.',
   },
   acceptInvite: {
     ...en.acceptInvite,

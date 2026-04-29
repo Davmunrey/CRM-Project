@@ -77,9 +77,14 @@ Deno.serve(async (req: Request) => {
       })
     }
 
-    const body = (await req.json().catch(() => ({}))) as { redirect_uri?: string; bundle?: string }
-    const requestedOrgId = typeof (body as { organizationId?: string }).organizationId === 'string'
-      ? (body as { organizationId?: string }).organizationId.replace(/^"+|"+$/g, '').trim()
+    const body = (await req.json().catch(() => ({}))) as {
+      redirect_uri?: string
+      bundle?: string
+      organizationId?: string
+      original_origin?: string
+    }
+    const requestedOrgId = typeof body.organizationId === 'string'
+      ? body.organizationId.replace(/^"+|"+$/g, '').trim()
       : ''
 
     const adminClient = createClient(
@@ -131,6 +136,34 @@ Deno.serve(async (req: Request) => {
         status: 400,
         headers: { ...cors, 'Content-Type': 'application/json' },
       })
+    }
+
+    // Extract and validate original_origin (the browser's actual origin, may differ from redirect_uri on previews)
+    const rawOriginalOrigin = typeof body.original_origin === 'string' ? body.original_origin.trim() : ''
+    let validatedOriginalOrigin: string | null = null
+    if (rawOriginalOrigin) {
+      try {
+        const originUrl = new URL(rawOriginalOrigin)
+        // Only accept https or http://localhost
+        if (originUrl.protocol === 'https:' || (originUrl.protocol === 'http:' && originUrl.hostname === 'localhost')) {
+          // Check against GOOGLE_OAUTH_ORIGIN_ALLOWLIST if set
+          const allowlistEnv = Deno.env.get('GOOGLE_OAUTH_ORIGIN_ALLOWLIST')?.trim()
+          if (allowlistEnv) {
+            const patterns = allowlistEnv.split(',').map((p) => p.trim()).filter(Boolean)
+            const allowed = patterns.some((pattern) => {
+              try { return new RegExp(pattern).test(rawOriginalOrigin) }
+              catch { return false }
+            })
+            if (allowed) validatedOriginalOrigin = rawOriginalOrigin
+            // If not in allowlist, silently ignore (don't block the OAuth flow)
+          } else {
+            // No allowlist configured — accept any valid https or localhost
+            validatedOriginalOrigin = rawOriginalOrigin
+          }
+        }
+      } catch {
+        // Invalid URL — ignore
+      }
     }
 
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID')?.trim()
@@ -195,6 +228,7 @@ Deno.serve(async (req: Request) => {
       redirect_uri: redirectUri,
       expires_at: expiresAt,
       bundle,
+      ...(validatedOriginalOrigin ? { original_origin: validatedOriginalOrigin } : {}),
     })
     if (insErr) {
       console.error(JSON.stringify({ event: 'google_oauth_state_insert', error: insErr.message }))
