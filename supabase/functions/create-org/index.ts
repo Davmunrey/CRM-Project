@@ -110,18 +110,16 @@ Deno.serve(async (req) => {
       )
     }
 
-    // 4. Set JWT claims
-    const { error: claimOrgErr } = await adminClient.rpc('set_claim', { uid: user.id, claim: 'organization_id', value: `"${org.id}"` })
-    if (claimOrgErr) {
+    // 4. Set JWT claims via Auth Admin API (avoids REVOKE ALL on set_claim RPC)
+    const { error: metaErr } = await adminClient.auth.admin.updateUserById(user.id, {
+      app_metadata: {
+        organization_id: org.id,
+        user_role: 'admin',
+      },
+    })
+    if (metaErr) {
       return new Response(
-        JSON.stringify({ error: claimOrgErr.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
-    }
-    const { error: claimRoleErr } = await adminClient.rpc('set_claim', { uid: user.id, claim: 'user_role', value: '"admin"' })
-    if (claimRoleErr) {
-      return new Response(
-        JSON.stringify({ error: claimRoleErr.message }),
+        JSON.stringify({ error: metaErr.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       )
     }

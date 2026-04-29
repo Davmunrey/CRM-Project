@@ -52,7 +52,7 @@ export function OrgSetup() {
 
     if (!primary.error) return primary.data as { org?: { id?: string } } | null
 
-    // Browser-level fetch failures from supabase.functions.invoke can happen despite healthy backend.
+    // Browser-level fetch failures: retry with a direct fetch to bypass SDK quirks.
     if (!/Failed to send a request to the Edge Function/i.test(primary.error.message)) {
       throw new Error(primary.error.message)
     }
@@ -70,11 +70,6 @@ export function OrgSetup() {
       throw new Error(t.orgSetup.errorNotConfigured)
     }
 
-    const requestBody = {
-      orgName: orgNameValue,
-      slug: slugValue,
-    }
-
     const directRes = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/create-org`, {
       method: 'POST',
       headers: {
@@ -82,27 +77,16 @@ export function OrgSetup() {
         apikey: anonOrPublishableKey,
         Authorization: `Bearer ${sessionData.session.access_token}`,
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({ orgName: orgNameValue, slug: slugValue }),
     }).catch(() => null)
 
     if (directRes) {
       const payload = (await directRes.json().catch(() => null)) as { error?: string; org?: { id?: string } } | null
-      if (!directRes.ok) throw new Error(payload?.error ?? t.errors.generic)
+      if (!directRes.ok) throw new Error(payload?.error ?? primary.error.message)
       return payload
     }
 
-    // Final fallback: same-origin Vercel API proxy to bypass browser/network blocks to supabase.co.
-    const proxyRes = await fetch('/api/create-org', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${sessionData.session.access_token}`,
-      },
-      body: JSON.stringify(requestBody),
-    })
-    const proxyPayload = (await proxyRes.json().catch(() => null)) as { error?: string; org?: { id?: string } } | null
-    if (!proxyRes.ok) throw new Error(proxyPayload?.error ?? t.errors.generic)
-    return proxyPayload
+    throw new Error(primary.error.message)
   }
 
   useEffect(() => {
