@@ -29,7 +29,7 @@ Scope: emails sent by Supabase Auth (`confirm signup`, `magic link`, `reset pass
 
 ### Operator checklist
 
-- [ ] Sender identity configured in Supabase `Authentication -> SMTP Settings`.
+- [x] **Sender identity configured (2026-04-29):** Supabase `Authentication → SMTP Settings` set to Resend (`smtp.resend.com:587`, sender `onboarding@resend.dev`). Email confirmations and invites now deliver on production (`https://velo-crm-taupe.vercel.app`).
 - [ ] Each auth template updated from the repo kit.
 - [ ] Test email received for all four auth flows.
 - [ ] CTA buttons and fallback links open approved domains only.
@@ -98,6 +98,7 @@ CRM-specific outbound and inbox behavior (complements the Resend DNS checklist a
 
 ### Production reliability gate (Google)
 
+- **`create-org` fix (2026-04-29):** `create-org` Edge Function now uses `adminClient.auth.admin.updateUserById` to set JWT claims instead of the `set_claim` RPC, which was revoked from all roles by migration `20260427123000_security_rpc_execute_grants.sql`. Org creation was broken until this fix. `src/pages/OrgSetup.tsx` dead `/api/create-org` Vercel proxy fallback also removed.
 - On every push to `master`, [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml) now applies DB migrations, sets required Google OAuth Edge secrets, deploys the full function set, and runs `npm run supabase:smoke:google-edge`.
 - Smoke check script [`../scripts/verify-google-edge-health.mjs`](../scripts/verify-google-edge-health.mjs) verifies that `google-oauth-start`, `google-integration-status`, `gmail-oauth-exchange`, `gmail-refresh-token`, and `gmail-disconnect` are reachable at `functions/v1/*`.
 - If required secrets are missing or endpoint checks fail, the workflow fails hard (release-blocking).

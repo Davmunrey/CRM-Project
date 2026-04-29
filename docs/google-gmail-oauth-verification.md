@@ -49,13 +49,14 @@ In the **same** Supabase project as `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KE
 | `GOOGLE_CLIENT_SECRET` | Web client secret |
 | `TOKEN_ENCRYPTION_KEY` | **64 hex characters** (32 bytes). Generate: `openssl rand -hex 32` |
 | `GOOGLE_OAUTH_REDIRECT_URIS` | Comma-separated list of **every** allowed redirect URL (each full `https://…/auth/gmail/callback`), **or** a single `GOOGLE_OAUTH_REDIRECT_URI` if only one origin exists |
-| `EDGE_CORS_ORIGINS` | *(Recommended in production)* Comma-separated **exact** browser origins (`scheme://host:port`) allowed to call Google/Gmail Edge functions and other CORS-aware surfaces. When set, a disallowed `Origin` receives **403** `cors_origin_not_allowed`. When unset, `Access-Control-Allow-Origin: *`. Align with every origin where users open Settings → Integrations. Documented in [`.env.example`](../.env.example) and [`master-security-compliance.md`](./master-security-compliance.md#supabase-external-hardening-checklist). |
+| `EDGE_CORS_ORIGINS` | Comma-separated **exact** browser origins (`scheme://host:port`) allowed to call Google/Gmail Edge functions and other CORS-aware surfaces. When set, a disallowed `Origin` receives **403** `cors_origin_not_allowed`. When unset, `Access-Control-Allow-Origin: *`. **Configured 2026-04-29:** `https://velo-crm-taupe.vercel.app`, `https://velo-crm-davmunreys-projects.vercel.app`, `https://velo-crm-davmunrey-davmunreys-projects.vercel.app`, `https://velo-crm-two.vercel.app`, `http://localhost:5173`, `http://localhost:4173`. GitHub secret updated to prevent CI overwrite. Documented in [`.env.example`](../.env.example) and [`master-security-compliance.md`](./master-security-compliance.md#supabase-external-hardening-checklist). |
+| `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` | **Added 2026-04-29.** CSV of regex patterns for allowed `original_origin` values during preview-OAuth redirect flow. Example: `^https://velo-crm-[a-z0-9-]+-davmunreys-projects\.vercel\.app$,^https://velo-crm-taupe\.vercel\.app$`. Validated by `google-oauth-start` before storing `original_origin` in `google_oauth_states`. |
 
 `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are provided to Edge at runtime.
 
 ### 5. Database
 
-Apply migrations (includes `gmail_tokens`, `google_oauth_states`, and `google_oauth_states.bundle` for which OAuth step started):
+Apply migrations (includes `gmail_tokens`, `google_oauth_states`, `google_oauth_states.bundle`, and **`google_oauth_states.original_origin`** added by migration `20260429100000_google_oauth_states_original_origin.sql` for the preview-redirect flow):
 
 ```bash
 supabase db push
@@ -70,7 +71,7 @@ From the linked project:
 npm run supabase:deploy:google
 ```
 
-This deploys `google-oauth-start`, `google-integration-status`, `gmail-oauth-exchange`, `gmail-refresh-token`, and `gmail-disconnect`. The GitHub workflow [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml) includes these and now runs automatically on `master` pushes (plus manual trigger), with a preflight secret gate and post-deploy smoke check (`npm run supabase:smoke:google-edge`). See also [`supabase/README.md`](../supabase/README.md).
+This deploys `google-oauth-start`, `google-integration-status`, `gmail-oauth-exchange`, `gmail-refresh-token`, `gmail-disconnect`, and **`google-oauth-state-origin`** (added 2026-04-29 for the preview-redirect flow). The GitHub workflow [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml) includes these and now runs automatically on `master` pushes (plus manual trigger), with a preflight secret gate and post-deploy smoke check (`npm run supabase:smoke:google-edge`). See also [`supabase/README.md`](../supabase/README.md).
 
 ### 7. Smoke test (operator)
 
@@ -94,7 +95,7 @@ This deploys `google-oauth-start`, `google-integration-status`, `gmail-oauth-exc
 |-------|--------|
 | **Console submission** | Owned on the Google Cloud + legal side — not automatable from this repo. |
 | **Repo readiness** | Redirect URI matrix + channel alignment below; keep **Authorized redirect URIs** in sync with every deployed origin. |
-| **Last doc review** | 2026-04-22 — cross-check [`project-state.md`](./project-state.md) (Gaps) when submission state changes. |
+| **Last doc review** | 2026-04-29 — `EDGE_CORS_ORIGINS` and `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` configured; `google-oauth-state-origin` function deployed; `original_origin` column migration applied. Cross-check [`project-state.md`](./project-state.md) (Gaps) when Google submission state changes. |
 
 ### Checklist (Google Cloud Console — verification)
 
@@ -153,8 +154,11 @@ Use this section as the **single “what is still to do”** list for Google int
 | # | Task | Why |
 |---|------|-----|
 | B1 | Edge secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TOKEN_ENCRYPTION_KEY` (64 hex), redirect URI list. | Without these, `google-oauth-start` / `gmail-oauth-exchange` fail at runtime. |
+| B1a | ✅ **Done 2026-04-29:** `EDGE_CORS_ORIGINS` set with all production aliases + localhost. `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` set with Vercel preview URL patterns. GitHub secret updated to match. | Fixes CORS 403 errors from preview deployments and enforces origin allowlist for preview OAuth flow. |
 | B2 | After **schema** changes: `supabase db push` (or CI migration) on **each** linked project (staging vs production). | Example: `google_oauth_states.bundle` must exist before new OAuth starts. |
+| B2a | ✅ **Done 2026-04-29:** Migration `20260429100000_google_oauth_states_original_origin.sql` applied — adds `original_origin` column to `google_oauth_states`. | Required for preview-domain OAuth redirect flow. |
 | B3 | After **function** changes: `npm run supabase:deploy:google` (or your deploy workflow). | Browser calls `…/functions/v1/google-oauth-start`; stale deploys cause “Failed to send a request to the Edge Function”. |
+| B3a | ✅ **Done 2026-04-29:** `google-oauth-state-origin` Edge Function deployed. | New function for preview-OAuth redirect flow — returns `original_origin` for a given state token. |
 
 ### C. Product / engineering (repo — beyond “connect” UI)
 
@@ -177,7 +181,7 @@ These are **not** finished just because Settings → Integrations shows “Conne
 
 *Operational detail only; not legal advice. Keep privacy policy and in-product disclosures aligned with actual data processing.*
 
-*Last updated (git): **2026-04-22***
+*Last updated (git): **2026-04-29***
 
 ## OAuth on Vercel preview deployments
 

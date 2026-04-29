@@ -37,3 +37,4 @@ docs/security-audit-*.md
 
 .vercel
 .env*.local
+.mcp.json

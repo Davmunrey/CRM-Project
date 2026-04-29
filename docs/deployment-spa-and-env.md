@@ -130,7 +130,7 @@ Failures usually mean: wrong org id, user not privileged, functions not deployed
 *See also [`project-state.md`](./project-state.md) and [`master-release-qa.md`](./master-release-qa.md#production-handoff-checklist).*
 ---
 
-*Last updated (git): **2026-04-22***
+*Last updated (git): **2026-04-29***
 
 ## Vercel deployment (`davmunreys-projects/velo-crm`)
 
@@ -138,19 +138,19 @@ This project deploys as a **pure static SPA** on Vercel. There are no serverless
 
 ### Environment variables (Project → Settings → Environment Variables)
 
-Set for all three environments (Production, Preview, Development):
+All three environments (Production, Preview, Development) have been configured as follows:
 
-| Variable | Value |
-|---|---|
-| `VITE_SUPABASE_URL` | `https://<project>.supabase.co` |
-| `VITE_SUPABASE_ANON_KEY` | Supabase anon key |
-| `VITE_GMAIL_REDIRECT_URI` | `https://<PROD_DOMAIN>/auth/gmail/callback` |
+| Variable | Environments | Notes |
+|---|---|---|
+| `VITE_SUPABASE_URL` | Production, Preview, Development | Was already set for Production; Preview + Development added 2026-04-29 |
+| `VITE_SUPABASE_ANON_KEY` | Production, Preview, Development | Was already set for Production; Preview + Development added 2026-04-29 |
+| `VITE_GMAIL_REDIRECT_URI` | Production, Preview, Development | Value: `https://velo-crm-taupe.vercel.app/auth/gmail/callback` — added 2026-04-29 |
 
-> **Important:** `VITE_GMAIL_REDIRECT_URI` must always point to the **production domain**. Vercel preview deployments work via a redirect through the production callback — see `docs/google-gmail-oauth-verification.md`.
+> **Important:** `VITE_GMAIL_REDIRECT_URI` must always point to the **production domain** (`https://velo-crm-taupe.vercel.app`). Vercel preview deployments work via a redirect through the production callback — see `docs/google-gmail-oauth-verification.md`.
 
 ### Supabase Edge Function secrets
 
-These go in Supabase Dashboard → Edge Functions → Secrets:
+These go in Supabase Dashboard → Edge Functions → Secrets (or `supabase secrets set`):
 
 | Secret | Notes |
 |---|---|
@@ -158,4 +158,5 @@ These go in Supabase Dashboard → Edge Functions → Secrets:
 | `GOOGLE_CLIENT_SECRET` | Google Cloud OAuth Web client secret |
 | `TOKEN_ENCRYPTION_KEY` | 64 hex chars. Do not rotate without migration — rotating invalidates all stored refresh tokens. |
 | `GOOGLE_OAUTH_REDIRECT_URIS` | CSV: production callback URL (+ localhost for dev) |
-| `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` | CSV of regexes for allowed preview origins (see `docs/google-gmail-oauth-verification.md`) |
+| `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` | CSV of regex patterns for allowed preview origins (see `docs/google-gmail-oauth-verification.md`). Set 2026-04-29. |
+| `EDGE_CORS_ORIGINS` | Comma-separated exact browser origins allowed to call Edge functions. **Configured 2026-04-29:** `https://velo-crm-taupe.vercel.app`, `https://velo-crm-davmunreys-projects.vercel.app`, `https://velo-crm-davmunrey-davmunreys-projects.vercel.app`, `https://velo-crm-two.vercel.app`, `http://localhost:5173`, `http://localhost:4173`. GitHub secret also updated so CI does not overwrite. |

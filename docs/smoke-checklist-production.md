@@ -9,6 +9,7 @@ Use this after a production deploy (or before marking **`DEPLOY-04`** done). Rec
 - [ ] `VITE_APP_CHANNEL` is **`production`** for this deploy (not `staging`).
 - [ ] `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` match the **production** Supabase project for this build.
 - [ ] SPA deep links work ([`deployment-spa-and-env.md`](./deployment-spa-and-env.md)).
+- [x] **SMTP configured (2026-04-29):** Supabase Auth email delivery via Resend (`smtp.resend.com:587`, sender `onboarding@resend.dev`) — signup confirmation and invite emails now work on production.
 - [ ] Optional: Gmail restricted-scope verification status noted ([`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md)).
 
 ## Core flows
@@ -36,7 +37,7 @@ Uses Playwright against the dev server by default. For an optional **hosted** UR
 *Aligns with Phase 10.4 narrative in [`.planning/ROADMAP.md`](../.planning/ROADMAP.md).*
 ---
 
-*Last updated (git): **2026-04-21***
+*Last updated (git): **2026-04-29***
 
 ### Google OAuth — Vercel previews + production
 
