@@ -128,28 +128,62 @@ jobs:
           fi
           supabase secrets set "WEBHOOK_WORKER_SECRET=${WEBHOOK_WORKER_SECRET}"
 
-      - name: Deploy Edge Functions (full set, with retry)
+      - name: Deploy critical Edge Functions (targeted retry)
         run: |
-          max_attempts=3
+          critical_functions=(
+            "create-org"
+            "invite-member"
+            "google-oauth-start"
+            "google-integration-status"
+            "gmail-oauth-exchange"
+            "gmail-refresh-token"
+            "gmail-disconnect"
+          )
+
+          for fn in "${critical_functions[@]}"; do
+            max_attempts=4
+            attempt=1
+            while [ "$attempt" -le "$max_attempts" ]; do
+              echo "Deploy ${fn}: attempt ${attempt}/${max_attempts}"
+              if supabase functions deploy "$fn"; then
+                break
+              fi
+              if [ "$attempt" -lt "$max_attempts" ]; then
+                backoff=$((attempt * 20))
+                echo "Deploy ${fn} failed on attempt ${attempt}. Retrying in ${backoff}s..."
+                sleep "$backoff"
+              fi
+              attempt=$((attempt + 1))
+            done
+
+            if [ "$attempt" -gt "$max_attempts" ]; then
+              echo "Critical function deploy failed for ${fn} after ${max_attempts} attempts."
+              exit 1
+            fi
+          done
+
+      - name: Deploy full Edge set (best effort)
+        continue-on-error: true
+        run: |
+          max_attempts=2
           attempt=1
 
           while [ "$attempt" -le "$max_attempts" ]; do
-            echo "Deploy attempt ${attempt}/${max_attempts}"
+            echo "Full deploy attempt ${attempt}/${max_attempts}"
             if npm run supabase:deploy:all-functions; then
               exit 0
             fi
 
             if [ "$attempt" -lt "$max_attempts" ]; then
-              backoff=$((attempt * 20))
-              echo "Deploy failed on attempt ${attempt}. Retrying in ${backoff}s..."
+              backoff=$((attempt * 30))
+              echo "Full deploy failed on attempt ${attempt}. Retrying in ${backoff}s..."
               sleep "$backoff"
             fi
 
             attempt=$((attempt + 1))
           done
 
-          echo "Deploy failed after ${max_attempts} attempts."
-          exit 1
+          echo "Full deploy failed after ${max_attempts} attempts (continuing because critical functions already deployed)."
 
       - name: Smoke check Google/Gmail Edge functions
         run: npm run supabase:smoke:google-edge
