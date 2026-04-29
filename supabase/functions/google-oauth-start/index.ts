@@ -23,6 +23,26 @@ function getAllowedRedirectUris(): string[] {
   return []
 }
 
+function normalizeUri(value: string): string {
+  try {
+    const url = new URL(value)
+    return `${url.origin}${url.pathname}`
+  } catch {
+    return value.trim()
+  }
+}
+
+function requestOriginRedirectUri(req: Request): string | null {
+  const origin = req.headers.get('Origin')?.trim()
+  if (!origin) return null
+  try {
+    const originUrl = new URL(origin)
+    return `${originUrl.origin}/auth/gmail/callback`
+  } catch {
+    return null
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (isCorsOriginBlocked(req)) {
     console.warn('google-oauth-start cors_blocked', { origin: req.headers.get('Origin') ?? '' })
@@ -99,7 +119,14 @@ Deno.serve(async (req: Request) => {
         { status: 500, headers: { ...cors, 'Content-Type': 'application/json' } },
       )
     }
-    if (!allowed.includes(redirectUri)) {
+    const normalizedRedirectUri = normalizeUri(redirectUri)
+    const normalizedAllowed = new Set(allowed.map(normalizeUri))
+    const requestOriginRedirect = requestOriginRedirectUri(req)
+    if (requestOriginRedirect) {
+      normalizedAllowed.add(normalizeUri(requestOriginRedirect))
+    }
+
+    if (!normalizedAllowed.has(normalizedRedirectUri)) {
       return new Response(JSON.stringify({ error: 'redirect_uri is not allowed' }), {
         status: 400,
         headers: { ...cors, 'Content-Type': 'application/json' },
