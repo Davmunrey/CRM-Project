@@ -134,6 +134,7 @@ jobs:
             "create-org"
             "invite-member"
             "google-oauth-start"
+            "google-oauth-state-origin"
             "google-integration-status"
             "gmail-oauth-exchange"
             "gmail-refresh-token"
