@@ -3,6 +3,7 @@ import { mergeScopeLists, parseScopeString } from '../_shared/google-scopes.ts'
 import { encryptToken, requireTokenEncryptionKey } from '../_shared/token-cipher.ts'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
 import { resolveOrgId } from '../_shared/resolve-org-id.ts'
+import { getAnonKey, getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 function decodeJwtPayload(idToken: string): Record<string, unknown> {
   const parts = idToken.split('.')
@@ -62,7 +63,7 @@ Deno.serve(async (req: Request) => {
 
     const callerClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      getAnonKey(),
       { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } },
     )
     const { data: { user }, error: authErr } = await callerClient.auth.getUser()
@@ -75,7 +76,7 @@ Deno.serve(async (req: Request) => {
 
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      getServiceRoleKey(),
     )
     const requestedOrgId = typeof body.organizationId === 'string'
       ? body.organizationId.replace(/^"+|"+$/g, '').trim()

@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
+import { getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 // Simple in-memory rate limiter per IP: max 20 req/min
 const ipRequestLog = new Map<string, number[]>()
@@ -64,7 +65,7 @@ Deno.serve(async (req: Request) => {
   try {
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      getServiceRoleKey(),
     )
 
     const { data } = await adminClient

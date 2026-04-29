@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { getPlainRefreshToken } from '../_shared/gmail-refresh-read.ts'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
 import { resolveOrgId } from '../_shared/resolve-org-id.ts'
+import { getAnonKey, getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 Deno.serve(async (req: Request) => {
   if (isCorsOriginBlocked(req)) {
@@ -21,7 +22,7 @@ Deno.serve(async (req: Request) => {
   try {
     const callerClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      getAnonKey(),
       { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } },
     )
     const { data: { user }, error: authErr } = await callerClient.auth.getUser()
@@ -39,7 +40,7 @@ Deno.serve(async (req: Request) => {
 
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      getServiceRoleKey(),
     )
     const orgId = (await resolveOrgId(callerClient, adminClient, user)) ?? requestedOrgId
     if (!orgId) {

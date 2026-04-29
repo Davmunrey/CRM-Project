@@ -3,6 +3,7 @@ import { jsonError, jsonResponse } from '../_shared/edgeHttp.ts'
 import { edgeLog, getRequestId } from '../_shared/requestLog.ts'
 import { rateLimitHit } from '../_shared/rateLimit.ts'
 import { withTraceLog } from '../_shared/tracing.ts'
+import { getAnonKey } from '../_shared/supabase-keys.ts'
 
 type Action = 'summarizeThread' | 'draftReply' | 'nextBestAction' | 'semanticSearch'
 
@@ -11,7 +12,7 @@ Deno.serve(async (req) => withTraceLog(req, async (trace) => {
   if (req.method !== 'POST') return jsonError('Method not allowed', 405)
 
   const url = Deno.env.get('SUPABASE_URL')!
-  const anon = Deno.env.get('SUPABASE_ANON_KEY')!
+  const anon = getAnonKey()
   const client = createClient(url, anon, {
     global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
   })

@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
+import { getAnonKey, getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 async function getOrgMembershipRole(
   adminClient: ReturnType<typeof createClient>,
@@ -106,7 +107,7 @@ Deno.serve(async (req: Request) => {
     const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization') ?? ''
     const callerClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      getAnonKey(),
       { global: { headers: { Authorization: authHeader } } },
     )
     const { data: { user }, error: userErr } = await callerClient.auth.getUser()
@@ -118,7 +119,7 @@ Deno.serve(async (req: Request) => {
 
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      getServiceRoleKey(),
     )
 
     const action = body.action ?? 'list'

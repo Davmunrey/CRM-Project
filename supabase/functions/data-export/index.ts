@@ -6,6 +6,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
 import { captureEdgeException } from '../_shared/sentryEdge.ts'
 import { jsonResponse, jsonError } from '../_shared/edgeHttp.ts'
+import { getAnonKey, getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 Deno.serve(async (req) => {
   if (isCorsOriginBlocked(req)) {
@@ -18,7 +19,7 @@ Deno.serve(async (req) => {
   }
 
   const url = Deno.env.get('SUPABASE_URL')!
-  const anon = Deno.env.get('SUPABASE_ANON_KEY')!
+  const anon = getAnonKey()
   const userClient = createClient(url, anon, {
     global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
   })
@@ -27,7 +28,7 @@ Deno.serve(async (req) => {
     return jsonError('Unauthorized', 401, cors)
   }
 
-  const admin = createClient(url, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+  const admin = createClient(url, getServiceRoleKey())
 
   try {
     const body = await req.json().catch(() => ({})) as { format?: 'zip' | 'json'; async?: boolean }

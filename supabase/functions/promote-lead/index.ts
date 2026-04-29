@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { captureEdgeException } from '../_shared/sentryEdge.ts'
+import { getAnonKey, getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -20,7 +21,7 @@ Deno.serve(async (req: Request) => {
 
     const callerClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      getAnonKey(),
       { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } },
     )
     const { data: { user: caller }, error: callerErr } = await callerClient.auth.getUser()
@@ -33,7 +34,7 @@ Deno.serve(async (req: Request) => {
 
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      getServiceRoleKey(),
     )
 
     const { data: lead, error: leadErr } = await adminClient

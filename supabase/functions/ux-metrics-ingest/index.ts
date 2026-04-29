@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
 import { edgeLog, getRequestId } from '../_shared/requestLog.ts'
 import { rateLimitHit } from '../_shared/rateLimit.ts'
+import { getAnonKey } from '../_shared/supabase-keys.ts'
 
 type UxEvent = { action: string; timestamp: string; meta?: Record<string, unknown> }
 
@@ -22,7 +23,7 @@ Deno.serve(async (req) => {
   }
 
   const url = Deno.env.get('SUPABASE_URL')!
-  const anon = Deno.env.get('SUPABASE_ANON_KEY')!
+  const anon = getAnonKey()
   const userClient = createClient(url, anon, {
     global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
   })

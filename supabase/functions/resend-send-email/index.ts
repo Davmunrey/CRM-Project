@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getAnonKey, getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -109,7 +110,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
-  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
+  const supabaseAnonKey = getAnonKey()
   if (!supabaseUrl || !supabaseAnonKey) {
     return new Response(
       JSON.stringify({ error: 'Server misconfiguration' }),
@@ -143,7 +144,7 @@ Deno.serve(async (req: Request) => {
   const now = Date.now()
 
   let organizationId: string | null = null
-  const serviceRole = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  const serviceRole = getServiceRoleKey()
   if (serviceRole) {
     try {
       const admin = createClient(supabaseUrl, serviceRole)

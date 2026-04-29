@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { jsonError, jsonResponse } from '../_shared/edgeHttp.ts'
+import { getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return jsonError('Method not allowed', 405)
@@ -8,7 +9,7 @@ Deno.serve(async (req) => {
     return jsonError('Unauthorized', 401)
   }
 
-  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+  const admin = createClient(Deno.env.get('SUPABASE_URL')!, getServiceRoleKey())
   const { data: jobs, error } = await admin
     .from('ai_embedding_jobs')
     .select('id, organization_id, entity_type, entity_id')

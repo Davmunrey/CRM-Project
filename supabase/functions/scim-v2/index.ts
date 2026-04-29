@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { jsonError, jsonResponse, sha256Hex } from '../_shared/edgeHttp.ts'
+import { getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 function bearer(req: Request): string {
   const auth = req.headers.get('authorization') ?? ''
@@ -11,7 +12,7 @@ Deno.serve(async (req) => {
   const token = bearer(req)
   if (!token) return jsonError('Unauthorized', 401)
 
-  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+  const admin = createClient(Deno.env.get('SUPABASE_URL')!, getServiceRoleKey())
   const tokenHash = await sha256Hex(token)
   const { data: scimToken } = await admin
     .from('organization_scim_tokens')

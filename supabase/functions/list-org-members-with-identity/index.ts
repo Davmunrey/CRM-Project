@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
+import { getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 type MemberRow = {
   user_id: string
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
 
   const admin = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    getServiceRoleKey(),
   )
 
   const token = authHeader.replace(/^Bearer\s+/i, '').trim()

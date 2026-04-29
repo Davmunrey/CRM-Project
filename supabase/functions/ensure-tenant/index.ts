@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { getAnonKey, getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
 
     const anonClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      getAnonKey(),
       { global: { headers: { Authorization: authHeader } } },
     )
     const { data: { user }, error: userError } = await anonClient.auth.getUser()
@@ -49,7 +50,7 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      getServiceRoleKey(),
     )
 
     // Already mapped to an org -> nothing to do.

@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { clientIpFromRequest, rateLimitHit } from '../_shared/edge-rate-limit.ts'
 import { corsHeadersForRequest, isCorsOriginBlocked } from '../_shared/cors-allowlist.ts'
+import { getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 const MAX_BODY_BYTES = 65_536
 const RATE_MAX = 40
@@ -125,7 +126,7 @@ Deno.serve(async (req: Request) => {
 
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      getServiceRoleKey(),
     )
 
     const { data: tok, error: tErr } = await admin

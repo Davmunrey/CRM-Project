@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { OUTBOUND_WEBHOOK_SIGNATURE_HEADER } from '../_shared/outboundWebhookSignature.ts'
+import { getAnonKey, getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -72,7 +73,7 @@ Deno.serve(async (req: Request) => {
 
     const callerClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      getAnonKey(),
       { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } },
     )
     const { data: { user }, error: userErr } = await callerClient.auth.getUser()
@@ -85,7 +86,7 @@ Deno.serve(async (req: Request) => {
 
     const admin = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+      getServiceRoleKey(),
     )
 
     const action = body.action ?? 'create'

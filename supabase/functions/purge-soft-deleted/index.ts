@@ -5,6 +5,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { edgeLog, getRequestId } from '../_shared/requestLog.ts'
 import { jsonError, jsonResponse } from '../_shared/edgeHttp.ts'
+import { getServiceRoleKey } from '../_shared/supabase-keys.ts'
 
 const TABLES = ['contacts', 'companies', 'deals', 'activities', 'leads'] as const
 
@@ -23,7 +24,7 @@ Deno.serve(async (req) => {
   const cutoff = new Date(Date.now() - days * 86_400_000).toISOString()
 
   const url = Deno.env.get('SUPABASE_URL')!
-  const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const key = getServiceRoleKey()
   const admin = createClient(url, key)
 
   const report: Record<string, number> = {}
