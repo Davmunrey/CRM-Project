@@ -1463,6 +1463,7 @@ export const pt: Translations = {
     errorNotConfigured: 'Supabase não está configurado',
     errorNotAuthenticated: 'Não autenticado',
     errorCompleteLegalProfile: 'Preencha os campos do perfil legal da empresa para continuar.',
+    errorSessionExpired: 'Sua sessão expirou. Por favor, faça login novamente.',
   },
 
   // ─── Invitations ─────────────────────────────────────────────────────────────

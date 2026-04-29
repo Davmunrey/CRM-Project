@@ -1449,6 +1449,7 @@ export const en: Translations = {
     errorNotConfigured: 'Supabase is not configured',
     errorNotAuthenticated: 'Not authenticated',
     errorCompleteLegalProfile: 'Complete the legal company profile fields to continue.',
+    errorSessionExpired: 'Your session has expired. Please sign in again.',
   },
 
   // ─── Invitations ─────────────────────────────────────────────────────────────

@@ -1533,6 +1533,7 @@ export interface Translations {
     errorNotConfigured: string
     errorNotAuthenticated: string
     errorCompleteLegalProfile: string
+    errorSessionExpired: string
   }
 
   // ─── Invitations ─────────────────────────────────────────────────────────────

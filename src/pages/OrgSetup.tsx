@@ -39,54 +39,32 @@ export function OrgSetup() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const invokeCreateOrgWithFallback = async (orgNameValue: string, slugValue: string) => {
-    if (!supabase) throw new Error(t.orgSetup.errorNotConfigured)
-    const sb = supabase
-
-    const primary = await sb.functions.invoke('create-org', {
-      body: {
-        orgName: orgNameValue,
-        slug: slugValue,
-      },
-    })
-
-    if (!primary.error) return primary.data as { org?: { id?: string } } | null
-
-    // Browser-level fetch failures: retry with a direct fetch to bypass SDK quirks.
-    if (!/Failed to send a request to the Edge Function/i.test(primary.error.message)) {
-      throw new Error(primary.error.message)
-    }
-
-    const { data: sessionData, error: sessionErr } = await sb.auth.getSession()
-    if (sessionErr || !sessionData.session?.access_token) {
-      throw new Error(sessionErr?.message ?? t.orgSetup.errorNotAuthenticated)
-    }
-
+  /**
+   * Calls the create-org Edge Function via a direct fetch using a caller-supplied
+   * access token. This bypasses `supabase.functions.invoke()`, which calls
+   * `auth.getSession()` internally and can throw a FunctionsFetchError when the
+   * stored refresh_token is stale — even though the current access_token is valid.
+   */
+  const invokeCreateOrgWithFallback = async (orgNameValue: string, slugValue: string, accessToken: string) => {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
-    const anonOrPublishableKey =
+    const anonKey =
       (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ??
       (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)
-    if (!supabaseUrl || !anonOrPublishableKey) {
-      throw new Error(t.orgSetup.errorNotConfigured)
-    }
+    if (!supabaseUrl || !anonKey) throw new Error(t.orgSetup.errorNotConfigured)
 
-    const directRes = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/create-org`, {
+    const res = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/create-org`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        apikey: anonOrPublishableKey,
-        Authorization: `Bearer ${sessionData.session.access_token}`,
+        apikey: anonKey,
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ orgName: orgNameValue, slug: slugValue }),
-    }).catch(() => null)
+    })
 
-    if (directRes) {
-      const payload = (await directRes.json().catch(() => null)) as { error?: string; org?: { id?: string } } | null
-      if (!directRes.ok) throw new Error(payload?.error ?? primary.error.message)
-      return payload
-    }
-
-    throw new Error(primary.error.message)
+    const payload = (await res.json().catch(() => null)) as { error?: string; org?: { id?: string } } | null
+    if (!res.ok) throw new Error(payload?.error ?? `HTTP ${res.status}`)
+    return payload
   }
 
   useEffect(() => {
@@ -158,14 +136,31 @@ export function OrgSetup() {
     const { data: authData, error: authError } = await supabase.auth.getUser()
     if (authError || !authData.user) { setError(t.orgSetup.errorNotAuthenticated); return }
 
+    // Proactively refresh the session before calling the Edge Function.
+    // functions.invoke() uses auth.getSession() internally, which can fail with a
+    // FunctionsFetchError when the stored refresh_token is stale — even if the
+    // current access_token is still valid. By refreshing here and passing the
+    // resulting token directly to our fetch, we avoid that code path entirely.
+    const { data: preFetchSession, error: preFetchErr } = await sb.auth.refreshSession()
+    if (preFetchErr || !preFetchSession.session?.access_token) {
+      // The refresh_token is completely dead. Clear the broken local session so
+      // the user can sign in cleanly instead of getting a cryptic network error.
+      await sb.auth.signOut({ scope: 'local' })
+      navigate('/login', { replace: true })
+      return
+    }
+    const freshAccessToken = preFetchSession.session.access_token
+
     setIsLoading(true)
     setError(null)
 
     try {
-      const data = await invokeCreateOrgWithFallback(orgName.trim(), slug.trim())
+      const data = await invokeCreateOrgWithFallback(orgName.trim(), slug.trim(), freshAccessToken)
       const createdOrgId = (data as { org?: { id?: string } } | null)?.org?.id
       if (!createdOrgId) throw new Error(t.errors.generic)
 
+      // Second refresh to pick up the new organization_id / user_role JWT claims
+      // that the Edge Function set via auth.admin.updateUserById.
       const { error: refreshErr } = await sb.auth.refreshSession()
       if (refreshErr) throw new Error(refreshErr.message)
 
