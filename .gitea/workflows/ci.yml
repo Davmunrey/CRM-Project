@@ -8,7 +8,7 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,8 +40,6 @@ jobs:
       - name: Unit tests
         run: npx vitest run
 
-      # Compile-only production bundle: use development mode so the Supabase
-      # build gate is skipped (real deploys use production/staging + secrets).
       - name: Vite build (CI)
         run: npm run build -- --mode development
 
@@ -65,7 +63,7 @@ jobs:
         run: npm run test:e2e:integrations
 
   security:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
