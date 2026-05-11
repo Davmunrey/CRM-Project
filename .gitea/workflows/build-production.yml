@@ -1,5 +1,5 @@
 # Manual production bundle: set repository secrets first (see docs/deployment-spa-and-env.md).
-# Gitea: Settings → Actions → Secrets (names must match exactly).
+# Gitea: Settings -> Actions -> Secrets (names must match exactly).
 name: Build production (Supabase)
 
 on:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4
