@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, ArrowRight, ShieldCheck } from 'lucide-react'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { AuthLayout } from '../components/auth/AuthLayout'
+import { api } from '../lib/api'
 import { trackUxAction } from '../lib/uxMetrics'
 
 export function ForgotPassword() {
@@ -25,23 +25,18 @@ export function ForgotPassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     trackUxAction('auth_password_reset_request_attempt')
-    if (!isSupabaseConfigured || !supabase) {
-      trackUxAction('auth_password_reset_request_success', { mode: 'unconfigured_runtime' })
-      setSuccess(true) // Demo mode: pretend it works
-      return
-    }
     setError('')
     setLoading(true)
-    const { error: sbError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    })
-    setLoading(false)
-    if (sbError) {
-      trackUxAction('auth_password_reset_request_error', { reason: sbError.message.slice(0, 120) })
-      setError(sbError.message)
-    } else {
+    try {
+      await api.post('/auth/forgot-password', { email })
       trackUxAction('auth_password_reset_request_success')
       setSuccess(true)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Request failed'
+      trackUxAction('auth_password_reset_request_error', { reason: msg.slice(0, 120) })
+      setError(msg)
+    } finally {
+      setLoading(false)
     }
   }
 

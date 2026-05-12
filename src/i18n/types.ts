@@ -1651,6 +1651,7 @@ export interface Translations {
     wrongCurrentPassword: string
     emailAlreadyExists: string
     notAuthenticated: string
+    invalidResetToken: string
     userLimitReached: string
     invitationNotFound: string
     invitationUsedOrExpired: string

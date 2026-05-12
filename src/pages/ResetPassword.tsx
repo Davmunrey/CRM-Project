@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
 import { Button } from '../components/ui/Button'
@@ -9,6 +8,7 @@ import { Card } from '../components/ui/Card'
 import { AuthLayout } from '../components/auth/AuthLayout'
 import { SecurePasswordField } from '../components/auth/SecurePasswordField'
 import { formatPasswordStrengthIssues, getPasswordStrengthIssues } from '../lib/securePassword'
+import { api } from '../lib/api'
 import { trackUxAction } from '../lib/uxMetrics'
 
 export function ResetPassword() {
@@ -23,6 +23,8 @@ export function ResetPassword() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,21 +48,22 @@ export function ResetPassword() {
       )
       return
     }
-    if (!isSupabaseConfigured || !supabase) {
-      trackUxAction('auth_password_reset_complete_success', { mode: 'unconfigured_runtime' })
-      navigate('/')
+    if (!token) {
+      setError(t.errors.invalidResetToken ?? 'Invalid or missing reset token')
       return
     }
     setError('')
     setLoading(true)
-    const { error: sbError } = await supabase.auth.updateUser({ password })
-    setLoading(false)
-    if (sbError) {
-      trackUxAction('auth_password_reset_complete_error', { reason: sbError.message.slice(0, 120) })
-      setError(sbError.message)
-    } else {
+    try {
+      await api.post('/auth/reset-password', { token, password })
       trackUxAction('auth_password_reset_complete_success')
-      navigate('/')
+      navigate('/login')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Reset failed'
+      trackUxAction('auth_password_reset_complete_error', { reason: msg.slice(0, 120) })
+      setError(msg)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -75,50 +78,57 @@ export function ResetPassword() {
       )}
     >
       <Card className="p-8">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <p className="text-sm text-fg-muted">{t.auth.checkEmailInstructions}</p>
+        {!token ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-fg-muted mb-4">{t.errors.invalidResetToken ?? 'Invalid or missing reset token.'}</p>
+            <Link to="/forgot-password" className="text-sm text-accent-400 hover:text-accent-300 transition-colors">
+              {t.auth.sendLink}
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">
+                {error}
+              </div>
+            )}
 
-          {error && (
-            <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">
-              {error}
-            </div>
-          )}
+            <SecurePasswordField
+              label={t.auth.password}
+              value={password}
+              onChange={setPassword}
+              onGeneratedPassword={(p) => {
+                setPassword(p)
+                setConfirmPassword(p)
+              }}
+              placeholder={t.auth.password}
+              required
+              autoFocus
+            />
 
-          <SecurePasswordField
-            label={t.auth.password}
-            value={password}
-            onChange={setPassword}
-            onGeneratedPassword={(p) => {
-              setPassword(p)
-              setConfirmPassword(p)
-            }}
-            placeholder={t.auth.password}
-            required
-            autoFocus
-          />
+            <SecurePasswordField
+              label={t.auth.confirmPassword}
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              showGenerator={false}
+              showPolicyHint={false}
+              showRequirementChecklist={false}
+              placeholder={t.auth.confirmPassword}
+              required
+            />
 
-          <SecurePasswordField
-            label={t.auth.confirmPassword}
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            showGenerator={false}
-            showPolicyHint={false}
-            showRequirementChecklist={false}
-            placeholder={t.auth.confirmPassword}
-            required
-          />
-
-          <Button
-            type="submit"
-            className="w-full rounded-xl"
-            size="lg"
-            disabled={loading || !password || !confirmPassword}
-            loading={loading}
-            rightIcon={<ArrowRight size={16} aria-hidden />}
-          >
-            {t.auth.savePassword}
-          </Button>
-        </form>
+            <Button
+              type="submit"
+              className="w-full rounded-xl"
+              size="lg"
+              disabled={loading || !password || !confirmPassword}
+              loading={loading}
+              rightIcon={<ArrowRight size={16} aria-hidden />}
+            >
+              {t.auth.savePassword}
+            </Button>
+          </form>
+        )}
       </Card>
     </AuthLayout>
   )

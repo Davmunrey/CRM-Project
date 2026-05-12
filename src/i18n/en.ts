@@ -1565,6 +1565,7 @@ export const en: Translations = {
     wrongCurrentPassword: 'Current password is incorrect',
     emailAlreadyExists: 'A user with this email already exists',
     notAuthenticated: 'Not authenticated',
+    invalidResetToken: 'Invalid or missing password reset token. Request a new link.',
     userLimitReached: 'User limit reached ({max})',
     invitationNotFound: 'Invitation not found',
     invitationUsedOrExpired: 'Invitation already used or expired',

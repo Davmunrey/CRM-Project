@@ -1579,6 +1579,7 @@ export const es: Translations = {
     wrongCurrentPassword: 'Contraseña actual incorrecta',
     emailAlreadyExists: 'Ya existe un usuario con este email',
     notAuthenticated: 'No autenticado',
+    invalidResetToken: 'Token de restablecimiento inválido o ausente. Solicita un nuevo enlace.',
     userLimitReached: 'Límite de usuarios alcanzado ({max})',
     invitationNotFound: 'Invitación no encontrada',
     invitationUsedOrExpired: 'Invitación ya usada o expirada',

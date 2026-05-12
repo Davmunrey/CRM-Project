@@ -1579,6 +1579,7 @@ export const pt: Translations = {
     wrongCurrentPassword: 'Senha atual incorreta',
     emailAlreadyExists: 'Já existe um usuário com este e-mail',
     notAuthenticated: 'Não autenticado',
+    invalidResetToken: 'Token de redefinição inválido ou ausente. Solicite um novo link.',
     userLimitReached: 'Limite de usuários atingido ({max})',
     invitationNotFound: 'Convite não encontrado',
     invitationUsedOrExpired: 'Convite já usado ou expirado',

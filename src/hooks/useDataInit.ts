@@ -75,6 +75,5 @@ export function useDataInit() {
       window.removeEventListener('online', handleBackOnline)
       didInit.current = false
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- stable primitive deps; object refs would cause spurious re-runs
   }, [currentUserId, organizationId])
 }

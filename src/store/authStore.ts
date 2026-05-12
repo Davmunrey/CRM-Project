@@ -37,7 +37,7 @@ interface ApiMember {
   name: string
   role: string
   jobTitle: string | null
-  phone: string | null
+  avatarUrl: string | null
   isActive: boolean
   createdAt: string
 }
@@ -185,7 +185,7 @@ export const useAuthStore = create<AuthState>()(
             name: m.name,
             role: normalizeRole(m.role),
             jobTitle: m.jobTitle ?? '',
-            phone: m.phone ?? undefined,
+            avatarUrl: m.avatarUrl ?? undefined,
             organizationId,
             isActive: m.isActive,
             createdAt: m.createdAt,
