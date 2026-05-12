@@ -1,8 +1,6 @@
 import { create } from 'zustand'
 import type { Product } from '../types'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { devConsole } from '../lib/devConsole'
-import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
+import { api } from '../lib/api'
 
 interface ProductsStore {
   products: Product[]
@@ -15,28 +13,33 @@ interface ProductsStore {
   getActive: () => Product[]
 }
 
+type ApiProduct = Record<string, unknown>
+
+function rowToProduct(r: ApiProduct): Product {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    description: (r.description as string) ?? undefined,
+    sku: (r.sku as string) ?? undefined,
+    price: r.price as number,
+    currency: ((r.currency as import('../types').DealCurrency) ?? 'EUR'),
+    category: ((r.category as import('../types').ProductCategory) ?? undefined),
+    isActive: ((r.isActive ?? r.is_active) as boolean) ?? true,
+    createdAt: ((r.createdAt ?? r.created_at) as string),
+    updatedAt: ((r.updatedAt ?? r.updated_at) as string),
+  }
+}
+
 export const useProductsStore = create<ProductsStore>()((set, get) => ({
   products: [],
   isLoading: false,
   error: null,
 
   fetchProducts: async () => {
-    if (!isSupabaseConfigured || !supabase) {
-      set({ products: [] })
-      return
-    }
     set({ isLoading: true, error: null })
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      const { data, error } = await (supabase as any).from('products').select('*').order('created_at', { ascending: false })
-      if (error) throw error
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
-      const products: Product[] = (data ?? []).map((r: any) => ({
-        id: r.id, name: r.name, description: r.description, sku: r.sku,
-        price: r.price, currency: r.currency, category: r.category,
-        isActive: r.is_active, createdAt: r.created_at, updatedAt: r.updated_at,
-      }))
-      set({ products, isLoading: false })
+      const data = await api.get<ApiProduct[]>('/products')
+      set({ products: (data ?? []).map(rowToProduct), isLoading: false })
     } catch (e: unknown) {
       set({ error: (e as Error).message, isLoading: false })
     }
@@ -44,45 +47,33 @@ export const useProductsStore = create<ProductsStore>()((set, get) => ({
 
   addProduct: (data) => {
     const now = new Date().toISOString()
-    const product: Product = { ...data, id: crypto.randomUUID(), createdAt: now, updatedAt: now }
-    set((s) => ({ products: [...s.products, product] }))
-    if (isSupabaseConfigured && supabase) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      ;(supabase as any).from('products').insert({
-        id: product.id, name: product.name, description: product.description,
-        sku: product.sku, price: product.price, currency: product.currency,
-        category: product.category, is_active: product.isActive,
-        organization_id: getOrgId(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
-      }).then(({ error }: any) => { if (error) devConsole.error('[productsStore] insert error', error) })
-    }
+    const optimistic: Product = { ...data, id: crypto.randomUUID(), createdAt: now, updatedAt: now }
+    set((s) => ({ products: [...s.products, optimistic] }))
+    api.post<ApiProduct>('/products', {
+      name: data.name,
+      description: data.description,
+      sku: data.sku,
+      price: data.price,
+      currency: data.currency,
+      category: data.category,
+      isActive: data.isActive,
+    }).then((created) => {
+      set((s) => ({ products: s.products.map((p) => p.id === optimistic.id ? rowToProduct(created) : p) }))
+    }).catch((err: Error) => {
+      set((s) => ({ products: s.products.filter((p) => p.id !== optimistic.id), error: err.message }))
+    })
   },
 
   updateProduct: (id, updates) => {
     set((s) => ({
       products: s.products.map((p) => p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p),
     }))
-    if (isSupabaseConfigured && supabase) {
-      const row: Record<string, unknown> = { updated_at: new Date().toISOString() }
-      if (updates.name !== undefined) row.name = updates.name
-      if (updates.description !== undefined) row.description = updates.description
-      if (updates.sku !== undefined) row.sku = updates.sku
-      if (updates.price !== undefined) row.price = updates.price
-      if (updates.currency !== undefined) row.currency = updates.currency
-      if (updates.category !== undefined) row.category = updates.category
-      if (updates.isActive !== undefined) row.is_active = updates.isActive
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      ;(supabase as any).from('products').update(row).eq('id', id)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
-        .then(({ error }: any) => { if (error) devConsole.error('[productsStore] update error', error) })
-    }
+    api.patch(`/products/${id}`, updates).catch(() => {})
   },
 
   deleteProduct: (id) => {
     set((s) => ({ products: s.products.filter((p) => p.id !== id) }))
-    if (isSupabaseConfigured && supabase) {
-      sbDelete('products', id).catch((e) => devConsole.error('[productsStore] delete error', e))
-    }
+    api.delete(`/products/${id}`).catch(() => {})
   },
 
   getActive: () => get().products.filter((p) => p.isActive),

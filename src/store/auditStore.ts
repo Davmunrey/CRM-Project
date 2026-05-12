@@ -1,9 +1,7 @@
 import { create } from 'zustand'
 import type { AuditAction, AuditEntry } from '../types'
 import { useAuthStore } from './authStore'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { devConsole } from '../lib/devConsole'
-import { getOrgId } from '../lib/supabaseHelpers'
+import { api } from '../lib/api'
 
 const MAX_ENTRIES = 500
 
@@ -24,25 +22,26 @@ interface AuditStore {
   clear: () => void
 }
 
+type ApiEntry = Record<string, unknown>
+
 export const useAuditStore = create<AuditStore>()((set, get) => ({
   entries: [],
   isLoading: false,
   error: null,
 
   fetchEntries: async () => {
-    if (!isSupabaseConfigured || !supabase) return
     set({ isLoading: true, error: null })
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      const { data, error } = await (supabase as any)
-        .from('audit_log').select('*').order('created_at', { ascending: false }).limit(MAX_ENTRIES)
-      if (error) throw error
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
-      const entries: AuditEntry[] = (data ?? []).map((r: any) => ({
-        id: r.id, action: r.action, entityType: r.entity_type,
-        entityId: r.entity_id, entityName: r.entity_name,
-        details: r.details, userId: r.user_id,
-        timestamp: r.created_at,
+      const data = await api.get<ApiEntry[]>('/audit')
+      const entries: AuditEntry[] = (data ?? []).map((r) => ({
+        id: r.id as string,
+        action: (r.action ?? r.action) as AuditAction,
+        entityType: ((r.entityType ?? r.entity_type) as AuditEntry['entityType']),
+        entityId: ((r.entityId ?? r.entity_id) as string),
+        entityName: ((r.entityName ?? r.entity_name) as string),
+        details: (r.details as string) ?? '',
+        userId: ((r.userId ?? r.user_id) as string),
+        timestamp: ((r.createdAt ?? r.created_at) as string),
       }))
       set({ entries, isLoading: false })
     } catch (e: unknown) {
@@ -56,19 +55,8 @@ export const useAuditStore = create<AuditStore>()((set, get) => ({
       userId: useAuthStore.getState().currentUser?.name || 'system',
       timestamp: new Date().toISOString(),
     }
-    set((s) => {
-      const updated = [entry, ...s.entries]
-      return { entries: updated.slice(0, MAX_ENTRIES) }
-    })
-    if (isSupabaseConfigured && supabase) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      ;(supabase as any).from('audit_log').insert({
-        id: entry.id, action: entry.action, entity_type: entry.entityType,
-        entity_id: entry.entityId, entity_name: entry.entityName,
-        details: entry.details, user_id: entry.userId,
-        organization_id: getOrgId(),
-      }).then(({ error }: { error: Error | null }) => { if (error) devConsole.error('[auditStore] insert error', error) })
-    }
+    set((s) => ({ entries: [entry, ...s.entries].slice(0, MAX_ENTRIES) }))
+    api.post('/audit', { action, entityType, entityId, entityName, details }).catch(() => {})
   },
 
   getByEntity: (entityType, entityId) =>

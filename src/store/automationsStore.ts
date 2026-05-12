@@ -3,12 +3,8 @@ import type { AutomationExecutionLog, AutomationRule, AutomationTriggerType, Dea
 import { useActivitiesStore } from './activitiesStore'
 import { useNotificationsStore } from './notificationsStore'
 import { useDealsStore } from './dealsStore'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { devConsole } from '../lib/devConsole'
-import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
+import { api } from '../lib/api'
 import { getTranslations } from '../i18n'
-
-// ─── Store Interface ──────────────────────────────────────────────────────────
 
 interface AutomationsStore {
   rules: AutomationRule[]
@@ -27,7 +23,23 @@ interface AutomationsStore {
   ) => Promise<void>
 }
 
-// ─── Store ────────────────────────────────────────────────────────────────────
+type ApiRule = Record<string, unknown>
+type ApiExecution = Record<string, unknown>
+
+function rowToRule(r: ApiRule): AutomationRule {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    description: (r.description as string) ?? '',
+    isActive: Boolean(r.isActive ?? r.is_active),
+    trigger: (r.trigger as AutomationRule['trigger']),
+    actions: ((r.actions as AutomationRule['actions']) ?? []),
+    executionCount: ((r.executionCount ?? r.execution_count) as number) ?? 0,
+    createdAt: ((r.createdAt ?? r.created_at) as string),
+    updatedAt: ((r.updatedAt ?? r.updated_at) as string),
+    lastExecutedAt: ((r.lastExecutedAt ?? r.last_executed_at) as string) ?? undefined,
+  }
+}
 
 export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
   rules: [],
@@ -36,59 +48,32 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
   error: null,
 
   fetchRules: async () => {
-    if (!isSupabaseConfigured || !supabase) {
-      set({ rules: [] })
-      return
-    }
     set({ isLoading: true, error: null })
     try {
-      const { data, error } = await supabase.from('automation_rules').select('*').order('created_at', { ascending: false })
-      if (error) throw error
-      const rows = (data ?? []) as unknown as Array<Record<string, unknown>>
-      const rules: AutomationRule[] = rows.map((r) => ({
-        id: r.id as string,
-        name: r.name as string,
-        description: r.description as string,
-        isActive: Boolean(r.is_active),
-        trigger: r.trigger as AutomationRule['trigger'],
-        actions: (r.actions as AutomationRule['actions']) ?? [],
-        executionCount: (r.execution_count as number) ?? 0,
-        createdAt: r.created_at as string,
-        updatedAt: r.updated_at as string,
-        lastExecutedAt: r.last_executed_at as string | undefined,
-      }))
-      set({ rules, isLoading: false })
+      const data = await api.get<ApiRule[]>('/automations')
+      set({ rules: (data ?? []).map(rowToRule), isLoading: false })
     } catch (e: unknown) {
-      set({ error: getErrorMessage(e), isLoading: false })
+      set({ error: (e as Error).message, isLoading: false })
     }
   },
 
   fetchRecentExecutions: async () => {
-    if (!isSupabaseConfigured || !supabase) {
-      set({ recentExecutions: [] })
-      return
-    }
     try {
-      const { data, error } = await supabase
-        .from('automation_executions')
-        .select('id,rule_id,trigger_type,status,context,result,error_message,created_at')
-        .order('created_at', { ascending: false })
-        .limit(25)
-      if (error) throw error
+      const data = await api.get<ApiExecution[]>('/automations/executions')
       set({
-        recentExecutions: ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+        recentExecutions: (data ?? []).map((row) => ({
           id: row.id as string,
-          ruleId: row.rule_id as string,
-          triggerType: row.trigger_type as AutomationTriggerType,
+          ruleId: ((row.ruleId ?? row.rule_id) as string),
+          triggerType: ((row.triggerType ?? row.trigger_type) as AutomationTriggerType),
           status: ((row.status as string) === 'error' ? 'error' : 'success'),
           context: (row.context as Record<string, unknown>) ?? {},
           result: (row.result as Record<string, unknown>) ?? {},
-          errorMessage: row.error_message as string | undefined,
-          createdAt: row.created_at as string,
+          errorMessage: ((row.errorMessage ?? row.error_message) as string) ?? undefined,
+          createdAt: ((row.createdAt ?? row.created_at) as string),
         })),
       })
     } catch (e: unknown) {
-      set({ error: getErrorMessage(e) })
+      set({ error: (e as Error).message })
     }
   },
 
@@ -96,43 +81,29 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
     const ts = new Date().toISOString()
     const rule: AutomationRule = { ...ruleData, id: crypto.randomUUID(), executionCount: 0, createdAt: ts, updatedAt: ts }
     set((s) => ({ rules: [...s.rules, rule] }))
-    if (isSupabaseConfigured && supabase) {
-      runSupabaseWrite(
-        'automationsStore:addRule',
-        supabase.from('automation_rules').insert({
-          id: rule.id, name: rule.name, description: rule.description,
-          is_active: rule.isActive, trigger: rule.trigger, actions: rule.actions,
-          execution_count: 0, organization_id: getOrgId(),
-        } as never),
-        (message) => set({ error: message }),
-      )
-    }
+    api.post<ApiRule>('/automations', {
+      name: rule.name,
+      description: rule.description,
+      isActive: rule.isActive,
+      trigger: rule.trigger,
+      actions: rule.actions,
+    }).then((created) => {
+      set((s) => ({ rules: s.rules.map((r) => r.id === rule.id ? rowToRule(created) : r) }))
+    }).catch((err: Error) => {
+      set((s) => ({ rules: s.rules.filter((r) => r.id !== rule.id), error: err.message }))
+    })
   },
 
   updateRule: (id, updates) => {
     set((s) => ({
       rules: s.rules.map((r) => r.id === id ? { ...r, ...updates, updatedAt: new Date().toISOString() } : r),
     }))
-    if (isSupabaseConfigured && supabase) {
-      const row: Record<string, unknown> = { updated_at: new Date().toISOString() }
-      if (updates.name !== undefined) row.name = updates.name
-      if (updates.description !== undefined) row.description = updates.description
-      if (updates.isActive !== undefined) row.is_active = updates.isActive
-      if (updates.trigger !== undefined) row.trigger = updates.trigger
-      if (updates.actions !== undefined) row.actions = updates.actions
-      runSupabaseWrite(
-        'automationsStore:updateRule',
-        supabase.from('automation_rules').update(row as never).eq('id', id),
-        (message) => set({ error: message }),
-      )
-    }
+    api.patch(`/automations/${id}`, updates).catch(() => {})
   },
 
   deleteRule: (id) => {
     set((s) => ({ rules: s.rules.filter((r) => r.id !== id) }))
-    if (isSupabaseConfigured && supabase) {
-      sbDelete('automation_rules', id).catch((e) => devConsole.error('[automationsStore] delete error', e))
-    }
+    api.delete(`/automations/${id}`).catch(() => {})
   },
 
   toggleRule: (id) => {
@@ -142,13 +113,7 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
     set((s) => ({
       rules: s.rules.map((r) => r.id === id ? { ...r, isActive: newActive, updatedAt: new Date().toISOString() } : r),
     }))
-    if (isSupabaseConfigured && supabase) {
-      runSupabaseWrite(
-        'automationsStore:toggleRule',
-        supabase.from('automation_rules').update({ is_active: newActive, updated_at: new Date().toISOString() } as never).eq('id', id),
-        (message) => set({ error: message }),
-      )
-    }
+    api.patch(`/automations/${id}`, { isActive: newActive }).catch(() => {})
   },
 
   executeRulesForTrigger: async (triggerType, context) => {
@@ -170,22 +135,20 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
             const dueDate = action.activityDaysFromNow
               ? new Date(Date.now() + action.activityDaysFromNow * 86_400_000).toISOString()
               : undefined
-            const dealTitle = deal.title
             useActivitiesStore.getState().addActivity({
               type: action.activityType ?? 'task',
-              subject: action.activitySubject ?? tAuto.runtimeActivitySubjectFallback.replace(/\{dealTitle\}/g, dealTitle),
+              subject: action.activitySubject ?? tAuto.runtimeActivitySubjectFallback.replace(/\{dealTitle\}/g, deal.title),
               description: tAuto.runtimeActivityDescription.replace(/\{ruleName\}/g, ruleName),
               status: 'pending', dealId: deal.id,
               contactId: deal.contactId || undefined, dueDate, createdBy: tAuto.runtimeCreatedBy,
             })
             executedActions += 1
           } else if (action.type === 'send_notification' && deal) {
-            const dealTitle = deal.title
             useNotificationsStore.getState().notify(
               'system',
               action.notificationTitle ?? tAuto.runtimeNotificationTitleFallback.replace(/\{ruleName\}/g, ruleName),
               (action.notificationMessage ?? tAuto.runtimeNotificationMessageFallback)
-                .replace(/\{dealTitle\}/g, dealTitle)
+                .replace(/\{dealTitle\}/g, deal.title)
                 .replace(/\{ruleName\}/g, ruleName),
               { entityType: 'deal', entityId: deal.id }
             )
@@ -200,37 +163,15 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
         }
       } catch (e: unknown) {
         status = 'error'
-        errorMessage = getErrorMessage(e)
+        errorMessage = (e as Error).message
       }
+
       set((s) => ({
         rules: s.rules.map((r) =>
           r.id === rule.id ? { ...r, executionCount: r.executionCount + 1, lastExecutedAt: new Date().toISOString() } : r
         ),
       }))
-      if (isSupabaseConfigured && supabase) {
-        runSupabaseWrite(
-          'automationsStore:logExecution',
-          supabase.from('automation_executions').insert({
-            organization_id: getOrgId(),
-            rule_id: rule.id,
-            trigger_type: triggerType,
-            status,
-            context: context as unknown as Record<string, unknown>,
-            result: { executedActions },
-            error_message: errorMessage ?? null,
-          } as never),
-          (message) => set({ error: message }),
-        )
-        runSupabaseWrite(
-          'automationsStore:incrementRuleExecution',
-          supabase.from('automation_rules').update({
-            execution_count: rule.executionCount + 1,
-            last_executed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as never).eq('id', rule.id),
-          (message) => set({ error: message }),
-        )
-      }
+
       const localLog: AutomationExecutionLog = {
         id: crypto.randomUUID(),
         ruleId: rule.id,
@@ -242,6 +183,15 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
         createdAt: new Date().toISOString(),
       }
       set((s) => ({ recentExecutions: [localLog, ...s.recentExecutions].slice(0, 25) }))
+
+      api.post('/automations/executions', {
+        ruleId: rule.id,
+        triggerType,
+        status,
+        context,
+        result: { executedActions },
+        errorMessage,
+      }).catch(() => {})
     }
   },
 }))

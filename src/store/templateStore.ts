@@ -1,11 +1,6 @@
 import { create } from 'zustand'
 import type { EmailTemplate } from '../types'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { devConsole } from '../lib/devConsole'
-import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
-import { useAuthStore } from './authStore'
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+import { api } from '../lib/api'
 
 interface TemplateStore {
   templates: EmailTemplate[]
@@ -24,158 +19,116 @@ interface TemplateStore {
   getByCategory: (category: EmailTemplate['category']) => EmailTemplate[]
 }
 
+type ApiTemplate = Record<string, unknown>
+type ApiQR = Record<string, unknown>
+
+function rowToTemplate(r: ApiTemplate): EmailTemplate {
+  return {
+    id: r.id as string,
+    name: r.name as string,
+    subject: r.subject as string,
+    body: r.body as string,
+    category: (r.category as EmailTemplate['category']) ?? 'general',
+    variables: (r.variables as string[]) ?? [],
+    createdAt: ((r.createdAt ?? r.created_at) as string),
+    updatedAt: ((r.updatedAt ?? r.updated_at) as string),
+    usageCount: ((r.usageCount ?? r.usage_count) as number) ?? 0,
+  }
+}
+
 export const useTemplateStore = create<TemplateStore>()((set, get) => ({
   templates: [],
-  /** Loaded from Supabase (or empty). */
   quickReplies: [],
   isLoading: false,
   error: null,
 
   fetchTemplates: async () => {
-    if (!isSupabaseConfigured || !supabase) {
-      set({ templates: [] })
-      return
-    }
     set({ isLoading: true, error: null })
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      const { data, error } = await (supabase as any).from('email_templates').select('*').order('created_at', { ascending: false })
-      if (error) throw error
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
-      const templates: EmailTemplate[] = (data ?? []).map((r: any) => ({
-        id: r.id, name: r.name, subject: r.subject, body: r.body,
-        category: r.category, variables: r.variables ?? [],
-        createdAt: r.created_at, updatedAt: r.updated_at, usageCount: r.usage_count ?? 0,
-      }))
-      set({ templates, isLoading: false })
+      const data = await api.get<ApiTemplate[]>('/templates')
+      set({ templates: (data ?? []).map(rowToTemplate), isLoading: false })
     } catch (e: unknown) {
       set({ error: (e as Error).message, isLoading: false })
     }
   },
 
   fetchQuickReplies: async () => {
-    if (!isSupabaseConfigured || !supabase) {
-      set({ quickReplies: [] })
-      return
-    }
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      const { data, error } = await (supabase as any)
-        .from('quick_replies')
-        .select('id,title,body,created_at,updated_at')
-        .order('updated_at', { ascending: false })
-      if (error) throw error
+      const data = await api.get<ApiQR[]>('/templates/quick-replies')
       set({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
-        quickReplies: (data ?? []).map((row: any) => ({
-          id: row.id,
-          title: row.title,
-          body: row.body,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
+        quickReplies: (data ?? []).map((row) => ({
+          id: row.id as string,
+          title: row.title as string,
+          body: row.body as string,
+          createdAt: ((row.createdAt ?? row.created_at) as string),
+          updatedAt: ((row.updatedAt ?? row.updated_at) as string),
         })),
       })
     } catch {
-      // Leave current list unchanged; do not restore removed template rows.
+      // leave unchanged
     }
   },
 
   addTemplate: (template) => {
     const ts = new Date().toISOString()
-    const newTemplate: EmailTemplate = { ...template, id: crypto.randomUUID(), createdAt: ts, updatedAt: ts, usageCount: 0 }
-    set((s) => ({ templates: [...s.templates, newTemplate] }))
-    if (isSupabaseConfigured && supabase) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      ;(supabase as any).from('email_templates').insert({
-        id: newTemplate.id, name: newTemplate.name, subject: newTemplate.subject,
-        body: newTemplate.body, category: newTemplate.category, variables: newTemplate.variables,
-        usage_count: 0, organization_id: getOrgId(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
-      }).then(({ error }: any) => { if (error) devConsole.error('[templateStore] insert error', error) })
-    }
-    return newTemplate
+    const optimistic: EmailTemplate = { ...template, id: crypto.randomUUID(), createdAt: ts, updatedAt: ts, usageCount: 0 }
+    set((s) => ({ templates: [...s.templates, optimistic] }))
+    api.post<ApiTemplate>('/templates', {
+      name: template.name,
+      subject: template.subject,
+      body: template.body,
+      category: template.category,
+      variables: template.variables,
+    }).then((created) => {
+      set((s) => ({ templates: s.templates.map((t) => t.id === optimistic.id ? rowToTemplate(created) : t) }))
+    }).catch(() => {})
+    return optimistic
   },
 
   updateTemplate: (id, updates) => {
     set((s) => ({
       templates: s.templates.map((t) => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t),
     }))
-    if (isSupabaseConfigured && supabase) {
-      const row: Record<string, unknown> = { updated_at: new Date().toISOString() }
-      if (updates.name !== undefined) row.name = updates.name
-      if (updates.subject !== undefined) row.subject = updates.subject
-      if (updates.body !== undefined) row.body = updates.body
-      if (updates.category !== undefined) row.category = updates.category
-      if (updates.variables !== undefined) row.variables = updates.variables
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      ;(supabase as any).from('email_templates').update(row).eq('id', id)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
-        .then(({ error }: any) => { if (error) devConsole.error('[templateStore] update error', error) })
-    }
+    api.patch(`/templates/${id}`, updates).catch(() => {})
   },
 
   deleteTemplate: (id) => {
     set((s) => ({ templates: s.templates.filter((t) => t.id !== id) }))
-    if (isSupabaseConfigured && supabase) {
-      sbDelete('email_templates', id).catch((e) => devConsole.error('[templateStore] delete error', e))
-    }
+    api.delete(`/templates/${id}`).catch(() => {})
   },
 
   addQuickReply: (input) => {
     const ts = new Date().toISOString()
     const item = { id: crypto.randomUUID(), title: input.title.trim(), body: input.body, createdAt: ts, updatedAt: ts }
     set((s) => ({ quickReplies: [item, ...s.quickReplies] }))
-    if (isSupabaseConfigured && supabase) {
-      const currentUserId = useAuthStore.getState().currentUser?.id
-      if (!currentUserId) return
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      void (supabase as any).from('quick_replies').insert({
-        id: item.id,
-        user_id: currentUserId,
-        title: item.title,
-        body: item.body,
-        organization_id: getOrgId(),
-      }).then(({ error }: { error: Error | null }) => {
-        if (error) devConsole.error('[templateStore] quick_reply insert', error)
-      })
-    }
+    api.post<ApiQR>('/templates/quick-replies', { title: input.title.trim(), body: input.body }).then((created) => {
+      set((s) => ({
+        quickReplies: s.quickReplies.map((r) => r.id === item.id ? {
+          id: created.id as string,
+          title: created.title as string,
+          body: created.body as string,
+          createdAt: (created.createdAt ?? created.created_at) as string,
+          updatedAt: (created.updatedAt ?? created.updated_at) as string,
+        } : r),
+      }))
+    }).catch(() => {})
   },
 
   updateQuickReply: (id, updates) => {
     const updatedAt = new Date().toISOString()
     set((s) => ({
-      quickReplies: s.quickReplies.map((reply) => (
+      quickReplies: s.quickReplies.map((reply) =>
         reply.id === id
-          ? {
-              ...reply,
-              title: updates.title?.trim() ?? reply.title,
-              body: updates.body ?? reply.body,
-              updatedAt,
-            }
+          ? { ...reply, title: updates.title?.trim() ?? reply.title, body: updates.body ?? reply.body, updatedAt }
           : reply
-      )),
+      ),
     }))
-    if (isSupabaseConfigured && supabase && UUID_RE.test(id)) {
-      const patch: Record<string, unknown> = { updated_at: updatedAt }
-      if (updates.title !== undefined) patch.title = updates.title.trim()
-      if (updates.body !== undefined) patch.body = updates.body
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      void (supabase as any).from('quick_replies').update(patch).eq('id', id)
-        .then(({ error }: { error: Error | null }) => {
-          if (error) devConsole.error('[templateStore] quick_reply update', error)
-        })
-    }
+    api.patch(`/templates/quick-replies/${id}`, updates).catch(() => {})
   },
 
   deleteQuickReply: (id) => {
     set((s) => ({ quickReplies: s.quickReplies.filter((reply) => reply.id !== id) }))
-    if (isSupabaseConfigured && supabase && UUID_RE.test(id)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-      void (supabase as any).from('quick_replies').delete().eq('id', id)
-        .then(({ error }: { error: Error | null }) => {
-          if (error) devConsole.error('[templateStore] quick_reply delete', error)
-        })
-    }
+    api.delete(`/templates/quick-replies/${id}`).catch(() => {})
   },
 
   incrementUsage: (id) => {
@@ -184,15 +137,7 @@ export const useTemplateStore = create<TemplateStore>()((set, get) => ({
         t.id === id ? { ...t, usageCount: t.usageCount + 1, updatedAt: new Date().toISOString() } : t
       ),
     }))
-    if (isSupabaseConfigured && supabase) {
-      const t = get().templates.find((x) => x.id === id)
-      if (t) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-        ;(supabase as any).from('email_templates').update({ usage_count: t.usageCount }).eq('id', id)
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
-          .then(({ error }: any) => { if (error) devConsole.error('[templateStore] usage error', error) })
-      }
-    }
+    api.post(`/templates/${id}/increment-usage`, {}).catch(() => {})
   },
 
   getByCategory: (category) => get().templates.filter((t) => t.category === category),
