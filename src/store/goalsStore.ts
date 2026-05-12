@@ -41,6 +41,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
     }
     set({ isLoading: true, error: null })
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       const { data, error } = await (supabase as any).from('sales_goals').select('*').order('created_at', { ascending: false })
       if (error) throw error
       set({ goals: (data ?? []).map(rowToGoal), isLoading: false })
@@ -56,6 +57,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
     goal.userId = effectiveUserId
     set((s) => ({ goals: [...s.goals, goal] }))
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       const { error } = await (supabase as any).from('sales_goals').insert({
         id: goal.id, user_id: goal.userId, type: goal.type,
         target: goal.target, current: goal.current, period: goal.period,
@@ -82,6 +84,7 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
       if (updates.period !== undefined) row.period = updates.period
       if (updates.startDate !== undefined) row.start_date = updates.startDate
       if (updates.endDate !== undefined) row.end_date = updates.endDate
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('sales_goals').update(row).eq('id', id)
         .then(({ error }: { error: Error | null }) => { if (error) devConsole.error('[goalsStore] update error', error) })
     }

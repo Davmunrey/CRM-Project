@@ -43,14 +43,18 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const [defRes, valRes, i18nRes] = await Promise.all([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         (supabase as any).from('custom_field_definitions').select('*').order('order', { ascending: true }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         (supabase as any).from('custom_field_values').select('*'),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         (supabase as any).from('custom_field_definition_i18n').select('*'),
       ])
       if (defRes.error) throw defRes.error
       if (valRes.error) throw valRes.error
       if (i18nRes.error) throw i18nRes.error
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
       const definitions: CustomFieldDefinition[] = (defRes.data ?? []).map((r: any) => ({
         id: r.id, entityType: r.entity_type, label: r.label, fieldType: r.field_type,
         placeholder: r.placeholder, required: r.required, order: r.order,
@@ -63,6 +67,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
         values[r.entity_id].push({ fieldId: r.field_id, value: r.value })
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
       const translations: CustomFieldDefinitionI18n[] = (i18nRes.data ?? []).map((r: any) => ({
         fieldId: r.field_id,
         languageCode: r.language_code,
@@ -88,10 +93,12 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
     const def: CustomFieldDefinition = { ...defData, id: crypto.randomUUID(), order: existing.length + 1, createdAt: ts, updatedAt: ts }
     set((s) => ({ definitions: [...s.definitions, def] }))
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('custom_field_definitions').insert({
         id: def.id, entity_type: def.entityType, label: def.label, field_type: def.fieldType,
         placeholder: def.placeholder, required: def.required, order: def.order,
         is_active: def.isActive, options: def.options, organization_id: getOrgId(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
       }).then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] def insert error', error) })
     }
   },
@@ -109,7 +116,9 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
       if (updates.isActive !== undefined) row.is_active = updates.isActive
       if (updates.options !== undefined) row.options = updates.options
       if (updates.order !== undefined) row.order = updates.order
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('custom_field_definitions').update(row).eq('id', id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
         .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] def update error', error) })
     }
   },
@@ -123,7 +132,9 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
       return { definitions: s.definitions.filter((d) => d.id !== id), values: newValues }
     })
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('custom_field_definitions').delete().eq('id', id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
         .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] def delete error', error) })
     }
   },
@@ -138,7 +149,9 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
     }))
     if (isSupabaseConfigured && supabase) {
       orderedIds.forEach((id, idx) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         ;(supabase as any).from('custom_field_definitions').update({ order: idx + 1 }).eq('id', id)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
           .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] reorder error', error) })
       })
     }
@@ -154,9 +167,11 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
       return { values: { ...s.values, [entityId]: updated } }
     })
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('custom_field_values').upsert(
         { entity_id: entityId, field_id: fieldId, value, organization_id: getOrgId() },
         { onConflict: 'entity_id,field_id' }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
       ).then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] value upsert error', error) })
     }
   },
@@ -175,7 +190,9 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
       return { values: newValues }
     })
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('custom_field_values').delete().eq('entity_id', entityId)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
         .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] deleteEntityValues error', error) })
     }
   },
@@ -195,6 +212,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
     })
 
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any)
         .from('custom_field_definition_i18n')
         .upsert({
@@ -205,6 +223,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
           placeholder: updates.placeholder ?? null,
           options: updates.options ?? null,
         }, { onConflict: 'field_id,language_code' })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
         .then(({ error }: any) => { if (error) devConsole.error('[customFieldsStore] i18n upsert error', error) })
     }
   },

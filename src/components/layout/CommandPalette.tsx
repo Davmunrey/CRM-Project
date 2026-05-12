@@ -87,6 +87,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
     })
 
     return results
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `go` is defined inline and recreated each render; including it would cause unnecessary re-memos without benefit
   }, [query, contacts, companies, deals, t, uiLang])
 
   const filteredStatic = query.length < 2
@@ -184,7 +185,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         {/* Results */}
         <div className="max-h-80 overflow-y-auto py-2">
           {allItems.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-fg-subtle">{t.common.noResults} "{query}"</p>
+            <p className="px-4 py-6 text-center text-sm text-fg-subtle">{t.common.noResults} &quot;{query}&quot;</p>
           )}
 
           {Object.entries(groups).map(([category, items]) => (

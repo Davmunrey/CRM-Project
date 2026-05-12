@@ -15,7 +15,7 @@ import { StatCard } from '../components/ui/StatCard'
 import { EmptyState } from '../components/ui/EmptyState'
 import { toast } from '../store/toastStore'
 import { formatRelativeDate } from '../utils/formatters'
-import { getTranslations, useI18nStore, useTranslations } from '../i18n'
+import { getTranslations, useTranslations } from '../i18n'
 import { localizedAutomationRule } from '../i18n/localizeSeed'
 import type { SeedAutomationId } from '../i18n/types'
 import {
@@ -399,8 +399,7 @@ function AutomationStarterLibrary({ onUseTemplate }: { onUseTemplate: (payload: 
 
 function RuleCard({ rule }: { rule: AutomationRule }) {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
-  const displayRule = useMemo(() => localizedAutomationRule(rule, getTranslations()), [rule, language])
+  const displayRule = useMemo(() => localizedAutomationRule(rule, getTranslations()), [rule])
   const triggerLabels = getTriggerLabels(t)
   const actionLabels = getActionLabels(t)
   const { toggleRule, deleteRule, updateRule } = useAutomationsStore()

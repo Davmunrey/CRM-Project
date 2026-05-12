@@ -107,6 +107,7 @@ export const useCompaniesStore = create<CompaniesState>()(
       if (isSupabaseConfigured && supabase) {
         const row = companyToRow(companyData)
         sb().from('companies').insert({ ...row, organization_id: getOrgId() }).select().single()
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
           .then(({ data, error }: any) => {
             if (error) {
               set((s) => ({ companies: s.companies.filter((c) => c.id !== id), error: error.message }))

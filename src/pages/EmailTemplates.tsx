@@ -4,7 +4,7 @@ import { useTemplateStore } from '../store/templateStore'
 import type { EmailTemplate } from '../types'
 import { toast } from '../store/toastStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
-import { getTranslations, useI18nStore, useTranslations } from '../i18n'
+import { getTranslations, useTranslations } from '../i18n'
 import { localizedEmailTemplate } from '../i18n/localizeSeed'
 import { PanelEmpty } from '../components/shared/PanelEmpty'
 import { Select } from '../components/ui/Select'
@@ -72,7 +72,6 @@ function replaceVariables(text: string, t: ReturnType<typeof useTranslations>): 
 
 export function EmailTemplates() {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
   const categoryLabels = getCategoryLabels(t)
 
   const categoryFilterSelectOptions = useMemo(() => {
@@ -118,7 +117,7 @@ export function EmailTemplates() {
   const localizedTemplates = useMemo(() => {
     const tr = getTranslations()
     return templates.map((tpl) => localizedEmailTemplate(tpl, tr))
-  }, [templates, language])
+  }, [templates])
 
   const filtered = useMemo(() => {
     return localizedTemplates.filter((tpl) => {
@@ -133,15 +132,16 @@ export function EmailTemplates() {
 
   const selected = useMemo(() => localizedTemplates.find((tpl) => tpl.id === selectedId) ?? null, [localizedTemplates, selectedId])
 
-  const previewVars = useMemo(() => previewVariableMap(getTranslations()), [language])
+  const previewVars = useMemo(() => previewVariableMap(getTranslations()), [])
 
   useEffect(() => {
     if (!selected || isDirty) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: syncs draft fields when selected template changes (prop-driven reset)
     setDraftName(selected.name)
     setDraftSubject(selected.subject)
     setDraftBody(selected.body)
     setDraftCategory(selected.category)
-  }, [selected, isDirty, language])
+  }, [selected, isDirty])
 
   const detectedVariables = useMemo(() => {
     return extractVariables(`${draftSubject} ${draftBody}`)

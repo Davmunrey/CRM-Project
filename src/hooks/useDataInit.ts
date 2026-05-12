@@ -101,5 +101,6 @@ export function useDataInit() {
       window.removeEventListener('online', handleBackOnline)
       didInit.current = false
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- gmailAddress and setGmailToken are intentionally omitted: this effect runs once per auth session (guarded by didInit ref); including them would re-run the full data-init on gmail token changes
   }, [currentUser])
 }

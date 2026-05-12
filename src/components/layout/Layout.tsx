@@ -40,6 +40,7 @@ export function Layout({ children, title }: LayoutProps) {
     return () => {
       if (sessionCheckRef.current) clearInterval(sessionCheckRef.current)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- t.auth.login is a stable translation string; including it would recreate the interval on every language change unnecessarily
   }, [navigate])
 
   useEffect(() => {

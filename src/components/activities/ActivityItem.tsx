@@ -66,7 +66,7 @@ export function ActivityItem({ activity, onComplete, onEdit, onDelete, showActio
         </div>
 
         {activity.outcome && (
-          <p className="text-xs text-fg-muted mt-1 italic">"{activity.outcome}"</p>
+          <p className="text-xs text-fg-muted mt-1 italic">&quot;{activity.outcome}&quot;</p>
         )}
 
         <div className="flex items-center gap-3 mt-2">

@@ -26,6 +26,7 @@ export function SequenceMetricsPanel({ sequenceId }: { sequenceId: string }) {
     setLoading(true)
     setError(null)
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       const { data, error: qErr } = await (supabase as any)
         .from('sequence_step_events')
         .select('id, created_at, event_type, node_id, metadata')

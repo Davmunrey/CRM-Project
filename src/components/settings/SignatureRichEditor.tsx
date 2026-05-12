@@ -105,6 +105,7 @@ export const SignatureRichEditor = forwardRef<SignatureRichEditorHandle, Signatu
       }
       lastEmitted.current = incoming
       const text = el.innerText?.replace(/\u00a0/g, ' ').trim() ?? ''
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: syncs the `empty` flag after imperatively updating the DOM with the incoming value prop
       setEmpty(!text && !el.querySelector('img'))
     }, [value])
 

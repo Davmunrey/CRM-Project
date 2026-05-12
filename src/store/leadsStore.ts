@@ -210,6 +210,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
     if (isSupabaseConfigured && supabase) {
       try {
         sb().from('leads').insert({ ...leadToRow(optimistic), organization_id: getOrgId() }).select().single()
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
           .then(({ data, error }: any) => {
             if (error) {
               set({ error: error.message })
@@ -283,6 +284,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
       return
     }
     set({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
       scoringRules: (data ?? []).map((row: any) => ({
         id: row.id as string,
         key: (row.key as string) ?? '',
@@ -337,6 +339,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
     set((s) => ({
       leadEventsByLeadId: {
         ...s.leadEventsByLeadId,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
         [leadId]: (data ?? []).map((row: any) => ({
           id: row.id as string,
           eventType: (row.event_type as string) ?? 'activity',

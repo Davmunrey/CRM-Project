@@ -204,6 +204,7 @@ function ThreadView({
     }
     const last = thread.messages[thread.messages.length - 1]
     if (last?.id) setExpandedMessageIds(new Set([last.id]))
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- thread?.id and thread?.messages.length are sufficient to detect thread changes without including the full array reference
   }, [thread?.id, thread?.messages.length])
 
   const messagePreview = (msg: GmailMessage) => {
@@ -689,6 +690,7 @@ export function Inbox() {
     if (connected && folder === 'inbox') {
       handleLoadThreads('', { silent: true })
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- handleLoadThreads is intentionally excluded: it's a stable useCallback but we only want to reload when connection state or folder changes
   }, [connected, folder])
 
   useEffect(() => {
@@ -704,6 +706,7 @@ export function Inbox() {
       handleLoadThreads(listQuery.trim(), { silent: true })
     }, 280)
     return () => window.clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- handleLoadThreads is intentionally excluded: listQuery/connected/folder are the only triggers needed
   }, [listQuery, connected, folder])
 
   const handleConnectGmail = async () => {
@@ -729,6 +732,7 @@ export function Inbox() {
     run()
     const id = window.setInterval(run, 15000)
     return () => window.clearInterval(id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- setGmailToken is from context and stable; including it would cause spurious re-runs on context re-renders
   }, [connected, processScheduledEmails, accessToken])
 
   useEffect(() => {

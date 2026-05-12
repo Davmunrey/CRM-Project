@@ -132,6 +132,7 @@ export function SettingsWebhooksPanel() {
   }, [organizationId, t])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: loads webhook list on mount; setState inside async `load` is the standard data-fetching pattern
     void load()
     return () => {
       loadGenerationRef.current += 1

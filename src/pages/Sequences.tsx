@@ -15,7 +15,7 @@ import { SequenceMetricsPanel } from '../features/sequences-flow/SequenceMetrics
 import { resolveFlowDefinition } from '../features/sequences-flow/sequenceFlowConverters'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { toast } from '../store/toastStore'
-import { getTranslations, useI18nStore, useTranslations } from '../i18n'
+import { getTranslations, useTranslations } from '../i18n'
 import { localizedEmailSequence } from '../i18n/localizeSeed'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Button } from '../components/ui/Button'
@@ -55,8 +55,7 @@ interface EnrollModalProps {
 
 function EnrollModal({ sequence, onClose }: EnrollModalProps) {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
-  const locSequence = useMemo(() => localizedEmailSequence(sequence, getTranslations()), [sequence, language])
+  const locSequence = useMemo(() => localizedEmailSequence(sequence, getTranslations()), [sequence])
   const [contacts, setContacts] = useState(useContactsStore.getState().contacts)
   const [selectedContactId, setSelectedContactId] = useState('')
   const { enrollContact } = useSequencesStore.getState()
@@ -159,9 +158,8 @@ interface SequenceDetailProps {
 
 function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps) {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
   const currentUser = useAuthStore((s) => s.currentUser)
-  const viewSequence = useMemo(() => localizedEmailSequence(sequence, getTranslations()), [sequence, language])
+  const viewSequence = useMemo(() => localizedEmailSequence(sequence, getTranslations()), [sequence])
   const canEditMeta = Boolean(currentUser && hasPermission(currentUser.role, 'sequences:update'))
   const canEditFlow = canEditMeta
   const enrollmentStatusLabels = getEnrollmentStatusLabels(t)
@@ -485,7 +483,6 @@ function SequenceDetail({ sequence, enrollments, onEnroll }: SequenceDetailProps
 
 export function Sequences() {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
   const sequencesLoading = useSequencesStore((s) => s.isLoading)
   const [sequences, setSequences] = useState<EmailSequence[]>([])
   const [enrollments, setEnrollments] = useState<SequenceEnrollment[]>([])
@@ -501,6 +498,7 @@ export function Sequences() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: syncs local state from Zustand store on mount and on subsequent store changes
     syncState()
     const unsub = useSequencesStore.subscribe(syncState)
     return unsub
@@ -513,7 +511,7 @@ export function Sequences() {
   const selectedSequence = sequences.find((s) => s.id === selectedId) ?? null
   const selectedSequenceView = useMemo(
     () => (selectedSequence ? localizedEmailSequence(selectedSequence, getTranslations()) : null),
-    [selectedSequence, language],
+    [selectedSequence],
   )
   const selectedEnrollments = selectedSequence
     ? enrollments.filter((e) => e.sequenceId === selectedSequence.id)

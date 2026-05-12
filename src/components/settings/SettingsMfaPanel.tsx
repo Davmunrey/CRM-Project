@@ -25,6 +25,7 @@ export function SettingsMfaPanel() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: fetches MFA factor status on mount; setState inside async `load` is the standard data-fetching pattern
     void load()
   }, [load])
 

@@ -3,7 +3,7 @@ import { Package, Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Boxes, Euro } fr
 import { useProductsStore } from '../store/productsStore'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { toast } from '../store/toastStore'
-import { getTranslations, useI18nStore, useTranslations } from '../i18n'
+import { getTranslations, useTranslations } from '../i18n'
 import { localizedProduct } from '../i18n/localizeSeed'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
@@ -141,8 +141,7 @@ function ProductModal({
 
 function ProductCard({ product }: { product: Product }) {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
-  const displayProduct = useMemo(() => localizedProduct(product, getTranslations()), [product, language])
+  const displayProduct = useMemo(() => localizedProduct(product, getTranslations()), [product])
   const categoryLabels = getCategoryLabels(t)
   const { updateProduct, deleteProduct } = useProductsStore()
   const [editing, setEditing] = useState(false)
@@ -235,7 +234,6 @@ function ProductCard({ product }: { product: Product }) {
 
 export function Products() {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
   const categoryLabels = getCategoryLabels(t)
   const products = useProductsStore((s) => s.products)
   const addProduct = useProductsStore((s) => s.addProduct)
@@ -252,7 +250,7 @@ export function Products() {
       if (categoryFilter && p.category !== categoryFilter) return false
       return true
     })
-  }, [products, search, categoryFilter, language])
+  }, [products, search, categoryFilter])
 
   const active = products.filter((p) => p.isActive).length
   const totalValue = products.filter((p) => p.isActive).reduce((s, p) => s + p.price, 0)

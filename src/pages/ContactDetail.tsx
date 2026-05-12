@@ -25,7 +25,7 @@ import { toast } from '../store/toastStore'
 import { formatDate, formatCurrency, formatRelativeDate } from '../utils/formatters'
 import type { Contact, DealStage, ActivityType } from '../types'
 import { CustomFieldsDisplay } from '../components/shared/CustomFieldRenderer'
-import { getTranslations, useTranslations, useI18nStore } from '../i18n'
+import { getTranslations, useTranslations } from '../i18n'
 import { useDateLocale } from '../hooks/useDateLocale'
 import { localizedActivity, localizedCompany, localizedContact, localizedCRMEmail, localizedDeal } from '../i18n/localizeSeed'
 import { format } from 'date-fns'
@@ -59,7 +59,6 @@ function getMonthLabel(dateStr: string, locale: Locale): string {
 
 export function ContactDetail() {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
   const dateLocale = useDateLocale()
 
   const { id } = useParams<{ id: string }>()
@@ -81,7 +80,7 @@ export function ContactDetail() {
 
   const displayContact = useMemo(
     () => (contactRaw ? localizedContact(contactRaw, getTranslations()) : undefined),
-    [contactRaw, language],
+    [contactRaw],
   )
 
   const companyRaw = useMemo(
@@ -91,7 +90,7 @@ export function ContactDetail() {
 
   const displayCompany = useMemo(
     () => (companyRaw ? localizedCompany(companyRaw, getTranslations()) : undefined),
-    [companyRaw, language],
+    [companyRaw],
   )
 
   const contactDeals = useMemo(() => {
@@ -99,7 +98,7 @@ export function ContactDetail() {
     return deals
       .filter((d) => d.contactId === id || contactRaw.linkedDeals.includes(d.id))
       .map((d) => localizedDeal(d, getTranslations()))
-  }, [deals, id, contactRaw, language])
+  }, [deals, id, contactRaw])
 
   const contactActivities = useMemo(() => {
     if (!id) return []
@@ -107,14 +106,14 @@ export function ContactDetail() {
       .filter((a) => a.contactId === id)
       .map((a) => localizedActivity(a, getTranslations()))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-  }, [activities, id, language])
+  }, [activities, id])
 
   const contactEmails = useMemo(() => {
     if (!contactRaw) return []
     return emails
       .filter((e) => e.contactId === id || e.to.some((addr) => addr === contactRaw.email))
       .map((e) => localizedCRMEmail(e, getTranslations()))
-  }, [emails, id, contactRaw, language])
+  }, [emails, id, contactRaw])
 
   // Group activities by month for timeline
   const activitiesByMonth = useMemo(() => {

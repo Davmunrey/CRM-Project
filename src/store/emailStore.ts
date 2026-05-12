@@ -277,6 +277,7 @@ export const useEmailStore = create<EmailStore>()(
             const rewritten = rewriteLinksForTracking(bodyHtml, clickBaseUrl)
             trackedHtmlBody = injectOpenPixel(rewritten.htmlBody, openUrl)
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
             const { data: trackingMessage, error: trackingMessageError } = await (supabase as any)
               .from('email_tracking_messages')
               .insert({
@@ -291,6 +292,7 @@ export const useEmailStore = create<EmailStore>()(
               .select('id')
               .single()
             if (!trackingMessageError && trackingMessage?.id && rewritten.links.length > 0) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
               await (supabase as any)
                 .from('email_tracking_links')
                 .insert(rewritten.links.map((link) => ({
@@ -538,6 +540,7 @@ export const useEmailStore = create<EmailStore>()(
                 const bodyHtml = job.payload.htmlBody ?? normalizeBodyToHtml(job.payload.body)
                 const rewritten = rewriteLinksForTracking(bodyHtml, clickBaseUrl)
                 trackedHtmlBody = injectOpenPixel(rewritten.htmlBody, openUrl)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
                 const { data: trackingMessage, error: trackingInsertError } = await (supabase as any)
                   .from('email_tracking_messages')
                   .insert({
@@ -555,6 +558,7 @@ export const useEmailStore = create<EmailStore>()(
                   console.error('[emailStore] tracking_messages insert failed', trackingInsertError.message)
                   // No insertar tracking_links para evitar phantom opens — continuar sin tracking
                 } else if (trackingMessage?.id && rewritten.links.length > 0) {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
                   const { error: linksInsertError } = await (supabase as any)
                     .from('email_tracking_links')
                     .insert(rewritten.links.map((link) => ({
@@ -714,6 +718,7 @@ export const useEmailStore = create<EmailStore>()(
       fetchThreadWorkspace: async () => {
         if (!isSupabaseConfigured || !supabase) return
         try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
           const { data, error } = await (supabase as any)
             .from('gmail_thread_workspace')
             .select('thread_id, owner_user_id, internal_note, updated_at')
@@ -803,6 +808,7 @@ export const useEmailStore = create<EmailStore>()(
           if (!currentUserId) return
           runSupabaseWrite(
             'emailStore:setThreadOwner',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
             (supabase as any).from('gmail_thread_workspace').upsert({
               thread_id: threadId,
               user_id: currentUserId,
@@ -835,6 +841,7 @@ export const useEmailStore = create<EmailStore>()(
           if (!currentUserId) return
           runSupabaseWrite(
             'emailStore:setThreadNote',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
             (supabase as any).from('gmail_thread_workspace').upsert({
               thread_id: threadId,
               user_id: currentUserId,
@@ -870,6 +877,7 @@ export const useEmailStore = create<EmailStore>()(
         const effectiveScopedEmails = get().emails.filter((e) => e.ownerUserId && e.ownerUserId === currentUserId)
         const trackedIds = effectiveScopedEmails.filter((e) => e.trackingEnabled).map((e) => e.id)
         if (trackedIds.length === 0) return
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         const { data, error } = await (supabase as any)
           .from('email_tracking_events')
           .select('id,email_id,event_type,created_at')
@@ -912,6 +920,7 @@ export const useEmailStore = create<EmailStore>()(
         }
         if (recipientEmails.size === 0) return
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         const { data: leadsRows } = await (supabase as any)
           .from('leads')
           .select('id,email')
@@ -928,6 +937,7 @@ export const useEmailStore = create<EmailStore>()(
           const leadId = leadIdByEmail.get(recipient)
           if (!leadId) continue
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
           const { data: existing } = await (supabase as any)
             .from('lead_events')
             .select('id')
@@ -937,6 +947,7 @@ export const useEmailStore = create<EmailStore>()(
             .maybeSingle()
           if (existing?.id) continue
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
           await (supabase as any)
             .from('lead_events')
             .insert({

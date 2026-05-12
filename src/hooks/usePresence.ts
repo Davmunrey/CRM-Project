@@ -29,6 +29,7 @@ export function usePresence(channelName: string, me: { userId: string; name: str
       void channel.untrack()
       if (supabase) void supabase.removeChannel(channel)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- me?.name and me?.userId are sufficient; subscribing to the full `me` object would re-run on every reference change even when the values are the same
   }, [channelName, me?.name, me?.userId])
 
   return useMemo(() => ({ members }), [members])

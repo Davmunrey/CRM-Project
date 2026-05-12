@@ -33,9 +33,11 @@ export const useAuditStore = create<AuditStore>()((set, get) => ({
     if (!isSupabaseConfigured || !supabase) return
     set({ isLoading: true, error: null })
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       const { data, error } = await (supabase as any)
         .from('audit_log').select('*').order('created_at', { ascending: false }).limit(MAX_ENTRIES)
       if (error) throw error
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
       const entries: AuditEntry[] = (data ?? []).map((r: any) => ({
         id: r.id, action: r.action, entityType: r.entity_type,
         entityId: r.entity_id, entityName: r.entity_name,
@@ -59,6 +61,7 @@ export const useAuditStore = create<AuditStore>()((set, get) => ({
       return { entries: updated.slice(0, MAX_ENTRIES) }
     })
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('audit_log').insert({
         id: entry.id, action: entry.action, entity_type: entry.entityType,
         entity_id: entry.entityId, entity_name: entry.entityName,

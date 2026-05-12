@@ -361,6 +361,7 @@ export function EmailComposer({
     setBody(defaultBody)
     applyEmptyCcBcc()
     applyDefaultAttachments()
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- companyId, contactId, dealId and defaultAttachments are intentionally excluded: they are seeded once on open via setLinkContactId/setLinkDealId/setLinkCompanyId and applyDefaultAttachments; including them would reset the composer on every prop change mid-session
   }, [
     defaultAttachmentsKey,
     defaultBcc,
@@ -800,6 +801,7 @@ export function EmailComposer({
     } finally {
       setSending(false)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- parseEmailList is a plain inline function recreated each render; adding it would cause useCallback to invalidate on every render defeating its purpose
   }, [
     activeSignatureId,
     activityContext.contactId,

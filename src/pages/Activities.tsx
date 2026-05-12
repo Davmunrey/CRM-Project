@@ -299,6 +299,7 @@ export function Activities() {
 
   useEffect(() => {
     if (searchParams.get('create') !== '1') return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: opens the form when ?create=1 query param is present, then removes the param
     setIsFormOpen(true)
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev)

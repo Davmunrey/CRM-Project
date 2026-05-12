@@ -15,6 +15,7 @@ export function SettingsSsoScimPanel() {
 
   useEffect(() => {
     if (!supabase || !organizationId) return
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
     void (supabase as any)
       .from('organization_sso_domains')
       .select('id,domain,verified_at')
@@ -27,6 +28,7 @@ export function SettingsSsoScimPanel() {
   const addDomain = async () => {
     if (!supabase || !organizationId || !domain.trim()) return
     setLoading(true)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
     const { data } = await (supabase as any).from('organization_sso_domains').insert({
       organization_id: organizationId,
       domain: domain.trim().toLowerCase(),

@@ -141,6 +141,7 @@ export function SettingsIntegrationsPanel() {
   }, [invokeWithSessionRetry, organizationId, t.settings.integrationsLoadError])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: loads integration data on mount; setState inside async `load` is the standard data-fetching pattern
     void load()
     return () => {
       loadGen.current += 1

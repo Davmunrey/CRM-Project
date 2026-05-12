@@ -32,6 +32,7 @@ function HintPopover({ text }: { text: string }) {
 
   useEffect(() => {
     if (!open) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: computes popover position from DOM measurements when open state changes
     updatePosition()
     const onLayoutChange = () => updatePosition()
     window.addEventListener('scroll', onLayoutChange, true)
@@ -88,7 +89,6 @@ function HintPopover({ text }: { text: string }) {
 
 export function Leads() {
   const t = useTranslations()
-  const leads = useLeadsStore((s) => s.leads)
   const isLoading = useLeadsStore((s) => s.isLoading)
   const error = useLeadsStore((s) => s.error)
   const search = useLeadsStore((s) => s.search)
@@ -117,7 +117,7 @@ export function Leads() {
   const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null)
   const [expandedScoreLeadId, setExpandedScoreLeadId] = useState<string | null>(null)
 
-  const filtered = useMemo(() => getFilteredLeads(), [leads, search, stageFilter, scoreFilter, getFilteredLeads])
+  const filtered = useMemo(() => getFilteredLeads(), [getFilteredLeads])
   const stageLabels = t.leads.stageLabels
 
   const hotCount = filtered.filter((lead) => lead.score >= 70).length

@@ -741,7 +741,6 @@ function QuoteBuilder({
 
 export function Deals() {
   const t = useTranslations()
-  const language = useI18nStore((s) => s.language)
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
   const deals = useDealsStore((s) => s.deals)
@@ -788,6 +787,7 @@ export function Deals() {
 
   useEffect(() => {
     if (searchParams.get('create') === '1') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: opens form/detail panel when ?create=1 or ?deal=id query params are present, then removes the params
       setIsFormOpen(true)
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev)
@@ -950,7 +950,7 @@ export function Deals() {
 
   const displaySelectedDeal = useMemo(
     () => (selectedDeal ? localizedDeal(selectedDeal, getTranslations()) : null),
-    [selectedDeal, language],
+    [selectedDeal],
   )
 
   const dealActivities = useMemo(() => {
@@ -960,7 +960,7 @@ export function Deals() {
       .filter((a) => a.dealId === selectedDeal.id)
       .map((a) => localizedActivity(a, tr))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-  }, [activities, selectedDeal, language])
+  }, [activities, selectedDeal])
 
   return (
     <div className="crm-page-full flex flex-col">

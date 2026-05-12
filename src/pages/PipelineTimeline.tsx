@@ -40,6 +40,7 @@ export function PipelineTimeline() {
   const [deals, setDeals] = useState<Deal[]>([])
   const computeDeals = useCallback(() => setDeals(useDealsStore.getState().deals), [])
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: syncs deals from Zustand store on mount and via subscription
     computeDeals()
     return useDealsStore.subscribe(computeDeals)
   }, [computeDeals])

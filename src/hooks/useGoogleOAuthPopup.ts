@@ -17,6 +17,7 @@ type Options = {
  */
 export function useGoogleOAuthPopup(options: Options) {
   const optsRef = useRef(options)
+  // eslint-disable-next-line react-hooks/refs -- intentional: ref is updated here to keep the latest options available in async callbacks without causing re-renders; this is the standard "latest ref" pattern
   optsRef.current = options
 
   const [loading, setLoading] = useState(false)

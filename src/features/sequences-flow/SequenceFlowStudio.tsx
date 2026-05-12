@@ -90,6 +90,7 @@ export function SequenceFlowStudio({ sequence, canEdit, onPersist }: SequenceFlo
     setEdges(toRfEdges(f.edges))
     setSelectedId(null)
     setSaveError(null)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- sequence.id and flowSnapshot are sufficient; adding full `sequence` object would cause excessive re-renders on every reference change
   }, [sequence.id, flowSnapshot, setEdges, setNodes])
 
   const flowFromCanvas = useMemo(() => fromRfState(nodes, edges), [nodes, edges])

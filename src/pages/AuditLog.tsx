@@ -42,7 +42,7 @@ export function AuditLog() {
   const t = useTranslations()
   const dateLocale = useDateLocale()
 
-  const ENTITY_LABELS: Record<AuditEntry['entityType'], string> = {
+  const ENTITY_LABELS: Record<AuditEntry['entityType'], string> = useMemo(() => ({
     contact: t.contacts.title,
     deal: t.deals.title,
     activity: t.activities.title,
@@ -51,7 +51,7 @@ export function AuditLog() {
     lead: t.leads.title,
     settings: t.settings.title,
     user: t.team.title,
-  }
+  }), [t])
 
   const ACTION_LABELS: Record<AuditAction, string> = {
     contact_created: t.common.create,
@@ -122,7 +122,7 @@ export function AuditLog() {
     }
 
     return { total: entries.length, today: todayCount, mostActive }
-  }, [entries])
+  }, [entries, ENTITY_LABELS])
 
   const entityFilterOptions: { value: EntityFilter; label: string }[] = [
     { value: 'all', label: t.common.all },

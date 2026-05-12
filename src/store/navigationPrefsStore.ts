@@ -36,6 +36,7 @@ export const useNavigationPrefsStore = create<NavigationPrefsState>()(
         const organizationId = state.organizationId
         if (!userId || !organizationId) return
         set({ loading: true, error: null })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         const { data, error } = await (supabase as any)
           .from('navigation_preferences')
           .select('prefs')
@@ -61,6 +62,7 @@ export const useNavigationPrefsStore = create<NavigationPrefsState>()(
         const userId = state.currentUser?.id
         const organizationId = state.organizationId
         if (!userId || !organizationId) return
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         const { error } = await (supabase as any)
           .from('navigation_preferences')
           .upsert({

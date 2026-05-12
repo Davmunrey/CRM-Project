@@ -50,6 +50,7 @@ export function CalendarIntegrationCard() {
   }, [])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: fetches calendar connection status on mount and whenever refreshStatus identity changes
     void refreshStatus()
   }, [refreshStatus])
 

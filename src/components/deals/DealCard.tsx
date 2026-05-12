@@ -7,7 +7,7 @@ import { memo, useMemo } from 'react'
 import { useContactsStore } from '../../store/contactsStore'
 import { useCompaniesStore } from '../../store/companiesStore'
 import { useActivitiesStore } from '../../store/activitiesStore'
-import { useI18nStore, getTranslations } from '../../i18n'
+import { getTranslations } from '../../i18n'
 import { localizedCompany, localizedContact, localizedDeal } from '../../i18n/localizeSeed'
 import { computeDealHealth, healthStatusColor, healthStatusBg } from '../../utils/dealHealth'
 import { CalendarDays } from 'lucide-react'
@@ -29,18 +29,17 @@ function getAgingColor(days: number): { bg: string; text: string } {
 }
 
 function DealCardInner({ deal, index, onClick }: DealCardProps) {
-  const language = useI18nStore((s) => s.language)
   const contactRaw = useContactsStore((s) => s.contacts.find((c) => c.id === deal.contactId))
   const companyRaw = useCompaniesStore((s) => s.companies.find((c) => c.id === deal.companyId))
   const activities = useActivitiesStore((s) => s.activities)
-  const displayDeal = useMemo(() => localizedDeal(deal, getTranslations()), [deal, language])
+  const displayDeal = useMemo(() => localizedDeal(deal, getTranslations()), [deal])
   const contact = useMemo(
     () => (contactRaw ? localizedContact(contactRaw, getTranslations()) : undefined),
-    [contactRaw, language],
+    [contactRaw],
   )
   const company = useMemo(
     () => (companyRaw ? localizedCompany(companyRaw, getTranslations()) : undefined),
-    [companyRaw, language],
+    [companyRaw],
   )
   const health = computeDealHealth(deal, activities)
 

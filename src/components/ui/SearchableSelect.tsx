@@ -87,11 +87,13 @@ export function SearchableSelect({
   const [panelRect, setPanelRect] = useState<PanelRect | null>(null)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: clears search query when dropdown closes (prop-driven reset)
     if (!open) setQuery('')
   }, [open])
 
   useLayoutEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: computes panel position from DOM measurement when open state changes
       setPanelRect(null)
       return
     }

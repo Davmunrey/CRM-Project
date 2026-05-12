@@ -91,5 +91,7 @@ export function useChartTheme(): ChartTheme {
     return () => obs.disconnect()
   }, [])
 
+  // version is used to retrigger the snapshot when the theme class changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => getChartThemeSnapshot(), [version])
 }

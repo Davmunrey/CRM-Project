@@ -246,6 +246,7 @@ export function Forecast() {
   )
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: syncs deals and activities from Zustand stores on mount and via subscriptions
     setDeals(useDealsStore.getState().deals)
     setActivities(useActivitiesStore.getState().activities)
 

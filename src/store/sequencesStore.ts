@@ -206,11 +206,14 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       const [seqRes, enrRes] = await Promise.all([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         (supabase as any).from('email_sequences').select('*').order('created_at', { ascending: false }),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
         (supabase as any).from('sequence_enrollments').select('*').order('enrolled_at', { ascending: false }),
       ])
       if (seqRes.error) throw seqRes.error
       if (enrRes.error) throw enrRes.error
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
       const sequences: EmailSequence[] = (seqRes.data ?? []).map((r: any) => ({
         id: r.id,
         name: r.name,
@@ -224,6 +227,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
         stopOnContactReply: r.stop_on_contact_reply !== false,
         enrollmentStartDelayDays: Math.max(0, Number(r.enrollment_start_delay_days) || 0),
       }))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- raw Supabase row shape not typed
       const enrollments: SequenceEnrollment[] = (enrRes.data ?? []).map((r: any) => ({
         id: r.id,
         sequenceId: r.sequence_id,
@@ -272,6 +276,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
     }
     set((s) => ({ sequences: [...s.sequences, newSeq] }))
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('email_sequences').insert({
         id: newSeq.id,
         name: newSeq.name,
@@ -284,6 +289,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
         stop_on_contact_reply: newSeq.stopOnContactReply !== false,
         enrollment_start_delay_days: newSeq.enrollmentStartDelayDays ?? 0,
         organization_id: getOrgId(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
       }).then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] insert error', error) })
     }
     return newSeq
@@ -303,7 +309,9 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
       if (updates.enrollmentStartDelayDays !== undefined) {
         row.enrollment_start_delay_days = Math.max(0, updates.enrollmentStartDelayDays)
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('email_sequences').update(row).eq('id', id)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
         .then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] update error', error) })
     }
   },
@@ -346,6 +354,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
       sequences: s.sequences.map((seq) => seq.id === sequenceId ? { ...seq, enrolledCount: seq.enrolledCount + 1 } : seq),
     }))
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('sequence_enrollments').insert({
         id: enrollment.id,
         sequence_id: sequenceId,
@@ -358,6 +367,7 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
         enrolled_at: now,
         next_step_at: nextStepAt,
         organization_id: getOrgId(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
       }).then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] enroll error', error) })
     }
     return enrollment
@@ -366,7 +376,9 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
   pauseEnrollment: (enrollmentId) => {
     set((s) => ({ enrollments: s.enrollments.map((e) => e.id === enrollmentId ? { ...e, status: 'paused' as EnrollmentStatus } : e) }))
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('sequence_enrollments').update({ status: 'paused' }).eq('id', enrollmentId)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
         .then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] pause error', error) })
     }
   },
@@ -374,7 +386,9 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
   resumeEnrollment: (enrollmentId) => {
     set((s) => ({ enrollments: s.enrollments.map((e) => e.id === enrollmentId ? { ...e, status: 'active' as EnrollmentStatus } : e) }))
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('sequence_enrollments').update({ status: 'active' }).eq('id', enrollmentId)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
         .then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] resume error', error) })
     }
   },
@@ -383,7 +397,9 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
     const now = new Date().toISOString()
     set((s) => ({ enrollments: s.enrollments.map((e) => e.id === enrollmentId ? { ...e, status: 'completed' as EnrollmentStatus, completedAt: now } : e) }))
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any).from('sequence_enrollments').update({ status: 'completed', completed_at: now }).eq('id', enrollmentId)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
         .then(({ error }: any) => { if (error) devConsole.error('[sequencesStore] complete error', error) })
     }
   },
@@ -410,10 +426,12 @@ export const useSequencesStore = create<SequencesStore>()((set, get) => ({
       ),
     }))
     if (isSupabaseConfigured && supabase) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
       ;(supabase as any)
         .from('sequence_enrollments')
         .update({ status: 'replied', completed_at: now, next_step_at: null })
         .eq('id', enrollmentId)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
         .then(({ error }: any) => {
           if (error) devConsole.error('[sequencesStore] markEnrollmentReplied error', error)
         })

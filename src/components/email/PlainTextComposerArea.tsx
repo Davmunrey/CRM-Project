@@ -92,6 +92,7 @@ export function PlainTextComposerArea({
   useEffect(() => {
     formatUndoPast.current = []
     formatUndoFuture.current = []
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: resets undo/redo depth counters when the composer is reset via resetKey prop
     setUndoDepth(0)
     setRedoDepth(0)
   }, [resetKey])

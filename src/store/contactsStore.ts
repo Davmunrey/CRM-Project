@@ -129,6 +129,7 @@ export const useContactsStore = create<ContactsState>()(
         try {
           const row = contactToRow(contactData)
           sb().from('contacts').insert({ ...row, organization_id: getOrgId() }).select().single()
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
             .then(({ data, error }: any) => {
               if (error) {
                 set({ error: error.message })

@@ -82,6 +82,7 @@ export function Companies() {
   useEffect(() => {
     if (!distributionListId) return
     if (!distributionLists.some((l) => l.id === distributionListId)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: clears stale distributionListId when the selected list is removed from the store
       setDistributionListId(null)
     }
   }, [distributionListId, distributionLists])

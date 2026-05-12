@@ -10,7 +10,7 @@ import { ROLE_COLORS } from '../utils/permissions'
 import { Avatar } from '../components/ui/Avatar'
 import { toast } from '../store/toastStore'
 import type { UserRole } from '../types/auth'
-import { useI18nStore, useLocalizedOrgUsers, useTranslations, getTranslations } from '../i18n'
+import { useLocalizedOrgUsers, useTranslations, getTranslations } from '../i18n'
 import { localizedOrganization } from '../i18n/localizeSeed'
 import { supabase } from '../lib/supabase'
 import { formatDateShort } from '../utils/formatters'
@@ -38,11 +38,10 @@ export function TeamManagement() {
   const resetPassword = useAuthStore((s) => s.resetPassword)
   const createInvitation = useAuthStore((s) => s.createInvitation)
   const cancelInvitation = useAuthStore((s) => s.cancelInvitation)
-  const language = useI18nStore((s) => s.language)
   const users = useLocalizedOrgUsers(usersRaw)
   const displayOrganization = useMemo(
     () => localizedOrganization(organization, getTranslations()),
-    [organization, language],
+    [organization],
   )
   const [showAddUser, setShowAddUser] = useState(false)
   const [showInvite, setShowInvite] = useState(false)

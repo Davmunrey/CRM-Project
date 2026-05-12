@@ -182,6 +182,7 @@ export function Dashboard() {
     setRecentNotifs(useNotificationsStore.getState().notifications.slice(0, 5))
   }, [])
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: syncs notification list from Zustand store on mount and via subscription
     computeNotifs()
     const unsub = useNotificationsStore.subscribe(computeNotifs)
     return unsub

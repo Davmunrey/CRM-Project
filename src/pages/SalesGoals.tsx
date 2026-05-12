@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslations } from '../i18n'
 import {
   Target, DollarSign, Handshake, Activity, UserPlus,
@@ -110,6 +110,9 @@ export function SalesGoals() {
         return goal.current
     }
   }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- goals dep is intentional to refresh the snapshot when goals change
+  const nowMs = useMemo(() => Date.now(), [goals])
 
   const handleSubmit = async () => {
     if (form.target <= 0) {
@@ -289,10 +292,10 @@ export function SalesGoals() {
           const current = computeCurrentForGoal(goal)
           const pct = Math.min(Math.round((current / goal.target) * 100), 100)
           const isCompleted = current >= goal.target
-          const now = new Date().toISOString().split('T')[0]
+          const now = new Date(nowMs).toISOString().split('T')[0]
           const isExpired = goal.endDate < now
           const totalDays = Math.max(1, (new Date(goal.endDate).getTime() - new Date(goal.startDate).getTime()) / 86400000)
-          const daysElapsed = Math.max(0, (Date.now() - new Date(goal.startDate).getTime()) / 86400000)
+          const daysElapsed = Math.max(0, (nowMs - new Date(goal.startDate).getTime()) / 86400000)
           const expectedPct = Math.min(Math.round((daysElapsed / totalDays) * 100), 100)
           const onTrack = pct >= expectedPct
 

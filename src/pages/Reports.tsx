@@ -45,6 +45,7 @@ export function Reports() {
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: immediately clears stats when Supabase is not configured, then loads asynchronously
       setEmailTrackingStats({ opens: 0, clicks: 0, loading: false, error: false })
       return
     }
@@ -56,6 +57,7 @@ export function Reports() {
           ? startOfDay(parseISO(dateFrom)).toISOString()
           : startOfDay(subMonths(new Date(), 6)).toISOString()
         const end = dateTo ? endOfDay(parseISO(dateTo)).toISOString() : endOfDay(new Date()).toISOString()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for tracking tables
         const sb = supabase as any
         const [openRes, clickRes] = await Promise.all([
           sb
@@ -118,7 +120,7 @@ export function Reports() {
         weighted: weightedValue,
       }
     })
-  }, [filteredDeals])
+  }, [filteredDeals, t])
 
   // Won vs Lost
   const wonLostData = useMemo(() => {
@@ -187,7 +189,7 @@ export function Reports() {
       const activitiesCount = activities.filter((a) => a.createdBy === name).length
       return { name, wonDeals: won.length, wonValue, pipelineValue, activeDeals: active.length, winRate, activitiesCount }
     }).sort((a, b) => b.wonValue - a.wonValue)
-  }, [filteredDeals, activities])
+  }, [filteredDeals, activities, orgUsers])
 
   const handleExportCSV = () => {
     const rows = [
