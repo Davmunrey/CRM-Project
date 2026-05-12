@@ -314,7 +314,9 @@ export const useAuthStore = create<AuthState>()(
             session,
             supabaseSession: { access_token: res.token },
             users: [user],
+            organizationId: null,
             tenantResolutionStatus: 'idle',
+            tenantResolutionMessage: null,
           })
 
           return { success: true }
@@ -485,24 +487,25 @@ export function initSupabaseAuth(): (() => void) | undefined {
   }
 
   // Token valid — restore session from persisted state; fetch fresh user profile
-  api.get<{ id: string; email: string; name: string; role: string; organizationId: string | null }>('/auth/me')
-    .then((user) => {
+  api.get<{ user: { id: string; email: string; name: string; role: string; organizationId: string | null } }>('/auth/me')
+    .then((res) => {
+      const u = res.user
       const now = new Date().toISOString()
       const authUser: AuthUser = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: normalizeRole(user.role),
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: normalizeRole(u.role),
         jobTitle: '',
-        organizationId: user.organizationId ?? undefined,
+        organizationId: u.organizationId ?? undefined,
         isActive: true,
         createdAt: now,
         updatedAt: now,
       }
       useAuthStore.getState().setCurrentUser(authUser)
       useAuthStore.getState().setSupabaseSession({ access_token: token })
-      if (user.organizationId) {
-        void useAuthStore.getState().fetchOrgUsers(user.organizationId)
+      if (u.organizationId) {
+        void useAuthStore.getState().fetchOrgUsers(u.organizationId)
       }
     })
     .catch(() => {

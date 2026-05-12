@@ -22,11 +22,12 @@ import { initRealtimeSubscriptions } from '../lib/realtimeSubscriptions'
  */
 export function useDataInit() {
   const currentUserId = useAuthStore((s) => s.currentUser?.id ?? null)
+  const organizationId = useAuthStore((s) => s.organizationId)
   const didInit = useRef(false)
 
   useEffect(() => {
     if (didInit.current) return
-    if (!currentUserId) return
+    if (!currentUserId || !organizationId) return
 
     didInit.current = true
 
@@ -74,6 +75,6 @@ export function useDataInit() {
       window.removeEventListener('online', handleBackOnline)
       didInit.current = false
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- currentUserId (stable string) prevents spurious re-runs from object identity changes
-  }, [currentUserId])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- stable primitive deps; object refs would cause spurious re-runs
+  }, [currentUserId, organizationId])
 }

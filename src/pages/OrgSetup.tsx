@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { Logo } from '../components/brand/Logo'
-import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
@@ -10,24 +9,26 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { AuthLayout } from '../components/auth/AuthLayout'
+import { api, setToken } from '../lib/api'
 import { trackUxAction } from '../lib/uxMetrics'
 
-function normalizeClaimValue(value: string | undefined): string | undefined {
-  if (!value) return undefined
-  const normalized = value.replace(/^"+|"+$/g, '').trim()
-  return normalized || undefined
+interface OrgCreateResponse {
+  id: string
+  name: string
+  slug: string
+  token: string
 }
 
 export function OrgSetup() {
   const navigate = useNavigate()
   const t = useTranslations()
+  const currentUser = useAuthStore((s) => s.currentUser)
   const setCurrentUser = useAuthStore((s) => s.setCurrentUser)
   const workspaceSlugFromHost = useAuthStore((s) => s.workspaceSlugFromHost)
   const updateBranding = useSettingsStore((s) => s.updateBranding)
 
   const [orgName, setOrgName] = useState('')
   const [slug, setSlug] = useState('')
-  /** When true, org name typing does not overwrite slug (slug came from company subdomain). */
   const [slugTiedToSubdomain, setSlugTiedToSubdomain] = useState(false)
   const [legalName, setLegalName] = useState('')
   const [taxId, setTaxId] = useState('')
@@ -38,76 +39,6 @@ export function OrgSetup() {
   const [billingPhone, setBillingPhone] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  /**
-   * Calls the create-org Edge Function via a direct fetch using a caller-supplied
-   * access token. This bypasses `supabase.functions.invoke()`, which calls
-   * `auth.getSession()` internally and can throw a FunctionsFetchError when the
-   * stored refresh_token is stale — even though the current access_token is valid.
-   */
-  const invokeCreateOrgWithFallback = async (orgNameValue: string, slugValue: string, accessToken: string) => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
-    const anonKey =
-      (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ??
-      (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)
-    if (!supabaseUrl || !anonKey) throw new Error(t.orgSetup.errorNotConfigured)
-
-    const res = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/create-org`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: anonKey,
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ orgName: orgNameValue, slug: slugValue }),
-    })
-
-    const payload = (await res.json().catch(() => null)) as { error?: string; org?: { id?: string } } | null
-    if (!res.ok) throw new Error(payload?.error ?? `HTTP ${res.status}`)
-    return payload
-  }
-
-  useEffect(() => {
-    if (!supabase) return
-    const sb = supabase
-    let cancelled = false
-
-    const redirectIfAlreadyMember = async () => {
-      const { data: authData, error: authError } = await sb.auth.getUser()
-      if (cancelled || authError || !authData.user) return
-
-      const existingOrgId = normalizeClaimValue(
-        ((authData.user.app_metadata?.organization_id as string | undefined) ?? authData.user.user_metadata?.org_id) as
-          | string
-          | undefined,
-      )
-
-      if (!existingOrgId) return
-
-      setCurrentUser({
-        id: authData.user.id,
-        name: authData.user.user_metadata?.full_name ?? authData.user.email?.split('@')[0] ?? t.auth.profile,
-        email: authData.user.email ?? '',
-        role: (authData.user.app_metadata?.user_role as 'admin' | 'manager' | 'sales_rep' | 'viewer') ?? 'admin',
-        jobTitle: authData.user.user_metadata?.job_title ?? '',
-        organizationId: existingOrgId,
-        isActive: true,
-        createdAt: authData.user.created_at,
-        updatedAt: authData.user.updated_at ?? authData.user.created_at,
-      })
-
-      void useAuthStore.getState().fetchOrgUsers(existingOrgId).catch(() => {
-        /* non-critical */
-      })
-      navigate('/', { replace: true })
-    }
-
-    void redirectIfAlreadyMember()
-
-    return () => {
-      cancelled = true
-    }
-  }, [navigate, setCurrentUser, t.auth.profile])
 
   useEffect(() => {
     if (!workspaceSlugFromHost) return
@@ -131,45 +62,17 @@ export function OrgSetup() {
       setError(t.orgSetup.errorCompleteLegalProfile)
       return
     }
-    if (!supabase) { setError(t.orgSetup.errorNotConfigured); return }
-    const sb = supabase
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-    if (authError || !authData.user) { setError(t.orgSetup.errorNotAuthenticated); return }
-
-    // Proactively refresh the session before calling the Edge Function.
-    // functions.invoke() uses auth.getSession() internally, which can fail with a
-    // FunctionsFetchError when the stored refresh_token is stale — even if the
-    // current access_token is still valid. By refreshing here and passing the
-    // resulting token directly to our fetch, we avoid that code path entirely.
-    const { data: preFetchSession, error: preFetchErr } = await sb.auth.refreshSession()
-    if (preFetchErr || !preFetchSession.session?.access_token) {
-      // The refresh_token is completely dead. Clear the broken local session so
-      // the user can sign in cleanly instead of getting a cryptic network error.
-      await sb.auth.signOut({ scope: 'local' })
-      navigate('/login', { replace: true })
-      return
-    }
-    const freshAccessToken = preFetchSession.session.access_token
 
     setIsLoading(true)
     setError(null)
 
     try {
-      const data = await invokeCreateOrgWithFallback(orgName.trim(), slug.trim(), freshAccessToken)
-      const createdOrgId = (data as { org?: { id?: string } } | null)?.org?.id
-      if (!createdOrgId) throw new Error(t.errors.generic)
+      const res = await api.post<OrgCreateResponse>('/orgs', { name: orgName.trim(), slug: slug.trim() })
 
-      // Second refresh to pick up the new organization_id / user_role JWT claims
-      // that the Edge Function set via auth.admin.updateUserById.
-      const { error: refreshErr } = await sb.auth.refreshSession()
-      if (refreshErr) throw new Error(refreshErr.message)
+      // Store new JWT — now contains org claim
+      setToken(res.token)
 
-      const { data: refreshedUserData, error: refreshedUserError } = await sb.auth.getUser()
-      if (refreshedUserError || !refreshedUserData.user) {
-        throw new Error(refreshedUserError?.message ?? t.orgSetup.errorNotAuthenticated)
-      }
-
-      const u = refreshedUserData.user
+      // Save billing/legal info to settings (client-side branding store)
       updateBranding({
         appName: orgName.trim(),
         legalName: legalName.trim(),
@@ -180,62 +83,17 @@ export function OrgSetup() {
         billingEmail: billingEmail.trim(),
         billingPhone: billingPhone.trim() || undefined,
       })
-      const newOrgId = normalizeClaimValue(
-        ((u.app_metadata?.organization_id as string | undefined) ?? u.user_metadata?.org_id) as string | undefined,
-      )
-      setCurrentUser({
-        id: u.id,
-        name: u.user_metadata?.full_name ?? u.email?.split('@')[0] ?? t.auth.profile,
-        email: u.email ?? '',
-        role: (u.app_metadata?.user_role as 'admin' | 'manager' | 'sales_rep' | 'viewer') ?? 'admin',
-        jobTitle: u.user_metadata?.job_title ?? '',
-        organizationId: newOrgId,
-        isActive: true,
-        createdAt: u.created_at,
-        updatedAt: u.updated_at ?? u.created_at,
-      })
 
-      if (newOrgId) {
-        void useAuthStore.getState().fetchOrgUsers(newOrgId).catch(() => {
-          /* non-critical */
-        })
+      // Update auth store with org
+      if (currentUser) {
+        setCurrentUser({ ...currentUser, organizationId: res.id })
       }
+      useAuthStore.setState({ organizationId: res.id, tenantResolutionStatus: 'ready', tenantResolutionMessage: null })
 
-      navigate('/', { replace: true })
       trackUxAction('onboarding_org_setup_submit_success')
+      navigate('/', { replace: true })
     } catch (err) {
       const message = (err as Error).message
-      const isAlreadyMember = /already a member of an organization/i.test(message)
-      if (isAlreadyMember) {
-        const { data: refreshedUserData, error: refreshedUserError } = await sb.auth.getUser()
-        const existingOrgId =
-          !refreshedUserError && refreshedUserData.user
-            ? normalizeClaimValue(
-                ((refreshedUserData.user.app_metadata?.organization_id as string | undefined) ??
-                  refreshedUserData.user.user_metadata?.org_id) as string | undefined,
-              )
-            : undefined
-
-        if (existingOrgId && refreshedUserData.user) {
-          setCurrentUser({
-            id: refreshedUserData.user.id,
-            name: refreshedUserData.user.user_metadata?.full_name ?? refreshedUserData.user.email?.split('@')[0] ?? t.auth.profile,
-            email: refreshedUserData.user.email ?? '',
-            role: (refreshedUserData.user.app_metadata?.user_role as 'admin' | 'manager' | 'sales_rep' | 'viewer') ?? 'admin',
-            jobTitle: refreshedUserData.user.user_metadata?.job_title ?? '',
-            organizationId: existingOrgId,
-            isActive: true,
-            createdAt: refreshedUserData.user.created_at,
-            updatedAt: refreshedUserData.user.updated_at ?? refreshedUserData.user.created_at,
-          })
-          void useAuthStore.getState().fetchOrgUsers(existingOrgId).catch(() => {
-            /* non-critical */
-          })
-          navigate('/', { replace: true })
-          trackUxAction('onboarding_org_setup_submit_success', { reason: 'already_member' })
-          return
-        }
-      }
       trackUxAction('onboarding_org_setup_submit_error', { reason: message.slice(0, 120) })
       setError(message)
     } finally {
@@ -248,7 +106,7 @@ export function OrgSetup() {
       variant="centered"
       logo={(
         <div className="relative w-14 h-14 rounded-2xl bg-accent-500/20 flex items-center justify-center mx-auto mb-4 border border-accent-500/25 overflow-hidden shadow-brand-sm ring-1 ring-accent-500/20 motion-safe:transition motion-safe:duration-300 motion-safe:hover:scale-[1.02]">
-          <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 via-transparent to-accent-500/10" aria-hidden />
+          <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-fg/40 via-transparent to-accent-500/10" aria-hidden />
           <span className="relative z-[1]">
             <Logo variant="icon" theme="onAccent" size={28} />
           </span>

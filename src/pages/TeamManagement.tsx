@@ -12,7 +12,7 @@ import { toast } from '../store/toastStore'
 import type { UserRole } from '../types/auth'
 import { useLocalizedOrgUsers, useTranslations, getTranslations } from '../i18n'
 import { localizedOrganization } from '../i18n/localizeSeed'
-import { supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { formatDateShort } from '../utils/formatters'
 import { Select } from '../components/ui/Select'
 import { SecurePasswordField } from '../components/auth/SecurePasswordField'
@@ -60,76 +60,6 @@ export function TeamManagement() {
   const [inviteRole, setInviteRole] = useState<UserRole>('sales_rep')
   const [isInviting, setIsInviting] = useState(false)
 
-  const getAccessToken = async (): Promise<string> => {
-    if (!supabase) throw new Error(t.errors.supabaseNotConfiguredDetail)
-    const { data: sessionData } = await supabase.auth.getSession()
-    let accessToken = sessionData.session?.access_token
-    if (!accessToken) {
-      const { data: refreshed, error: refreshErr } = await supabase.auth.refreshSession()
-      if (refreshErr) throw new Error(refreshErr.message)
-      accessToken = refreshed.session?.access_token
-    }
-    if (!accessToken) throw new Error(t.errors.notAuthenticated)
-    return accessToken
-  }
-
-  const inviteViaEdge = async (email: string, role: UserRole, organizationId: string) => {
-    const accessToken = await getAccessToken()
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
-    const anonOrPublishableKey =
-      (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ??
-      (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)
-    if (!supabaseUrl) throw new Error(t.errors.supabaseNotConfiguredDetail)
-    if (!anonOrPublishableKey) throw new Error(t.errors.supabaseNotConfiguredDetail)
-
-    const requestBody = {
-      email: email.trim(),
-      role,
-      organizationId,
-    }
-
-    if (supabase) {
-      const primary = await supabase.functions.invoke('invite-member', {
-        body: requestBody,
-      })
-      if (!primary.error) return
-      if (!/Failed to send a request to the Edge Function/i.test(primary.error.message)) {
-        throw new Error(primary.error.message)
-      }
-    }
-
-    const directRes = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/invite-member`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: anonOrPublishableKey,
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(requestBody),
-    }).catch(() => null)
-
-    if (directRes) {
-      const directPayload = (await directRes.json().catch(() => null)) as { success?: boolean; error?: string } | null
-      if (!directRes.ok || directPayload?.error) {
-        throw new Error(directPayload?.error ?? t.errors.invitationSendError)
-      }
-      return
-    }
-
-    const proxyRes = await fetch('/api/invite-member', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(requestBody),
-    })
-
-    const proxyPayload = (await proxyRes.json().catch(() => null)) as { success?: boolean; error?: string } | null
-    if (!proxyRes.ok || proxyPayload?.error) {
-      throw new Error(proxyPayload?.error ?? t.errors.invitationSendError)
-    }
-  }
 
   if (!currentUser) return null
 
@@ -173,24 +103,6 @@ export function TeamManagement() {
       toast.error(formatPasswordStrengthIssues(strengthIssues, passwordIssueLabels))
       return
     }
-    // Supabase mode: user creation should go through invitation flow (server-side Auth admin).
-    if (supabase && currentUser.organizationId) {
-      setIsInviting(true)
-      void inviteViaEdge(newUser.email, newUser.role, currentUser.organizationId)
-        .then(() => {
-          toast.success(t.team.toastInviteSent.replace('{email}', newUser.email))
-          setNewUser({ name: '', email: '', password: '', role: 'sales_rep', jobTitle: '', phone: '' })
-          setShowAddUser(false)
-        })
-        .catch((err) => {
-          toast.error((err as Error).message)
-        })
-        .finally(() => {
-          setIsInviting(false)
-        })
-      return
-    }
-
     const result = addUser(newUser)
     if (result.success) {
       toast.success(t.team.toastUserCreated.replace('{name}', newUser.name))
@@ -203,20 +115,12 @@ export function TeamManagement() {
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) { toast.error(t.team.toastEnterEmail); return }
-    if (!currentUser?.organizationId) { toast.error(t.errors.supabaseNotConfigured); return }
-
-    // Mock mode fallback: supabase not configured
-    if (!supabase) {
-      createInvitation(inviteEmail, inviteRole)
-      toast.success(t.team.toastInviteSent.replace('{email}', inviteEmail))
-      setInviteEmail('')
-      setShowInvite(false)
-      return
-    }
+    if (!currentUser?.organizationId) { toast.error(t.errors.notAuthenticated); return }
 
     setIsInviting(true)
     try {
-      await inviteViaEdge(inviteEmail, inviteRole, currentUser.organizationId)
+      await api.post('/orgs/me/invite', { email: inviteEmail.trim(), role: inviteRole })
+      createInvitation(inviteEmail, inviteRole)
       toast.success(t.team.toastInviteSent.replace('{email}', inviteEmail))
       setInviteEmail('')
       setShowInvite(false)
