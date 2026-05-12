@@ -14,9 +14,6 @@ additional_redirect_urls = [
   "http://localhost:5173/auth/gmail/callback",
 ]
 
-[functions]
-import_map = "./functions/import_map.json"
-
 [functions.webhook-worker]
 verify_jwt = false
 
