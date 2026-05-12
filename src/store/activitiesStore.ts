@@ -1,15 +1,17 @@
 import { create } from 'zustand'
 import type { Activity, ActivityFilters } from '../types'
 import { useAuditStore } from './auditStore'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
+import { api } from '../lib/api'
+import { getErrorMessage } from '../lib/supabaseHelpers'
 import { useAuthStore } from './authStore'
 import { getTranslations } from '../i18n'
 
-// ── Snake ↔ Camel mappers ───────────────────────────────────────────────────
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+}
 
-function rowToActivity(row: Record<string, unknown>): Activity {
-  const createdBy = row.created_by as string | null
+function mapActivity(row: Record<string, unknown>): Activity {
+  const createdBy = (row.createdBy ?? row.created_by) as string | null
   const users = useAuthStore.getState().users
   const createdByName = createdBy
     ? (users.find((u) => u.id === createdBy)?.name ?? createdBy)
@@ -21,40 +23,16 @@ function rowToActivity(row: Record<string, unknown>): Activity {
     subject: (row.subject as string) ?? '',
     description: (row.description as string) ?? '',
     outcome: (row.outcome as string) ?? undefined,
-    dueDate: (row.due_date as string) ?? undefined,
-    completedAt: (row.completed_at as string) ?? undefined,
+    dueDate: (row.dueDate ?? row.due_date) as string | undefined,
+    completedAt: (row.completedAt ?? row.completed_at) as string | undefined,
     status: (row.status as Activity['status']) ?? 'pending',
-    contactId: (row.contact_id as string) ?? undefined,
-    companyId: (row.company_id as string) ?? undefined,
-    dealId: (row.deal_id as string) ?? undefined,
+    contactId: (row.contactId ?? row.contact_id) as string | undefined,
+    companyId: (row.companyId ?? row.company_id) as string | undefined,
+    dealId: (row.dealId ?? row.deal_id) as string | undefined,
     createdBy: createdByName,
-    createdAt: (row.created_at as string) ?? '',
+    createdAt: (row.createdAt ?? row.created_at ?? '') as string,
   }
 }
-
-function activityToRow(a: Partial<Activity>): Record<string, unknown> {
-  const row: Record<string, unknown> = {}
-  if (a.type !== undefined) row.type = a.type
-  if (a.subject !== undefined) row.subject = a.subject
-  if (a.description !== undefined) row.description = a.description
-  if (a.outcome !== undefined) row.outcome = a.outcome
-  if (a.dueDate !== undefined) row.due_date = a.dueDate
-  if (a.completedAt !== undefined) row.completed_at = a.completedAt
-  if (a.status !== undefined) row.status = a.status
-  if (a.contactId !== undefined) row.contact_id = a.contactId
-  if (a.companyId !== undefined) row.company_id = a.companyId
-  if (a.dealId !== undefined) row.deal_id = a.dealId
-  // `created_by` is UUID in DB. UI currently keeps display names.
-  // Only send value when it's already a UUID.
-  if (a.createdBy !== undefined && isUuid(a.createdBy)) row.created_by = a.createdBy
-  return row
-}
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-}
-
-// ── State interface ─────────────────────────────────────────────────────────
 
 export interface ActivitiesState {
   activities: Activity[]
@@ -102,15 +80,10 @@ export const useActivitiesStore = create<ActivitiesState>()(
     fetchActivities: async () => {
       set({ isLoading: true, error: null })
       try {
-        if (isSupabaseConfigured && supabase) {
-          const { data, error } = await supabase.from('activities').select('*').order('created_at', { ascending: false })
-          if (error) throw error
-          set({ activities: (data ?? []).map(rowToActivity), isLoading: false })
-        } else {
-          set({ activities: [], isLoading: false })
-        }
+        const data = await api.get<Activity[]>('/activities')
+        set({ activities: (data ?? []).map((r) => mapActivity(r as unknown as Record<string, unknown>)), isLoading: false })
       } catch (e: unknown) {
-        set({ error: (e as Error).message, isLoading: false })
+        set({ error: getErrorMessage(e), isLoading: false })
       }
     },
 
@@ -121,55 +94,32 @@ export const useActivitiesStore = create<ActivitiesState>()(
       set((state) => ({ activities: [activity, ...state.activities] }))
       useAuditStore.getState().logAction('activity_created', 'activity', activity.id, activity.subject, getTranslations().auditMessages.activityCreated)
 
-      if (isSupabaseConfigured && supabase) {
-        const row = activityToRow(activityData)
-        const currentUserId = useAuthStore.getState().currentUser?.id
-        const createdBy = currentUserId && isUuid(currentUserId) ? currentUserId : null
-        ;(supabase.from('activities').insert({ ...row, created_by: createdBy, organization_id: getOrgId() } as never).select().single()
-        ).then(({ data, error }: { data: Record<string, unknown> | null; error: { message: string } | null }) => {
-            if (error) {
-              set((s) => ({ activities: s.activities.filter((a) => a.id !== id), error: error.message }))
-              return
-            }
-            if (!data) {
-              set((s) => ({ activities: s.activities.filter((a) => a.id !== id), error: 'Empty Supabase insert response' }))
-              return
-            }
-            const real = rowToActivity(data)
-            set((s) => ({ activities: s.activities.map((a) => a.id === id ? real : a) }))
-          }, (error: unknown) => {
-            set((s) => ({ activities: s.activities.filter((a) => a.id !== id), error: getErrorMessage(error) }))
-          })
-      }
+      const currentUserId = useAuthStore.getState().currentUser?.id
+      const body = { ...activityData, ...(currentUserId && isUuid(currentUserId) ? { createdBy: currentUserId } : {}) }
+      api.post<Activity>('/activities', body).then(
+        (real) => {
+          set((s) => ({ activities: s.activities.map((a) => a.id === id ? mapActivity(real as unknown as Record<string, unknown>) : a) }))
+        },
+        (err: unknown) => {
+          set((s) => ({ activities: s.activities.filter((a) => a.id !== id), error: getErrorMessage(err) }))
+        },
+      )
 
       return activity
     },
 
     updateActivity: (id, updates) => {
       set((state) => ({
-        activities: state.activities.map((a) =>
-          a.id === id ? { ...a, ...updates } : a
-        ),
+        activities: state.activities.map((a) => a.id === id ? { ...a, ...updates } : a),
       }))
-
-      if (isSupabaseConfigured && supabase) {
-        const row = activityToRow(updates)
-        runSupabaseWrite(
-          'activitiesStore:updateActivity',
-          supabase.from('activities').update({ ...row, updated_at: new Date().toISOString() } as never).eq('id', id),
-          (message) => set({ error: message }),
-        )
-      }
+      api.patch(`/activities/${id}`, updates).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     deleteActivity: (id) => {
       const activity = get().getById(id)
       set((state) => ({ activities: state.activities.filter((a) => a.id !== id) }))
       useAuditStore.getState().logAction('activity_deleted', 'activity', id, activity?.subject ?? '', getTranslations().auditMessages.activityDeleted)
-
-      if (isSupabaseConfigured && supabase) {
-        sbDelete('activities', id).then(null, (e) => set({ error: (e as Error).message }))
-      }
+      api.delete(`/activities/${id}`).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     completeActivity: (id, outcome) => {
@@ -183,16 +133,9 @@ export const useActivitiesStore = create<ActivitiesState>()(
       }))
       const activity = get().getById(id)
       useAuditStore.getState().logAction('activity_completed', 'activity', id, activity?.subject ?? '', getTranslations().auditMessages.activityCompleted)
-
-      if (isSupabaseConfigured && supabase) {
-        const updates: Record<string, unknown> = { status: 'completed', completed_at: now, updated_at: now }
-        if (outcome) updates.outcome = outcome
-        runSupabaseWrite(
-          'activitiesStore:completeActivity',
-          supabase.from('activities').update(updates as never).eq('id', id),
-          (message) => set({ error: message }),
-        )
-      }
+      const patch: Record<string, unknown> = { status: 'completed', completedAt: now }
+      if (outcome) patch.outcome = outcome
+      api.patch(`/activities/${id}`, patch).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     setFilter: (key, value) => {
@@ -226,21 +169,10 @@ export const useActivitiesStore = create<ActivitiesState>()(
       })
     },
 
-    getActivitiesForContact: (contactId) => {
-      return get().activities.filter((a) => a.contactId === contactId)
-    },
-
-    getActivitiesForDeal: (dealId) => {
-      return get().activities.filter((a) => a.dealId === dealId)
-    },
-
-    getActivitiesForCompany: (companyId) => {
-      return get().activities.filter((a) => a.companyId === companyId)
-    },
-
-    getPendingActivities: () => {
-      return get().activities.filter((a) => a.status === 'pending')
-    },
+    getActivitiesForContact: (contactId) => get().activities.filter((a) => a.contactId === contactId),
+    getActivitiesForDeal: (dealId) => get().activities.filter((a) => a.dealId === dealId),
+    getActivitiesForCompany: (companyId) => get().activities.filter((a) => a.companyId === companyId),
+    getPendingActivities: () => get().activities.filter((a) => a.status === 'pending'),
 
     getOverdueActivities: () => {
       const now = new Date().toISOString().split('T')[0]

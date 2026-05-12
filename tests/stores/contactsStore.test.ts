@@ -1,37 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useContactsStore } from '../../src/store/contactsStore'
 
-vi.mock('../../src/lib/supabase', () => {
-  const mockEq = vi.fn().mockResolvedValue({ data: null, error: null })
-  const mockSingle = vi.fn().mockResolvedValue({
-    data: {
-      id: 'c-server-1', first_name: 'Ana', last_name: 'García', email: 'ana@test.com',
-      phone: '', job_title: '', company_id: '', status: 'prospect', source: 'website',
-      assigned_to: 'user-1', tags: [], notes: '', linked_deals: [], last_contacted_at: '',
-      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-      organization_id: 'org-1',
-    },
-    error: null,
-  })
-  const mockSelectForInsert = vi.fn().mockReturnValue({ single: mockSingle })
-  const mockSelectForFetch = vi.fn().mockReturnValue({
-    order: vi.fn().mockResolvedValue({ data: [], error: null }),
-  })
-  const mockInsert = vi.fn().mockReturnValue({ select: mockSelectForInsert })
-  const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
-  const mockDelete = vi.fn().mockReturnValue({ eq: mockEq })
-  const mockFrom = vi.fn().mockImplementation(() => ({
-    select: mockSelectForFetch,
-    insert: mockInsert,
-    update: mockUpdate,
-    delete: mockDelete,
-  }))
-  return {
-    isSupabaseConfigured: true,
-    isBootstrapFatalError: false,
-    supabase: { from: mockFrom },
-  }
-})
+vi.mock('../../src/lib/api', () => ({
+  api: {
+    get: vi.fn().mockResolvedValue([]),
+    post: vi.fn().mockResolvedValue({
+      id: 'c-server-1', firstName: 'Ana', lastName: 'García', email: 'ana@test.com',
+      phone: '', jobTitle: '', companyId: '', status: 'prospect', source: 'website',
+      assignedTo: 'user-1', tags: [], notes: '', linkedDeals: [], lastContactedAt: '',
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    }),
+    patch: vi.fn().mockResolvedValue({}),
+    put: vi.fn().mockResolvedValue({}),
+    delete: vi.fn().mockResolvedValue(undefined),
+  },
+  getToken: vi.fn().mockReturnValue(null),
+  setToken: vi.fn(),
+  clearToken: vi.fn(),
+  decodeToken: vi.fn().mockReturnValue(null),
+  isTokenExpired: vi.fn().mockReturnValue(true),
+  TOKEN_KEY: 'velo_token',
+}))
 
 vi.mock('../../src/store/auditStore', () => ({
   useAuditStore: {
@@ -39,11 +28,15 @@ vi.mock('../../src/store/auditStore', () => ({
   },
 }))
 
-vi.mock('../../src/lib/supabaseHelpers', () => ({
-  getOrgId: vi.fn().mockReturnValue('org-1'),
-  sbDelete: vi.fn().mockResolvedValue({ error: null }),
-  sbBulkDelete: vi.fn().mockResolvedValue({ error: null }),
-}))
+vi.mock('../../src/lib/supabaseHelpers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/lib/supabaseHelpers')>()
+  return {
+    ...actual,
+    getOrgId: vi.fn().mockReturnValue('org-1'),
+    sbDelete: vi.fn().mockResolvedValue(undefined),
+    sbBulkDelete: vi.fn().mockResolvedValue(undefined),
+  }
+})
 
 const emptyFilters = {
   search: '',

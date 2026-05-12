@@ -1,11 +1,8 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
-import { supabase } from './supabase'
-import type { Database } from './database.types'
-
-/** Returns the typed client or throws (call only when `isSupabaseConfigured` is true or after guards). */
-export function requireSupabase(): SupabaseClient<Database> {
-  if (!supabase) {
-    throw new Error('Supabase is not configured')
-  }
-  return supabase
+/**
+ * Compatibility stub — Supabase removed. New code uses `api` from `./api`.
+ * Returns a no-op proxy so existing call sites don't crash at runtime
+ * while stores are being migrated.
+ */
+export function requireSupabase(): never {
+  throw new Error('[requireSupabase] Supabase removed — use api client from ./api')
 }

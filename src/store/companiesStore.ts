@@ -1,13 +1,10 @@
 import { create } from 'zustand'
 import type { Company, CompanyFilters } from '../types'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { requireSupabase } from '../lib/requireSupabase'
-import { getOrgId, sbDelete } from '../lib/supabaseHelpers'
+import { api } from '../lib/api'
+import { getErrorMessage, sbDelete } from '../lib/supabaseHelpers'
 import { normalizeIndustryValue } from '../lib/industries'
 
-const sb = requireSupabase
-
-function rowToCompany(row: Record<string, unknown>): Company {
+function mapCompany(row: Record<string, unknown>): Company {
   return {
     id: row.id as string,
     name: (row.name as string) ?? '',
@@ -24,28 +21,9 @@ function rowToCompany(row: Record<string, unknown>): Company {
     deals: (row.deals as string[]) ?? [],
     tags: (row.tags as string[]) ?? [],
     notes: (row.notes as string) ?? '',
-    createdAt: (row.created_at as string) ?? '',
-    updatedAt: (row.updated_at as string) ?? '',
+    createdAt: (row.createdAt ?? row.created_at ?? '') as string,
+    updatedAt: (row.updatedAt ?? row.updated_at ?? '') as string,
   }
-}
-
-function companyToRow(c: Partial<Company>): Record<string, unknown> {
-  const row: Record<string, unknown> = {}
-  if (c.name !== undefined) row.name = c.name
-  if (c.domain !== undefined) row.domain = c.domain
-  if (c.industry !== undefined) row.industry = c.industry
-  if (c.size !== undefined) row.size = c.size
-  if (c.country !== undefined) row.country = c.country
-  if (c.city !== undefined) row.city = c.city
-  if (c.website !== undefined) row.website = c.website
-  if (c.phone !== undefined) row.phone = c.phone
-  if (c.status !== undefined) row.status = c.status
-  if (c.revenue !== undefined) row.revenue = c.revenue
-  if (c.contacts !== undefined) row.contacts = c.contacts
-  if (c.deals !== undefined) row.deals = c.deals
-  if (c.tags !== undefined) row.tags = c.tags
-  if (c.notes !== undefined) row.notes = c.notes
-  return row
 }
 
 export interface CompaniesState {
@@ -86,15 +64,10 @@ export const useCompaniesStore = create<CompaniesState>()(
     fetchCompanies: async () => {
       set({ isLoading: true, error: null })
       try {
-        if (isSupabaseConfigured && supabase) {
-          const { data, error } = await supabase.from('companies').select('*').order('created_at', { ascending: false })
-          if (error) throw error
-          set({ companies: (data ?? []).map((r) => rowToCompany(r as unknown as Record<string, unknown>)), isLoading: false })
-        } else {
-          set({ companies: [], isLoading: false })
-        }
+        const data = await api.get<Company[]>('/companies')
+        set({ companies: (data ?? []).map((r) => mapCompany(r as unknown as Record<string, unknown>)), isLoading: false })
       } catch (e: unknown) {
-        set({ error: (e as Error).message, isLoading: false })
+        set({ error: getErrorMessage(e), isLoading: false })
       }
     },
 
@@ -104,19 +77,14 @@ export const useCompaniesStore = create<CompaniesState>()(
       const company: Company = { ...companyData, id, createdAt: now, updatedAt: now }
       set((state) => ({ companies: [company, ...state.companies] }))
 
-      if (isSupabaseConfigured && supabase) {
-        const row = companyToRow(companyData)
-        sb().from('companies').insert({ ...row, organization_id: getOrgId() }).select().single()
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
-          .then(({ data, error }: any) => {
-            if (error) {
-              set((s) => ({ companies: s.companies.filter((c) => c.id !== id), error: error.message }))
-              return
-            }
-            const real = rowToCompany(data as Record<string, unknown>)
-            set((s) => ({ companies: s.companies.map((c) => c.id === id ? real : c) }))
-          })
-      }
+      api.post<Company>('/companies', companyData).then(
+        (real) => {
+          set((s) => ({ companies: s.companies.map((c) => c.id === id ? mapCompany(real as unknown as Record<string, unknown>) : c) }))
+        },
+        (err: unknown) => {
+          set((s) => ({ companies: s.companies.filter((c) => c.id !== id), error: getErrorMessage(err) }))
+        },
+      )
 
       return company
     },
@@ -127,19 +95,12 @@ export const useCompaniesStore = create<CompaniesState>()(
           c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c
         ),
       }))
-
-      if (isSupabaseConfigured && supabase) {
-        const row = companyToRow(updates)
-        sb().from('companies').update({ ...row, updated_at: new Date().toISOString() }).eq('id', id)
-      }
+      api.patch(`/companies/${id}`, updates).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     deleteCompany: (id) => {
       set((state) => ({ companies: state.companies.filter((c) => c.id !== id) }))
-
-      if (isSupabaseConfigured && supabase) {
-        sbDelete('companies', id)
-      }
+      sbDelete('companies', id).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     setFilter: (key, value) => {

@@ -1,165 +1,143 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { useAuthStore, initSupabaseAuth } from '../../src/store/authStore'
-import { supabase } from '../../src/lib/supabase'
 
-const { mockOnAuthStateChange, mockInvoke, mockRefreshSession, mockRpc } = vi.hoisted(() => ({
-  mockOnAuthStateChange: vi.fn(),
-  mockInvoke: vi.fn(),
-  mockRefreshSession: vi.fn(),
-  mockRpc: vi.fn().mockResolvedValue({ data: [], error: null }),
+const { mockApiPost, mockApiGet } = vi.hoisted(() => ({
+  mockApiPost: vi.fn(),
+  mockApiGet: vi.fn(),
 }))
 
-vi.mock('../../src/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      signOut: vi.fn().mockResolvedValue({ error: null }),
-      onAuthStateChange: mockOnAuthStateChange,
-      refreshSession: mockRefreshSession,
-    },
-    functions: {
-      invoke: mockInvoke,
-    },
-    rpc: mockRpc,
+vi.mock('../../src/lib/api', () => ({
+  api: {
+    post: mockApiPost,
+    get: mockApiGet,
+    patch: vi.fn().mockResolvedValue({}),
+    put: vi.fn().mockResolvedValue({}),
+    delete: vi.fn().mockResolvedValue(undefined),
   },
-  isSupabaseConfigured: true,
-  isBootstrapFatalError: false,
+  getToken: vi.fn().mockReturnValue(null),
+  setToken: vi.fn(),
+  clearToken: vi.fn(),
+  decodeToken: vi.fn().mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 }),
+  isTokenExpired: vi.fn().mockReturnValue(false),
+  TOKEN_KEY: 'velo_token',
 }))
 
-describe('initSupabaseAuth', () => {
+const fakeToken = 'header.eyJzdWIiOiJ1MSIsIm9yZyI6Im9yZy0xIiwicm9sZSI6ImFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.sig'
+
+function makeLoginResponse(overrides = {}) {
+  return {
+    token: fakeToken,
+    user: { id: 'u1', email: 'test@test.com', name: 'Test User', role: 'admin', organizationId: 'org-1', orgSlug: 'test', ...overrides },
+  }
+}
+
+describe('authStore — JWT auth', () => {
   beforeEach(() => {
-    mockOnAuthStateChange.mockReset()
-    mockInvoke.mockReset()
-    mockRefreshSession.mockReset()
-    mockRpc.mockReset()
-    mockRpc.mockResolvedValue({ data: [], error: null })
+    mockApiPost.mockReset()
+    mockApiGet.mockReset()
     useAuthStore.setState({
       currentUser: null,
+      session: null,
+      organization: null,
+      supabaseSession: null,
       isLoadingAuth: true,
       organizationId: null,
       tenantResolutionStatus: 'idle',
       tenantResolutionMessage: null,
+      users: [],
     })
   })
 
-  it('AUTH-04: resolves isLoadingAuth to false on INITIAL_SESSION event', () => {
-    let capturedCallback: ((event: string, session: unknown) => void) | null = null
-    mockOnAuthStateChange.mockImplementation((cb: (event: string, session: unknown) => void) => {
-      capturedCallback = cb
-      return { data: { subscription: { unsubscribe: vi.fn() } } }
+  describe('login', () => {
+    it('AUTH-01: calls POST /auth/login and returns success', async () => {
+      mockApiPost.mockResolvedValue(makeLoginResponse())
+      const result = await useAuthStore.getState().login('test@test.com', 'pass')
+      expect(mockApiPost).toHaveBeenCalledWith('/auth/login', { email: 'test@test.com', password: 'pass' })
+      expect(result.success).toBe(true)
     })
 
-    initSupabaseAuth()
-
-    // Simulate INITIAL_SESSION with a session
-    capturedCallback!('INITIAL_SESSION', {
-      user: {
-        id: 'user-123',
-        email: 'test@example.com',
-        user_metadata: { full_name: 'Test User', role: 'sales_rep' },
-        app_metadata: {},
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-01-01T00:00:00Z',
-      },
+    it('AUTH-01: sets currentUser and session on successful login', async () => {
+      mockApiPost.mockResolvedValue(makeLoginResponse())
+      await useAuthStore.getState().login('test@test.com', 'pass')
+      const { currentUser, session, organizationId } = useAuthStore.getState()
+      expect(currentUser?.id).toBe('u1')
+      expect(currentUser?.email).toBe('test@test.com')
+      expect(session?.userId).toBe('u1')
+      expect(organizationId).toBe('org-1')
     })
 
-    expect(useAuthStore.getState().isLoadingAuth).toBe(false)
+    it('AUTH-01: returns error on API failure', async () => {
+      mockApiPost.mockRejectedValue(new Error('Invalid credentials'))
+      const result = await useAuthStore.getState().login('bad@test.com', 'wrong')
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Invalid credentials')
+    })
   })
 
-  it('AUTH-04: sets currentUser with correct shape from Supabase session', () => {
-    let capturedCallback: ((event: string, session: unknown) => void) | null = null
-    mockOnAuthStateChange.mockImplementation((cb: (event: string, session: unknown) => void) => {
-      capturedCallback = cb
-      return { data: { subscription: { unsubscribe: vi.fn() } } }
+  describe('logout', () => {
+    it('AUTH-05: calls POST /auth/logout and clears state', async () => {
+      mockApiPost.mockResolvedValue({ ok: true })
+      useAuthStore.setState({
+        currentUser: { id: 'u1', email: 'a@b.com', name: 'A', role: 'admin', jobTitle: '', isActive: true, createdAt: '', updatedAt: '' },
+        session: { userId: 'u1', token: 'tok', expiresAt: Date.now() + 3600000, createdAt: '' },
+      })
+      await useAuthStore.getState().logout()
+      expect(mockApiPost).toHaveBeenCalledWith('/auth/logout')
+      expect(useAuthStore.getState().currentUser).toBeNull()
+      expect(useAuthStore.getState().session).toBeNull()
     })
 
-    initSupabaseAuth()
-
-    capturedCallback!('SIGNED_IN', {
-      user: {
-        id: 'user-456',
-        email: 'sales@example.com',
-        user_metadata: { full_name: 'Sales Rep', role: 'sales_rep', job_title: 'SDR' },
-        app_metadata: { organization_id: 'org-789' },
-        created_at: '2026-01-01T00:00:00Z',
-        updated_at: '2026-02-01T00:00:00Z',
-      },
+    it('AUTH-05: clears local state even if API call fails', async () => {
+      mockApiPost.mockRejectedValue(new Error('Network error'))
+      useAuthStore.setState({
+        currentUser: { id: 'u1', email: 'a@b.com', name: 'A', role: 'admin', jobTitle: '', isActive: true, createdAt: '', updatedAt: '' },
+      })
+      await useAuthStore.getState().logout()
+      expect(useAuthStore.getState().currentUser).toBeNull()
     })
-
-    const user = useAuthStore.getState().currentUser
-    expect(user).not.toBeNull()
-    expect(user?.id).toBe('user-456')
-    expect(user?.email).toBe('sales@example.com')
-    expect(user?.name).toBe('Sales Rep')
-    expect(user?.isActive).toBe(true)
-    expect(user?.organizationId).toBe('org-789')
   })
 
-  it('AUTH-04: clears currentUser when session is null (SIGNED_OUT)', () => {
-    let capturedCallback: ((event: string, session: unknown) => void) | null = null
-    mockOnAuthStateChange.mockImplementation((cb: (event: string, session: unknown) => void) => {
-      capturedCallback = cb
-      return { data: { subscription: { unsubscribe: vi.fn() } } }
+  describe('register', () => {
+    it('AUTH-01: calls POST /auth/register and sets currentUser', async () => {
+      mockApiPost.mockResolvedValue(makeLoginResponse())
+      const result = await useAuthStore.getState().register({ name: 'Test', email: 'test@test.com', password: 'pass' })
+      expect(mockApiPost).toHaveBeenCalledWith('/auth/register', { name: 'Test', email: 'test@test.com', password: 'pass' })
+      expect(result.success).toBe(true)
+      expect(useAuthStore.getState().currentUser?.id).toBe('u1')
     })
-
-    useAuthStore.setState({ currentUser: { id: 'u1', email: 'a@b.com', name: 'A', role: 'sales_rep', jobTitle: '', isActive: true, createdAt: '', updatedAt: '' } })
-
-    initSupabaseAuth()
-    capturedCallback!('SIGNED_OUT', null)
-
-    expect(useAuthStore.getState().currentUser).toBeNull()
   })
 
-  it('AUTH-05: logout calls supabase.auth.signOut', async () => {
-    useAuthStore.setState({
-      currentUser: { id: 'u1', email: 'a@b.com', name: 'A', role: 'sales_rep', jobTitle: '', isActive: true, createdAt: '', updatedAt: '' },
-      session: { userId: 'u1', token: 'tok', expiresAt: 0, createdAt: '' },
-      supabaseSession: { access_token: 'at' } as unknown,
+  describe('ensureTenantForCurrentUser', () => {
+    it('AUTH-07: creates org via POST /orgs when user has no org', async () => {
+      mockApiPost.mockResolvedValue({ id: 'org-new', name: 'New Org', slug: 'new-org' })
+      useAuthStore.setState({
+        currentUser: { id: 'u1', email: 'u@test.com', name: 'U', role: 'admin', jobTitle: '', isActive: true, createdAt: '', updatedAt: '' },
+        organizationId: null,
+      })
+      await useAuthStore.getState().ensureTenantForCurrentUser()
+      expect(mockApiPost).toHaveBeenCalledWith('/orgs', expect.any(Object))
+      expect(useAuthStore.getState().tenantResolutionStatus).toBe('ready')
     })
 
-    await useAuthStore.getState().logout()
-
-    expect(supabase!.auth.signOut).toHaveBeenCalled()
-    expect(useAuthStore.getState().currentUser).toBeNull()
-    expect(useAuthStore.getState().session).toBeNull()
-    expect(useAuthStore.getState().supabaseSession).toBeNull()
+    it('AUTH-07: skips if user already has org', async () => {
+      useAuthStore.setState({
+        currentUser: { id: 'u1', email: 'u@test.com', name: 'U', role: 'admin', jobTitle: '', isActive: true, createdAt: '', updatedAt: '' },
+        organizationId: 'existing-org',
+      })
+      await useAuthStore.getState().ensureTenantForCurrentUser()
+      expect(mockApiPost).not.toHaveBeenCalled()
+      expect(useAuthStore.getState().tenantResolutionStatus).toBe('ready')
+    })
   })
 
-  it('AUTH-07: marks tenant status as needs_invitation when ensure-tenant requires invite', async () => {
-    mockInvoke.mockResolvedValue({
-      data: { status: 'requires_invitation', organizationName: 'Clovr Labs' },
-      error: null,
+  describe('initSupabaseAuth', () => {
+    afterEach(() => {
+      vi.restoreAllMocks()
     })
 
-    useAuthStore.setState({
-      currentUser: { id: 'u1', email: 'david@clovrlabs.com', name: 'David', role: 'sales_rep', jobTitle: '', isActive: true, createdAt: '', updatedAt: '' },
-      organizationId: null,
+    it('AUTH-04: sets isLoadingAuth to false when no token', () => {
+      initSupabaseAuth()
+      expect(useAuthStore.getState().isLoadingAuth).toBe(false)
     })
-
-    await useAuthStore.getState().ensureTenantForCurrentUser()
-
-    expect(useAuthStore.getState().tenantResolutionStatus).toBe('needs_invitation')
-    expect(useAuthStore.getState().tenantResolutionMessage).toContain('Clovr Labs')
-  })
-
-  it('AUTH-07: marks tenant status as ready when ensure-tenant creates tenant', async () => {
-    mockInvoke.mockResolvedValue({
-      data: { status: 'created', organizationName: 'Acme' },
-      error: null,
-    })
-    mockRefreshSession.mockResolvedValue({ error: null })
-
-    useAuthStore.setState({
-      currentUser: { id: 'u2', email: 'owner@acme.com', name: 'Owner', role: 'admin', jobTitle: '', isActive: true, createdAt: '', updatedAt: '' },
-      organizationId: null,
-      tenantResolutionStatus: 'idle',
-      tenantResolutionMessage: null,
-    })
-
-    await useAuthStore.getState().ensureTenantForCurrentUser()
-
-    expect(supabase!.functions.invoke).toHaveBeenCalledWith('ensure-tenant')
-    expect(supabase!.auth.refreshSession).toHaveBeenCalled()
-    expect(useAuthStore.getState().tenantResolutionStatus).toBe('ready')
-    expect(useAuthStore.getState().tenantResolutionMessage).toBeNull()
   })
 })

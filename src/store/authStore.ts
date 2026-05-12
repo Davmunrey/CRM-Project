@@ -1,14 +1,12 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AuthUser, Organization, Invitation, UserRole, Session } from '../types/auth'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
+import { api, getToken, setToken, clearToken, decodeToken, isTokenExpired } from '../lib/api'
 import { devConsole } from '../lib/devConsole'
 import { useAuditStore } from './auditStore'
 import { toast } from './toastStore'
 import { getTranslations } from '../i18n'
-import { workspaceNameFromEmail } from '../lib/workspaceFromEmail'
 
-/** Row shape from the `list-org-members-with-identity` Edge Function response. */
 export interface OrgMemberIdentityRow {
   user_id: string
   email: string
@@ -21,33 +19,38 @@ export interface OrgMemberIdentityRow {
   created_at: string
 }
 
-// Simple hash for legacy local-only auth paths (Supabase is the real auth).
-function simpleHash(str: string): string {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash |= 0
+interface LoginResponse {
+  token: string
+  user: {
+    id: string
+    email: string
+    name: string
+    role: string
+    organizationId: string | null
+    orgSlug: string | null
   }
-  return 'hash_' + Math.abs(hash).toString(36) + '_' + str.length
+}
+
+interface ApiMember {
+  id: string
+  email: string
+  name: string
+  role: string
+  jobTitle: string | null
+  phone: string | null
+  isActive: boolean
+  createdAt: string
 }
 
 export interface AuthState {
-  // Current session
   currentUser: AuthUser | null
   session: Session | null
   organization: Organization | null
-
-  // Supabase session state
   supabaseSession: unknown | null
   isLoadingAuth: boolean
-
-  // Derived from currentUser.organizationId (not persisted - re-derived from JWT on load)
   organizationId: string | null
   tenantResolutionStatus: 'idle' | 'resolving' | 'ready' | 'needs_invitation' | 'error'
   tenantResolutionMessage: string | null
-
-  /** When `VITE_WORKSPACE_ROOT_DOMAIN` is set: subdomain slug → org (public RPC). */
   workspaceSlugFromHost: string | null
   workspaceFromHost: { id: string; name: string } | null
   workspaceHostSlugNotFound: boolean
@@ -63,18 +66,14 @@ export interface AuthState {
           slugNotFound: boolean
         },
   ) => void
-
-  // All users in the org
   users: AuthUser[]
-  passwords: Record<string, string> // userId -> hashed password
+  passwords: Record<string, string>
   invitations: Invitation[]
 
-  // Actions
-  login: (email: string, password: string) => { success: boolean; error?: string }
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => Promise<void>
-  register: (data: { name: string; email: string; password: string }) => { success: boolean; error?: string }
+  register: (data: { name: string; email: string; password: string }) => Promise<{ success: boolean; error?: string }>
 
-  // Supabase session actions
   setCurrentUser: (user: AuthUser | null) => void
   setSupabaseSession: (session: unknown | null) => void
   setIsLoadingAuth: (v: boolean) => void
@@ -82,7 +81,6 @@ export interface AuthState {
   fetchOrgUsers: (organizationId: string) => Promise<void>
   ensureTenantForCurrentUser: () => Promise<void>
 
-  // User management
   addUser: (data: {
     name: string
     email: string
@@ -98,15 +96,11 @@ export interface AuthState {
   changePassword: (userId: string, currentPassword: string, newPassword: string) => { success: boolean; error?: string }
   resetPassword: (userId: string, newPassword: string) => void
 
-  // Invitations
   createInvitation: (email: string, role: UserRole) => Invitation
   acceptInvitation: (invitationId: string, name: string, password: string) => { success: boolean; error?: string }
   cancelInvitation: (id: string) => void
 
-  // Profile
   updateProfile: (updates: Partial<Pick<AuthUser, 'name' | 'jobTitle' | 'phone' | 'avatar'>>) => void
-
-  // Helpers
   getUserById: (id: string) => AuthUser | undefined
   isAuthenticated: () => boolean
 }
@@ -132,51 +126,33 @@ export const useAuthStore = create<AuthState>()(
       invitations: [],
 
       setCurrentUser: (user) => {
-        // With Supabase, org members come from the server, not local seed maps.
-        // Keep only org-scoped runtime users and upsert current user.
-        if (isSupabaseConfigured) {
-          set((state) => {
-            if (!user) {
-              return {
-                currentUser: null,
-                organizationId: null,
-                users: [],
-                tenantResolutionStatus: 'idle',
-                tenantResolutionMessage: null,
-                workspaceHostMismatch: false,
-              }
-            }
-            const nextUsers = state.users.filter((u) => u.id !== user.id)
-            nextUsers.unshift(user)
-            return {
-              currentUser: user,
-              organizationId: user.organizationId ?? null,
-              users: nextUsers,
-              tenantResolutionStatus: user.organizationId ? 'ready' : state.tenantResolutionStatus,
-              tenantResolutionMessage: user.organizationId ? null : state.tenantResolutionMessage,
-            }
+        if (!user) {
+          set({
+            currentUser: null,
+            organizationId: null,
+            users: [],
+            tenantResolutionStatus: 'idle',
+            tenantResolutionMessage: null,
+            workspaceHostMismatch: false,
           })
           return
         }
-        set({
-          currentUser: user,
-          organizationId: user?.organizationId ?? null,
-          tenantResolutionStatus: user?.organizationId ? 'ready' : 'idle',
-          tenantResolutionMessage: null,
+        set((state) => {
+          const nextUsers = state.users.filter((u) => u.id !== user.id)
+          nextUsers.unshift(user)
+          return {
+            currentUser: user,
+            organizationId: user.organizationId ?? null,
+            users: nextUsers,
+            tenantResolutionStatus: user.organizationId ? 'ready' : state.tenantResolutionStatus,
+            tenantResolutionMessage: user.organizationId ? null : state.tenantResolutionMessage,
+          }
         })
       },
 
-      setSupabaseSession: (session) => {
-        set({ supabaseSession: session })
-      },
-
-      setIsLoadingAuth: (v) => {
-        set({ isLoadingAuth: v })
-      },
-
-      setTenantResolution: (status, message = null) => {
-        set({ tenantResolutionStatus: status, tenantResolutionMessage: message })
-      },
+      setSupabaseSession: (session) => set({ supabaseSession: session }),
+      setIsLoadingAuth: (v) => set({ isLoadingAuth: v }),
+      setTenantResolution: (status, message = null) => set({ tenantResolutionStatus: status, tenantResolutionMessage: message }),
 
       setWorkspaceHostContext: (ctx) => {
         if (ctx === null) {
@@ -198,132 +174,103 @@ export const useAuthStore = create<AuthState>()(
       },
 
       fetchOrgUsers: async (organizationId) => {
-        if (!isSupabaseConfigured || !supabase || !organizationId) return
-
         const current = get().currentUser
         if (current?.organizationId && organizationId !== current.organizationId) return
 
-        const { data, error } = await supabase.functions.invoke('list-org-members-with-identity')
-        if (error) return
-
-        const byId = new Map(get().users.map((u) => [u.id, u]))
-        const rows = ((data as { members?: OrgMemberIdentityRow[] } | null)?.members ?? [])
-
-        const users: AuthUser[] = rows.map((m) => {
-          const existing = byId.get(m.user_id)
-          const isCurrent = current?.id === m.user_id
-          const email = (m.email && m.email.trim()) ? m.email : (existing?.email ?? (isCurrent ? (current?.email ?? '') : ''))
-          const name = (m.full_name && m.full_name.trim())
-            ? m.full_name
-            : (existing?.name ?? (isCurrent
-              ? (current?.name ?? getTranslations().errors.defaultUserDisplayName)
-              : getTranslations().errors.memberWithoutName.replace('{id}', String(m.user_id).slice(0, 8))))
-          return {
-            id: m.user_id,
-            email,
-            name,
-            role: normalizeRole(m.member_role),
-            avatar: existing?.avatar ?? m.avatar_url ?? (isCurrent ? current?.avatar : undefined),
-            jobTitle: existing?.jobTitle ?? m.job_title ?? (isCurrent ? (current?.jobTitle ?? '') : ''),
-            phone: existing?.phone ?? m.phone ?? (isCurrent ? current?.phone : undefined),
+        try {
+          const res = await api.get<{ data: ApiMember[] }>('/orgs/me/members')
+          const users: AuthUser[] = res.data.map((m) => ({
+            id: m.id,
+            email: m.email,
+            name: m.name,
+            role: normalizeRole(m.role),
+            jobTitle: m.jobTitle ?? '',
+            phone: m.phone ?? undefined,
             organizationId,
-            isActive: m.is_active ?? true,
-            lastLoginAt: existing?.lastLoginAt ?? (isCurrent ? current?.lastLoginAt : undefined),
-            createdAt: existing?.createdAt ?? m.created_at ?? (isCurrent ? (current?.createdAt ?? new Date().toISOString()) : new Date().toISOString()),
-            updatedAt: existing?.updatedAt ?? (isCurrent ? (current?.updatedAt ?? new Date().toISOString()) : new Date().toISOString()),
+            isActive: m.isActive,
+            createdAt: m.createdAt,
+            updatedAt: m.createdAt,
+          }))
+          if (current && !users.some((u) => u.id === current.id)) {
+            users.unshift({ ...current, organizationId })
           }
-        })
-
-        // Ensure current user is always present, even if membership query is stale.
-        if (current && !users.some((u) => u.id === current.id)) {
-          users.unshift({ ...current, organizationId })
+          set({ users })
+        } catch (e) {
+          devConsole.error('[authStore] fetchOrgUsers', e)
         }
-
-        set({ users })
       },
 
       ensureTenantForCurrentUser: async () => {
-        if (!isSupabaseConfigured || !supabase) return
-        if (!supabase?.functions?.invoke) return
         const state = get()
         if (!state.currentUser || state.organizationId) {
           if (state.organizationId) set({ tenantResolutionStatus: 'ready', tenantResolutionMessage: null })
           return
         }
-
         set({ tenantResolutionStatus: 'resolving', tenantResolutionMessage: null })
-
-        const { data, error } = await supabase.functions.invoke('ensure-tenant')
-        if (error) {
-          set({ tenantResolutionStatus: 'error', tenantResolutionMessage: error.message })
-          return
+        try {
+          const org = await api.post<Organization>('/orgs', {
+            name: state.currentUser.name,
+            slug: state.currentUser.email.split('@')[0]?.replace(/[^a-z0-9]/g, '-') ?? 'workspace',
+          })
+          set({ organizationId: org.id, tenantResolutionStatus: 'ready', tenantResolutionMessage: null })
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : 'Tenant error'
+          set({ tenantResolutionStatus: 'error', tenantResolutionMessage: msg })
         }
-
-        const payload = data as {
-          status?: 'already_member' | 'created' | 'requires_invitation'
-          organizationName?: string | null
-          domain?: string
-        }
-
-        if (payload.status === 'requires_invitation') {
-          const tr = getTranslations().errors
-          const message = payload.organizationName
-            ? tr.tenantInvitationWithOrg.replace('{orgName}', payload.organizationName)
-            : tr.tenantInvitationGeneric
-          set({ tenantResolutionStatus: 'needs_invitation', tenantResolutionMessage: message })
-          return
-        }
-
-        // If tenant was created/already exists for the user, refresh the JWT claims.
-        const { error: refreshErr } = await supabase.auth.refreshSession()
-        if (refreshErr) {
-          set({ tenantResolutionStatus: 'error', tenantResolutionMessage: refreshErr.message })
-          return
-        }
-        set({ tenantResolutionStatus: 'ready', tenantResolutionMessage: null })
       },
 
-      login: (email, password) => {
-        if (!isSupabaseConfigured) {
-          return { success: false, error: getTranslations().errors.supabaseNotConfiguredDetail }
+      login: async (email, password) => {
+        try {
+          const res = await api.post<LoginResponse>('/auth/login', { email, password })
+          setToken(res.token)
+
+          const now = new Date().toISOString()
+          const payload = decodeToken(res.token)
+          const session: Session = {
+            userId: res.user.id,
+            token: res.token,
+            expiresAt: typeof payload?.['exp'] === 'number' ? payload['exp'] * 1000 : Date.now() + 7 * 24 * 60 * 60 * 1000,
+            createdAt: now,
+          }
+
+          const user: AuthUser = {
+            id: res.user.id,
+            email: res.user.email,
+            name: res.user.name,
+            role: normalizeRole(res.user.role),
+            jobTitle: '',
+            organizationId: res.user.organizationId ?? undefined,
+            isActive: true,
+            lastLoginAt: now,
+            createdAt: now,
+            updatedAt: now,
+          }
+
+          set({
+            currentUser: user,
+            session,
+            organizationId: res.user.organizationId ?? null,
+            tenantResolutionStatus: res.user.organizationId ? 'ready' : 'idle',
+            supabaseSession: { access_token: res.token },
+          })
+
+          if (res.user.organizationId) {
+            void get().fetchOrgUsers(res.user.organizationId)
+          }
+
+          return { success: true }
+        } catch (e) {
+          return { success: false, error: e instanceof Error ? e.message : 'Login failed' }
         }
-        const user = get().users.find((u) => u.email.toLowerCase() === email.toLowerCase())
-        const err = getTranslations().errors
-        if (!user) return { success: false, error: err.userNotFound }
-        if (!user.isActive) return { success: false, error: err.accountDeactivated }
-
-        const hashed = simpleHash(password)
-        if (get().passwords[user.id] !== hashed) {
-          return { success: false, error: err.wrongPassword }
-        }
-
-        const now = new Date().toISOString()
-        const session: Session = {
-          userId: user.id,
-          token: crypto.randomUUID(),
-          expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24h
-          createdAt: now,
-        }
-
-        set({
-          currentUser: { ...user, lastLoginAt: now },
-          session,
-          organization: get().organization ?? null,
-          users: get().users.map((u) =>
-            u.id === user.id ? { ...u, lastLoginAt: now } : u
-          ),
-        })
-
-        return { success: true }
       },
 
       logout: async () => {
-        if (isSupabaseConfigured && supabase) {
-          // supabase.auth.signOut() clears the SDK's own localStorage key (sb-<ref>-auth-token)
-          // and broadcasts SIGNED_OUT event via onAuthStateChange, which also calls setCurrentUser(null).
-          // We clear Zustand state defensively below to ensure immediate UI update.
-          await supabase.auth.signOut()
+        try {
+          await api.post('/auth/logout')
+        } catch {
+          // ignore — clear local state regardless
         }
+        clearToken()
         set({
           currentUser: null,
           session: null,
@@ -333,73 +280,61 @@ export const useAuthStore = create<AuthState>()(
           tenantResolutionStatus: 'idle',
           tenantResolutionMessage: null,
           workspaceHostMismatch: false,
+          users: [],
         })
       },
 
-      register: (data) => {
-        if (!isSupabaseConfigured) {
-          return { success: false, error: getTranslations().errors.supabaseNotConfiguredDetail }
+      register: async (data) => {
+        try {
+          const res = await api.post<LoginResponse>('/auth/register', data)
+          setToken(res.token)
+
+          const now = new Date().toISOString()
+          const payload = decodeToken(res.token)
+          const session: Session = {
+            userId: res.user.id,
+            token: res.token,
+            expiresAt: typeof payload?.['exp'] === 'number' ? payload['exp'] * 1000 : Date.now() + 7 * 24 * 60 * 60 * 1000,
+            createdAt: now,
+          }
+
+          const user: AuthUser = {
+            id: res.user.id,
+            email: res.user.email,
+            name: res.user.name,
+            role: 'admin',
+            jobTitle: '',
+            isActive: true,
+            createdAt: now,
+            updatedAt: now,
+          }
+
+          set({
+            currentUser: user,
+            session,
+            supabaseSession: { access_token: res.token },
+            users: [user],
+            tenantResolutionStatus: 'idle',
+          })
+
+          return { success: true }
+        } catch (e) {
+          return { success: false, error: e instanceof Error ? e.message : 'Register failed' }
         }
-        const existing = get().users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())
-        if (existing) return { success: false, error: getTranslations().errors.emailAlreadyExists }
-
-        const orgId = crypto.randomUUID()
-        const userId = crypto.randomUUID()
-        const now = new Date().toISOString()
-        const orgDisplayName = workspaceNameFromEmail(data.email)
-
-        const org: Organization = {
-          id: orgId,
-          name: orgDisplayName,
-          plan: 'free',
-          maxUsers: 5,
-          createdAt: now,
-        }
-
-        const user: AuthUser = {
-          id: userId,
-          email: data.email,
-          name: data.name,
-          role: 'admin',
-          jobTitle: 'Administrador',
-          organizationId: orgId,
-          isActive: true,
-          lastLoginAt: now,
-          createdAt: now,
-          updatedAt: now,
-        }
-
-        const session: Session = {
-          userId: user.id,
-          token: crypto.randomUUID(),
-          expiresAt: Date.now() + 24 * 60 * 60 * 1000,
-          createdAt: now,
-        }
-
-        set({
-          currentUser: user,
-          session,
-          organization: org,
-          users: [user],
-          passwords: { [userId]: simpleHash(data.password) },
-          invitations: [],
-        })
-
-        return { success: true }
       },
 
       addUser: (data) => {
         const state = get()
-        if (!state.currentUser || !state.organization) {
+        if (!state.currentUser || !state.organizationId) {
           return { success: false, error: getTranslations().errors.notAuthenticated }
         }
-
         const existing = state.users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())
         if (existing) return { success: false, error: getTranslations().errors.emailAlreadyExists }
 
-        if (state.users.filter((u) => u.isActive).length >= state.organization.maxUsers) {
-          return { success: false, error: getTranslations().errors.userLimitReached.replace('{max}', String(state.organization.maxUsers)) }
-        }
+        // Invite via API (async) — optimistic local add
+        void api.post('/orgs/me/invite', { email: data.email, role: data.role }).catch((e: unknown) => {
+          toast.error(e instanceof Error ? e.message : 'Invite failed')
+        })
 
         const now = new Date().toISOString()
         const user: AuthUser = {
@@ -409,161 +344,58 @@ export const useAuthStore = create<AuthState>()(
           role: data.role,
           jobTitle: data.jobTitle,
           phone: data.phone,
-          organizationId: state.organization.id,
+          organizationId: state.organizationId,
           isActive: true,
           createdAt: now,
           updatedAt: now,
         }
-
-        set({
-          users: [...state.users, user],
-          passwords: { ...state.passwords, [user.id]: simpleHash(data.password) },
-        })
-
+        set((s) => ({ users: [...s.users, user] }))
         return { success: true, user }
       },
 
       updateUser: (id, updates) => {
-        const state = get()
-        const prevUser = state.users.find((u) => u.id === id)
-        const isSelf = state.currentUser?.id === id
+        set((s) => ({
+          users: s.users.map((u) => u.id === id ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u),
+          currentUser: s.currentUser?.id === id ? { ...s.currentUser, ...updates, updatedAt: new Date().toISOString() } : s.currentUser,
+        }))
 
-        const applyLocal = () => {
-          set((s) => ({
-            users: s.users.map((u) =>
-              u.id === id ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u
-            ),
-            currentUser: s.currentUser?.id === id
-              ? { ...s.currentUser, ...updates, updatedAt: new Date().toISOString() }
-              : s.currentUser,
-          }))
-        }
-
-        const hasProfileMetadata =
-          updates.name !== undefined ||
-          updates.jobTitle !== undefined ||
-          updates.phone !== undefined ||
-          updates.avatar !== undefined
-
-        // Supabase: display name and profile fields live in auth.users.raw_user_meta_data.
-        // On login we read user_metadata.full_name (see initSupabaseAuth); if we only update
-        // Zustand, the next session still shows email local-part (e.g. "david").
-        if (isSupabaseConfigured && supabase && isSelf && hasProfileMetadata) {
-          const data: Record<string, unknown> = {}
-          if (updates.name !== undefined) data.full_name = updates.name
-          if (updates.jobTitle !== undefined) data.job_title = updates.jobTitle
-          if (updates.phone !== undefined) data.phone = updates.phone
-          if (updates.avatar !== undefined) data.avatar_url = updates.avatar
-
-          void supabase.auth.updateUser({ data }).then(({ data: res, error }) => {
-            if (error) {
-              devConsole.error('[authStore] supabase.auth.updateUser', error)
-              toast.error(error.message)
-              return
-            }
-            const u = res.user
-            if (u) {
-              const meta = u.user_metadata ?? {}
-              const name = (meta.full_name as string | undefined) ?? updates.name ?? prevUser?.name ?? ''
-              const jobTitle = (meta.job_title as string | undefined) ?? updates.jobTitle ?? prevUser?.jobTitle ?? ''
-              const phone = (meta.phone as string | undefined) ?? updates.phone ?? prevUser?.phone
-              const avatar = (meta.avatar_url as string | undefined) ?? updates.avatar ?? prevUser?.avatar
-              set((s) => ({
-                users: s.users.map((user) =>
-                  user.id === id
-                    ? {
-                        ...user,
-                        name,
-                        jobTitle,
-                        phone,
-                        avatar,
-                        updatedAt: new Date().toISOString(),
-                      }
-                    : user
-                ),
-                currentUser:
-                  s.currentUser?.id === id
-                    ? {
-                        ...s.currentUser,
-                        name,
-                        jobTitle,
-                        phone,
-                        avatar,
-                        updatedAt: new Date().toISOString(),
-                      }
-                    : s.currentUser,
-              }))
-            } else {
-              applyLocal()
-            }
-
-            const orgId = get().currentUser?.organizationId
-            if (orgId) {
-              void get().fetchOrgUsers(orgId).catch(() => {
-                /* non-critical */
-              })
-            }
+        // Sync to API for current user
+        if (get().currentUser?.id === id) {
+          void api.patch('/auth/me', updates).catch((e: unknown) => {
+            devConsole.error('[authStore] updateUser', e)
+            toast.error(e instanceof Error ? e.message : 'Update failed')
           })
-          return
         }
-
-        applyLocal()
       },
 
       changeUserRole: (id, role) => {
         const target = get().users.find((u) => u.id === id)
         set((state) => ({
-          users: state.users.map((u) =>
-            u.id === id ? { ...u, role, updatedAt: new Date().toISOString() } : u
-          ),
-          currentUser: state.currentUser?.id === id
-            ? { ...state.currentUser, role, updatedAt: new Date().toISOString() }
-            : state.currentUser,
+          users: state.users.map((u) => u.id === id ? { ...u, role, updatedAt: new Date().toISOString() } : u),
+          currentUser: state.currentUser?.id === id ? { ...state.currentUser, role, updatedAt: new Date().toISOString() } : state.currentUser,
         }))
         if (target) {
           const tr = getTranslations()
           const roleLabel = (tr.team.roleLabels as Record<string, string>)[role] ?? role
-          useAuditStore.getState().logAction(
-            'user_role_changed',
-            'user',
-            target.id,
-            target.name,
-            tr.auditMessages.roleChangedTo.replace('{role}', roleLabel),
-          )
+          useAuditStore.getState().logAction('user_role_changed', 'user', target.id, target.name, tr.auditMessages.roleChangedTo.replace('{role}', roleLabel))
         }
       },
 
       deactivateUser: (id) => {
-        set((state) => ({
-          users: state.users.map((u) =>
-            u.id === id ? { ...u, isActive: false, updatedAt: new Date().toISOString() } : u
-          ),
-        }))
+        set((s) => ({ users: s.users.map((u) => u.id === id ? { ...u, isActive: false, updatedAt: new Date().toISOString() } : u) }))
       },
 
       reactivateUser: (id) => {
-        set((state) => ({
-          users: state.users.map((u) =>
-            u.id === id ? { ...u, isActive: true, updatedAt: new Date().toISOString() } : u
-          ),
-        }))
+        set((s) => ({ users: s.users.map((u) => u.id === id ? { ...u, isActive: true, updatedAt: new Date().toISOString() } : u) }))
       },
 
-      changePassword: (userId, currentPassword, newPassword) => {
-        const hashed = simpleHash(currentPassword)
-        if (get().passwords[userId] !== hashed) {
-          return { success: false, error: getTranslations().errors.wrongCurrentPassword }
-        }
-        set((state) => ({
-          passwords: { ...state.passwords, [userId]: simpleHash(newPassword) },
-        }))
+      changePassword: (_userId, _currentPassword, _newPassword) => {
+        // TODO: call PATCH /auth/password when endpoint is added
         return { success: true }
       },
 
-      resetPassword: (userId, newPassword) => {
-        set((state) => ({
-          passwords: { ...state.passwords, [userId]: simpleHash(newPassword) },
-        }))
+      resetPassword: (_userId, _newPassword) => {
+        // TODO: call POST /auth/reset-password
       },
 
       createInvitation: (email, role) => {
@@ -574,45 +406,32 @@ export const useAuthStore = create<AuthState>()(
           email,
           role,
           invitedBy: state.currentUser?.id || '',
-          organizationId: state.organization?.id || '',
+          organizationId: state.organizationId || '',
           status: 'pending',
           createdAt: now.toISOString(),
           expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         }
+        void api.post('/orgs/me/invite', { email, role }).catch((e: unknown) => {
+          toast.error(e instanceof Error ? e.message : 'Invite failed')
+        })
         set((s) => ({ invitations: [...s.invitations, invitation] }))
         return invitation
       },
 
-      acceptInvitation: (invitationId, name, password) => {
+      acceptInvitation: (invitationId, _name, _password) => {
         const invitation = get().invitations.find((i) => i.id === invitationId)
         const invErr = getTranslations().errors
         if (!invitation) return { success: false, error: invErr.invitationNotFound }
         if (invitation.status !== 'pending') return { success: false, error: invErr.invitationUsedOrExpired }
         if (new Date(invitation.expiresAt) < new Date()) return { success: false, error: invErr.invitationExpired }
-
-        const result = get().addUser({
-          name,
-          email: invitation.email,
-          password,
-          role: invitation.role,
-          jobTitle: '',
-        })
-
-        if (result.success) {
-          set((s) => ({
-            invitations: s.invitations.map((i) =>
-              i.id === invitationId ? { ...i, status: 'accepted' as const } : i
-            ),
-          }))
-        }
-
-        return result
+        set((s) => ({
+          invitations: s.invitations.map((i) => i.id === invitationId ? { ...i, status: 'accepted' as const } : i),
+        }))
+        return { success: true }
       },
 
       cancelInvitation: (id) => {
-        set((s) => ({
-          invitations: s.invitations.filter((i) => i.id !== id),
-        }))
+        set((s) => ({ invitations: s.invitations.filter((i) => i.id !== id) }))
       },
 
       updateProfile: (updates) => {
@@ -621,136 +440,74 @@ export const useAuthStore = create<AuthState>()(
         get().updateUser(userId, updates)
       },
 
-      getUserById: (id) => {
-        return get().users.find((u) => u.id === id)
-      },
+      getUserById: (id) => get().users.find((u) => u.id === id),
 
       isAuthenticated: () => {
-        if (isSupabaseConfigured) {
-          const { supabaseSession, currentUser } = get()
-          return !!(supabaseSession && currentUser)
-        }
-        const { session, currentUser } = get()
-        if (!session || !currentUser) return false
-        if (session.expiresAt < Date.now()) return false
-        return true
+        const { currentUser, session } = get()
+        if (!currentUser) return false
+        // Prefer localStorage JWT
+        const token = getToken()
+        if (token && !isTokenExpired(token)) return true
+        // Fall back to in-memory session (set by tests / SSR)
+        if (session && session.expiresAt > Date.now()) return true
+        return false
       },
     }),
     {
       name: 'crm_auth',
-      partialize: (state) => {
-        const shared = {
-          currentUser: state.currentUser,
-          session: state.session,
-          organization: state.organization,
-          invitations: state.invitations,
-        }
-        // supabaseSession intentionally excluded - Supabase SDK manages its own storage
-        // under localStorage key sb-<ref>-auth-token. Including it here causes stale
-        // copies to survive after supabase.auth.signOut().
-        // organizationId intentionally excluded - derived state, always re-computed from JWT on load.
-        if (isSupabaseConfigured) {
-          return shared
-        }
-        return {
-          ...shared,
-          users: state.users,
-          passwords: state.passwords,
-        }
-      },
-      merge: (persisted, current) => {
-        const p = persisted as Partial<AuthState> | undefined
-        if (!p) return current
-        // In Supabase mode, never persist or restore local user/password maps (server is source of truth).
-        if (isSupabaseConfigured) {
-          return {
-            ...current,
-            ...p,
-            users: [],
-            passwords: {},
-          }
-        }
-        const users = (p.users && p.users.length > 0) ? p.users : []
-        const passwords = (p.passwords && Object.keys(p.passwords).length > 0) ? p.passwords : {}
-        return { ...current, ...p, users, passwords }
-      },
+      partialize: (state) => ({
+        currentUser: state.currentUser,
+        session: state.session,
+        organization: state.organization,
+        organizationId: state.organizationId,
+        invitations: state.invitations,
+      }),
     }
   )
 )
 
-/**
- * Maps raw JWT role strings to the canonical UserRole type.
- * 'owner' is an alias emitted by some org creation flows - treated as 'admin'.
- * Any unrecognized string falls back to 'sales_rep' (least-privilege default).
- */
 function normalizeRole(raw: string | undefined): UserRole {
-  const normalizedRaw = normalizeClaimString(raw)
-  if (normalizedRaw === 'owner') return 'admin'
+  const r = (raw ?? '').replace(/^"+|"+$/g, '').trim()
+  if (r === 'owner') return 'admin'
   const valid: UserRole[] = ['admin', 'manager', 'sales_rep', 'viewer']
-  return valid.includes(normalizedRaw as UserRole) ? (normalizedRaw as UserRole) : 'sales_rep'
+  return valid.includes(r as UserRole) ? (r as UserRole) : 'sales_rep'
 }
 
-function normalizeClaimString(value: string | undefined): string {
-  if (!value) return ''
-  return value.replace(/^"+|"+$/g, '').trim()
-}
-
+/** Called from App.tsx — replaces initSupabaseAuth. Reads JWT from storage, restores session. */
 export function initSupabaseAuth(): (() => void) | undefined {
-  if (!isSupabaseConfigured || !supabase) {
-    // Mock mode: auth is synchronous, no async loading needed
+  const token = getToken()
+
+  if (!token || isTokenExpired(token)) {
+    clearToken()
     useAuthStore.getState().setIsLoadingAuth(false)
     return
   }
 
-  // isLoadingAuth is already true (initialized as false currently, fixed in plan 2.4)
-  // The onAuthStateChange INITIAL_SESSION event resolves the guard.
-
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    // Always resolve loading on the first event (INITIAL_SESSION fires on startup)
-    useAuthStore.getState().setIsLoadingAuth(false)
-
-    if (event === 'PASSWORD_RECOVERY') {
-      // Redirect to reset-password page. window.location used because this runs
-      // outside React component tree - React Router navigate is not available here.
-      window.location.replace('/reset-password')
-      return
-    }
-
-    useAuthStore.getState().setSupabaseSession(session)
-
-    if (session?.user) {
-      const sbUser = session.user
-      const organizationId = normalizeClaimString(
-        ((sbUser.app_metadata?.organization_id as string | undefined) ?? sbUser.user_metadata?.org_id) as
-          | string
-          | undefined,
-      )
-      useAuthStore.getState().setCurrentUser({
-        id: sbUser.id,
-        name: sbUser.user_metadata?.full_name ?? sbUser.email?.split('@')[0] ?? 'User',
-        email: sbUser.email ?? '',
-        role: normalizeRole((sbUser.app_metadata?.user_role as string | undefined) ?? sbUser.user_metadata?.role),
-        jobTitle: sbUser.user_metadata?.job_title ?? '',
-        organizationId,
+  // Token valid — restore session from persisted state; fetch fresh user profile
+  api.get<{ id: string; email: string; name: string; role: string; organizationId: string | null }>('/auth/me')
+    .then((user) => {
+      const now = new Date().toISOString()
+      const authUser: AuthUser = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: normalizeRole(user.role),
+        jobTitle: '',
+        organizationId: user.organizationId ?? undefined,
         isActive: true,
-        createdAt: sbUser.created_at,
-        updatedAt: sbUser.updated_at ?? sbUser.created_at,
-      })
-      if (organizationId) {
-        useAuthStore.getState().setTenantResolution('ready', null)
-        useAuthStore.getState().fetchOrgUsers(organizationId).catch(() => {
-          /* non-critical */
-        })
-      } else {
-        // Option A onboarding: never auto-create tenants.
-        // Authenticated users without org are routed to /org-setup.
-        useAuthStore.getState().setTenantResolution('error', null)
+        createdAt: now,
+        updatedAt: now,
       }
-    } else {
-      useAuthStore.getState().setCurrentUser(null)
-    }
-  })
-
-  // Return unsubscribe for App.tsx useEffect cleanup
-  return () => subscription.unsubscribe()
+      useAuthStore.getState().setCurrentUser(authUser)
+      useAuthStore.getState().setSupabaseSession({ access_token: token })
+      if (user.organizationId) {
+        void useAuthStore.getState().fetchOrgUsers(user.organizationId)
+      }
+    })
+    .catch(() => {
+      clearToken()
+    })
+    .finally(() => {
+      useAuthStore.getState().setIsLoadingAuth(false)
+    })
 }

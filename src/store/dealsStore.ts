@@ -2,8 +2,8 @@ import { create } from 'zustand'
 import type { Deal, DealFilters, DealStage, QuoteItem } from '../types'
 import { useAuditStore } from './auditStore'
 import { useNotificationsStore } from './notificationsStore'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
+import { api } from '../lib/api'
+import { getErrorMessage } from '../lib/supabaseHelpers'
 import { useAuthStore } from './authStore'
 import { useAutomationsStore } from './automationsStore'
 import { toast } from './toastStore'
@@ -14,10 +14,12 @@ function dealStageLabel(stage: DealStage): string {
   return labels[stage] ?? stage
 }
 
-// ── Snake ↔ Camel mappers ───────────────────────────────────────────────────
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+}
 
-function rowToDeal(row: Record<string, unknown>): Deal {
-  const assignedTo = row.assigned_to as string | null
+function mapDeal(row: Record<string, unknown>): Deal {
+  const assignedTo = (row.assignedTo ?? row.assigned_to) as string | null
   const users = useAuthStore.getState().users
   const assignedToName = assignedTo
     ? (users.find((u) => u.id === assignedTo)?.name ?? assignedTo)
@@ -30,46 +32,19 @@ function rowToDeal(row: Record<string, unknown>): Deal {
     currency: (row.currency as Deal['currency']) ?? 'EUR',
     stage: (row.stage as Deal['stage']) ?? 'lead',
     probability: (row.probability as number) ?? 0,
-    expectedCloseDate: (row.expected_close_date as string) ?? '',
-    contactId: (row.contact_id as string) ?? '',
-    companyId: (row.company_id as string) ?? '',
+    expectedCloseDate: (row.expectedCloseDate ?? row.expected_close_date ?? '') as string,
+    contactId: (row.contactId ?? row.contact_id ?? '') as string,
+    companyId: (row.companyId ?? row.company_id ?? '') as string,
     assignedTo: assignedToName,
     priority: (row.priority as Deal['priority']) ?? 'medium',
     source: (row.source as string) ?? '',
     notes: (row.notes as string) ?? '',
     activities: (row.activities as string[]) ?? [],
-    quoteItems: (row.quote_items as QuoteItem[]) ?? undefined,
-    createdAt: (row.created_at as string) ?? '',
-    updatedAt: (row.updated_at as string) ?? '',
+    quoteItems: (row.quoteItems ?? row.quote_items) as QuoteItem[] | undefined,
+    createdAt: (row.createdAt ?? row.created_at ?? '') as string,
+    updatedAt: (row.updatedAt ?? row.updated_at ?? '') as string,
   }
 }
-
-function dealToRow(d: Partial<Deal>): Record<string, unknown> {
-  const row: Record<string, unknown> = {}
-  if (d.title !== undefined) row.title = d.title
-  if (d.value !== undefined) row.value = d.value
-  if (d.currency !== undefined) row.currency = d.currency
-  if (d.stage !== undefined) row.stage = d.stage
-  if (d.probability !== undefined) row.probability = d.probability
-  if (d.expectedCloseDate !== undefined) row.expected_close_date = d.expectedCloseDate
-  if (d.contactId !== undefined) row.contact_id = d.contactId
-  if (d.companyId !== undefined) row.company_id = d.companyId
-  // `assigned_to` is UUID in DB. UI currently keeps display names.
-  // Only send value when it's already a UUID.
-  if (d.assignedTo !== undefined && isUuid(d.assignedTo)) row.assigned_to = d.assignedTo
-  if (d.priority !== undefined) row.priority = d.priority
-  if (d.source !== undefined) row.source = d.source
-  if (d.notes !== undefined) row.notes = d.notes
-  if (d.activities !== undefined) row.activities = d.activities
-  if (d.quoteItems !== undefined) row.quote_items = d.quoteItems
-  return row
-}
-
-function isUuid(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-}
-
-// ── State interface ─────────────────────────────────────────────────────────
 
 interface DealsState {
   deals: Deal[]
@@ -109,32 +84,6 @@ const defaultFilters: DealFilters = {
   dueDateTo: '',
 }
 
-let pendingDealsMemory: Deal[] = []
-
-function readPendingDeals(): Deal[] {
-  return [...pendingDealsMemory]
-}
-
-function writePendingDeals(items: Deal[]): void {
-  pendingDealsMemory = [...items]
-}
-
-function upsertPendingDeal(deal: Deal): void {
-  const prev = readPendingDeals()
-  const next = [deal, ...prev.filter((d) => d.id !== deal.id)]
-  writePendingDeals(next)
-}
-
-function removePendingDeal(dealId: string): void {
-  writePendingDeals(readPendingDeals().filter((d) => d.id !== dealId))
-}
-
-function updatePendingDeal(dealId: string, patch: Partial<Deal>): void {
-  writePendingDeals(
-    readPendingDeals().map((d) => (d.id === dealId ? { ...d, ...patch, updatedAt: new Date().toISOString() } : d)),
-  )
-}
-
 export const useDealsStore = create<DealsState>()(
   (set, get) => ({
     deals: [],
@@ -145,46 +94,13 @@ export const useDealsStore = create<DealsState>()(
     viewMode: 'kanban',
 
     fetchDeals: async (options) => {
-      if (options?.silent) {
-        set({ error: null })
-      } else {
-        set({ isLoading: true, error: null })
-      }
+      if (!options?.silent) set({ isLoading: true, error: null })
+      else set({ error: null })
       try {
-        if (isSupabaseConfigured && supabase) {
-          const { data, error } = await supabase.from('deals').select('*').order('created_at', { ascending: false })
-          if (error) throw error
-          const remoteDeals = (data ?? []).map(rowToDeal)
-          const pending = readPendingDeals()
-          const stillPending: Deal[] = []
-          const syncedPending: Deal[] = []
-          const currentUserId = useAuthStore.getState().currentUser?.id
-          const createdBy = currentUserId && isUuid(currentUserId) ? currentUserId : null
-
-          for (const pendingDeal of pending) {
-            try {
-              const row = dealToRow(pendingDeal)
-              const { data: inserted, error: insertError } = await supabase
-                .from('deals')
-                .insert({ ...row, created_by: createdBy, organization_id: getOrgId() } as never)
-                .select()
-                .single()
-              if (insertError || !inserted) throw insertError ?? new Error('Empty Supabase insert response')
-              syncedPending.push(rowToDeal(inserted as Record<string, unknown>))
-            } catch {
-              stillPending.push(pendingDeal)
-            }
-          }
-          writePendingDeals(stillPending)
-          const merged = [...syncedPending, ...remoteDeals, ...stillPending].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-          )
-          set({ deals: merged, isLoading: false })
-        } else {
-          set({ deals: [...readPendingDeals()], isLoading: false })
-        }
+        const data = await api.get<Deal[]>('/deals')
+        set({ deals: (data ?? []).map((r) => mapDeal(r as unknown as Record<string, unknown>)), isLoading: false })
       } catch (e: unknown) {
-        set({ error: (e as Error).message, isLoading: false })
+        set({ error: getErrorMessage(e), isLoading: false })
       }
     },
 
@@ -195,40 +111,18 @@ export const useDealsStore = create<DealsState>()(
       set((state) => ({ deals: [deal, ...state.deals] }))
       useAuditStore.getState().logAction('deal_created', 'deal', deal.id, deal.title, getTranslations().auditMessages.dealCreated)
 
-      if (isSupabaseConfigured && supabase) {
-        try {
-          const row = dealToRow(dealData)
-          const currentUserId = useAuthStore.getState().currentUser?.id
-          const createdBy = currentUserId && isUuid(currentUserId) ? currentUserId : null
-          ;(supabase.from('deals').insert({ ...row, created_by: createdBy, organization_id: getOrgId() } as never).select().single()
-          ).then(({ data, error }: { data: Record<string, unknown> | null; error: { message: string } | null }) => {
-              if (error) {
-                set({ error: error.message })
-                toast.error(error.message)
-                return
-              }
-              if (!data) {
-                const message = getTranslations().dealSync.emptyInsertResponse
-                set({ error: message })
-                toast.error(message)
-                return
-              }
-              const real = rowToDeal(data)
-              removePendingDeal(id)
-              set((s) => ({ deals: s.deals.map((d) => d.id === id ? real : d) }))
-            }, (error: unknown) => {
-              const message = getErrorMessage(error)
-              upsertPendingDeal(deal)
-              set({ error: message })
-              toast.error(`${message}. ${getTranslations().dealSync.dealSavedRetrySuffix}`)
-            })
-        } catch (error) {
-          const message = getErrorMessage(error)
-          upsertPendingDeal(deal)
+      const currentUserId = useAuthStore.getState().currentUser?.id
+      const body = { ...dealData, ...(currentUserId && isUuid(currentUserId) ? { createdBy: currentUserId } : {}) }
+      api.post<Deal>('/deals', body).then(
+        (real) => {
+          set((s) => ({ deals: s.deals.map((d) => d.id === id ? mapDeal(real as unknown as Record<string, unknown>) : d) }))
+        },
+        (err: unknown) => {
+          const message = getErrorMessage(err)
           set({ error: message })
           toast.error(`${message}. ${getTranslations().dealSync.dealSavedRetrySuffix}`)
-        }
-      }
+        },
+      )
 
       return deal
     },
@@ -241,38 +135,21 @@ export const useDealsStore = create<DealsState>()(
       }))
       const deal = get().getById(id)
       useAuditStore.getState().logAction('deal_updated', 'deal', id, deal?.title ?? '', getTranslations().auditMessages.dealUpdated)
-
-      if (isSupabaseConfigured && supabase) {
-        const row = dealToRow(updates)
-        runSupabaseWrite(
-          'dealsStore:updateDeal',
-          supabase.from('deals').update({ ...row, updated_at: new Date().toISOString() } as never).eq('id', id),
-          (message) => set({ error: message }),
-        )
-      }
-      updatePendingDeal(id, updates)
+      api.patch(`/deals/${id}`, updates).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     deleteDeal: (id) => {
       const deal = get().getById(id)
       set((state) => ({ deals: state.deals.filter((d) => d.id !== id) }))
       useAuditStore.getState().logAction('deal_deleted', 'deal', id, deal?.title ?? '', getTranslations().auditMessages.dealDeleted)
-
-      if (isSupabaseConfigured && supabase) {
-        sbDelete('deals', id).then(null, (e) => set({ error: (e as Error).message }))
-      }
-      removePendingDeal(id)
+      api.delete(`/deals/${id}`).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     moveDeal: (id, newStage) => {
       const oldDeal = get().getById(id)
-
-      // Optimistic local update
       set((state) => ({
         deals: state.deals.map((d) =>
-          d.id === id
-            ? { ...d, stage: newStage, updatedAt: new Date().toISOString() }
-            : d
+          d.id === id ? { ...d, stage: newStage, updatedAt: new Date().toISOString() } : d
         ),
       }))
 
@@ -281,79 +158,44 @@ export const useDealsStore = create<DealsState>()(
       const tr = getTranslations()
       const stageLabel = dealStageLabel(newStage)
       useAuditStore.getState().logAction(
-        'deal_stage_changed',
-        'deal',
-        id,
-        title,
+        'deal_stage_changed', 'deal', id, title,
         tr.auditMessages.dealMovedTo.replace('{stage}', stageLabel),
       )
 
-      // Trigger notifications
       const notify = useNotificationsStore.getState().notify
       const dn = tr.dealNotifications
       if (newStage === 'closed_won') {
-        notify('deal_won', dn.wonTitle.replace('{title}', title), dn.wonMessage.replaceAll('{title}', title), {
-          entityType: 'deal', entityId: id,
-        })
+        notify('deal_won', dn.wonTitle.replace('{title}', title), dn.wonMessage.replaceAll('{title}', title), { entityType: 'deal', entityId: id })
       } else if (newStage === 'closed_lost') {
-        notify('deal_lost', dn.lostTitle.replace('{title}', title), dn.lostMessage.replaceAll('{title}', title), {
-          entityType: 'deal', entityId: id,
-        })
+        notify('deal_lost', dn.lostTitle.replace('{title}', title), dn.lostMessage.replaceAll('{title}', title), { entityType: 'deal', entityId: id })
       } else if (oldDeal && oldDeal.stage !== newStage) {
         notify(
           'deal_stage_changed',
           dn.stageTitle.replace('{title}', title),
-          dn.stageMessage
-            .replace('{from}', dealStageLabel(oldDeal.stage))
-            .replace('{to}', stageLabel),
-          {
-            entityType: 'deal', entityId: id,
-          },
+          dn.stageMessage.replace('{from}', dealStageLabel(oldDeal.stage)).replace('{to}', stageLabel),
+          { entityType: 'deal', entityId: id },
         )
       }
 
-      // Fire pipeline automations
       if (deal) {
         const triggerType = newStage === 'closed_won'
           ? 'deal_closed_won'
           : newStage === 'closed_lost'
             ? 'deal_closed_lost'
             : 'deal_stage_changed'
-        useAutomationsStore.getState().executeRulesForTrigger(triggerType, {
-          deal,
-          fromStage: oldDeal?.stage,
-          toStage: newStage,
-        })
+        useAutomationsStore.getState().executeRulesForTrigger(triggerType, { deal, fromStage: oldDeal?.stage, toStage: newStage })
       }
 
-      // Fire-and-forget Supabase update
-      if (isSupabaseConfigured && supabase) {
-        runSupabaseWrite(
-          'dealsStore:moveDeal',
-          supabase.from('deals').update({ stage: newStage, updated_at: new Date().toISOString() } as never).eq('id', id),
-          (message) => set({ error: message }),
-        )
-      }
-      updatePendingDeal(id, { stage: newStage })
+      api.patch(`/deals/${id}`, { stage: newStage }).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     updateQuote: (dealId, items) => {
       set((state) => ({
         deals: state.deals.map((d) =>
-          d.id === dealId
-            ? { ...d, quoteItems: items, updatedAt: new Date().toISOString() }
-            : d
+          d.id === dealId ? { ...d, quoteItems: items, updatedAt: new Date().toISOString() } : d
         ),
       }))
-
-      if (isSupabaseConfigured && supabase) {
-        runSupabaseWrite(
-          'dealsStore:updateQuote',
-          supabase.from('deals').update({ quote_items: items as unknown as Record<string, unknown>, updated_at: new Date().toISOString() } as never).eq('id', dealId),
-          (message) => set({ error: message }),
-        )
-      }
-      updatePendingDeal(dealId, { quoteItems: items })
+      api.patch(`/deals/${dealId}`, { quoteItems: items }).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     setFilter: (key, value) => {

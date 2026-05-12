@@ -2,68 +2,34 @@ import { create } from 'zustand'
 import type { Contact, ContactFilters } from '../types'
 import { useAuditStore } from './auditStore'
 import { getTranslations } from '../i18n'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { requireSupabase } from '../lib/requireSupabase'
-import { getOrgId, sbDelete, sbBulkDelete } from '../lib/supabaseHelpers'
+import { api } from '../lib/api'
+import { getErrorMessage, sbDelete, sbBulkDelete } from '../lib/supabaseHelpers'
 import { toast } from './toastStore'
 
-const sb = requireSupabase
-
-// ── Snake / Camel mappers ───────────────────────────────────────────────────
-
-/** Maps a Supabase contact row to the domain model. */
 export function mapContactFromSupabaseRow(row: Record<string, unknown>): Contact {
   return {
     id: row.id as string,
-    firstName: (row.first_name as string) ?? '',
-    lastName: (row.last_name as string) ?? '',
+    firstName: (row.firstName ?? row.first_name ?? '') as string,
+    lastName: (row.lastName ?? row.last_name ?? '') as string,
     email: (row.email as string) ?? '',
     phone: (row.phone as string) ?? '',
-    jobTitle: (row.job_title as string) ?? '',
-    companyId: (row.company_id as string) ?? '',
+    jobTitle: (row.jobTitle ?? row.job_title ?? '') as string,
+    companyId: (row.companyId ?? row.company_id ?? '') as string,
     status: (row.status as Contact['status']) ?? 'prospect',
     source: (row.source as Contact['source']) ?? 'other',
     tags: (row.tags as string[]) ?? [],
-    assignedTo: (row.assigned_to as string) ?? '',
-    createdAt: (row.created_at as string) ?? '',
-    updatedAt: (row.updated_at as string) ?? '',
-    lastContactedAt: (row.last_contacted_at as string) ?? '',
+    assignedTo: (row.assignedTo ?? row.assigned_to ?? '') as string,
+    createdAt: (row.createdAt ?? row.created_at ?? '') as string,
+    updatedAt: (row.updatedAt ?? row.updated_at ?? '') as string,
+    lastContactedAt: (row.lastContactedAt ?? row.last_contacted_at ?? '') as string,
     notes: (row.notes as string) ?? '',
-    linkedDeals: (row.linked_deals as string[]) ?? [],
+    linkedDeals: (row.linkedDeals ?? row.linked_deals ?? []) as string[],
     avatar: (row.avatar as string) ?? undefined,
-    marketingOptIn: (row.marketing_opt_in as boolean | undefined) ?? false,
-    marketingOptInAt: (row.marketing_opt_in_at as string) ?? undefined,
-    marketingOptInSource: (row.marketing_opt_in_source as string) ?? undefined,
+    marketingOptIn: (row.marketingOptIn ?? row.marketing_opt_in ?? false) as boolean,
+    marketingOptInAt: (row.marketingOptInAt ?? row.marketing_opt_in_at) as string | undefined,
+    marketingOptInSource: (row.marketingOptInSource ?? row.marketing_opt_in_source) as string | undefined,
   }
 }
-
-function rowToContact(row: Record<string, unknown>): Contact {
-  return mapContactFromSupabaseRow(row)
-}
-
-function contactToRow(c: Partial<Contact>): Record<string, unknown> {
-  const row: Record<string, unknown> = {}
-  if (c.firstName !== undefined) row.first_name = c.firstName
-  if (c.lastName !== undefined) row.last_name = c.lastName
-  if (c.email !== undefined) row.email = c.email
-  if (c.phone !== undefined) row.phone = c.phone
-  if (c.jobTitle !== undefined) row.job_title = c.jobTitle
-  if (c.companyId !== undefined) row.company_id = c.companyId
-  if (c.status !== undefined) row.status = c.status
-  if (c.source !== undefined) row.source = c.source
-  if (c.tags !== undefined) row.tags = c.tags
-  if (c.assignedTo !== undefined) row.assigned_to = c.assignedTo
-  if (c.lastContactedAt !== undefined) row.last_contacted_at = c.lastContactedAt
-  if (c.notes !== undefined) row.notes = c.notes
-  if (c.linkedDeals !== undefined) row.linked_deals = c.linkedDeals
-  if (c.avatar !== undefined) row.avatar = c.avatar
-  if (c.marketingOptIn !== undefined) row.marketing_opt_in = c.marketingOptIn
-  if (c.marketingOptInAt !== undefined) row.marketing_opt_in_at = c.marketingOptInAt
-  if (c.marketingOptInSource !== undefined) row.marketing_opt_in_source = c.marketingOptInSource
-  return row
-}
-
-// ── State ───────────────────────────────────────────────────────────────────
 
 export interface ContactsState {
   contacts: Contact[]
@@ -106,15 +72,10 @@ export const useContactsStore = create<ContactsState>()(
     fetchContacts: async () => {
       set({ isLoading: true, error: null })
       try {
-        if (isSupabaseConfigured && supabase) {
-          const { data, error } = await supabase.from('contacts').select('*').order('created_at', { ascending: false })
-          if (error) throw error
-          set({ contacts: (data ?? []).map((r) => rowToContact(r as unknown as Record<string, unknown>)), isLoading: false })
-        } else {
-          set({ contacts: [], isLoading: false })
-        }
+        const data = await api.get<Contact[]>('/contacts')
+        set({ contacts: (data ?? []).map((r) => mapContactFromSupabaseRow(r as unknown as Record<string, unknown>)), isLoading: false })
       } catch (e: unknown) {
-        set({ error: (e as Error).message, isLoading: false })
+        set({ error: getErrorMessage(e), isLoading: false })
       }
     },
 
@@ -125,26 +86,16 @@ export const useContactsStore = create<ContactsState>()(
       set((s) => ({ contacts: [optimistic, ...s.contacts] }))
       useAuditStore.getState().logAction('contact_created', 'contact', tempId, contactData.firstName + ' ' + contactData.lastName, getTranslations().auditMessages.contactCreated)
 
-      if (isSupabaseConfigured && supabase) {
-        try {
-          const row = contactToRow(contactData)
-          sb().from('contacts').insert({ ...row, organization_id: getOrgId() }).select().single()
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase .then response shape
-            .then(({ data, error }: any) => {
-              if (error) {
-                set({ error: error.message })
-                toast.error(error.message)
-                return
-              }
-              const real = rowToContact(data as Record<string, unknown>)
-              set((s) => ({ contacts: s.contacts.map((c) => c.id === tempId ? real : c) }))
-            })
-        } catch (error) {
-          const message = error instanceof Error ? error.message : 'Unable to save contact'
+      api.post<Contact>('/contacts', contactData).then(
+        (real) => {
+          set((s) => ({ contacts: s.contacts.map((c) => c.id === tempId ? mapContactFromSupabaseRow(real as unknown as Record<string, unknown>) : c) }))
+        },
+        (err: unknown) => {
+          const message = getErrorMessage(err)
           set({ error: message })
           toast.error(message)
-        }
-      }
+        },
+      )
 
       return optimistic
     },
@@ -156,29 +107,19 @@ export const useContactsStore = create<ContactsState>()(
         ),
       }))
       useAuditStore.getState().logAction('contact_updated', 'contact', id, '', getTranslations().auditMessages.contactUpdated)
-
-      if (isSupabaseConfigured && supabase) {
-        const row = contactToRow(updates)
-        sb().from('contacts').update({ ...row, updated_at: new Date().toISOString() }).eq('id', id)
-      }
+      api.patch(`/contacts/${id}`, updates).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     deleteContact: (id) => {
       set((state) => ({ contacts: state.contacts.filter((c) => c.id !== id) }))
       useAuditStore.getState().logAction('contact_deleted', 'contact', id, '', getTranslations().auditMessages.contactDeleted)
-
-      if (isSupabaseConfigured && supabase) {
-        sbDelete('contacts', id)
-      }
+      sbDelete('contacts', id).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     bulkDelete: (ids) => {
       const idSet = new Set(ids)
       set((state) => ({ contacts: state.contacts.filter((c) => !idSet.has(c.id)) }))
-
-      if (isSupabaseConfigured && supabase) {
-        sbBulkDelete('contacts', ids)
-      }
+      sbBulkDelete('contacts', ids).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     setFilter: (key, value) => {

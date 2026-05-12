@@ -15,9 +15,6 @@ import { useCustomFieldsStore } from '../store/customFieldsStore'
 import { useLeadsStore } from '../store/leadsStore'
 import { useNavigationPrefsStore } from '../store/navigationPrefsStore'
 import { initRealtimeSubscriptions } from '../lib/realtimeSubscriptions'
-import { isSupabaseConfigured, supabase } from '../lib/supabase'
-import { useEmailStore } from '../store/emailStore'
-import { useGmailToken } from '../contexts/GmailTokenContext'
 
 /**
  * Fetches all core data on mount and sets up Realtime subscriptions.
@@ -25,29 +22,14 @@ import { useGmailToken } from '../contexts/GmailTokenContext'
  */
 export function useDataInit() {
   const currentUser = useAuthStore((s) => s.currentUser)
-  const gmailAddress = useEmailStore((s) => s.gmailAddress)
-  const { setGmailToken } = useGmailToken()
   const didInit = useRef(false)
 
   useEffect(() => {
     if (didInit.current) return
     // For !isSupabaseConfigured we still want seed data loaded
-    if (!currentUser && isSupabaseConfigured) return
+    if (!currentUser) return
 
     didInit.current = true
-
-    let gmailRefreshCancelled = false
-    // Silent Gmail token refresh (D-11): restore in-memory access token if user was connected
-    if (gmailAddress && isSupabaseConfigured) {
-      void supabase!.functions.invoke('gmail-refresh-token').then(({ data, error }) => {
-        if (gmailRefreshCancelled) return
-        if (!error && data?.access_token) {
-          const expiresAt = Date.now() + (data.expires_in ?? 3600) * 1000
-          setGmailToken(data.access_token, expiresAt)
-        }
-        // If refresh fails (e.g. token revoked), stay silent - user will see "Connect Gmail" in Inbox
-      })
-    }
 
     // Kick off all fetches in parallel
     useContactsStore.getState().fetchContacts()
@@ -68,13 +50,6 @@ export function useDataInit() {
 
     const cleanup = initRealtimeSubscriptions()
     const runServerMaintenance = () => {
-      if (isSupabaseConfigured && supabase) {
-        supabase.functions.invoke('lead-score-maintenance').catch(() => {
-          // Fallback to client-side maintenance if edge function is unavailable.
-          useLeadsStore.getState().runScheduledScoreMaintenance()
-        })
-        return
-      }
       useLeadsStore.getState().runScheduledScoreMaintenance()
     }
 
@@ -94,13 +69,12 @@ export function useDataInit() {
       runServerMaintenance()
     }, 15000)
     return () => {
-      gmailRefreshCancelled = true
       cleanup()
       window.clearInterval(maintenanceInterval)
       window.clearInterval(dealsSyncInterval)
       window.removeEventListener('online', handleBackOnline)
       didInit.current = false
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- gmailAddress and setGmailToken are intentionally omitted: this effect runs once per auth session (guarded by didInit ref); including them would re-run the full data-init on gmail token changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per auth session, guarded by didInit ref
   }, [currentUser])
 }

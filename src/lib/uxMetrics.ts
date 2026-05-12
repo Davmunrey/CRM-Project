@@ -1,5 +1,3 @@
-import { isSupabaseConfigured, supabase } from './supabase'
-
 export type UxActionName =
   | 'auth_login_attempt'
   | 'auth_login_success'
@@ -66,25 +64,8 @@ export function getUxActionCount(action: UxActionName): number {
   return getUxEvents().reduce((acc, event) => acc + (event.action === action ? 1 : 0), 0)
 }
 
-/** Post queued UX events to the Edge Function (no-op if offline / no session / no Supabase). */
+/** Post queued UX events to the API (no-op — will be wired to velo-api once route exists). */
 export async function flushUxMetricsToServer(): Promise<void> {
-  try {
-    if (!isSupabaseConfigured || !supabase) return
-    const events = getUxEvents()
-    if (events.length === 0) return
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
-    const { error } = await supabase.functions.invoke('ux-metrics-ingest', {
-      body: { events },
-    })
-    if (error) return
-    try {
-      localStorage.removeItem(LS_KEY)
-    } catch {
-      // ignore
-    }
-  } catch {
-    // Non-blocking
-  }
+  // Placeholder: velo-api /ux-metrics-ingest not yet implemented
 }
 

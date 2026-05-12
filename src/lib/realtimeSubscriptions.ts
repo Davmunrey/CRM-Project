@@ -1,4 +1,3 @@
-import { supabase, isSupabaseConfigured } from './supabase'
 import { useContactsStore } from '../store/contactsStore'
 import { useCompaniesStore } from '../store/companiesStore'
 import { useDealsStore } from '../store/dealsStore'
@@ -14,85 +13,60 @@ import { useLeadsStore } from '../store/leadsStore'
 import { useAuditStore } from '../store/auditStore'
 import { useAuthStore } from '../store/authStore'
 
+type TableHandler = () => void
+
+const TABLE_HANDLERS: Record<string, TableHandler> = {
+  contacts: () => useContactsStore.getState().fetchContacts(),
+  companies: () => useCompaniesStore.getState().fetchCompanies(),
+  deals: () => useDealsStore.getState().fetchDeals({ silent: true }),
+  activities: () => useActivitiesStore.getState().fetchActivities(),
+  notifications: () => useNotificationsStore.getState().fetchNotifications(),
+  sales_goals: () => useGoalsStore.getState().fetchGoals(),
+  email_sequences: () => useSequencesStore.getState().fetchSequences(),
+  automation_rules: () => {
+    const s = useAutomationsStore.getState()
+    void s.fetchRules()
+    void s.fetchRecentExecutions()
+  },
+  automation_executions: () => useAutomationsStore.getState().fetchRecentExecutions(),
+  sequence_enrollments: () => useSequencesStore.getState().fetchSequences(),
+  leads: () => useLeadsStore.getState().fetchLeads(),
+  audit_log: () => useAuditStore.getState().fetchEntries(),
+  organization_members: () => {
+    const orgId = useAuthStore.getState().organizationId
+    if (orgId) void useAuthStore.getState().fetchOrgUsers(orgId).catch(() => {})
+  },
+  email_templates: () => useTemplateStore.getState().fetchTemplates(),
+  products: () => useProductsStore.getState().fetchProducts(),
+  custom_field_definitions: () => useCustomFieldsStore.getState().fetchCustomFields(),
+}
+
 /**
- * Subscribe to Postgres changes on all core tables.
- * Returns a cleanup function that removes the channel.
+ * Subscribe to DB change events from the Velo API via server-sent events or
+ * polling. Currently a no-op placeholder — Socket.io integration is done in
+ * velo-api/src/services/realtime.ts. Returns a cleanup function.
  */
 export function initRealtimeSubscriptions(): () => void {
-  if (!isSupabaseConfigured || !supabase) return () => {}
-
   const throttledByTable = new Map<string, number>()
-  const scheduleFetch = (table: string, fn: () => void) => {
+
+  const scheduleFetch = (table: string) => {
     const existing = throttledByTable.get(table)
     if (existing) window.clearTimeout(existing)
+    const handler = TABLE_HANDLERS[table]
+    if (!handler) return
     const timer = window.setTimeout(() => {
-      fn()
+      handler()
       throttledByTable.delete(table)
     }, 180)
     throttledByTable.set(table, timer)
   }
 
-  const channel = supabase!.channel('db-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'contacts' }, () => {
-      scheduleFetch('contacts', () => useContactsStore.getState().fetchContacts())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'companies' }, () => {
-      scheduleFetch('companies', () => useCompaniesStore.getState().fetchCompanies())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, () => {
-      scheduleFetch('deals', () => useDealsStore.getState().fetchDeals({ silent: true }))
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'activities' }, () => {
-      scheduleFetch('activities', () => useActivitiesStore.getState().fetchActivities())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
-      scheduleFetch('notifications', () => useNotificationsStore.getState().fetchNotifications())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_goals' }, () => {
-      scheduleFetch('sales_goals', () => useGoalsStore.getState().fetchGoals())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'email_sequences' }, () => {
-      scheduleFetch('email_sequences', () => useSequencesStore.getState().fetchSequences())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'automation_rules' }, () => {
-      scheduleFetch('automation_rules', () => {
-        const s = useAutomationsStore.getState()
-        void s.fetchRules()
-        void s.fetchRecentExecutions()
-      })
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'automation_executions' }, () => {
-      scheduleFetch('automation_executions', () => useAutomationsStore.getState().fetchRecentExecutions())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'sequence_enrollments' }, () => {
-      scheduleFetch('sequence_enrollments', () => useSequencesStore.getState().fetchSequences())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () => {
-      scheduleFetch('leads', () => useLeadsStore.getState().fetchLeads())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_log' }, () => {
-      scheduleFetch('audit_log', () => useAuditStore.getState().fetchEntries())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'organization_members' }, () => {
-      scheduleFetch('organization_members', () => {
-        const orgId = useAuthStore.getState().organizationId
-        if (orgId) void useAuthStore.getState().fetchOrgUsers(orgId).catch(() => {})
-      })
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'email_templates' }, () => {
-      scheduleFetch('email_templates', () => useTemplateStore.getState().fetchTemplates())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
-      scheduleFetch('products', () => useProductsStore.getState().fetchProducts())
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_field_definitions' }, () => {
-      scheduleFetch('custom_field_definitions', () => useCustomFieldsStore.getState().fetchCustomFields())
-    })
-    .subscribe()
+  // Expose for Socket.io integration: window.__veloDbChange(table)
+  ;(window as unknown as Record<string, unknown>).__veloDbChange = scheduleFetch
 
   return () => {
     throttledByTable.forEach((timer) => window.clearTimeout(timer))
     throttledByTable.clear()
-    supabase!.removeChannel(channel)
+    delete (window as unknown as Record<string, unknown>).__veloDbChange
   }
 }

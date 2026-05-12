@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 import type { CRMNotification, NotificationType } from '../types'
 import { useAuthStore } from './authStore'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { getErrorMessage, getOrgId, runSupabaseWrite, sbDelete } from '../lib/supabaseHelpers'
+import { api } from '../lib/api'
+import { getErrorMessage } from '../lib/supabaseHelpers'
 
 const MAX_NOTIFICATIONS = 200
 
@@ -14,43 +14,25 @@ export const ALL_NOTIFICATION_TYPES: NotificationType[] = [
   'mention', 'system',
 ]
 
-// ── Snake ↔ Camel mappers ───────────────────────────────────────────────────
-
-function rowToNotification(row: Record<string, unknown>): CRMNotification {
+function mapNotification(row: Record<string, unknown>): CRMNotification {
   return {
     id: row.id as string,
     type: (row.type as NotificationType) ?? 'system',
     title: (row.title as string) ?? '',
     message: (row.message as string) ?? '',
-    entityType: (row.entity_type as CRMNotification['entityType']) ?? undefined,
-    entityId: (row.entity_id as string) ?? undefined,
-    userId: (row.user_id as string) ?? '',
-    triggeredBy: (row.triggered_by as string) ?? undefined,
-    isRead: (row.is_read as boolean) ?? false,
-    createdAt: (row.created_at as string) ?? '',
+    entityType: (row.entityType ?? row.entity_type) as CRMNotification['entityType'] | undefined,
+    entityId: (row.entityId ?? row.entity_id) as string | undefined,
+    userId: (row.userId ?? row.user_id ?? '') as string,
+    triggeredBy: (row.triggeredBy ?? row.triggered_by) as string | undefined,
+    isRead: (row.isRead ?? row.is_read ?? false) as boolean,
+    createdAt: (row.createdAt ?? row.created_at ?? '') as string,
   }
 }
-
-function notificationToRow(n: Partial<CRMNotification>): Record<string, unknown> {
-  const row: Record<string, unknown> = {}
-  if (n.type !== undefined) row.type = n.type
-  if (n.title !== undefined) row.title = n.title
-  if (n.message !== undefined) row.message = n.message
-  if (n.entityType !== undefined) row.entity_type = n.entityType
-  if (n.entityId !== undefined) row.entity_id = n.entityId
-  if (n.userId !== undefined) row.user_id = n.userId
-  if (n.triggeredBy !== undefined) row.triggered_by = n.triggeredBy
-  if (n.isRead !== undefined) row.is_read = n.isRead
-  return row
-}
-
-// ── Store ───────────────────────────────────────────────────────────────────
 
 interface NotificationsStore {
   notifications: CRMNotification[]
   isLoading: boolean
   error: string | null
-  // Per-type preferences: disabled types are not shown (still stored but muted)
   disabledTypes: Set<NotificationType>
 
   fetchNotifications: () => Promise<void>
@@ -86,20 +68,14 @@ export const useNotificationsStore = create<NotificationsStore>()(
     fetchNotifications: async () => {
       set({ isLoading: true, error: null })
       try {
-        if (isSupabaseConfigured && supabase) {
-          const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(MAX_NOTIFICATIONS)
-          if (error) throw error
-          set({ notifications: (data ?? []).map(rowToNotification), isLoading: false })
-        } else {
-          set({ notifications: [], isLoading: false })
-        }
+        const data = await api.get<CRMNotification[]>('/notifications')
+        set({ notifications: (data ?? []).map((r) => mapNotification(r as unknown as Record<string, unknown>)).slice(0, MAX_NOTIFICATIONS), isLoading: false })
       } catch (e: unknown) {
         set({ error: getErrorMessage(e), isLoading: false })
       }
     },
 
     notify: (type, title, message, opts) => {
-      // Respect notification preferences
       if (get().disabledTypes.has(type)) return
       const currentUser = useAuthStore.getState().currentUser
       const notification: CRMNotification = {
@@ -117,84 +93,39 @@ export const useNotificationsStore = create<NotificationsStore>()(
       set((state) => ({
         notifications: [notification, ...state.notifications].slice(0, MAX_NOTIFICATIONS),
       }))
-
-      if (isSupabaseConfigured && supabase) {
-        const row = notificationToRow(notification)
-        runSupabaseWrite(
-          'notificationsStore:notify',
-          supabase.from('notifications').insert({ ...row, organization_id: getOrgId() } as never),
-          (message) => set({ error: message }),
-        )
-      }
+      api.post('/notifications', notification).catch(() => {})
     },
 
     markAsRead: (id) => {
       set((state) => ({
-        notifications: state.notifications.map((n) =>
-          n.id === id ? { ...n, isRead: true } : n
-        ),
+        notifications: state.notifications.map((n) => n.id === id ? { ...n, isRead: true } : n),
       }))
-
-      if (isSupabaseConfigured && supabase) {
-        runSupabaseWrite(
-          'notificationsStore:markAsRead',
-          supabase.from('notifications').update({ is_read: true } as never).eq('id', id),
-          (message) => set({ error: message }),
-        )
-      }
+      api.patch(`/notifications/${id}`, { isRead: true }).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     markAllAsRead: () => {
-      const unreadIds = get().notifications.filter((n) => !n.isRead).map((n) => n.id)
       set((state) => ({
         notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
       }))
-
-      if (isSupabaseConfigured && supabase && unreadIds.length > 0) {
-        runSupabaseWrite(
-          'notificationsStore:markAllAsRead',
-          supabase.from('notifications').update({ is_read: true } as never).in('id', unreadIds),
-          (message) => set({ error: message }),
-        )
-      }
+      api.post('/notifications/mark-all-read', {}).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     deleteNotification: (id) => {
       set((state) => ({
         notifications: state.notifications.filter((n) => n.id !== id),
       }))
-
-      if (isSupabaseConfigured && supabase) {
-        sbDelete('notifications', id).then(null, (e) => set({ error: (e as Error).message }))
-      }
+      api.delete(`/notifications/${id}`).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     clearAll: () => {
-      const ids = get().notifications.map((n) => n.id)
       set({ notifications: [] })
-
-      if (isSupabaseConfigured && supabase && ids.length > 0) {
-        runSupabaseWrite(
-          'notificationsStore:clearAll',
-          supabase.from('notifications').delete().in('id', ids),
-          (message) => set({ error: message }),
-        )
-      }
+      api.delete('/notifications').catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
-    getUnreadCount: () => {
-      return get().notifications.filter((n) => !n.isRead).length
-    },
-
-    getUnread: () => {
-      return get().notifications.filter((n) => !n.isRead)
-    },
-
-    getByEntity: (entityType, entityId) => {
-      return get().notifications.filter(
-        (n) => n.entityType === entityType && n.entityId === entityId
-      )
-    },
+    getUnreadCount: () => get().notifications.filter((n) => !n.isRead).length,
+    getUnread: () => get().notifications.filter((n) => !n.isRead),
+    getByEntity: (entityType, entityId) =>
+      get().notifications.filter((n) => n.entityType === entityType && n.entityId === entityId),
 
     toggleType: (type) => {
       set((state) => {
@@ -205,8 +136,6 @@ export const useNotificationsStore = create<NotificationsStore>()(
       })
     },
 
-    isTypeEnabled: (type) => {
-      return !get().disabledTypes.has(type)
-    },
+    isTypeEnabled: (type) => !get().disabledTypes.has(type),
   })
 )

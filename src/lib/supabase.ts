@@ -1,38 +1,25 @@
-import { createClient } from '@supabase/supabase-js'
-import type { Database } from './database.gen'
-import { devConsole } from './devConsole'
-
 /**
- * Resolved data backend for this bundle:
- * - `supabase`: real project (VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY).
- * - `unconfigured`: no backend; production shows bootstrap fatal screen.
+ * Supabase compatibility stub — Supabase has been replaced by the Velo API.
+ * This file preserves imports across the codebase during the migration.
+ * Files should be updated to import from `./api` directly over time.
+ *
+ * `supabase` is typed as SupabaseClient | null so existing `if (!supabase)` guards
+ * correctly narrow and TypeScript doesn't error on property accesses inside those guards.
+ * At runtime the value is always null, so all guarded Supabase code is unreachable.
  */
-export type DataRuntime = 'supabase' | 'unconfigured'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import { getToken } from './api'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
-const supabaseAnonKey =
-  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ??
-  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)
+export type DataRuntime = 'velo-api' | 'unconfigured'
 
-export const isSupabaseConfigured =
-  typeof supabaseUrl === 'string' &&
-  supabaseUrl.startsWith('https://') &&
-  typeof supabaseAnonKey === 'string' &&
-  supabaseAnonKey.length > 10
+export const isSupabaseConfigured = true
+export const isBootstrapFatalError = false
+export const dataRuntime: DataRuntime = 'velo-api'
 
-/** Production and staging bundles require Supabase at build time. */
-export const isBootstrapFatalError = Boolean(import.meta.env.PROD && !isSupabaseConfigured)
+/** Always null — Supabase SDK removed. Guards that check `supabase &&` will skip Supabase paths. */
+export const supabase = null as unknown as SupabaseClient | null
 
-export const dataRuntime: DataRuntime = isSupabaseConfigured ? 'supabase' : 'unconfigured'
-
-const isVitest = import.meta.env.MODE === 'test'
-
-if (dataRuntime === 'unconfigured' && import.meta.env.DEV && !isVitest) {
-  devConsole.warn(
-    '[Velo] Supabase env vars missing or invalid. Auth and data are disabled until you set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY).',
-  )
+/** Back-compat alias — use `getToken()` from `./api` directly in new code. */
+export function getSupabaseSession() {
+  return getToken() ? { access_token: getToken() } : null
 }
-
-export const supabase = isSupabaseConfigured
-  ? createClient<Database>(supabaseUrl!, supabaseAnonKey!)
-  : null

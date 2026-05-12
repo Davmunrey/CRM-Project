@@ -4,16 +4,19 @@ import userEvent from '@testing-library/user-event'
 import { Register } from '../../src/pages/Register'
 import { TestRouter } from '../utils/TestRouter'
 
-const { mockSignUp, mockNavigate } = vi.hoisted(() => ({
-  mockSignUp: vi.fn(),
+const { mockRegister, mockNavigate } = vi.hoisted(() => ({
+  mockRegister: vi.fn(),
   mockNavigate: vi.fn(),
 }))
 
-vi.mock('../../src/lib/supabase', () => ({
-  supabase: { auth: { signUp: mockSignUp } },
-  isSupabaseConfigured: true,
-  isBootstrapFatalError: false,
-}))
+vi.mock('../../src/store/authStore', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/store/authStore')>()
+  return {
+    ...actual,
+    useAuthStore: (selector: (s: { register: typeof mockRegister }) => unknown) =>
+      selector({ register: mockRegister }),
+  }
+})
 
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>()
@@ -21,11 +24,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
 })
 
 function renderRegister() {
-  return render(
-    <TestRouter>
-      <Register />
-    </TestRouter>
-  )
+  return render(<TestRouter><Register /></TestRouter>)
 }
 
 async function fillAndSubmit() {
@@ -38,37 +37,25 @@ async function fillAndSubmit() {
 
 describe('Register', () => {
   beforeEach(() => {
-    mockSignUp.mockReset()
+    mockRegister.mockReset()
     mockNavigate.mockReset()
   })
 
-  it('AUTH-01: calls supabase.auth.signUp with email, password, and user metadata', async () => {
-    mockSignUp.mockResolvedValue({ data: { session: null }, error: null })
+  it('AUTH-01: calls register with name, email, and password on submit', async () => {
+    mockRegister.mockResolvedValue({ success: true })
     renderRegister()
     await fillAndSubmit()
     await waitFor(() => {
-      expect(mockSignUp).toHaveBeenCalledWith({
+      expect(mockRegister).toHaveBeenCalledWith({
+        name: 'Test User',
         email: 'test@example.com',
         password: 'Aa1!abcdefgh',
-        options: { data: { full_name: 'Test User', org_name: 'example.com' } },
       })
     })
   }, 15000)
 
-  it('AUTH-02: shows email verification screen when signUp returns no session', async () => {
-    mockSignUp.mockResolvedValue({ data: { session: null }, error: null })
-    renderRegister()
-    await fillAndSubmit()
-    await waitFor(() => {
-      expect(screen.getByText(/revisa tu correo|check your email/i)).toBeInTheDocument()
-    })
-  }, 15000)
-
-  it('AUTH-01: navigates to / when signUp returns an immediate session', async () => {
-    mockSignUp.mockResolvedValue({
-      data: { session: { access_token: 'tok', user: { id: 'u1' } } },
-      error: null,
-    })
+  it('AUTH-01: navigates to / on successful registration', async () => {
+    mockRegister.mockResolvedValue({ success: true })
     renderRegister()
     await fillAndSubmit()
     await waitFor(() => {
@@ -76,8 +63,8 @@ describe('Register', () => {
     })
   }, 15000)
 
-  it('AUTH-01: shows error message on signUp failure', async () => {
-    mockSignUp.mockResolvedValue({ data: { session: null }, error: { message: 'Email already registered' } })
+  it('AUTH-01: shows error message on register failure', async () => {
+    mockRegister.mockResolvedValue({ success: false, error: 'Email already registered' })
     renderRegister()
     await fillAndSubmit()
     await waitFor(() => {
