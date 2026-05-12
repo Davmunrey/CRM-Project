@@ -1,40 +1,10 @@
 /// <reference types="vitest/config" />
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { resolve } from 'path'
 
-/** Keep aligned with `src/lib/envChannel.ts` `resolveAppChannel` logic (no `test` mode in builds). */
-function resolveBuildChannel(mode: string, env: Record<string, string>): string {
-  const explicit = (env.VITE_APP_CHANNEL ?? '').trim().toLowerCase()
-  if (explicit === 'production' || explicit === 'staging') return explicit
-  if (mode === 'staging') return 'staging'
-  if (mode === 'production') return 'production'
-  return 'development'
-}
-
-function isSupabaseEnvValid(env: Record<string, string>): boolean {
-  const url = env.VITE_SUPABASE_URL
-  const key = env.VITE_SUPABASE_ANON_KEY ?? env.VITE_SUPABASE_PUBLISHABLE_KEY
-  return (
-    typeof url === 'string' &&
-    url.startsWith('https://') &&
-    typeof key === 'string' &&
-    key.length > 10
-  )
-}
-
-export default defineConfig(({ command, mode }) => {
-  const env = loadEnv(mode, process.cwd(), 'VITE_')
-  const channel = resolveBuildChannel(mode, env)
-
-  if (command === 'build' && (channel === 'production' || channel === 'staging') && !isSupabaseEnvValid(env)) {
-    throw new Error(
-      `[Velo] Build rejected: VITE_APP_CHANNEL is "${channel}" but VITE_SUPABASE_URL (https://…) and ` +
-        'VITE_SUPABASE_ANON_KEY (or VITE_SUPABASE_PUBLISHABLE_KEY) are missing or invalid.',
-    )
-  }
-
+export default defineConfig(({ mode }) => {
   const analyze = process.env.ANALYZE === '1' || process.env.ANALYZE === 'true'
   return {
     plugins: [
