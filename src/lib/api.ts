@@ -60,7 +60,9 @@ async function request<T>(
 
   if (res.status === 401) {
     clearToken()
-    window.location.replace('/login')
+    if (!window.location.pathname.startsWith('/login')) {
+      window.location.replace('/login')
+    }
     throw new Error('Unauthorized')
   }
 

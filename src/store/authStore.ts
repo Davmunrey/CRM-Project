@@ -479,6 +479,7 @@ export function initSupabaseAuth(): (() => void) | undefined {
 
   if (!token || isTokenExpired(token)) {
     clearToken()
+    useAuthStore.getState().setCurrentUser(null)
     useAuthStore.getState().setIsLoadingAuth(false)
     return
   }

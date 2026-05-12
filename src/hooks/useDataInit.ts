@@ -21,13 +21,12 @@ import { initRealtimeSubscriptions } from '../lib/realtimeSubscriptions'
  * Call this inside a component that only renders for authenticated users.
  */
 export function useDataInit() {
-  const currentUser = useAuthStore((s) => s.currentUser)
+  const currentUserId = useAuthStore((s) => s.currentUser?.id ?? null)
   const didInit = useRef(false)
 
   useEffect(() => {
     if (didInit.current) return
-    // For !isSupabaseConfigured we still want seed data loaded
-    if (!currentUser) return
+    if (!currentUserId) return
 
     didInit.current = true
 
@@ -75,6 +74,6 @@ export function useDataInit() {
       window.removeEventListener('online', handleBackOnline)
       didInit.current = false
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per auth session, guarded by didInit ref
-  }, [currentUser])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- currentUserId (stable string) prevents spurious re-runs from object identity changes
+  }, [currentUserId])
 }
