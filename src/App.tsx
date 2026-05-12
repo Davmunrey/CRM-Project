@@ -51,6 +51,7 @@ const PipelineTimeline = lazy(() => import('./pages/PipelineTimeline').then((m) 
 const Automations = lazy(() => import('./pages/Automations').then((m) => ({ default: m.Automations })))
 const Products = lazy(() => import('./pages/Products').then((m) => ({ default: m.Products })))
 const GmailCallback = lazy(() => import('./pages/GmailCallback').then((m) => ({ default: m.GmailCallback })))
+const Landing = lazy(() => import('./pages/Landing').then((m) => ({ default: m.Landing })))
 
 function ProtectedPage({ title, children, requiredPermission }: { title: string; children: React.ReactNode; requiredPermission?: import('./types/auth').Permission }) {
   return (
@@ -62,10 +63,26 @@ function ProtectedPage({ title, children, requiredPermission }: { title: string;
   )
 }
 
-/** Unknown paths: send guests to login, signed-in users to dashboard. */
+/** `/` — landing for guests, dashboard for authenticated users. */
+function HomeRoute() {
+  const isLoadingAuth = useAuthStore((s) => s.isLoadingAuth)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated())
+  const t = useTranslations()
+
+  if (isLoadingAuth) return <div className="crm-page text-sm text-fg-muted">{t.common.loading}</div>
+  if (!isAuthenticated) return <Landing />
+
+  return (
+    <ProtectedPage title={t.nav.dashboard}>
+      <Dashboard />
+    </ProtectedPage>
+  )
+}
+
+/** Unknown paths: send guests to landing, signed-in users to dashboard. */
 function CatchAllRedirect() {
   const user = useAuthStore((s) => s.currentUser)
-  return <Navigate to={user ? '/' : '/login'} replace />
+  return <Navigate to={user ? '/' : '/'} replace />
 }
 
 /** Shown before router when production/staging build lacks Supabase env (copy is localized). */
@@ -133,15 +150,8 @@ function AppRoutes() {
         <Route path="/accept-invite" element={<AcceptInvite />} />
         <Route path="/auth/gmail/callback" element={<GmailCallback />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/"
-          element={
-            <ProtectedPage title={t.nav.dashboard}>
-              <Dashboard />
-            </ProtectedPage>
-          }
-        />
+        {/* Home: landing for guests, dashboard for authenticated */}
+        <Route path="/" element={<HomeRoute />} />
         <Route path="/contacts" element={<ProtectedPage title={t.nav.contacts} requiredPermission="contacts:read"><Contacts /></ProtectedPage>} />
         <Route path="/leads" element={<ProtectedPage title={t.nav.leads} requiredPermission="contacts:read"><Leads /></ProtectedPage>} />
         <Route path="/contacts/:id" element={<ProtectedPage title={t.nav.contacts} requiredPermission="contacts:read"><ContactDetail /></ProtectedPage>} />

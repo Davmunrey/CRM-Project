@@ -112,8 +112,8 @@ describe('initSupabaseAuth', () => {
   it('AUTH-05: logout calls supabase.auth.signOut', async () => {
     useAuthStore.setState({
       currentUser: { id: 'u1', email: 'a@b.com', name: 'A', role: 'sales_rep', jobTitle: '', isActive: true, createdAt: '', updatedAt: '' },
-      session: { token: 'tok' } as any,
-      supabaseSession: { access_token: 'at' } as any,
+      session: { userId: 'u1', token: 'tok', expiresAt: 0, createdAt: '' },
+      supabaseSession: { access_token: 'at' } as unknown,
     })
 
     await useAuthStore.getState().logout()
