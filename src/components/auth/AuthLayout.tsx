@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { Zap } from 'lucide-react'
 import { useSettingsStore } from '../../store/settingsStore'
 import { LanguageSwitcher } from '../shared/LanguageSwitcher'
 import { ThemeSwitcher } from '../ui/ThemeSwitcher'
+import { Logo } from '../brand/Logo'
 
 export interface AuthLayoutProps {
   variant?: 'centered' | 'split'
@@ -39,7 +39,7 @@ export function AuthLayout({
       {branding.logoUrl ? (
         <img src={branding.logoUrl} alt="" className="w-full h-full object-cover" />
       ) : (
-        <Zap size={24} className="text-fg" aria-hidden />
+        <Logo variant="icon" theme="onAccent" size={28} />
       )}
     </div>
   )
