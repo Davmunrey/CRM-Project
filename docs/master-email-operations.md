@@ -7,6 +7,7 @@
 ## Table of contents
 
 - [Email deliverability (Resend)](#email-deliverability-resend)
+- [BYO‑SMTP outbound (per organization)](#byo-smtp-outbound)
 - [Supabase auth emails branding](#supabase-auth-emails-branding)
 - [In-app outbound and Gmail](#in-app-outbound-and-gmail)
 - [Email mailbox privacy runbook](#email-mailbox-privacy-runbook)
@@ -117,6 +118,53 @@ CRM-specific outbound and inbox behavior (complements the Resend DNS checklist a
 ### Limits
 
 - Inbox placement is decided by recipients and providers; no client change guarantees avoiding spam or Promotions.
+
+---
+
+
+<a id="byo-smtp-outbound"></a>
+## BYO‑SMTP outbound (per organization)
+
+Velo can route outbound mail through an organization's own SMTP server in addition to Gmail OAuth and Resend. Use this when a customer must send "from" a verified corporate domain managed outside Resend (e.g., Microsoft 365, Google Workspace SMTP relay, AWS SES SMTP, Postmark SMTP, dedicated Postfix).
+
+### Selection
+
+Set `VITE_EMAIL_PROVIDER=smtp` in the deployment that should default to SMTP. Settings can be saved per‑org regardless of this flag, but only sends from the active provider go through `smtp-send-email`.
+
+### Operator setup
+
+1. Apply migration `20260512100000_email_smtp_settings.sql` — creates `public.email_smtp_settings` and the safe view `public.email_smtp_settings_public`.
+2. Deploy Edge Function `smtp-send-email` (`supabase functions deploy smtp-send-email`).
+3. Ensure existing Edge secrets are set on the project: `TOKEN_ENCRYPTION_KEY` (64 hex chars, shared with the Gmail token cipher), Supabase publishable/secret keys, and `EDGE_CORS_ORIGINS`.
+4. Optional throttling secrets: `SMTP_RATE_MAX_PER_USER_PER_HOUR` (default 60) and `SMTP_RATE_MAX_PER_ORG_PER_HOUR` (default 500).
+
+### What admins do in the app
+
+In **Settings → Email → SMTP outbound (BYO)**, an org `owner` or `admin` enters:
+
+- Host, port (587 default), username, password
+- From address (must be valid) and optional From name + Reply‑To
+- Security mode: `starttls` (port 587), `ssl` (port 465 implicit TLS) or `none` (testing only)
+
+Hitting **Save** stores the row as the new active configuration; older rows are kept (`is_active = false`) for audit. The password is AES‑256‑GCM ciphertext (`base64(iv):base64(ciphertext)`) and never returned to the browser. Editing settings without retyping the password reuses the existing ciphertext.
+
+Hitting **Send test** dispatches a small "SMTP test" message to a recipient of the admin's choice using the saved (or inline) credentials, and writes the outcome to `last_test_at` / `last_test_ok` / `last_test_error`.
+
+### What happens on outbound send
+
+`smtpEmailProvider` (`src/services/emailProviders/smtpEmailProvider.ts`) calls `smtp-send-email` with `action: send`. The function:
+
+1. Authenticates the caller via the Supabase Bearer token.
+2. Validates recipient/CC/BCC counts, subject length, body size, and attachment limits (max 10 attachments, 10 MB total).
+3. Applies a rolling‑hour rate limit per user and per org.
+4. Decrypts the stored password and sends via [`denomailer`](https://deno.land/x/denomailer).
+5. Records the send in `audit_log` (`smtp_send_email`).
+
+### Security notes
+
+- Direct write access to `email_smtp_settings` is denied to end users — every mutation goes through the Edge Function with the service role key, which guarantees encryption before persistence.
+- The Settings UI reads from the `email_smtp_settings_public` view which excludes `password_cipher`.
+- Failed sends do **not** rotate the credentials automatically; admins must re‑enter the password if a provider rotates it.
 
 ---
 

@@ -85,6 +85,10 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 # If using Resend as outbound provider
 # VITE_EMAIL_PROVIDER=resend
 # VITE_RESEND_SEND_FUNCTION=resend-send-email
+
+# If using BYO-SMTP (per-organization SMTP credentials stored in Velo)
+# VITE_EMAIL_PROVIDER=smtp
+# VITE_SMTP_SEND_FUNCTION=smtp-send-email
 ```
 
 **Deploy:** SPA rewrites, `VITE_APP_CHANNEL`, and Supabase vars per environment are documented in [`docs/deployment-spa-and-env.md`](docs/deployment-spa-and-env.md). **Google (Gmail/Calendar) operator setup** (OAuth client, Edge secrets, deploy): [`docs/google-gmail-oauth-verification.md`](docs/google-gmail-oauth-verification.md#operator-setup-google-oauth). Google verification / redirect matrix: same file. Post-deploy smoke: [`docs/smoke-checklist-production.md`](docs/smoke-checklist-production.md).
@@ -94,6 +98,8 @@ When `VITE_EMAIL_PROVIDER=resend`, deploy Supabase Edge Function `resend-send-em
 
 - `RESEND_API_KEY`
 - `RESEND_FROM`
+
+When `VITE_EMAIL_PROVIDER=smtp` (BYO-SMTP), deploy the `smtp-send-email` Edge Function and grant the org owner/admin access to **Settings → Email → SMTP outbound**. Each organization saves its own host, port, username, From address and password. Velo encrypts the SMTP password with `TOKEN_ENCRYPTION_KEY` (AES‑256‑GCM) before persisting it in `email_smtp_settings.password_cipher`; the plaintext only exists inside the Edge Function. Use the **Send test** button to validate the connection — the last result is persisted in `last_test_at` / `last_test_ok` / `last_test_error`. Required Edge secrets are the same as the rest of the platform (`SUPABASE_URL`, publishable + secret service keys, `TOKEN_ENCRYPTION_KEY`); optional knobs are `SMTP_RATE_MAX_PER_USER_PER_HOUR` (60) and `SMTP_RATE_MAX_PER_ORG_PER_HOUR` (500).
 
 Optional variables for maintenance scripts:
 

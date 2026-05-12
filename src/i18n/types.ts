@@ -684,6 +684,48 @@ export interface Translations {
     emailSyncState: string
     emailLastSync: string
     emailLastError: string
+    /** SMTP (BYO outbound) */
+    smtpTitle: string
+    smtpBlurb: string
+    smtpHost: string
+    smtpHostPlaceholder: string
+    smtpPort: string
+    smtpUsername: string
+    smtpUsernamePlaceholder: string
+    smtpPassword: string
+    smtpPasswordPlaceholder: string
+    smtpPasswordSavedHint: string
+    smtpFromAddress: string
+    smtpFromAddressPlaceholder: string
+    smtpFromName: string
+    smtpFromNamePlaceholder: string
+    smtpReplyTo: string
+    smtpReplyToPlaceholder: string
+    smtpSecurity: string
+    smtpSecurityStarttls: string
+    smtpSecuritySsl: string
+    smtpSecurityNone: string
+    smtpSecurityHelp: string
+    smtpTestRecipient: string
+    smtpTestRecipientPlaceholder: string
+    smtpButtonSave: string
+    smtpButtonTest: string
+    smtpButtonDisable: string
+    smtpStatusConfigured: string
+    smtpStatusNotConfigured: string
+    smtpStatusDisabled: string
+    smtpLastTest: string
+    smtpLastTestOk: string
+    smtpLastTestError: string
+    smtpToastSaved: string
+    smtpToastDisabled: string
+    smtpToastTestSent: string
+    smtpToastTestFailed: string
+    smtpToastNeedAdmin: string
+    smtpToastMissingFields: string
+    smtpToastSaveFailed: string
+    smtpProviderActiveHint: string
+    smtpProviderInactiveHint: string
     emailSignatures: string
     signatureName: string
     signatureHtml: string

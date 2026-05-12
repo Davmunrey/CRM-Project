@@ -1,4 +1,4 @@
-export type EmailProviderName = 'gmail' | 'resend'
+export type EmailProviderName = 'gmail' | 'resend' | 'smtp'
 
 export interface SendEmailPayload {
   to: string[]

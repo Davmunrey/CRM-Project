@@ -44,6 +44,7 @@ import { SettingsWebhooksPanel } from '../components/settings/SettingsWebhooksPa
 import { SettingsIntegrationsPanel } from '../components/settings/SettingsIntegrationsPanel'
 import { SettingsMfaPanel } from '../components/settings/SettingsMfaPanel'
 import { SettingsSsoScimPanel } from '../components/settings/SettingsSsoScimPanel'
+import { SettingsSmtpPanel } from '../components/settings/SettingsSmtpPanel'
 import { SignatureRichEditor } from '../components/settings/SignatureRichEditor'
 const ENTITY_TABS: CustomFieldEntityType[] = ['contact', 'company', 'deal']
 
@@ -939,6 +940,11 @@ export function Settings() {
             </Link>
           </div>
         )}
+      </section>
+
+      {/* ── BYO-SMTP Configuration ───────────────────────────────────────── */}
+      <section className={`crm-surface-section p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
+        <SettingsSmtpPanel />
       </section>
 
       <section className={`crm-surface-section p-6 ${tabVisible('email') ? '' : 'hidden'}`}>
