@@ -80,7 +80,8 @@ See: .planning/PROJECT.md
 
 ## Blockers
 
-- Password reset emails not sent yet (backend creates token in DB; SMTP/Resend integration needed to actually deliver link)
+- Gmail OAuth Edge Functions require Supabase JWT — blocked until Edge Functions updated to accept velo-api JWT. Gmail connect/refresh will not work until then.
+- Production deploy not yet executed (DEPLOY-01 through DEPLOY-05 remain operator tasks)
 
 ## Notes (Phase 10 — velo-api migration)
 
@@ -108,3 +109,5 @@ See: .planning/PROJECT.md
 *Session 2026-04-22 — Canonical docs + planning aligned with **Supabase-only** runtime: removed `demo` / offline-mock narrative from `docs/deployment-spa-and-env.md`, root `README.md`, `supabase/README.md`, masters, `project-state`, Gitea CI `vite build --mode development`; `REQUIREMENTS` DEPLOY-02, `STACK`, `ROADMAP` 10.2; `STRUCTURE.md` map (`SecurePasswordField`, `defaultAppSettings`, `securePassword`, `workflowLibrary`).*
 
 *Session 2026-05-13 — Documentation audit post velo-api migration: deleted `.planning/research/supabase-multitenant.md` (44KB pre-migration archive) and `.planning/research/deploy-testing.md` (content in canonical docs); deleted `supabase/auth-email-templates/README.md` (Supabase Auth gone); stripped Supabase-auth sections from `supabase/README.md`, `master-security-compliance.md` (Auth/SSO handoff + external hardening checklist), `master-email-operations.md` (Supabase auth emails branding → transactional auth emails pending velo-api SMTP), `master-release-qa.md` (env vars + blocker notes), `docs/README.md`, `project-state.md`, `REQUIREMENTS.md`. All remaining Supabase references are for Edge Functions (Gmail, tracking, webhooks, public API) which remain deployed.*
+
+*Session 2026-05-13 (continued) — Runtime bug fixes post-migration: contacts/companies/deals stores now unwrap `{ data: [] }` API response shape; automationsStore/sequencesStore/leadsStore/customFieldsStore/templateStore parse JSON-string columns (`actions`, `trigger`, `steps`, `flowDefinition`, `tags`, `metadata`, `options`, `variables`) returned as text from PostgreSQL; 5x `?.startsWith` guards (Notifications, AttachmentsList, Sidebar, Automations); Zod `.parse()` → `.safeParse()` in companies + deals routes; deleted 4 obsolete GitHub Actions workflows (supabase-remote-deploy, webhook-worker, types-drift, data-retention-purge); wired transactional emails (password reset + invitations) via velo-api `sendEmail`; lead score recompute triggered on new activity for linked contact. Build clean. 218 tests passing.*

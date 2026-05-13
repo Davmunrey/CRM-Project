@@ -3,15 +3,15 @@
 **Defined:** 2026-03-31
 **Core Value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time — with lead scoring, reporting, and collaboration (no Anthropic/Claude LLM stack in product scope).
 
-## Current Snapshot (2026-04-10)
+## Current Snapshot (2026-05-13)
 
 - Execution source of truth: `.planning/STATE.md` and `.planning/ROADMAP.md`.
-- Phases 1–9 are completed; Phase 10 (deployment hardening) is pending.
-- Gmail integration is fully operational with PKCE OAuth, server-side refresh token storage, access-token refresh flow, and persisted thread links (`gmail_thread_links`).
-- i18n is expanded to 6 languages (`en`, `es`, `pt`, `fr`, `de`, `it`).
-- Quote workflow includes builder save + export-to-PDF (print layout) + send-by-email from deal detail.
-- Build hardening includes route-level lazy loading for chart-heavy pages (`Dashboard`, `Reports`, `Forecast`) to keep chunk warnings under control.
-- Test suite remains green (`105` tests) and build is passing.
+- Phases 1–9 complete; Phase 10 (production deploy) pending operator action.
+- **Backend:** velo-api (Fastify 5 + PostgreSQL 16 + Redis). Supabase Auth removed. JWT `{ sub, org, role }`.
+- Gmail integration wired (PKCE + Edge Functions) but blocked — Edge Functions require Supabase JWT, not yet updated.
+- Transactional emails (password reset, invitations) wired via nodemailer/Resend in velo-api.
+- i18n: 6 languages (`en`, `es`, `pt`, `fr`, `de`, `it`), 1603 keys each, parity verified.
+- Test suite: **218 passing, 1 skipped** (42 files). Build clean.
 
 ## v1 Requirements
 
@@ -31,38 +31,38 @@
 ### Schema & Multi-Tenancy
 
 - [x] **SCHEMA-01**: All core tables (contacts, companies, deals, activities, notifications, goals, sequences, automations, templates, products) have `organization_id uuid NOT NULL` column
-- [x] **SCHEMA-02**: RLS policies on all tables enforce `organization_id = (auth.jwt() -> 'app_metadata' ->> 'organization_id')::uuid` (JWT claim, not subquery — performance critical)
-- [x] **SCHEMA-03**: Trigger sets `organization_id` in JWT `app_metadata` on org membership changes
+- [x] **SCHEMA-02**: velo-api scopes all queries with `WHERE organization_id = ${req.user.org}` from JWT `org` claim (API-layer isolation, not DB-level RLS)
+- [x] **SCHEMA-03**: velo-api issues JWT with `org` claim immediately after org creation or invitation accept — no DB trigger needed
 - [x] **SCHEMA-04**: `organizations` and `organization_members` tables created with correct FK structure
 - [x] **SCHEMA-05**: `gmail_tokens` table created to store refresh tokens server-side (never in browser)
 
 ### Data Migration — Core Stores
 
-- [x] **DATA-01**: `contactsStore` migrated from Zustand `persist` to async Supabase calls (create, read, update, delete)
-- [x] **DATA-02**: `companiesStore` migrated to Supabase
-- [x] **DATA-03**: `dealsStore` migrated to Supabase
-- [x] **DATA-04**: `activitiesStore` migrated to Supabase
-- [x] **DATA-05**: `notificationsStore` migrated to Supabase
-- [x] **DATA-06**: Seed data `onRehydrateStorage` hooks removed from all migrated stores (conflict with Supabase fetch)
+- [x] **DATA-01**: `contactsStore` migrated from Zustand `persist` to async velo-api calls (create, read, update, delete)
+- [x] **DATA-02**: `companiesStore` migrated to velo-api
+- [x] **DATA-03**: `dealsStore` migrated to velo-api
+- [x] **DATA-04**: `activitiesStore` migrated to velo-api
+- [x] **DATA-05**: `notificationsStore` migrated to velo-api
+- [x] **DATA-06**: Seed data `onRehydrateStorage` hooks removed from all migrated stores
 - [x] **DATA-07**: Loading states (`isLoading`, `error`) added to all migrated stores
-- [x] **DATA-08**: Optimistic updates implemented with `updated_at` timestamp guard to prevent double-apply on realtime echo
+- [x] **DATA-08**: Optimistic updates implemented with rollback on API error
 
 ### Data Migration — Secondary Stores
 
-- [x] **DATA-09**: `goalsStore` migrated to Supabase
-- [x] **DATA-10**: `sequencesStore` migrated to Supabase
-- [x] **DATA-11**: `automationsStore` migrated to Supabase
-- [x] **DATA-12**: `templateStore` migrated to Supabase
-- [x] **DATA-13**: `productsStore` migrated to Supabase
-- [x] **DATA-14**: `auditStore` migrated to Supabase
-- [x] **DATA-15**: `customFieldsStore` migrated to Supabase
+- [x] **DATA-09**: `goalsStore` migrated to velo-api
+- [x] **DATA-10**: `sequencesStore` migrated to velo-api
+- [x] **DATA-11**: `automationsStore` migrated to velo-api
+- [x] **DATA-12**: `templateStore` migrated to velo-api
+- [x] **DATA-13**: `productsStore` migrated to velo-api
+- [x] **DATA-14**: `auditStore` migrated to velo-api
+- [x] **DATA-15**: `customFieldsStore` migrated to velo-api
 
 ### Real-Time Sync
 
-- [x] **REALTIME-01**: Contacts table has Supabase Realtime subscription — changes by any org member appear instantly for all
-- [x] **REALTIME-02**: Deals table has Realtime subscription
-- [x] **REALTIME-03**: Activities table has Realtime subscription
-- [x] **REALTIME-04**: Notifications table has Realtime subscription
+- [x] **REALTIME-01**: Contacts: Socket.io `__veloDbChange('contacts')` broadcasts to all connected org clients
+- [x] **REALTIME-02**: Deals: Socket.io broadcast on create/update/delete
+- [x] **REALTIME-03**: Activities: Socket.io broadcast on create/update/delete
+- [x] **REALTIME-04**: Notifications: Socket.io broadcast on create
 
 ### Users & Assignment
 

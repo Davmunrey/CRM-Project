@@ -9,19 +9,19 @@ This file consolidates the prior `.planning/codebase/*.md` documents into a sing
 
 ### Pattern overview
 
-**Overall:** React SPA with Supabase-backed data/auth, org-scoped RLS, and Zustand stores as client orchestration.
+**Overall:** React SPA + `velo-api` (Fastify 5, PostgreSQL 16, Redis). Zustand stores for client state. Auth via HS256 JWT (`{ sub, org, role }`). Real-time via Socket.io. Supabase Edge Functions retained for Gmail OAuth only (`supabase` client is `null` at runtime — all data goes through velo-api).
 
 **Key characteristics:**
-- Supabase is the primary backend for auth, persistence, and realtime sync.
-- Zustand remains the app state layer, with selective persistence for safe client state.
-- Route-level protection is handled through `ProtectedRoute` + permission checks.
-- Gmail integration uses PKCE + Edge Functions for secure token exchange/refresh.
+- `velo-api` is the primary backend for auth, persistence, and realtime sync.
+- Zustand remains the app state layer; all mutations go through `src/lib/api.ts` (`VITE_API_URL`).
+- Route-level protection via `ProtectedRoute` + JWT `org`/`role` claims.
+- Gmail integration uses PKCE + Supabase Edge Functions for token exchange (blocked until Edge Functions accept velo-api JWT).
 
 ### Layers
 
 **App shell + routing (`src/App.tsx`):**
 - Declares routes and protected wrappers.
-- Initializes auth/session sync.
+- Initializes auth via `GET /auth/me` on mount (`isLoadingAuth` prevents /login flash).
 - Uses lazy loading for chart-heavy routes (`Dashboard`, `Reports`, `Forecast`).
 
 **Pages (`src/pages/*`):**
@@ -30,34 +30,36 @@ This file consolidates the prior `.planning/codebase/*.md` documents into a sing
 
 **Stores (`src/store/*`):**
 - Domain-specific Zustand stores.
-- Supabase CRUD + realtime subscriptions where applicable.
-- When Supabase env vars are missing, `supabase` is `null` (`dataRuntime === 'unconfigured'`): no client mock CRM; staging/production builds require valid keys (`src/lib/envChannel.ts`, `src/lib/supabase.ts`, `vite.config.ts`).
+- All CRUD via `src/lib/api.ts` REST calls to velo-api; optimistic updates where implemented.
+- `supabase` is `null` — all `!supabase` / `supabase?.` guards fire; Supabase-dependent panels show info states.
+- Real-time: `window.__veloDbChange(table)` global fires Socket.io events → stores refetch.
 
 **Services (`src/services/*`):**
-- Stateless integration adapters (`gmailService`, `src/services/emailProviders/*`, etc.).
-- Security-sensitive OAuth/token steps are delegated to Supabase Edge Functions.
+- Stateless integration adapters (`googleIntegrationService`, `gmailTokenRefresh`, etc.).
+- Gmail token operations attempt direct Edge Function fetch with velo-api JWT as fallback.
 
 **Data/infra (`supabase/*`):**
-- SQL migrations and Edge Functions for server-side responsibilities.
-- Includes Gmail token and thread-link persistence support.
+- Edge Functions for Gmail OAuth (token exchange, refresh, disconnect).
+- SQL migrations: schema history for PostgreSQL (now managed via `velo-api/src/db/migrations/`).
 
 ### Core flows
 
 **Auth + org scope:**
-1. Session initializes from Supabase.
-2. Org/role context is resolved.
-3. RLS enforces tenant isolation on all scoped data operations.
+1. `POST /auth/login` → HS256 JWT with `{ sub, org, role }`.
+2. `GET /auth/me` on mount restores session.
+3. Every velo-api route scopes queries with `WHERE organization_id = ${req.user.org}`.
 
 **CRM CRUD:**
 1. UI dispatches store action.
-2. Store persists to Supabase (with optimistic UX where implemented).
-3. Realtime updates fan out to active clients.
+2. Store optimistically updates local state.
+3. `api.post/patch/delete` persists to velo-api.
+4. Socket.io `__veloDbChange` broadcasts table changes to other connected clients.
 
 **Gmail:**
-1. User connects via Google OAuth PKCE.
-2. Code exchange and refresh token handling happen in Edge Functions.
-3. Short-lived access tokens are used client-side; inbox loads/syncs threads.
-4. Thread links can be pinned/unpinned and persisted (`gmail_thread_links`).
+1. User connects via Google OAuth popup (PKCE).
+2. Code exchange via Supabase Edge Function (currently blocked — requires Supabase JWT).
+3. Short-lived access tokens used client-side; inbox loads/syncs Gmail threads.
+4. Thread links pinned/unpinned and persisted in `gmail_thread_links` table.
 
 ### Cross-cutting concerns
 

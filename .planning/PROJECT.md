@@ -4,7 +4,7 @@
 
 Velo is a full-featured B2B SaaS CRM for Sales teams, built to compete with HubSpot and Pipedrive. It covers the full sales lifecycle — contacts, companies, deals pipeline, activities, sequences, forecasting, rule-based lead scoring, and Gmail integration — with multi-tenant organization isolation so any business can sign up and use it independently.
 
-The product is now operating as a Supabase-backed SaaS app (auth, multi-tenant RLS, real-time stores, hardened Gmail OAuth/token flow, and 6-language i18n coverage). The next milestone is deployment hardening and production release on **private static hosting** (reverse proxy or CDN serving `dist/` — see `.planning/ROADMAP.md` Phase 10 and `docs/project-state.md`).
+The product operates with a self-hosted Fastify REST API (`velo-api`) backed by PostgreSQL 16 and Redis. Auth is JWT-based (HS256, claims `{ sub, org, role }`). All CRM data persisted in PostgreSQL; real-time via Socket.io. Supabase Edge Functions remain deployed for Gmail OAuth only. Next milestone: production deploy.
 
 **Documentation language:** `.planning/` and engineering master documents under `docs/` are maintained in **English**.
 
@@ -43,10 +43,12 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 ### Active
 
-- [ ] Phase 10 production deployment and release checklist
-- [ ] Production environment validation (Supabase vars, Edge Functions, redirects)
-- [ ] End-to-end UAT for organization bootstrap, team invitations, Gmail flows, and quote export/email flows
-- [x] Org directory hydration: `list_organization_members_with_identity` via `fetchOrgUsers` on Supabase session, profile updates, **OrgSetup** (after `create_org_self_service`), and **AcceptInvite** (after `refreshSession`); see `authStore.fetchOrgUsers`.
+- [ ] Phase 10 production deployment and release checklist (DEPLOY-01–05)
+- [ ] Production environment validation (`VITE_API_URL`, `JWT_SECRET`, `RESEND_API_KEY` or SMTP, `REDIS_URL`)
+- [ ] Gmail Edge Functions updated to accept velo-api JWT (currently blocked — Edge Functions require Supabase JWT)
+- [ ] End-to-end UAT: org bootstrap, team invitations, password reset email, quote export/email
+- [x] Transactional emails wired: password reset + invitation accept links via `sendEmail` (velo-api nodemailer)
+- [x] Org directory hydration: `fetchOrgUsers` populates `authStore.users` from `GET /users` on login/org-create/invite-accept
 
 ### Out of Scope
 
@@ -58,30 +60,31 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 ## Context
 
-**Current state:** Core modules are backed by Supabase with org-scoped data and RLS. Auth/session is handled by Supabase Auth, stores fetch from Supabase, and tests are green (105/105). Recent hardening fixes removed demo-user bleed in Supabase mode, stabilized org creation session checks, fixed UUID field mapping for deals/activities inserts, added Gmail thread-link persistence with remote migrations/deploy (`gmail_thread_links`, `gmail_thread_workspace`), and applied lazy-loading plus UX/UI polish for chart-heavy and inbox/date-localized flows.
+**Current state:** All CRM modules backed by velo-api (Fastify 5, Node.js 22, PostgreSQL 16). Auth is velo-api JWT — no Supabase Auth. Stores fetch from `VITE_API_URL` REST endpoints. Real-time via Socket.io. 218 tests passing. Gmail Edge Functions remain deployed but require Supabase JWT (blocked until updated to accept velo-api JWT). Transactional emails (password reset, invitations) now wired via nodemailer/Resend.
 
 **Known critical issues (current):**
-- Deployment and environment validation for production are still pending (Phase 10)
+- Gmail OAuth connect/refresh blocked (Edge Functions require Supabase JWT)
+- Production deploy not yet executed (DEPLOY-01–05 operator tasks)
 
-**Tech stack:** React 18, TypeScript (strict), Vite 8, Tailwind CSS 3, Zustand 5, React Router v6, React Hook Form + Zod v4, Recharts, @hello-pangea/dnd, @supabase/supabase-js, date-fns, lucide-react
+**Tech stack:** React 18, TypeScript (strict), Vite 8, Tailwind CSS 3, Zustand 5, React Router v6, React Hook Form + Zod v4, Recharts, @hello-pangea/dnd, date-fns, lucide-react. **Backend:** Fastify 5, postgres.js, BullMQ, Socket.io.
 
 **Target market:** Spanish and European B2B sales teams. UI is multilingual (en/es/pt/fr/de/it).
 
 ## Constraints
 
-- **Tech stack**: React + Supabase + **private** static hosting — no dedicated Node app server; Supabase Edge Functions for sensitive operations (Gmail OAuth token exchange; no Claude/Anthropic proxy)
-- **Auth**: Supabase Auth only — no custom auth, no third-party OAuth providers beyond Google (Gmail)
-- **Multi-tenancy**: RLS at database level — no application-layer tenant filtering
-- **Budget**: Free tier first — Supabase free tier + self-operated static hosting where applicable
-- **Backwards compatibility**: Seed data reset on first Supabase migration — localStorage data is not migrated
+- **Tech stack**: React SPA + `velo-api` (Fastify 5 + PostgreSQL 16 + Redis) + private static hosting; Supabase Edge Functions remain for Gmail OAuth only
+- **Auth**: velo-api JWT (HS256, `{ sub, org, role }`) — no Supabase Auth
+- **Multi-tenancy**: API-layer filtering via `req.user.org` JWT claim on every query; no database-level RLS dependency
+- **Budget**: Self-hosted stack; Supabase free tier only for surviving Edge Functions
+- **Backwards compatibility**: localStorage no longer used for CRM data — all in PostgreSQL
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Supabase for backend | Schema and RLS model aligned with org isolation requirements | Adopted |
-| Supabase Edge Functions for sensitive operations | Keeps service role and external API credentials out of browser | Adopted |
-| Organizations via RLS + JWT claims | O(1) tenant resolution and strict row isolation | Adopted |
+| velo-api (Fastify + PostgreSQL) for backend | Full control over auth, schema, and data layer; no Supabase vendor lock-in | Adopted 2026-05 |
+| Supabase Edge Functions retained for Gmail OAuth | Gmail token exchange requires Supabase JWT; migrating Edge Functions is post-v1 | Adopted |
+| JWT org claim for tenant isolation | O(1) tenant resolution; `WHERE organization_id = $orgId` in every query | Adopted |
 | i18n 6-language baseline (en/es/pt/fr/de/it) | Reduces UX fragmentation for international teams and demos | Adopted |
 | Supabase mode must not rehydrate demo users | Prevents cross-org confusion and invalid team state | Adopted |
 | Persisted Gmail thread links (`gmail_thread_links`) | Enables explicit CRM linkage and avoids re-matching drift across sessions | Adopted |
