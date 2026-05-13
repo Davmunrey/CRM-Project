@@ -69,33 +69,6 @@ Shortcut for steps 3 + webhooks after the first secret setup: `npm run supabase:
 
 `npm run supabase:deploy:all-edge` is an **alias** for `supabase:deploy:all-functions` (full deploy, not only webhooks + integrations).
 
-## Auth email branding (Supabase)
-
-To brand and harden Supabase Auth emails (signup confirmation, magic link, reset password, invite):
-
-1. Open templates in [`supabase/auth-email-templates/`](./auth-email-templates/).
-2. In Supabase Dashboard, go to `Authentication -> Email Templates`.
-3. Paste the corresponding HTML for each template.
-4. Use the recommended subjects from [`supabase/auth-email-templates/README.md`](./auth-email-templates/README.md).
-5. Send test emails for each flow and verify links open your production domain.
-
-Operator reminders:
-
-- Configure sender identity in `Authentication -> SMTP Settings` (name + sender email).
-- Keep auth domains aligned with [`supabase/config.toml`](./config.toml) `site_url` and `additional_redirect_urls`.
-- Verify SPF, DKIM, DMARC before production rollout.
-
-## Auth security hardening (dashboard-required)
-
-Some Supabase advisor checks are controlled at the **Auth project level** (not through SQL migrations). For production:
-
-1. Open `Authentication -> Providers / Security`.
-2. Enable **Leaked password protection** (HaveIBeenPwned integration).
-3. Enable at least one additional **MFA factor** beyond your current baseline (typically TOTP, optionally WebAuthn).
-4. Save and re-run Supabase advisors.
-
-Record evidence (screenshot + date + operator) in `docs/master-security-compliance.md` under the external hardening checklist.
-
 ## API & capture troubleshooting runbook
 
 Use this checklist when `Settings > Integrations` shows API key/token errors.

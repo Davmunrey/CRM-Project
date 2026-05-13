@@ -8,7 +8,7 @@
 
 - [Email deliverability (Resend)](#email-deliverability-resend)
 - [BYO‑SMTP outbound (per organization)](#byo-smtp-outbound)
-- [Supabase auth emails branding](#supabase-auth-emails-branding)
+- [Transactional auth emails (velo-api)](#transactional-auth-emails)
 - [In-app outbound and Gmail](#in-app-outbound-and-gmail)
 - [Email mailbox privacy runbook](#email-mailbox-privacy-runbook)
 - [Email release checklist](#email-release-checklist)
@@ -17,32 +17,30 @@
 ---
 
 
-<a id="supabase-auth-emails-branding"></a>
-## Supabase auth emails branding
+<a id="transactional-auth-emails"></a>
+## Transactional auth emails (velo-api)
 
-Scope: emails sent by Supabase Auth (`confirm signup`, `magic link`, `reset password`, `invite`).
+Auth is now handled by velo-api (Fastify + PostgreSQL). Supabase Auth is no longer used for login/registration.
 
-### Source of truth
+### Current state
 
-- Template kit: [`supabase/auth-email-templates/`](../supabase/auth-email-templates/)
-- Rollout guide + suggested subjects: [`supabase/auth-email-templates/README.md`](../supabase/auth-email-templates/README.md)
-- Domain redirects: [`supabase/config.toml`](../supabase/config.toml)
+- `POST /auth/forgot-password` creates a 1-hour reset token in `password_reset_tokens` table. **Email delivery not yet implemented** — SMTP/Resend integration is a pending blocker.
+- `POST /auth/reset-password` consumes the token.
 
-### Operator checklist
+### Operator checklist (pending)
 
-- [x] **Sender identity configured (2026-04-29):** Supabase `Authentication → SMTP Settings` set to Resend (`smtp.resend.com:587`, sender `onboarding@resend.dev`). Email confirmations and invites now deliver on production (`https://velo-crm-taupe.vercel.app`).
-- [ ] Each auth template updated from the repo kit.
-- [ ] Test email received for all four auth flows.
-- [ ] CTA buttons and fallback links open approved domains only.
-- [ ] Copy includes "ignore if you did not request this" language for security.
+- [ ] Wire Resend (or SMTP) into velo-api `POST /auth/forgot-password` to send the reset link.
+- [ ] HTML template for password reset email with branded design.
+- [ ] Test email received for forgot-password flow.
+- [ ] CTA button opens `{FRONTEND_URL}/reset-password?token=<token>`.
+- [ ] Copy includes "ignore if you did not request this" language.
 - [ ] SPF/DKIM/DMARC verified for sender domain.
 
 ### Acceptance criteria
 
-- Emails render cleanly in Gmail and Outlook web clients.
-- Brand consistency: same app naming and tone across all auth flows.
-- No stale domains (old preview/staging hosts) in email links.
-- Password reset and invite flows complete without manual URL edits.
+- Reset email arrives within 60 seconds of request.
+- Token in email link is valid for 1 hour and single-use.
+- Renders cleanly in Gmail and Outlook web clients.
 
 ---
 

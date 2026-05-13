@@ -67,8 +67,9 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 ## Other entry points
 
 - Main app overview: [`../README.md`](../README.md)
-- Supabase SQL and migrations: [`../supabase/README.md`](../supabase/README.md)
-- Deploy + env + Supabase runtime notes + optional integrations smoke: [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) · Browser smoke: set `E2E_STAGING_URL` (see [`../e2e/smoke.spec.ts`](../e2e/smoke.spec.ts))
+- Supabase Edge Functions (Gmail, tracking, webhooks, public API): [`../supabase/README.md`](../supabase/README.md)
+- velo-api (Fastify backend, PostgreSQL, JWT auth): [`../velo-api/README.md`](../../velo-api/README.md)
+- Deploy + env + Docker full-stack: [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) · Browser smoke: set `E2E_STAGING_URL` (see [`../e2e/smoke.spec.ts`](../e2e/smoke.spec.ts))
 
 ---
 

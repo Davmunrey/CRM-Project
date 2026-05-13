@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { getToken } from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import { getGmailRedirectUri } from './gmailService'
 
@@ -20,7 +21,7 @@ function getCurrentOrganizationId(): string | undefined {
 }
 
 async function getAccessToken(): Promise<string | undefined> {
-  if (!supabase) return undefined
+  if (!supabase) return getToken() ?? undefined
   const { data: sessionData } = await supabase.auth.getSession()
   let accessToken = sessionData.session?.access_token
   if (!accessToken) {
@@ -30,8 +31,34 @@ async function getAccessToken(): Promise<string | undefined> {
   return accessToken
 }
 
+async function directEdgeFetch<T>(functionName: string, body: Record<string, unknown>): Promise<T> {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
+  const anonKey =
+    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ??
+    (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)
+  if (!supabaseUrl) {
+    throw new Error('Failed to send a request to the Edge Function: server not configured')
+  }
+  const accessToken = await getAccessToken()
+  const res = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/${functionName}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(anonKey ? { apikey: anonKey } : {}),
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
+    body: JSON.stringify(body),
+  }).catch(() => null)
+  if (!res) throw new Error('Failed to send a request to the Edge Function: network error')
+  const payload = (await res.json().catch(() => null)) as { error?: string } | null
+  if (!res.ok || payload?.error) {
+    throw new Error(payload?.error ?? `Failed to send a request to the Edge Function: HTTP ${res.status}`)
+  }
+  return payload as T
+}
+
 async function invokeEdgeWithFallback<T>(functionName: string, body: Record<string, unknown>): Promise<T> {
-  if (!supabase) throw new Error('Supabase not configured')
+  if (!supabase) return directEdgeFetch<T>(functionName, body)
 
   const primary = await supabase.functions.invoke(functionName, { body })
   if (!primary.error) return primary.data as T
@@ -40,34 +67,7 @@ async function invokeEdgeWithFallback<T>(functionName: string, body: Record<stri
     throw new Error(primary.error.message)
   }
 
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
-  const anonOrPublishableKey =
-    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ??
-    (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)
-  if (!supabaseUrl || !anonOrPublishableKey) {
-    throw new Error(primary.error.message)
-  }
-
-  const accessToken = await getAccessToken()
-  const directRes = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/${functionName}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: anonOrPublishableKey,
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    },
-    body: JSON.stringify(body),
-  }).catch(() => null)
-
-  if (directRes) {
-    const directPayload = (await directRes.json().catch(() => null)) as { error?: string } | null
-    if (!directRes.ok || directPayload?.error) {
-      throw new Error(directPayload?.error ?? primary.error.message)
-    }
-    return directPayload as T
-  }
-
-  throw new Error(primary.error.message)
+  return directEdgeFetch<T>(functionName, body)
 }
 
 export async function fetchGoogleOAuthStartUrl(bundle: GoogleOAuthBundle = 'primary'): Promise<string> {

@@ -49,10 +49,10 @@ See: .planning/PROJECT.md
 | Auth Code + PKCE for Gmail OAuth | initTokenClient cannot obtain refresh tokens | 2026-03-31 |
 | Edge Functions for API key proxying | Anthropic + Gmail secrets must never reach the browser | 2026-03-31 |
 | Free beta (no Stripe in v1.0) | Validate product before billing complexity | 2026-03-31 |
-| isLoadingAuth default is true (02.4) | Cold render holds at null until INITIAL_SESSION fires — prevents /login flash on hard refresh | 2026-03-31 |
+| isLoadingAuth default is true (02.4) | Cold render holds at null until auth/me resolves — prevents /login flash on hard refresh | 2026-03-31 |
 | JWT claim for RLS (not JOIN subquery) | Performance critical — O(1) vs per-row subquery at scale | 2026-03-31 |
 | Per-file vi.mock() for Supabase (02.0) | Inline mocking gives explicit control over each test file vs auto-hoisting | 2026-03-31 |
-| ProtectedRoute returns null while loading (02.4) | No layout shift; loading is invisible until Supabase resolves | 2026-03-31 |
+| ProtectedRoute returns null while loading (02.4) | No layout shift; loading is invisible until auth resolves | 2026-03-31 |
 | react-markdown + rehype-sanitize | Replace dangerouslySetInnerHTML in AIAgent — live XSS vector | 2026-03-31 |
 | Static frontend hosting (provider TBD) | Ship Vite `dist/` to a static host or CDN (any vendor with SPA rewrites + preview envs); keeps client-only architecture | 2026-03-31 |
 | Supabase for backend | Schema already written, RLS built-in for multi-tenancy, SDK installed | 2026-03-31 |
@@ -106,3 +106,5 @@ See: .planning/PROJECT.md
 *Session 2026-04-21 (later) — Engineering closure batch: checkbox ownership matrix merged into `docs/project-state.md` + `docs/README` links; ROADMAP Phase 9 CI wording aligned with Gitea Actions; Automations/Sequences polish + shared **template library** dialog (`WorkflowTemplateLibraryDialog`, `workflowTemplateCatalog`); `fetchOrgUsers` after **OrgSetup** and **AcceptInvite**; `npm run build`, `npm run i18n:lint`, `npm run ui:lint` green on this snapshot. **`DEPLOY-01`–`DEPLOY-05` and production smoke** remain operator-owned: attach host, channel, Supabase project, smoke outcome, and commit per `.planning/REQUIREMENTS.md` before ticking `[x]` there.*
 
 *Session 2026-04-22 — Canonical docs + planning aligned with **Supabase-only** runtime: removed `demo` / offline-mock narrative from `docs/deployment-spa-and-env.md`, root `README.md`, `supabase/README.md`, masters, `project-state`, Gitea CI `vite build --mode development`; `REQUIREMENTS` DEPLOY-02, `STACK`, `ROADMAP` 10.2; `STRUCTURE.md` map (`SecurePasswordField`, `defaultAppSettings`, `securePassword`, `workflowLibrary`).*
+
+*Session 2026-05-13 — Documentation audit post velo-api migration: deleted `.planning/research/supabase-multitenant.md` (44KB pre-migration archive) and `.planning/research/deploy-testing.md` (content in canonical docs); deleted `supabase/auth-email-templates/README.md` (Supabase Auth gone); stripped Supabase-auth sections from `supabase/README.md`, `master-security-compliance.md` (Auth/SSO handoff + external hardening checklist), `master-email-operations.md` (Supabase auth emails branding → transactional auth emails pending velo-api SMTP), `master-release-qa.md` (env vars + blocker notes), `docs/README.md`, `project-state.md`, `REQUIREMENTS.md`. All remaining Supabase references are for Edge Functions (Gmail, tracking, webhooks, public API) which remain deployed.*

@@ -82,7 +82,8 @@ Use this operational plan to close unchecked items across `docs/**/*.md`, `.plan
   - `docs/**/*.md`: 110
   - `.planning/**/*.md`: 49
 - Active blockers (external/runtime):
-  - `Supabase remote deploy` workflow on `master` is failing preflight because required GitHub secrets are empty (`Missing required secret: SUPABASE_ACCESS_TOKEN`), so deploy/runtime checks stay `[ ]` until secrets are populated and pipeline reruns green.
+  - Supabase Edge Function deploy (`supabase-remote-deploy.yml`) blocked until `SUPABASE_ACCESS_TOKEN` and Google OAuth secrets are set in GitHub Actions secrets.
+  - Password reset email delivery not yet implemented (token created in DB; SMTP/Resend integration pending).
 
 ---
 
@@ -165,11 +166,11 @@ When enabling **required status checks** on the default branch (`master`):
 Cross-check before any **external** customer rollout (evidence lives in linked docs; platform tasks are org-specific):
 
 - [x] Outbound Resend function abuse controls and logging (`supabase/functions/resend-send-email`, index: [`master-security-compliance` — evidence](./master-security-compliance.md#sell-ready-security-evidence-index)).
-- [x] Deploy channels + auth fail-closed: `VITE_APP_CHANNEL` (`src/lib/envChannel.ts`), Supabase bootstrap (`src/lib/supabase.ts`, `src/App.tsx`), build validation (`vite.config.ts`), `.env.example`.
-- [x] Supabase mode auth persistence does not restore demo credentials (`src/store/authStore.ts`).
+- [x] Deploy channels: `VITE_APP_CHANNEL` (`src/lib/envChannel.ts`), auth fail-closed (`src/App.tsx`), build validation (`vite.config.ts`), `.env.example`.
+- [x] Auth store does not restore stale or demo credentials on rehydrate (`src/store/authStore.ts`).
 - [x] Email send state matches provider outcome (`failed` + audit path where applicable).
 - [x] CI includes critical-level `npm audit` (`.gitea/workflows/ci.yml`, `.github/workflows/ci.yml`).
-- [ ] **Per deployment:** Supabase RLS/auth checklist signed, SPF/DKIM/DMARC evidence, branch protection in Gitea (see [`master-security-compliance` — Supabase checklist](./master-security-compliance.md#supabase-external-hardening-checklist), [`master-email-operations` — deliverability](./master-email-operations.md#email-deliverability-resend), [`master-security-compliance` — Gitea](./master-security-compliance.md#gitea-operations)).
+- [ ] **Per deployment:** External hardening checklist signed, SPF/DKIM/DMARC evidence, branch protection in Gitea (see [`master-security-compliance` — hardening checklist](./master-security-compliance.md#supabase-external-hardening-checklist), [`master-email-operations` — deliverability](./master-email-operations.md#email-deliverability-resend), [`master-security-compliance` — Gitea](./master-security-compliance.md#gitea-operations)).
 
 ---
 
@@ -215,7 +216,7 @@ Use after changes to **Dashboard**, **Settings → Getting started**, or [`onboa
 
 ### Preconditions
 
-- [ ] Signed-in user belongs to an organization (`organizationId` present in session / JWT as usual for Supabase mode).
+- [ ] Signed-in user belongs to an organization (`organizationId` present in JWT claims).
 
 ### Flow
 
@@ -404,22 +405,24 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 
 ## 1) Pre-Go-Live (T-7 to T-1 days)
 
-- [ ] **Environment Variables**
-  - [ ] `VITE_APP_CHANNEL` (`production` on prod host; `staging` on preview/UAT; omit or `development` only for local dev — no mock-channel bundle)
-  - [ ] `VITE_SUPABASE_URL`
-  - [ ] `VITE_SUPABASE_ANON_KEY`
+- [ ] **Environment Variables — Frontend**
+  - [ ] `VITE_API_URL` points to production velo-api (`/api` for Docker nginx; full URL for external hosting)
+  - [ ] `VITE_APP_CHANNEL` (`production` on prod; `staging` on preview/UAT)
+  - [ ] `VITE_GMAIL_CLIENT_ID` (if Gmail integration enabled)
+- [ ] **Environment Variables — velo-api**
+  - [ ] `JWT_SECRET` min 32 chars (`openssl rand -hex 32`)
+  - [ ] `DATABASE_URL` points to production PostgreSQL
+  - [ ] `CORS_ORIGIN` matches frontend production origin
+  - [ ] `REDIS_URL` (for BullMQ/Socket.io)
   - [ ] `LEAD_MAINTENANCE_SECRET`
-  - [ ] `SUPABASE_FUNCTIONS_URL`
-  - [ ] `SUPABASE_ANON_KEY`
-- [ ] **Auth Providers**
-  - [ ] Google enabled and callback URL validated
-  - [ ] Azure enabled and callback URL validated
-  - [ ] Apple enabled and callback URL validated
-  - [ ] SAML configured (if enterprise rollout requires it)
-- [ ] **Database and RLS**
-  - [ ] Latest migrations applied
+- [ ] **Environment Variables — Supabase Edge Functions** (if deployed)
+  - [ ] `SUPABASE_FUNCTIONS_URL` + `SUPABASE_ANON_KEY`
+  - [ ] Google OAuth secrets set in Edge
+- [ ] **Database**
+  - [ ] Latest migrations applied (`npm run db:migrate`)
+  - [ ] Seed applied (`npm run db:seed`)
   - [ ] Tenant isolation smoke test completed
-  - [ ] `lead_score_maintenance_runs` table visible per tenant under RLS
+  - [ ] `lead_score_maintenance_runs` table visible per tenant
 - [ ] **Edge Functions**
   - [ ] `lead-score-maintenance` deployed
   - [ ] `track-open` deployed
@@ -461,7 +464,7 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
   - [ ] telemetry run status mostly `success`
   - [ ] error messages triaged within SLA
 - [ ] Capacity checks:
-  - [ ] Supabase rate limits acceptable
+  - [ ] velo-api rate limits acceptable (PostgreSQL + Redis load under expected traffic)
   - [ ] SMTP/email provider health stable
   - [ ] edge function latency acceptable
 - [ ] Product checks:

@@ -1,8 +1,8 @@
 # Security & Compliance (master)
 
-> Consolidated **2026-04-15**; password policy and selector hygiene **2026-04-22**; Edge/public-surface hardening narrative **2026-04-22** (rate limits, CORS allowlist env, webhook SSRF guards — see [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist)). Single reference for auth/SSO contracts, hardening matrix, sell-ready evidence index, Supabase external checklist, SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
+> Consolidated **2026-04-15**; auth migrated from Supabase to velo-api JWT **2026-05-13**; Edge/public-surface hardening narrative **2026-04-22** (rate limits, CORS allowlist env, webhook SSRF guards — see [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist)). Single reference for auth/SSO contracts, hardening matrix, sell-ready evidence index, external hardening checklist, SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
 
-**Replaces:** auth-sso-backend-handoff, hardening-matrix, sell-ready-security-evidence-index, supabase-external-hardening-checklist, compliance-mapping, dsar-playbook, gitea-operations.
+**Replaces:** auth-sso-backend-handoff, hardening-matrix, sell-ready-security-evidence-index, external-hardening-checklist, compliance-mapping, dsar-playbook, gitea-operations.
 
 ## Table of contents
 
@@ -36,98 +36,37 @@
 <a id="auth-sso-backend-handoff"></a>
 ## Auth / SSO backend handoff
 
-The shipped SPA shell is **email/password + magic link** against Supabase; OAuth/SAML paths below describe **contracts already present in the client** for when backend SSO is enabled. Until those flows are turned on in Supabase and env, treat SSO as integration-ready, not default login.
+Auth is **email/password via velo-api** (`POST /auth/login`, `POST /auth/register`). JWT HS256 with `sub/org/role` claims. SSO (Google/Azure/Apple/SAML) is roadmap — the frontend has feature-flag toggles wired but backend routes are not yet implemented.
 
 ## Document Control
 
 - Status: Active
 - Owner: Backend/Auth
-- Last updated: 2026-04-22 (Edge §3 checklist: CORS env, public API/lead limits, webhook SSRF, SPA headers/sanitizer)
+- Last updated: 2026-05-13 (migrated from Supabase Auth to velo-api JWT)
 - Canonical: Yes
 
-## Frontend contract already implemented
+## velo-api auth endpoints
 
-- OAuth buttons call Supabase directly:
-  - `google`
-  - `azure`
-  - `apple`
-- SAML button calls Supabase SSO with a resolved domain.
-- If `VITE_AUTH_SAML_DISCOVERY_ENDPOINT` is configured, frontend resolves domain via backend first.
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `POST /auth/register` | public | Create account; returns JWT with `org: null` |
+| `POST /auth/login` | public | Email/password; returns JWT with org claim |
+| `GET /auth/me` | Bearer JWT | Returns user + org info |
+| `POST /auth/forgot-password` | public | Creates reset token (always 200) |
+| `POST /auth/reset-password` | public | Validates token TTL, updates password |
 
-## Required backend endpoint (optional but recommended)
+JWT payload: `{ sub: userId, org: organizationId | null, role: UserRole }`. Expiry: 7 days.
 
-If your org maps users to SSO domains dynamically, expose:
+## SSO — future work
 
-- `POST /auth/sso/discovery`
-- Request body:
-
-```json
-{ "email": "user@company.com" }
-```
-
-- Response body:
-
-```json
-{ "domain": "company.com" }
-```
-
-Error responses should use non-2xx status codes. Frontend displays a generic SSO resolution error.
-
-## Google enterprise discovery contract (recommended for multi-tenant buyers)
-
-Frontend now supports an enterprise guard before starting Google OAuth.
-
-- `POST /auth/sso/discovery`
-- Request body (Google flow):
-
-```json
-{
-  "identifier": "user@company.com",
-  "email": "user@company.com",
-  "domain": "company.com",
-  "provider": "google"
-}
-```
-
-- Response body:
-
-```json
-{
-  "allowGoogleOAuth": true,
-  "googleHostedDomain": "company.com",
-  "preferredProvider": "google"
-}
-```
-
-Notes:
-- `allowGoogleOAuth=false` blocks Google button flow for that tenant/account.
-- `googleHostedDomain` is passed as Google OAuth `hd` query param.
-- Frontend also sends `login_hint` (email when available) + `prompt=select_account`.
-- If `preferredProvider="saml"` and Google is denied, UI instructs users to use company SSO.
-
-## Supabase provider setup responsibilities (backend/platform)
-
-- Enable providers in Supabase Auth:
-  - Google OAuth
-  - Azure OAuth
-  - Apple OAuth
-  - SAML 2.0
-- Configure redirect URLs to the app origin.
-- For SAML, map corporate domains so `signInWithSSO({ domain })` resolves correctly.
-
-## Frontend env toggles
-
-Use `.env` or deployment variables:
+Frontend env toggles exist for when SSO is added to velo-api:
 
 - `VITE_AUTH_GOOGLE_ENABLED=true|false`
 - `VITE_AUTH_AZURE_ENABLED=true|false`
 - `VITE_AUTH_APPLE_ENABLED=true|false`
 - `VITE_AUTH_SAML_ENABLED=true|false`
-- `VITE_AUTH_SAML_DISCOVERY_ENDPOINT=<url>` (optional)
-- `VITE_AUTH_GOOGLE_DISCOVERY_ENDPOINT=<url>` (optional, falls back to SAML endpoint if omitted)
-- `VITE_AUTH_GOOGLE_DISCOVERY_REQUIRED=true|false` (default: `true` in prod, `false` in dev/staging)
 
-These toggles only affect visible login options, so backend can roll out provider-by-provider safely.
+These toggles only affect visible login options and are all currently `false`.
 
 ---
 
@@ -236,31 +175,28 @@ Single consolidation 2026-04-15: prior `sell-ready-security-evidence-index` + re
 
 
 <a id="supabase-external-hardening-checklist"></a>
-## Supabase external hardening checklist
+## External hardening checklist
 
-Use this checklist when validating a **production** Supabase project backing Velo. Record evidence (screenshots, SQL output, dashboard URLs) in your security ticket or the [#sell-ready security evidence index](#sell-ready-security-evidence-index).
+Use this checklist when validating a **production** deployment. Record evidence (screenshots, SQL output, dashboard URLs) in your security ticket or the [#sell-ready security evidence index](#sell-ready-security-evidence-index).
 
 **Doc hub:** [`README`](./README.md) (status snapshot and full index).
 
-## 1. Authentication and sessions
+## 1. Authentication and sessions (velo-api)
 
-- [ ] Email confirmation policy matches your go-live plan (invite-only vs open signup).
-- [ ] OAuth redirect URLs include every production origin (and staging if applicable).
-- [ ] Refresh token rotation enabled where supported.
-- [ ] JWT expiry aligned with product risk (shorter for high-sensitivity tenants).
-- [ ] Rate limits and bot protection reviewed in Supabase Auth settings.
-- [ ] **Leaked password protection** enabled (Supabase Auth password security).
-- [ ] MFA has at least two enabled options for the project risk profile (for example TOTP + WebAuthn).
+- [ ] `JWT_SECRET` is at least 32 random bytes (`openssl rand -hex 32`); rotated on compromise.
+- [ ] JWT expiry (`JWT_EXPIRES_IN`) aligned with product risk (default 7d).
+- [ ] `CORS_ORIGIN` on velo-api matches frontend production origin exactly.
+- [ ] `POST /auth/forgot-password` always returns 200 (email enumeration prevention — already implemented).
+- [ ] `password_reset_tokens` TTL is 1 hour (migration `002` — already applied).
+- [ ] Rate limiting enabled on auth routes (`@fastify/rate-limit` — already configured).
 
-## 2. Row Level Security (RLS)
+## 2. Row Level Security (RLS — Supabase Edge Functions)
 
 - [ ] RLS **enabled** on all tables in `public` that hold tenant or user data.
 - [ ] No policy uses `USING (true)` for write operations without an org/user predicate.
-- [ ] `SECURITY DEFINER` functions reviewed; each validates `auth.uid()` / org membership before mutating data.
+- [ ] `SECURITY DEFINER` functions reviewed; each validates org membership before mutating data.
 - [ ] Indexes exist on columns referenced in policies (avoid full-table scans at scale).
 - [ ] Run tenant-isolation smoke: User A cannot `select`/`update` User B org rows (automate where possible).
-
-References: [Supabase RLS](https://supabase.com/docs/guides/auth/auth-deep-dive/auth-row-level-security), [Production checklist](https://supabase.com/docs/guides/platform/going-into-prod).
 
 ## 3. Edge Functions
 
@@ -281,7 +217,8 @@ References: [Supabase RLS](https://supabase.com/docs/guides/auth/auth-deep-dive/
 
 ## 5. Observability
 
-- [ ] Supabase logs exported or reviewed on a schedule.
+- [ ] velo-api structured logs reviewed on a schedule (stdout → your log aggregator).
+- [ ] Supabase Edge Function logs reviewed for Gmail, webhook, and public-API errors.
 - [ ] Alerts for auth anomalies, function error rate, and database CPU/storage.
 
 ## Sign-off
@@ -312,7 +249,7 @@ It is a pragmatic engineering mapping (not legal advice and not a formal certifi
 ## Scope
 
 - Application: Velo
-- Backend: Supabase (Auth, Postgres, Edge Functions, RLS)
+- Backend: velo-api (Fastify, PostgreSQL, JWT auth) + Supabase (Edge Functions, RLS for Edge-served data)
 - Operational controls: lead maintenance telemetry/SLA, runbooks, handoff checklists
 
 ## Control Mapping Table
@@ -399,7 +336,7 @@ Always resolve the subject’s **`organization_id`** and enforce **tenant isolat
    - Document before/after hashes or row versions in the ticket.
 4. **Delete path (erasure)**  
    - Follow a defined order respecting FKs (child tables first).  
-   - For **Auth user removal**, use Supabase Auth admin APIs / dashboard per your runbook; confirm org membership rows and CRM ownership reassignment policy.
+   - For **Auth user removal**, delete from `users` table via velo-api admin or direct DB access; confirm org membership rows and CRM ownership reassignment policy.
 5. **Evidence**  
    - Attach query text (redacted), execution timestamp, operator, and sample row counts.  
    - Store evidence in your ticket system; avoid copying full exports into chat logs.

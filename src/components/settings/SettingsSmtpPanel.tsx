@@ -232,6 +232,10 @@ export function SettingsSmtpPanel() {
     }
   }
 
+  if (!supabase) {
+    return <p className="text-sm text-fg-muted">{t.errors.supabaseNotConfiguredDetail}</p>
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-3">

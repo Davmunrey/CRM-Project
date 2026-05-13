@@ -17,13 +17,13 @@
 
 ### Authentication & Organizations
 
-- [x] **AUTH-01**: User can sign up with email and password via Supabase Auth
+- [x] **AUTH-01**: User can sign up with email and password via velo-api JWT auth
 - [x] **AUTH-02**: User receives email verification after signup
 - [x] **AUTH-03**: User can reset password via email link
 - [x] **AUTH-04**: User session persists across browser refresh (onAuthStateChange + `isLoadingAuth: true` initial state to prevent race condition redirect)
 - [x] **AUTH-05**: User can log out and session is fully cleared
 - [x] **AUTH-06**: New user creates an organization on first login (org name, slug)
-- [x] **AUTH-07**: User can invite team members by email (Supabase Edge Function — requires service role key)
+- [x] **AUTH-07**: User can invite team members by email (velo-api `POST /orgs/me/invite`; invitation token stored in DB)
 - [x] **AUTH-08**: Invited user receives email and can accept invitation to join organization
 - [x] **AUTH-09**: User has a role within organization (owner, admin, member)
 - [x] **AUTH-10**: All CRM data is scoped to organization via RLS — no cross-tenant data leakage
@@ -72,7 +72,7 @@
 
 ### Security Fixes
 
-- [x] **SEC-01**: `authStore` weak djb2 hash replaced by Supabase Auth — passwords never stored locally
+- [x] **SEC-01**: `authStore` weak djb2 hash replaced by velo-api bcrypt auth — passwords never stored locally
 - [x] **SEC-02**: Third-party LLM API keys are not stored in the browser; sensitive credentials belong only in Edge Function env (if a future non-browser LLM integration is approved)
 - [x] **SEC-03**: `dangerouslySetInnerHTML` in `AIAgent.tsx` replaced with `react-markdown` + `rehype-sanitize`
 - [x] **SEC-04**: Direct browser LLM SDKs and legacy client AI modules were removed (`aiService.ts`, `aiStore.ts`, `components/ai/*`). Any future assistive model, if approved, must use Edge-only proxies with secrets in function env — **not** Anthropic/Claude (see **AI Features** below).
@@ -114,14 +114,14 @@
 ### Deployment
 
 - [ ] **DEPLOY-01**: Static SPA hosting configured so all client routes resolve to `index.html` on cold load (**primary:** nginx `try_files`, Caddy `file_server` + `try_files`, or CDN/bucket rules on **private** infrastructure). Optional: checked-in `vercel.json` or Netlify `_redirects` for reference only — **not** the required production platform.
-- [ ] **DEPLOY-02**: Production and preview/staging environments define `VITE_APP_CHANNEL` (`production` \| `staging`) plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the deployment pipeline or host dashboard (secrets never committed); hosted bundles are Supabase-only (no mock-channel omit of credentials)
-- [ ] **DEPLOY-03**: Staging builds (e.g. branch pipeline or manual staging host) set `VITE_APP_CHANNEL=staging` and use a **staging** Supabase project; production uses `VITE_APP_CHANNEL=production` and production-only credentials. Add every **staging and production origin** you use to Supabase Auth URL allowlists (not limited to any single SaaS preview domain).
+- [ ] **DEPLOY-02**: Production and preview/staging environments define `VITE_APP_CHANNEL` (`production` \| `staging`) and `VITE_API_URL` pointing to the correct velo-api instance (secrets never committed); `JWT_SECRET` and `CORS_ORIGIN` set on velo-api.
+- [ ] **DEPLOY-03**: Staging builds set `VITE_APP_CHANNEL=staging` and point `VITE_API_URL` at a staging velo-api instance; production uses `VITE_APP_CHANNEL=production` and production-only API. Add every **staging and production origin** to `CORS_ORIGIN` on the API and to `EDGE_CORS_ORIGINS` for Supabase Edge Functions.
 - [ ] **DEPLOY-04**: Production deployment on merge to `main` (or your protected release branch) with a recorded smoke pass
 - [ ] **DEPLOY-05**: Custom domain + HTTPS (DNS + TLS per your hosting provider)
 
 #### Recording DEPLOY completion (human-owned evidence)
 
-Check **`DEPLOY-*`** only after the work exists on the **target** environment (not when templates or docs are updated alone). Capture evidence in one of: this file (short dated bullet under Traceability), [`.planning/STATE.md`](./STATE.md) Notes, or [`docs/master-release-qa.md`](../docs/master-release-qa.md) — include **deploy URL**, **`VITE_APP_CHANNEL`**, **Supabase project** (staging vs prod), **smoke outcome** ([`docs/smoke-checklist-production.md`](../docs/smoke-checklist-production.md)), and **commit SHA or tag**.
+Check **`DEPLOY-*`** only after the work exists on the **target** environment (not when templates or docs are updated alone). Capture evidence in one of: this file (short dated bullet under Traceability), [`.planning/STATE.md`](./STATE.md) Notes, or [`docs/master-release-qa.md`](../docs/master-release-qa.md) — include **deploy URL**, **`VITE_APP_CHANNEL`**, **velo-api URL** (staging vs prod), **smoke outcome** ([`docs/smoke-checklist-production.md`](../docs/smoke-checklist-production.md)), and **commit SHA or tag**.
 
 **Agent / doc-only prep (2026-04-16):** [`docs/smoke-checklist-production.md`](../docs/smoke-checklist-production.md) extended with manager + onboarding steps so Phase 10 evidence has explicit gates when a human runs production smoke — **does not** check `DEPLOY-*` by itself.
 

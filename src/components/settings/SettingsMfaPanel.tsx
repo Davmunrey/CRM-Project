@@ -85,7 +85,7 @@ export function SettingsMfaPanel() {
     void load()
   }
 
-  if (!isSupabaseConfigured) {
+  if (!isSupabaseConfigured || !supabase) {
     return <p className="text-sm text-fg-muted">{t.errors.supabaseNotConfiguredDetail}</p>
   }
 

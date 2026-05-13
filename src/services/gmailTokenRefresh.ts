@@ -8,7 +8,7 @@ export type SetGmailTokenFn = (accessToken: string, expiresAt: number) => void
  * Calls `setToken` with the new token and expiry so callers can update their context.
  */
 export async function refreshGmailAccessToken(setToken: SetGmailTokenFn): Promise<string> {
-  if (!supabase) throw new Error('Supabase not configured')
+  if (!supabase) throw new Error('Failed to send a request to the Edge Function: gmail-refresh-token requires server configuration')
   const { data, error } = await supabase.functions.invoke('gmail-refresh-token')
   if (error || !data?.access_token) {
     throw new Error(error?.message ?? 'Token refresh failed - please reconnect Gmail')
