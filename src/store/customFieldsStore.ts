@@ -53,7 +53,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
         required: Boolean(r.required),
         order: (r.order as number) ?? 1,
         isActive: Boolean(r.isActive ?? r.is_active),
-        options: (r.options as string[]) ?? undefined,
+        options: (typeof r.options === 'string' ? JSON.parse(r.options) : r.options) as string[] | undefined,
         createdAt: ((r.createdAt ?? r.created_at) as string),
         updatedAt: ((r.updatedAt ?? r.updated_at) as string),
       }))
@@ -70,7 +70,7 @@ export const useCustomFieldsStore = create<CustomFieldsStore>()((set, get) => ({
         languageCode: ((r.languageCode ?? r.language_code) as Language),
         label: r.label as string,
         placeholder: (r.placeholder as string) ?? undefined,
-        options: (r.options as string[]) ?? undefined,
+        options: (typeof r.options === 'string' ? JSON.parse(r.options) : r.options) as string[] | undefined,
       }))
 
       set({ definitions, translations, values, isLoading: false })

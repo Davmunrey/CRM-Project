@@ -64,7 +64,7 @@ function rowToLead(row: ApiLead): Lead {
     score: (row.score as number) ?? 0,
     assignedTo: ((row.assignedTo ?? row.assigned_to) as string) ?? undefined,
     ownerUserId: ((row.ownerUserId ?? row.owner_user_id) as string) ?? undefined,
-    tags: (row.tags as string[]) ?? [],
+    tags: (typeof row.tags === 'string' ? JSON.parse(row.tags) : (row.tags ?? [])) as string[],
     notes: (row.notes as string) ?? undefined,
     createdAt: ((row.createdAt ?? row.created_at) as string) ?? new Date().toISOString(),
     updatedAt: ((row.updatedAt ?? row.updated_at) as string) ?? new Date().toISOString(),
@@ -275,7 +275,7 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
           [leadId]: (data ?? []).map((row) => ({
             id: row.id,
             eventType: (row.eventType ?? row.event_type) as string ?? 'activity',
-            metadata: row.metadata ?? {},
+            metadata: (typeof row.metadata === 'string' ? JSON.parse(row.metadata) : (row.metadata ?? {})) as Record<string, unknown>,
             createdAt: (row.createdAt ?? row.created_at) as string ?? new Date().toISOString(),
           })),
         },

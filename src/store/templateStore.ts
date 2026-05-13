@@ -29,7 +29,7 @@ function rowToTemplate(r: ApiTemplate): EmailTemplate {
     subject: r.subject as string,
     body: r.body as string,
     category: (r.category as EmailTemplate['category']) ?? 'general',
-    variables: (r.variables as string[]) ?? [],
+    variables: (typeof r.variables === 'string' ? JSON.parse(r.variables) : (r.variables ?? [])) as string[],
     createdAt: ((r.createdAt ?? r.created_at) as string),
     updatedAt: ((r.updatedAt ?? r.updated_at) as string),
     usageCount: ((r.usageCount ?? r.usage_count) as number) ?? 0,
