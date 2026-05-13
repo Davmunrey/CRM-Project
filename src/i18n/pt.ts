@@ -627,7 +627,7 @@ export const pt: Translations = {
     emailLastError: 'Último erro',
     smtpTitle: 'SMTP de saída (próprio servidor)',
     smtpBlurb:
-      'Configure seu próprio servidor SMTP (Office 365, SendGrid, Mailgun, Postmark, personalizado) para enviar e-mails de saída. A senha é armazenada criptografada (AES-256-GCM) e usada apenas pela Edge Function smtp-send-email.',
+      'Configure seu próprio servidor SMTP (Office 365, SendGrid, Mailgun, Postmark, personalizado) para enviar e-mails de saída. A senha é armazenada criptografada (AES-256-GCM) e usada pelo servidor Velo API para todos os e-mails de saída.',
     smtpHost: 'Host SMTP',
     smtpHostPlaceholder: 'smtp.exemplo.com',
     smtpPort: 'Porta',
@@ -774,7 +774,7 @@ export const pt: Translations = {
     webhooksTagline: 'Sem pressa: salve o endpoint, teste e ative quando quiser.',
     webhooksRequiresSupabase: 'Webhooks precisam de um projeto Supabase ligado ao app. Se outra pessoa cuida disso, peça ajuda para conectar.',
     webhooksCronHint:
-      'Processe a fila com um job agendado: POST na Edge Function webhook-worker com o cabeçalho x-webhook-worker-secret igual a WEBHOOK_WORKER_SECRET (veja supabase/README.md).',
+      'Processe a fila com um job agendado: POST /webhooks/process-queue com o cabeçalho x-webhook-worker-secret igual a WEBHOOK_WORKER_SECRET (veja velo-api README).',
     webhooksCronHintTitle: 'Fila de entregas (ops / self-hosting)',
     webhooksCreateSection: 'Adicionar um endpoint',
     webhooksName: 'Nome',
@@ -929,7 +929,7 @@ export const pt: Translations = {
     thisYear: 'Este Ano',
     emailTrackingTitle: 'Engajamento de e-mail de saída (servidor)',
     emailTrackingSubtitle:
-      'Aberturas e cliques registrados quando o destinatário carrega o pixel ou segue um link reescrito. As Edge Functions `track-open` e `track-click` gravam em `email_tracking_events`.',
+      'Aberturas e cliques registrados quando o destinatário carrega o pixel ou segue um link reescrito. As rotas Velo API `/email-tracking/open` e `/email-tracking/click` registam eventos em `email_tracking_events`.',
     emailTrackingServerBadge: 'Baseado no servidor',
     emailTrackingUnconfiguredBadge: 'Sem conexão',
     emailTrackingOpens: 'Aberturas',
@@ -1554,7 +1554,7 @@ export const pt: Translations = {
     gmailConnectionError: 'Erro ao conectar Gmail',
     googleIntegrationStartFailed: 'Não foi possível iniciar a ligação ao Google. Verifique a configuração no servidor.',
     googleEdgeFunctionUnreachable:
-      'Não foi possível contactar o serviço de ligação ao Google. Faça deploy das Edge Functions do Supabase (pelo menos `google-oauth-start` e `google-integration-status`) e defina os segredos em docs/google-gmail-oauth-verification.md (secção Operator setup). Se usa o workflow “Supabase remote deploy” no GitHub, execute-o após atualizar o repositório.',
+      'Verifique se a velo-api está em execução e que GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET estão definidos no ambiente do servidor. Consulte os logs da velo-api para detalhes.',
     googleOAuthAccessDenied: 'A autorização do Google foi cancelada.',
     googleOAuthStateInvalid: 'A sessão de ligação expirou. Tente novamente.',
     googleOAuthEmailMismatch: 'Use a mesma conta Google do seu e-mail do Velo.',

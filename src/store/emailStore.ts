@@ -685,7 +685,23 @@ export const useEmailStore = create<EmailStore>()(
       },
 
       fetchThreadWorkspace: async () => {
-        // gmail_thread_workspace not yet in velo-api — local state only
+        try {
+          const rows = await api.get<Array<{ threadId: string; ownerUserId: string | null; internalNote: string | null; updatedAt: string }>>(
+            '/gmail/thread-workspace',
+          )
+          const map: Record<string, GmailThreadWorkspaceMeta> = {}
+          for (const r of rows ?? []) {
+            map[r.threadId] = {
+              threadId: r.threadId,
+              ownerUserId: r.ownerUserId ?? undefined,
+              internalNote: r.internalNote ?? undefined,
+              updatedAt: r.updatedAt,
+            }
+          }
+          set({ threadWorkspace: map })
+        } catch {
+          // Non-critical — local state remains
+        }
       },
 
       setThreadLink: (link) => {
@@ -727,21 +743,22 @@ export const useEmailStore = create<EmailStore>()(
         set((s) => ({
           threadWorkspace: { ...s.threadWorkspace, [threadId]: next },
         }))
-        // gmail_thread_workspace not yet in velo-api — local state only
+        api.put(`/gmail/thread-workspace/${encodeURIComponent(threadId)}`, { ownerUserId }).catch(() => null)
       },
 
       setThreadNote: (threadId, internalNote) => {
         const current = get().threadWorkspace[threadId]
+        const note = internalNote?.trim() || null
         const next = {
           threadId,
           ownerUserId: current?.ownerUserId,
-          internalNote: internalNote?.trim() || undefined,
+          internalNote: note ?? undefined,
           updatedAt: new Date().toISOString(),
         }
         set((s) => ({
           threadWorkspace: { ...s.threadWorkspace, [threadId]: next },
         }))
-        // gmail_thread_workspace not yet in velo-api — local state only
+        api.put(`/gmail/thread-workspace/${encodeURIComponent(threadId)}`, { internalNote: note }).catch(() => null)
       },
 
       getEmailsByContact: (contactId) => get().emails.filter((e) => e.contactId === contactId),
