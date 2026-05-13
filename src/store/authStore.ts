@@ -46,7 +46,6 @@ export interface AuthState {
   currentUser: AuthUser | null
   session: Session | null
   organization: Organization | null
-  supabaseSession: unknown | null
   isLoadingAuth: boolean
   organizationId: string | null
   tenantResolutionStatus: 'idle' | 'resolving' | 'ready' | 'needs_invitation' | 'error'
@@ -75,7 +74,6 @@ export interface AuthState {
   register: (data: { name: string; email: string; password: string }) => Promise<{ success: boolean; error?: string }>
 
   setCurrentUser: (user: AuthUser | null) => void
-  setSupabaseSession: (session: unknown | null) => void
   setIsLoadingAuth: (v: boolean) => void
   setTenantResolution: (status: AuthState['tenantResolutionStatus'], message?: string | null) => void
   fetchOrgUsers: (organizationId: string) => Promise<void>
@@ -111,7 +109,6 @@ export const useAuthStore = create<AuthState>()(
       currentUser: null,
       session: null,
       organization: null,
-      supabaseSession: null,
       isLoadingAuth: true,
       organizationId: null,
       tenantResolutionStatus: 'idle',
@@ -150,7 +147,6 @@ export const useAuthStore = create<AuthState>()(
         })
       },
 
-      setSupabaseSession: (session) => set({ supabaseSession: session }),
       setIsLoadingAuth: (v) => set({ isLoadingAuth: v }),
       setTenantResolution: (status, message = null) => set({ tenantResolutionStatus: status, tenantResolutionMessage: message }),
 
@@ -251,7 +247,6 @@ export const useAuthStore = create<AuthState>()(
             session,
             organizationId: res.user.organizationId ?? null,
             tenantResolutionStatus: res.user.organizationId ? 'ready' : 'idle',
-            supabaseSession: { access_token: res.token },
           })
 
           if (res.user.organizationId) {
@@ -274,7 +269,6 @@ export const useAuthStore = create<AuthState>()(
         set({
           currentUser: null,
           session: null,
-          supabaseSession: null,
           organization: null,
           organizationId: null,
           tenantResolutionStatus: 'idle',
@@ -312,7 +306,6 @@ export const useAuthStore = create<AuthState>()(
           set({
             currentUser: user,
             session,
-            supabaseSession: { access_token: res.token },
             users: [user],
             organizationId: null,
             tenantResolutionStatus: 'idle',
@@ -511,7 +504,6 @@ export function initSupabaseAuth(): (() => void) | undefined {
         updatedAt: now,
       }
       useAuthStore.getState().setCurrentUser(authUser)
-      useAuthStore.getState().setSupabaseSession({ access_token: token })
       if (u.organizationId) {
         void useAuthStore.getState().fetchOrgUsers(u.organizationId)
       }

@@ -160,7 +160,6 @@ export const pt: Translations = {
     bulkEmailMarketingHint: 'Marketing: apenas contatos com opt-in de marketing.',
     bulkEmailStaggerLabel: 'Segundos entre cada envio',
     bulkEmailEnqueuedSummary: '{enqueued} na fila, {skipped} ignorados (sem email ou filtrados).',
-    bulkEmailNeedSupabase: 'A fila em massa exige Supabase e processamento de communication_jobs.',
     statusLabels: {
       prospect: 'Prospecto',
       customer: 'Cliente',
@@ -582,7 +581,7 @@ export const pt: Translations = {
     newTagPlaceholder: 'Nova tag...',
     deleteTagAriaLabel: 'Excluir tag',
     users: 'Usuários',
-    usersAuthHint: 'O gerenciamento completo de usuários requer autenticação (Supabase Auth na v2.0)',
+    usersAuthHint: 'O gerenciamento completo de usuários está disponível no painel de configurações da equipe.',
     branding: 'Marca',
     appName: 'Nome do app',
     primaryColor: 'Cor principal',
@@ -772,7 +771,7 @@ export const pt: Translations = {
     webhooksIntro:
       'Avise seus sistemas quando algo mudar no Velo: negócios, contatos, empresas ou atividades. Basta uma URL HTTPS e um segredo; filtros são opcionais.',
     webhooksTagline: 'Sem pressa: salve o endpoint, teste e ative quando quiser.',
-    webhooksRequiresSupabase: 'Webhooks precisam de um projeto Supabase ligado ao app. Se outra pessoa cuida disso, peça ajuda para conectar.',
+    webhooksRequiresSupabase: 'Webhooks são totalmente suportados. Crie um endpoint abaixo e use o botão de teste para verificar a entrega.',
     webhooksCronHint:
       'Processe a fila com um job agendado: POST /webhooks/process-queue com o cabeçalho x-webhook-worker-secret igual a WEBHOOK_WORKER_SECRET (veja velo-api README).',
     webhooksCronHintTitle: 'Fila de entregas (ops / self-hosting)',
@@ -938,9 +937,9 @@ export const pt: Translations = {
       'Privacidade da caixa de entrada: você só vê eventos de e-mails que você enviou (RLS). Agregação para toda a organização ainda não está nesta tela.',
     emailTrackingEmpty: 'Sem aberturas ou cliques registrados no servidor neste período para os seus envios.',
     emailTrackingLoadError: 'Não foi possível carregar as métricas de rastreamento de e-mail.',
-    emailTrackingNotConfigured: 'Conecte o Supabase para ver métricas de e-mail baseadas no servidor.',
+    emailTrackingNotConfigured: 'As métricas de rastreamento ficam disponíveis após o envio de e-mails pelo Velo.',
     emailTrackingReliabilityNote:
-      'Nota de produto: aberturas/cliques dependem de eventos no servidor com Supabase; cargas parciais ou só cliente podem sub-notificar. Trate como direcional até validar a ingestão completa.',
+      'Nota de produto: aberturas/cliques dependem de eventos no servidor registrados pelo velo-api. Cargas parciais ou só cliente podem sub-notificar. Trate como direcional até validar a ingestão completa.',
   },
   csvImport: {
     title: 'Importar CSV',
@@ -1151,7 +1150,7 @@ export const pt: Translations = {
       metricsTitle: 'Analítica de passos',
       metricsSubtitle: 'Eventos de sequence_step_events (preenchidos quando o motor registar envios e engagement).',
       metricsEmpty: 'Ainda sem eventos. Quando existir o motor de envios e tracking, aparecerão aqui.',
-      metricsNeedsSupabase: 'Ligue o Supabase para carregar a analítica de sequências.',
+      metricsNeedsSupabase: 'A analítica de sequências aparece aqui assim que os passos forem executados pelo motor de envios.',
       metricsColTime: 'Hora',
       metricsColEvent: 'Evento',
       metricsColNode: 'Nó',
@@ -1405,7 +1404,7 @@ export const pt: Translations = {
     snoozeOneWeek: 'Adiar 1w',
     trackingDemoSimulate: 'Simular (somente demo)',
     trackingServerMetricsHint:
-      'Com o Supabase, os totais atualizam quando o destinatário abre o e-mail rastreado ou clica em links rastreados. Atualize as métricas na caixa de entrada.',
+      'Os totais atualizam quando o destinatário abre o e-mail rastreado ou clica em links rastreados. Atualize as métricas na caixa de entrada.',
     backToMailbox: 'Voltar à lista',
     messageCount: '{n} mensagens',
     foldersNavLabel: 'Pastas de correio',
@@ -1505,7 +1504,7 @@ export const pt: Translations = {
     createButton: 'Criar organização',
     errorNameRequired: 'O nome da organização é obrigatório',
     errorSlugRequired: 'O slug é obrigatório',
-    errorNotConfigured: 'Supabase não está configurado',
+    errorNotConfigured: 'O servidor não está configurado',
     errorNotAuthenticated: 'Não autenticado',
     errorCompleteLegalProfile: 'Preencha os campos do perfil legal da empresa para continuar.',
     errorSessionExpired: 'Sua sessão expirou. Por favor, faça login novamente.',
@@ -1547,9 +1546,9 @@ export const pt: Translations = {
 
   // ─── Errors ──────────────────────────────────────────────────────────────────
   errors: {
-    supabaseNotConfigured: 'Supabase não está configurado',
+    supabaseNotConfigured: 'Servidor API não está configurado',
     supabaseNotConfiguredDetail:
-      'Supabase não está configurado. Defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no seu ambiente.',
+      'O servidor API não está disponível. Defina VITE_API_URL no seu ambiente e certifique-se de que velo-api está em execução.',
     generic: 'Ocorreu um erro',
     gmailConnectionError: 'Erro ao conectar Gmail',
     googleIntegrationStartFailed: 'Não foi possível iniciar a ligação ao Google. Verifique a configuração no servidor.',

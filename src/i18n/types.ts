@@ -209,7 +209,6 @@ export interface Translations {
     bulkEmailMarketingHint: string
     bulkEmailStaggerLabel: string
     bulkEmailEnqueuedSummary: string
-    bulkEmailNeedSupabase: string
     statusLabels: {
       prospect: string
       customer: string

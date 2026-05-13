@@ -158,7 +158,6 @@ export const en: Translations = {
     bulkEmailMarketingHint: 'Marketing: only contacts with marketing opt-in are queued.',
     bulkEmailStaggerLabel: 'Seconds between each send',
     bulkEmailEnqueuedSummary: '{enqueued} queued, {skipped} skipped (no email or filtered).',
-    bulkEmailNeedSupabase: 'Bulk queue requires Supabase and communication_jobs processing.',
     statusLabels: {
       prospect: 'Prospect',
       customer: 'Customer',
@@ -580,7 +579,7 @@ export const en: Translations = {
     newTagPlaceholder: 'New tag...',
     deleteTagAriaLabel: 'Delete tag',
     users: 'Users',
-    usersAuthHint: 'Full user management requires authentication (Supabase Auth in v2.0)',
+    usersAuthHint: 'Full user management is available through the team settings panel.',
     branding: 'Branding',
     appName: 'App name',
     primaryColor: 'Primary color',
@@ -935,9 +934,9 @@ export const en: Translations = {
       'Mailbox privacy: you only see events for emails you sent (RLS). Org-wide rollups for managers are not in this view yet.',
     emailTrackingEmpty: 'No server-tracked opens or clicks in this period for your sends.',
     emailTrackingLoadError: 'Could not load email tracking stats.',
-    emailTrackingNotConfigured: 'Connect Supabase to see server-tracked email metrics.',
+    emailTrackingNotConfigured: 'Email tracking metrics are available once emails are sent via Velo.',
     emailTrackingReliabilityNote:
-      'Product note: opens/clicks rely on server events when Supabase is configured; client-only or partial loads can under-report. Treat as directional until full ingestion is validated.',
+      'Product note: opens/clicks rely on server-tracked events from velo-api. Client-only or partial loads may under-report. Treat as directional until full ingestion is validated.',
   },
   csvImport: {
     title: 'Import CSV',
@@ -1144,7 +1143,7 @@ export const en: Translations = {
       metricsTitle: 'Step analytics',
       metricsSubtitle: 'Events from sequence_step_events (filled when the execution engine records sends and engagement).',
       metricsEmpty: 'No events yet. After sends and tracking are wired, metrics will appear here.',
-      metricsNeedsSupabase: 'Connect Supabase to load sequence analytics.',
+      metricsNeedsSupabase: 'Sequence analytics appear here once steps are executed by the send pipeline.',
       metricsColTime: 'Time',
       metricsColEvent: 'Event',
       metricsColNode: 'Node',
@@ -1393,7 +1392,7 @@ export const en: Translations = {
     snoozeOneWeek: 'Snooze 1w',
     trackingDemoSimulate: 'Simulate (demo only)',
     trackingServerMetricsHint:
-      'With Supabase, counts update when recipients open tracked mail or click tracked links. Refresh metrics from Inbox.',
+      'Counts update when recipients open tracked mail or click tracked links. Refresh metrics from Inbox.',
     backToMailbox: 'Back to list',
     messageCount: '{n} messages',
     foldersNavLabel: 'Mail folders',
@@ -1491,7 +1490,7 @@ export const en: Translations = {
     createButton: 'Create organization',
     errorNameRequired: 'Organization name is required',
     errorSlugRequired: 'Slug is required',
-    errorNotConfigured: 'Supabase is not configured',
+    errorNotConfigured: 'Server is not configured',
     errorNotAuthenticated: 'Not authenticated',
     errorCompleteLegalProfile: 'Complete the legal company profile fields to continue.',
     errorSessionExpired: 'Your session has expired. Please sign in again.',
@@ -1533,9 +1532,9 @@ export const en: Translations = {
 
   // ─── Errors ──────────────────────────────────────────────────────────────────
   errors: {
-    supabaseNotConfigured: 'Supabase is not configured',
+    supabaseNotConfigured: 'API server is not configured',
     supabaseNotConfiguredDetail:
-      'Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.',
+      'The API server is not reachable. Set VITE_API_URL in your environment and ensure velo-api is running.',
     generic: 'An error occurred',
     gmailConnectionError: 'Error connecting Gmail',
     googleIntegrationStartFailed: 'Could not start Google connection. Check that Integrations is configured on the server.',
