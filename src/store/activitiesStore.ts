@@ -99,6 +99,12 @@ export const useActivitiesStore = create<ActivitiesState>()(
       api.post<Activity>('/activities', body).then(
         (real) => {
           set((s) => ({ activities: s.activities.map((a) => a.id === id ? mapActivity(real as unknown as Record<string, unknown>) : a) }))
+          if (activityData.contactId) {
+            import('./leadsStore').then(({ useLeadsStore }) => {
+              const lead = useLeadsStore.getState().leads.find((l) => l.convertedContactId === activityData.contactId)
+              if (lead) useLeadsStore.getState().recomputeLeadScore(lead.id, { reason: 'activity_logged' })
+            })
+          }
         },
         (err: unknown) => {
           set((s) => ({ activities: s.activities.filter((a) => a.id !== id), error: getErrorMessage(err) }))

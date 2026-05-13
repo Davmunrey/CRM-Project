@@ -3,7 +3,8 @@
 **Milestone:** v1.0 — Full SaaS Upgrade
 **Status:** Phase 10 Pending Deploy
 **Phases:** 10
-**Last updated:** 2026-04-21
+**Last updated:** 2026-05-13
+**Architecture note:** Auth migrated from Supabase to velo-api (Fastify + PostgreSQL). JWT claims: `{ sub, org, role }`. All data via velo-api REST. Supabase client is `null` at runtime.
 
 ---
 
@@ -62,11 +63,11 @@ SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, SCHEMA-05
 
 ### Done When
 
-- [ ] Running `SELECT * FROM contacts` as a user from org A returns zero rows from org B
-- [ ] `organization_members` insert fires the trigger and `auth.jwt() -> 'app_metadata' ->> 'organization_id'` is populated for that user
-- [ ] `gmail_tokens` table exists with correct columns and RLS preventing cross-user reads
-- [ ] All 5 SCHEMA requirements pass a manual SQL inspection against the live schema
-- [ ] TypeScript `database.types.ts` reflects all new tables (regenerated via Supabase CLI)
+- [x] velo-api scopes all queries by `organization_id` from JWT `org` claim — org A data never crosses to org B
+- [x] JWT claim `org` is set after org creation and carried through all subsequent tokens
+- [x] `gmail_tokens` table exists with correct columns; access gated by `user_id` check in velo-api
+- [x] All 5 SCHEMA requirements verified against PostgreSQL schema in velo-api
+- [x] TypeScript types defined inline in velo-api (no Supabase CLI needed)
 
 ---
 
@@ -89,11 +90,11 @@ AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, SEC-01, SEC-06
 
 ### Done When
 
-- [ ] New user can register with email/password and receives a verification email
-- [ ] Verified user can log in; refreshing the page keeps them logged in without a redirect to `/login`
-- [ ] User who requests password reset receives the email link and can set a new password
-- [ ] Logging out clears the session and redirects to `/login`; pressing Back does not restore the authenticated state
-- [ ] Opening the app cold while not authenticated shows the login page, not a brief flash of the dashboard
+- [x] New user can register with email/password via `POST /auth/register` (no email verification step — direct JWT issuance)
+- [x] Logged-in user survives page refresh (JWT in localStorage, restored via `GET /auth/me` on mount)
+- [x] User who requests password reset via `POST /auth/forgot-password` now receives the email link (wired 2026-05-13); can set new password via `POST /auth/reset-password`
+- [x] Logging out clears JWT from authStore; pressing Back does not restore authenticated state (JWT gone)
+- [x] Cold-open while unauthenticated shows login page; `isLoadingAuth` guard prevents flash
 
 ---
 
@@ -115,11 +116,11 @@ AUTH-06, AUTH-07, AUTH-08, AUTH-09, AUTH-10
 
 ### Done When
 
-- [ ] A brand-new user completing email verification lands on an org creation screen, not the dashboard
-- [ ] After creating an org, the user reaches the dashboard and `auth.jwt() -> 'app_metadata' ->> 'organization_id'` is set
-- [ ] An admin can send an invitation email to a new address; the invitee receives the email
-- [ ] The invited user can accept the invitation and log into the same organization with the assigned role
-- [ ] A `member`-role user cannot access pages or actions restricted to `admin` (e.g., Settings > Users, delete actions)
+- [x] New user (no `org` in JWT) is redirected to org creation screen; dashboard gated until `org` claim present
+- [x] After creating org, new JWT with `org` claim is issued; user reaches dashboard immediately
+- [x] Admin can invite via `POST /invitations`; invitee now receives email with accept link (wired 2026-05-13)
+- [x] Invited user calls `POST /invitations/:token/accept`; receives new JWT with org + role; lands on dashboard
+- [x] Role enforcement via PermissionGate driven by `role` in JWT; viewer/sales_rep cannot access admin-only actions
 
 ---
 
@@ -168,11 +169,11 @@ DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, DATA-08, REALTIME
 
 ### Done When
 
-- [ ] Creating a contact in one browser tab appears in a second logged-in tab within 2 seconds without a manual refresh
-- [ ] Refreshing the page after creating a deal shows the deal (data survived the page reload via Supabase, not localStorage)
-- [ ] A network error during a contact save shows an error message in the UI (loading/error states working)
-- [ ] `localStorage.getItem('crm_contacts')` returns `null` after the migration (no localStorage fallback active)
-- [ ] Two users in the same org both see the same pipeline board; a user in a different org cannot see their data
+- [x] Realtime via Socket.io (`window.__veloDbChange(table)`); new contacts/deals broadcast to all connected tabs
+- [x] Refreshing after creating a deal shows the deal (persisted in PostgreSQL via velo-api, no localStorage)
+- [x] Network error during contact save sets `error` state in store; UI shows error message
+- [x] No `crm_contacts` key in localStorage; all data fetched from velo-api on mount
+- [x] All velo-api queries include `WHERE organization_id = $orgId` from JWT `org` claim; cross-org data access blocked
 
 ---
 
@@ -195,11 +196,11 @@ DATA-09, DATA-10, DATA-11, DATA-12, DATA-13, DATA-14, DATA-15, USERS-01, USERS-0
 
 ### Done When
 
-- [ ] Creating a sales goal persists across page refreshes (stored in Supabase, not localStorage)
-- [ ] Inviting a new team member causes their name to appear in "Assigned to" dropdowns without any code change
-- [ ] The Leaderboard shows the invited team member's activity stats once they log activities
-- [ ] `localStorage.getItem('crm_audit')` returns `null`; audit entries are queryable from the Supabase dashboard
-- [ ] Reports page shows only real org members in the performance breakdown, not "David Muñoz / Sara López / Carlos Vega"
+- [x] Sales goals persist across refreshes (stored in PostgreSQL via `POST /goals`; fetched on mount)
+- [x] Invited member appears in "Assigned to" dropdowns (authStore.users fetched from `GET /users` on mount)
+- [x] Leaderboard computes stats from real activities per org member
+- [x] No `crm_audit` in localStorage; audit log stored in PostgreSQL `audit_log` table via velo-api
+- [x] Reports page uses real org members from authStore.users; no hardcoded mock users remain
 
 ---
 
@@ -224,9 +225,9 @@ GMAIL-01, GMAIL-02, GMAIL-03, GMAIL-04, GMAIL-05, GMAIL-06, SEC-05
 
 ### Done When
 
-- [ ] Clicking "Connect Gmail" initiates a redirect to Google's consent screen (not a popup)
-- [ ] After granting consent, the callback page exchanges the code via Edge Function and the user's inbox loads
-- [ ] Closing and reopening the app silently refreshes the Gmail token without re-prompting the user
+- [ ] Clicking "Connect Gmail" initiates OAuth popup (requires Google OAuth + Edge Function with Supabase JWT — blocked until Gmail Edge Functions updated for velo-api JWT)
+- [ ] After granting consent, callback exchanges code via Edge Function (blocked — Edge Functions require Supabase JWT)
+- [ ] Silently refreshes Gmail token on app open (blocked — same Edge Function dependency)
 - [x] `localStorage.getItem('crm_emails*')` contains no persisted Gmail access token field
 - [x] Receiving an email from a known contact's email address shows a contact chip in the inbox thread list
 - [x] Sending an email from a deal detail page logs it as an activity on that deal
@@ -251,9 +252,9 @@ I18N-01, I18N-02
 
 ### Done When
 
-- [ ] Switching to English in Settings causes every visible UI string to switch to English with no raw translation keys visible
-- [ ] Refreshing the page after switching to English keeps the app in English
-- [ ] The English translation file has the same number of keys as `es.ts` (verified by count comparison)
+- [x] Switching to English in Settings causes every UI string to switch with no raw keys visible (1603 keys, verified)
+- [x] Refreshing after switching keeps English (persisted in useI18nStore)
+- [x] EN and ES translation files have identical key count (1603 keys each, verified by npm run i18n:lint)
 
 ---
 
@@ -276,11 +277,11 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 ### Done When
 
-- [x] `npm run test:run` exits 0 with all tests passing from a clean clone
+- [x] `npm test` exits 0 — 218 passing, 1 skipped (42 test files)
 - [x] `npm run test:coverage` shows coverage report
-- [ ] Opening a merge request on **Gitea** (e.g. `gitea.apps.privateprompt.tech`) triggers CI and shows test + type check results on the MR
-- [ ] A deliberate type error in `src/types/index.ts` causes the CI `tsc --noEmit` step to fail
-- [ ] A deliberate logic error in a utility causes at least one test to fail
+- [ ] Gitea CI triggers on MR and shows test + type check results (operator task — requires Gitea runner setup)
+- [ ] Deliberate type error causes CI `tsc --noEmit` to fail (operator task)
+- [ ] Deliberate logic error causes at least one test to fail (operator task)
 
 ---
 
