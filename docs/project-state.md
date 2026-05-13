@@ -43,20 +43,19 @@ Operational detail for env vars and schedulers overlaps [`master-release-qa.md` 
 ```mermaid
 flowchart LR
   Browser[Browser / SPA]
-  Host[Static host]
-  SupaAuth[Supabase Auth]
-  Postgres[Postgres + RLS]
-  Edge[Edge Functions]
+  Host[Static host / nginx]
+  API[velo-api - Fastify]
+  Postgres[PostgreSQL 16]
+  Redis[Redis / BullMQ]
   Browser --> Host
-  Browser --> SupaAuth
-  Browser --> Postgres
-  Browser --> Edge
-  Edge --> Postgres
+  Browser --> API
+  API --> Postgres
+  API --> Redis
 ```
 
-- **Frontend:** React 18 + Vite + React Router + Zustand; hosted as a static SPA (rewrites to `index.html`).
-- **Backend:** Supabase (Postgres + RLS, Auth, Realtime). **Edge Functions** (Deno) for webhooks, public API, lead capture, email/Gmail glue, etc.
-- **Auth (summary):** `signInWithPassword` → session JWT; optional MFA challenge/verify via Supabase MFA.
+- **Frontend:** React 18 + Vite + React Router + Zustand; hosted as a static SPA (rewrites to `index.html`). nginx proxies `/api/*` to the API in Docker.
+- **Backend:** `velo-api` — Fastify 5, Node.js 22, PostgreSQL 16 via `postgres.js`, BullMQ + Redis, Socket.io realtime.
+- **Auth:** HS256 JWT (`sub/org/role` claims), `@fastify/jwt`. `isLoadingAuth` starts `true` — prevents /login flash on cold load. All org-scoped routes check `req.user.org`.
 
 ---
 

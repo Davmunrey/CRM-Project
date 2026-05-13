@@ -2,36 +2,36 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 10 Pending Deploy
-last_updated: "2026-04-21T18:00:00.000Z"
+status: Backend Migration Complete — Ready for Deploy
+last_updated: "2026-05-13T00:00:00.000Z"
 progress:
   total_phases: 10
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 48
-  completed_plans: 43
+  completed_plans: 48
 ---
 
 # Velo — Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-10)
+See: .planning/PROJECT.md
 
-**Core value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time with data persisted in Supabase and real-time sync across tabs.
-**Current focus:** Phase 10 — production deployment (pending deploy execution)
+**Core value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time, with data persisted in PostgreSQL via self-hosted Fastify API (`velo-api`).
+**Current focus:** Deployed — all auth flows working, no Supabase runtime dependency.
 
 ## Current Status
 
-**Milestone:** v1.0 — Full SaaS Upgrade
-**Phase:** 9 of 10 — COMPLETE
-**Next:** Phase 10 (production deployment, pending)
+**Milestone:** v1.0 — Backend Migration Complete
+**Phase:** 10 of 10 — COMPLETE
+**Next:** Production deploy + email sending (SMTP/Resend for password reset emails)
 
 ## Completed Phases
 
 | Phase | Description | Completed |
 |-------|-------------|-----------|
 | 01 | Schema & Multi-Tenancy | 2026-03-31 |
-| 02 | Supabase Auth | 2026-04-05 |
+| 02 | Auth (originally Supabase, now velo-api JWT) | 2026-04-05 |
 | 03 | Organization Onboarding | 2026-04-06 |
 | 04 | Security Fixes | 2026-04-07 |
 | 05 | Core Data Stores + Real-Time | 2026-04-07 |
@@ -40,6 +40,7 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 | 08 | i18n English | 2026-04-09 |
 | 09 | Test Suite + i18n completo | 2026-04-10 |
 | 09b | Post-Phase hardening (Gmail + UX + Quotes) | 2026-04-10 |
+| 10 | Supabase → velo-api migration (all auth flows) | 2026-05-13 |
 
 ## Key Decisions
 
@@ -79,21 +80,20 @@ See: .planning/PROJECT.md (updated 2026-04-10)
 
 ## Blockers
 
-(None)
+- Password reset emails not sent yet (backend creates token in DB; SMTP/Resend integration needed to actually deliver link)
 
-## Notes
+## Notes (Phase 10 — velo-api migration)
 
-- Schema migration must come before auth (RLS depends on organizations table)
-- `isLoadingAuth` must initialize as `true` to prevent race condition redirect to /login
-- `onRehydrateStorage` seed hooks removed from all migrated stores
-- Google OAuth verification (restricted scopes) takes 4-6 weeks — start application process before Phase 10 deploy
-- Supabase service role key must NEVER get a VITE_ prefix
-- Phase 10 requires the repo on your **remote Git host** and a **CD pipeline** (or host integration) so preview and production deploys are reproducible
-- Post-Phase 09 hardening: `authStore` Supabase branch starts with empty users/passwords and keeps runtime users org-scoped.
-- Post-Phase 09 hardening: calendar week labels no longer hardcoded in Spanish (`hour`/`all day` now language-aware).
-- Supabase remote already includes migration `20260410160000_gmail_thread_links.sql`.
-- Post-Phase 09 hardening: local email timestamps in Inbox now follow active UI language (no forced `es` locale).
-- Roadmap plan Cursor (`roadmap_y_huecos`): **Wave B (B1–B3)** is owned by the agent — Gmail verification track, email open/click “truth” + Reports, Phase 10 / `DEPLOY-*` documentation closure and smokes; see Wave B in the plan and `.cursor/rules/roadmap-ola-b.mdc`.
+- `isLoadingAuth` initializes as `true` — prevents race-condition redirect to /login on cold load
+- Auth middleware: IS NULL branch for null-org JWT (PostgreSQL `= null` always false)
+- `useDataInit` guards on both `currentUserId` and `organizationId` — prevents 14 parallel 401s before org exists
+- `POST /orgs` returns new JWT with org claim — frontend calls `setToken(res.token)` immediately
+- `POST /invitations/:token/accept` validates email match before assigning user to org
+- `POST /auth/forgot-password` always returns 200 (prevents email enumeration)
+- `password_reset_tokens` table: migration `002` — 1-hour TTL, unique token per user
+- All Supabase Edge Function calls removed from frontend — replaced with `/api/*` routes
+- `supabase` stub: `null as unknown as SupabaseClient | null` — all `!supabase` guards fire correctly
+- Google OAuth verification (restricted scopes) takes 4-6 weeks if pursuing Gmail for production users
 
 ---
 *Initialized: 2026-03-31*

@@ -1,47 +1,41 @@
-# Smoke checklist — production (Phase 10 gate)
+# Smoke checklist — production
 
-Use this after a production deploy (or before marking **`DEPLOY-04`** done). Record pass/fail and who ran it.
-
-**Before ticking `DEPLOY-*` in [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md):** add a dated evidence line (host, channel, smoke outcome, commit) per the “Recording DEPLOY completion” note in that file — automated agents prepare docs; humans own the checked boxes.
+Use after a production deploy. Record pass/fail and who ran it.
 
 ## Preconditions
 
-- [ ] `VITE_APP_CHANNEL` is **`production`** for this deploy (not `staging`).
-- [ ] `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` match the **production** Supabase project for this build.
-- [ ] SPA deep links work ([`deployment-spa-and-env.md`](./deployment-spa-and-env.md)).
-- [x] **SMTP configured (2026-04-29):** Supabase Auth email delivery via Resend (`smtp.resend.com:587`, sender `onboarding@resend.dev`) — signup confirmation and invite emails now work on production.
-- [ ] Optional: Gmail restricted-scope verification status noted ([`google-gmail-oauth-verification.md`](./google-gmail-oauth-verification.md)).
+- [ ] `VITE_API_URL` points to the production `velo-api` instance
+- [ ] SPA deep links work (nginx `try_files` or equivalent — see [`deployment-spa-and-env.md`](./deployment-spa-and-env.md))
+- [ ] `velo-api` running, DB migrated (`npm run db:migrate`), seed applied (`npm run db:seed`)
+- [ ] JWT_SECRET set (min 32 chars), CORS_ORIGIN matches frontend origin
 
-## Core flows
+## Auth flows
 
-1. **Signup (or invite)** — Create a user; confirm email if verification is enabled in Supabase.
-2. **Login** — Sign in; no flash redirect loop on hard refresh of `/`.
-3. **Organization** — User lands in org context (org setup or home); JWT carries `organization_id` where expected.
-4. **Create contact** — Create a contact; reload page; record still visible.
-5. **Log activity** — Attach activity to contact or deal; visible after navigation away and back.
-6. **Team directory** — Open team / users UI; peer emails and names appear (backed by `list_organization_members_with_identity` RPC after migration `20260415120000_*`).
-7. **Optional — Gmail** — Connect Gmail on production domain only if OAuth verification allows your test user.
-8. **Manager dashboard** — As a user with **Reports read** (e.g. Manager preset), open `/manager` cold load; widgets render without console errors. Definitions, permissions, i18n keys, and tests: [`master-implementation-history` — Manager dashboard data contract](./master-implementation-history.md#manager-dashboard-data-contract).
-9. **Onboarding** — Open `/settings?tab=onboarding`; toggle a checklist step, reload; state persists for the org. Optional: Dashboard banner appears when steps incomplete and banner not dismissed.
+1. **Register** — Create new account → redirected to `/org-setup` → create org → land on dashboard
+2. **Login** — Sign in with existing account → no flash redirect loop on hard refresh of `/`
+3. **Cold load** — Hard refresh `/contacts`; app loads (no /login flash for authenticated user)
+4. **Logout** — Click logout → redirected to `/login`; back button doesn't go into app
+5. **401 recovery** — Clear localStorage, visit `/` → redirected to `/login`; no reload loop
+6. **Forgot password** — Submit email → success screen (token saved in DB; email delivery requires SMTP config)
+7. **Invitation** — Admin sends invite via Team Management → user visits `/accept-invite?token=...` → accepts → org assigned → new JWT issued
 
-## Automated smoke (local / CI)
+## Core CRM flows
+
+8. **Create contact** — Create contact; reload; record visible
+9. **Log activity** — Attach activity to contact; navigate away and back; still visible
+10. **Team directory** — Open Settings → Team; member list loads (fetched from `GET /orgs/me/members`)
+11. **Kanban** — Move deal across stages; refresh; stage preserved
+12. **Notifications** — Mark-all-read; badge clears
+
+## Optional (if configured)
+
+- **Gmail** — Connect Gmail; threads load in Inbox; disconnect clears token
+- **AI features** — Chat widget responds if `ANTHROPIC_API_KEY` set in velo-api
+
+## Automated smoke
 
 ```bash
 npm run test:e2e
 ```
 
-Uses Playwright against the dev server by default. For an optional **hosted** URL, set `E2E_STAGING_URL` (see [`e2e/smoke.spec.ts`](../e2e/smoke.spec.ts)).
-
----
-
-*Aligns with Phase 10.4 narrative in [`.planning/ROADMAP.md`](../.planning/ROADMAP.md).*
----
-
-*Last updated (git): **2026-04-29***
-
-### Google OAuth — Vercel previews + production
-
-- [ ] Preview deploy: connect Gmail → popup opens Google → production callback redirects to preview → exchange completes
-- [ ] Production: connect Gmail → OAuth completes directly (no intermediate redirect)
-- [ ] Revoke Google access from Google Account → next Gmail action shows reconnect message (not raw 401)
-- [ ] Scheduled email with expired token → auto-refreshes and delivers
+*Last updated: 2026-05-13*

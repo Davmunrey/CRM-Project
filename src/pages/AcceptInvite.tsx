@@ -32,16 +32,12 @@ export function AcceptInvite() {
   const t = useTranslations()
   const token = searchParams.get('token')
 
-  const [pageState, setPageState] = useState<PageState>('loading')
+  const [pageState, setPageState] = useState<PageState>(() => token ? 'loading' : 'error')
   const [invitation, setInvitation] = useState<InvitationDetails | null>(null)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(() => token ? null : t.invitations.invalidToken)
 
   useEffect(() => {
-    if (!token) {
-      setErrorMsg(t.invitations.invalidToken)
-      setPageState('error')
-      return
-    }
+    if (!token) return
 
     api.get<InvitationDetails>(`/invitations/${encodeURIComponent(token)}`)
       .then((inv) => {

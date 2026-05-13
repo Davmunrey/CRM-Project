@@ -132,11 +132,16 @@ src/
 
 ## Auth Flow
 
-1. `POST /auth/login` → receives JWT (`sub`, `org`, `role` claims)
-2. Token stored in `localStorage` via `authStore`
-3. All API requests attach `Authorization: Bearer <token>`
-4. 401 → redirect to `/login`
-5. `GET /auth/me` → restore session on page load
+| Step | Description |
+|------|-------------|
+| Login | `POST /auth/login` → JWT with `sub/org/role` claims |
+| Register | `POST /auth/register` → JWT without org claim → redirected to `/org-setup` |
+| Org setup | `POST /orgs` → new JWT with org claim; `setToken()` replaces old token |
+| Invitation | `/accept-invite?token=X` → `GET /invitations/:token` + `POST /invitations/:token/accept` → new JWT |
+| Session restore | On load: read token from localStorage → `GET /auth/me` → hydrate store |
+| 401 handling | `clearToken()` + redirect to `/login` (guard: no loop if already on `/login`) |
+| Logout | `POST /auth/logout` + `clearToken()` + reset all auth state |
+| Password reset | `POST /auth/forgot-password` (token stored in DB) → `POST /auth/reset-password?token=X` |
 
 ---
 

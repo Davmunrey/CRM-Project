@@ -4,34 +4,39 @@
 
 - **Node** 20+ and **npm** 10+
 - `npm install`
-- Copy `.env.example` to `.env.local` and set `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` (optional for full auth/data in dev; see [README](README.md))
-- `npm run dev` — app on [http://localhost:5174](http://localhost:5174) (see `vite.config.ts`)
+- Copy `.env.example` to `.env` and set `VITE_API_URL=http://localhost:3001`
+- Start `velo-api` (see `../velo-api/README.md`)
+- `npm run dev` — app on [http://localhost:5174](http://localhost:5174)
 
 ## Quality gates (run before a PR)
 
 - `npm run ui:lint` — design tokens / color guardrails
-- `npm run i18n:lint` — no stray user-facing string literals in forms of error handling
+- `npm run i18n:lint` — no stray user-facing string literals in error handling
 - `npm run i18n:coverage` — every locale has the same string key paths as `en` (Vitest)
 - `npm run lint:ci` — ESLint on `src/`
 - `npx tsc --noEmit`
 - `npm run test:run` — Vitest
-- `npm run build -- --mode development` — TypeScript + Vite production bundle (dev channel; avoids prod Supabase gate)
+- `npm run build` — TypeScript + Vite production bundle
 
-Optional: `npm run build:analyze` — bundle stats in `dist/stats.html` (set `ANALYZE=1` via `cross-env` in the script).
+Optional: `npm run build:analyze` — bundle stats in `dist/stats.html`.
 
 ## i18n
 
-- Add keys to `src/i18n/en.ts` and `src/i18n/types.ts`, and mirror in **full** catalogs `es.ts` / `pt.ts`.
-- Locales that spread `en` (`fr`, `de`, `it`) pick up new keys until translated.
+- Add keys to `src/i18n/en.ts` and `src/i18n/types.ts`
+- Mirror in full catalogs `es.ts`, `pt.ts`
+- Locales that spread `en` (`fr`, `de`, `it`) pick up new keys until translated
 
-## Supabase
+## Backend (velo-api)
 
-- Migrations: `supabase/migrations/`
-- Edge Functions: `supabase/functions/` — deploy with `npm run supabase:deploy:all-functions` (requires Supabase CLI and login).
+- API routes: `../velo-api/src/routes/`
+- DB schema: `../velo-api/migrations/`
+- New table: add a migration file `00N_description.sql` — picked up automatically by `npm run db:migrate`
+- All routes require `Authorization: Bearer <token>` except `/auth/*` and `GET /invitations/:token`
 
 ## Docs
 
 - Product / ops masters live under `docs/`. Update the relevant master when behavior or runbooks change.
+
 ---
 
-*Last updated (git): **2026-04-27***
+*Last updated: 2026-05-13*
