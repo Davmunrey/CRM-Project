@@ -49,7 +49,7 @@ export function Register() {
     setLoading(false)
 
     if (!result.success) {
-      setError(result.error ?? t.errors.supabaseNotConfiguredDetail)
+      setError(result.error ?? t.errors.generic)
       return
     }
 

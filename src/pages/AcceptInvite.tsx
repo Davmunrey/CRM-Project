@@ -2,21 +2,26 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { UserPlus, CheckCircle, XCircle } from 'lucide-react'
 import { Spinner } from '../components/ui/Spinner'
-import { supabase } from '../lib/supabase'
 import { useTranslations } from '../i18n'
 import { useAuthStore } from '../store/authStore'
 import type { UserRole } from '../types/auth'
 import { Button } from '../components/ui/Button'
 import { AuthLayout } from '../components/auth/AuthLayout'
+import { api, setToken } from '../lib/api'
 
-interface InvitationRow {
+interface InvitationDetails {
   id: string
-  organization_id: string
   email: string
   role: string
-  status: string
-  expires_at: string
-  organizations: { name: string } | null
+  orgName: string
+  orgId: string
+  expiresAt: string
+}
+
+interface AcceptResponse {
+  token: string
+  organizationId: string
+  role: string
 }
 
 type PageState = 'loading' | 'ready' | 'joining' | 'success' | 'error'
@@ -28,7 +33,7 @@ export function AcceptInvite() {
   const token = searchParams.get('token')
 
   const [pageState, setPageState] = useState<PageState>('loading')
-  const [invitation, setInvitation] = useState<InvitationRow | null>(null)
+  const [invitation, setInvitation] = useState<InvitationDetails | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -37,100 +42,52 @@ export function AcceptInvite() {
       setPageState('error')
       return
     }
-    if (!supabase) {
-      setErrorMsg(t.errors.supabaseNotConfigured)
-      setPageState('error')
-      return
-    }
 
-    const fetchInvitation = async () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase! as any)
-        .from('invitations')
-        .select('*, organizations(name)')
-        .eq('token', token)
-        .single()
-
-      if (error || !data) {
-        setErrorMsg(t.invitations.invalidOrExpired)
+    api.get<InvitationDetails>(`/invitations/${encodeURIComponent(token)}`)
+      .then((inv) => {
+        setInvitation(inv)
+        setPageState('ready')
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : t.invitations.invalidOrExpired
+        if (msg === 'Invitation already accepted') {
+          setErrorMsg(t.invitations.alreadyAccepted)
+        } else if (msg === 'Invitation has expired') {
+          setErrorMsg(t.invitations.expired)
+        } else {
+          setErrorMsg(t.invitations.invalidOrExpired)
+        }
         setPageState('error')
-        return
-      }
-
-      const inv = data as InvitationRow
-
-      if (inv.status !== 'pending') {
-        setErrorMsg(
-          inv.status === 'accepted'
-            ? t.invitations.alreadyAccepted
-            : t.invitations.expired
-        )
-        setPageState('error')
-        return
-      }
-
-      if (new Date(inv.expires_at) < new Date()) {
-        setErrorMsg(t.invitations.expired)
-        setPageState('error')
-        return
-      }
-
-      setInvitation(inv)
-      setPageState('ready')
-    }
-
-    void fetchInvitation()
+      })
   }, [token, t])
 
   const handleAccept = async () => {
-    if (!invitation || !supabase) return
+    if (!invitation || !token) return
+
+    const currentUser = useAuthStore.getState().currentUser
+    if (!currentUser) {
+      navigate(`/login?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`)
+      return
+    }
 
     setPageState('joining')
-
     try {
-      const { data: { user }, error: userErr } = await supabase!.auth.getUser()
+      const res = await api.post<AcceptResponse>(`/invitations/${encodeURIComponent(token)}/accept`, {})
+      setToken(res.token)
 
-      if (userErr || !user) {
-        navigate(`/login?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`)
-        return
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error: memberErr } = await (supabase! as any)
-        .from('organization_members')
-        .insert({
-          organization_id: invitation.organization_id,
-          user_id: user.id,
-          role: invitation.role,
+      const cur = useAuthStore.getState().currentUser
+      if (cur) {
+        useAuthStore.getState().setCurrentUser({
+          ...cur,
+          organizationId: res.organizationId,
+          role: res.role as UserRole,
         })
-
-      if (memberErr) throw new Error(memberErr.message)
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase! as any)
-        .from('invitations')
-        .update({ status: 'accepted' })
-        .eq('id', invitation.id)
-
-      const { error: refreshErr } = await supabase!.auth.refreshSession()
-      if (refreshErr) throw new Error(refreshErr.message)
-
-      const { data: freshAuth, error: freshErr } = await supabase!.auth.getUser()
-      if (!freshErr && freshAuth.user) {
-        const fu = freshAuth.user
-        const orgId = (fu.app_metadata?.organization_id as string | undefined) ?? invitation.organization_id
-        const cur = useAuthStore.getState().currentUser
-        if (cur?.id === fu.id) {
-          const role = (fu.app_metadata?.user_role as UserRole | undefined) ?? (invitation.role as UserRole)
-          useAuthStore.getState().setCurrentUser({
-            ...cur,
-            organizationId: orgId,
-            role,
-          })
-        }
-        void useAuthStore.getState().fetchOrgUsers(orgId).catch(() => {
-          /* non-critical */
+        useAuthStore.setState({
+          organizationId: res.organizationId,
+          tenantResolutionStatus: 'ready',
+          tenantResolutionMessage: null,
         })
+        void useAuthStore.getState().fetchOrgUsers(res.organizationId).catch(() => { /* non-critical */ })
       }
 
       setPageState('success')
@@ -141,7 +98,7 @@ export function AcceptInvite() {
     }
   }
 
-  const orgName = invitation?.organizations?.name ?? t.acceptInvite.organization
+  const orgName = invitation?.orgName ?? t.acceptInvite.organization
 
   const ROLE_LABELS: Record<string, string> = {
     admin: t.acceptInvite.roleAdmin,
@@ -225,7 +182,7 @@ export function AcceptInvite() {
       <Button
         type="button"
         className="w-full"
-        onClick={handleAccept}
+        onClick={() => void handleAccept()}
         disabled={pageState === 'joining'}
         loading={pageState === 'joining'}
         leftIcon={<UserPlus size={18} aria-hidden />}

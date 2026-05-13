@@ -128,8 +128,16 @@ export function GmailCallback() {
         return
       }
 
+      if (!supabase) {
+        const errMsg = t.errors.googleEdgeFunctionUnreachable
+        if (window.opener) { postToOpener({ ok: false, error: errMsg }); return }
+        toast.error(errMsg)
+        navigate('/settings/integrations', { replace: true })
+        return
+      }
+
       try {
-        const { data, error } = await supabase!.functions.invoke('gmail-oauth-exchange', { body })
+        const { data, error } = await supabase.functions.invoke('gmail-oauth-exchange', { body })
 
         const errMsg =
           error

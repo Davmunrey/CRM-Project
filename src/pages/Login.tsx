@@ -80,7 +80,7 @@ export function Login() {
 
     if (!result.success) {
       trackUxAction('auth_login_error', { reason: (result.error ?? 'unknown').slice(0, 120) })
-      setError(result.error ?? t.errors.supabaseNotConfiguredDetail)
+      setError(result.error ?? t.errors.generic)
       return
     }
 
