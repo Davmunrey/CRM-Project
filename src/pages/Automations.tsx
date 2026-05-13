@@ -61,8 +61,8 @@ const ACTIVITY_TYPE_OPTIONS: ActivityType[] = ['call', 'email', 'meeting', 'task
 function triggerColor(type: AutomationTriggerType) {
   if (type === 'deal_closed_won') return 'bg-success/15 text-success border-success/20'
   if (type === 'deal_closed_lost') return 'bg-danger/15 text-danger border-danger/20'
-  if (type.startsWith('deal')) return 'bg-accent-500/15 text-accent-400 border-accent-500/20'
-  if (type.startsWith('activity')) return 'bg-accent-500/15 text-accent-400 border-accent-500/25'
+  if (type?.startsWith('deal')) return 'bg-accent-500/15 text-accent-400 border-accent-500/20'
+  if (type?.startsWith('activity')) return 'bg-accent-500/15 text-accent-400 border-accent-500/25'
   return 'bg-fg/8 text-fg-muted border-fg/10'
 }
 
