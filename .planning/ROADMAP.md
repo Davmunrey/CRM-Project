@@ -225,13 +225,14 @@ GMAIL-01, GMAIL-02, GMAIL-03, GMAIL-04, GMAIL-05, GMAIL-06, SEC-05
 
 ### Done When
 
-- [ ] Clicking "Connect Gmail" initiates OAuth popup (requires Google OAuth + Edge Function with Supabase JWT — blocked until Gmail Edge Functions updated for velo-api JWT)
-- [ ] After granting consent, callback exchanges code via Edge Function (blocked — Edge Functions require Supabase JWT)
-- [ ] Silently refreshes Gmail token on app open (blocked — same Edge Function dependency)
+- [x] Clicking "Connect Gmail" initiates OAuth flow via `POST /gmail/oauth-start` (PKCE, velo-api — no Supabase dependency)
+- [x] After granting consent, callback exchanges code via `POST /gmail/oauth-exchange`; refresh token stored AES-256-GCM encrypted in `gmail_tokens` table
+- [x] Silently refreshes Gmail access token on app open via `POST /gmail/refresh` using stored refresh token
 - [x] `localStorage.getItem('crm_emails*')` contains no persisted Gmail access token field
 - [x] Receiving an email from a known contact's email address shows a contact chip in the inbox thread list
 - [x] Sending an email from a deal detail page logs it as an activity on that deal
 - [x] User can pin/unpin thread-to-CRM linkage and keep it stable across sessions
+- [ ] Google OAuth app passes Google verification for restricted scopes (operator task — 4-6 week review for production users)
 
 ---
 
@@ -287,14 +288,14 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 ## Phase 10: Production deployment
 
-**Goal:** The built SPA (`dist/`) is served from a static host or CDN with correct client-side routing; staging and production use separate Supabase projects; production is served on a custom domain over HTTPS.
+**Goal:** The built SPA (`dist/`) is served from a static host or CDN with correct client-side routing; velo-api deployed with PostgreSQL + Redis; production served on a custom domain over HTTPS.
 **Dependencies:** Phase 9 (CI must pass before production deploy)
 
 ### Plans
 
-- 10.1: SPA catch-all routing — on **private** static hosting, configure the reverse proxy or CDN so unknown paths serve `index.html`; verify React Router deep links on direct load. *Primary examples:* nginx `try_files`, Caddy, or CDN error rules. A checked-in `vercel.json` is optional reference only, not the production requirement.
-- 10.2: Connect the repository to **your** deploy pipeline and set build-time env vars — `VITE_APP_CHANNEL` (`production` vs `staging`) plus `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` per environment (compile-only CI may use `vite build --mode development` without keys; see `docs/deployment-spa-and-env.md`)
-- 10.3: Verify **staging** deployments — build from a non-production branch or job; confirm the **staging** URL uses the **staging** Supabase project (not production), e.g. via DevTools / network base URL
+- 10.1: SPA catch-all routing — on **private** static hosting, configure nginx `try_files` or CDN so unknown paths serve `index.html`; verify React Router deep links on direct load. `velo-api/docker-compose.yml` includes nginx frontend service as reference.
+- 10.2: Connect the repository to **your** deploy pipeline and set build-time env vars — `VITE_API_URL` pointing to production velo-api; `VITE_APP_CHANNEL` (`production` vs `staging`); set velo-api env vars (`DATABASE_URL`, `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
+- 10.3: Verify **staging** deployments — build from a non-production branch; confirm the **staging** URL hits the staging velo-api instance; confirm data isolation (separate DB)
 - 10.4: Production deploy — merge to `main`; confirm production URL serves the expected build; smoke test: signup, login, create contact, log activity
 - 10.5: Custom domain — add DNS records per your host; confirm HTTPS/TLS is valid
 
@@ -305,10 +306,29 @@ DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05
 ### Done When
 
 - [ ] Navigating directly to `/contacts` returns the Contacts page, not a 404
-- [ ] A **staging** build is reachable at its staging URL (CI artifact host, private preview hostname, or manual deploy — not tied to a specific SaaS preview product)
-- [ ] The staging URL hits staging Supabase (verified in DevTools)
+- [ ] A **staging** build is reachable at its staging URL and hits staging velo-api (verified in DevTools network tab)
 - [ ] Merging to `main` (or your protected branch) triggers a **production** deployment on your infrastructure that completes successfully
 - [ ] The production custom domain serves the app over HTTPS with a valid TLS certificate
+- [ ] Smoke test: signup → create org → invite member → create contact → log activity → all persist across refresh
+
+---
+
+## Phase 11: Realtime + UX Metrics + Tracking
+
+**Goal:** Socket.io realtime subscription wired; UX events flushed to server; email tracking metrics refreshed per-email.
+**Dependencies:** Phase 10 (API must be deployed and reachable)
+
+### Plans
+
+- 11.1: Wire Socket.io client in `realtimeSubscriptions.ts` — connect to velo-api Socket.io, map `db-change` events to `window.__veloDbChange(table)` bridge; existing TABLE_HANDLERS already complete
+- 11.2: Implement `flushUxMetricsToServer` — add `POST /ux-metrics-ingest` to velo-api; drain `crm_ux_metrics_v1` localStorage queue, batch POST, clear on success
+- 11.3: Wire `refreshTrackingMetrics` in emailStore — call `GET /email-tracking/metrics/:trackingId` (or equivalent) per tracked email; update open/click counts in store state
+
+### Done When
+
+- [ ] Creating a contact in tab A causes tab B to refresh contact list without manual reload (Socket.io realtime)
+- [ ] UX events (button clicks, page views) stored in localStorage are flushed to velo-api on `flushUxMetricsToServer()` call
+- [ ] Email tracking panel shows updated open/click counts after `refreshTrackingMetrics()` call
 
 ---
 

@@ -1,3 +1,4 @@
+import { io, type Socket } from 'socket.io-client'
 import { useContactsStore } from '../store/contactsStore'
 import { useCompaniesStore } from '../store/companiesStore'
 import { useDealsStore } from '../store/dealsStore'
@@ -12,6 +13,7 @@ import { useCustomFieldsStore } from '../store/customFieldsStore'
 import { useLeadsStore } from '../store/leadsStore'
 import { useAuditStore } from '../store/auditStore'
 import { useAuthStore } from '../store/authStore'
+import { getToken } from './api'
 
 type TableHandler = () => void
 
@@ -41,11 +43,6 @@ const TABLE_HANDLERS: Record<string, TableHandler> = {
   custom_field_definitions: () => useCustomFieldsStore.getState().fetchCustomFields(),
 }
 
-/**
- * Subscribe to DB change events from the Velo API via server-sent events or
- * polling. Currently a no-op placeholder — Socket.io integration is done in
- * velo-api/src/services/realtime.ts. Returns a cleanup function.
- */
 export function initRealtimeSubscriptions(): () => void {
   const throttledByTable = new Map<string, number>()
 
@@ -61,12 +58,42 @@ export function initRealtimeSubscriptions(): () => void {
     throttledByTable.set(table, timer)
   }
 
-  // Expose for Socket.io integration: window.__veloDbChange(table)
+  // Bridge for velo-api Socket.io events
   ;(window as unknown as Record<string, unknown>).__veloDbChange = scheduleFetch
+
+  // Connect Socket.io to velo-api
+  const authState = useAuthStore.getState()
+  const token = getToken()
+  const orgId = authState.organizationId
+  const userId = authState.currentUser?.id
+
+  let socket: Socket | null = null
+
+  if (token && orgId && userId) {
+    const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
+    // Strip path prefix so socket connects to the server root
+    const serverUrl = apiBase.startsWith('http') ? new URL(apiBase).origin : window.location.origin
+
+    socket = io(serverUrl, {
+      auth: { token, orgId, userId },
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+    })
+
+    socket.on('db:change', ({ table }: { table: string }) => {
+      scheduleFetch(table)
+    })
+
+    socket.on('connect_error', () => {
+      // Silent — realtime is optional, stores still poll on user action
+    })
+  }
 
   return () => {
     throttledByTable.forEach((timer) => window.clearTimeout(timer))
     throttledByTable.clear()
     delete (window as unknown as Record<string, unknown>).__veloDbChange
+    socket?.disconnect()
   }
 }

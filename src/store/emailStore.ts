@@ -747,7 +747,22 @@ export const useEmailStore = create<EmailStore>()(
       getEmailsByContact: (contactId) => get().emails.filter((e) => e.contactId === contactId),
       getEmailsByDeal: (dealId) => get().emails.filter((e) => e.dealId === dealId),
       refreshTrackingMetrics: async () => {
-        // Per-email tracking event refresh not yet implemented in velo-api — no-op
+        const tracked = get().emails.filter((e) => e.trackingEnabled)
+        if (tracked.length === 0) return
+        await Promise.allSettled(
+          tracked.map(async (email) => {
+            const res = await api.get<{ opens: number; clicks: number }>(
+              `/email-tracking/messages/${encodeURIComponent(email.id)}/stats`,
+            )
+            set((s) => ({
+              emails: s.emails.map((e) =>
+                e.id === email.id
+                  ? { ...e, openCount: res.opens, clickCount: res.clicks }
+                  : e,
+              ),
+            }))
+          }),
+        )
       },
     }),
     {

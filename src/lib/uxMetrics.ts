@@ -64,8 +64,16 @@ export function getUxActionCount(action: UxActionName): number {
   return getUxEvents().reduce((acc, event) => acc + (event.action === action ? 1 : 0), 0)
 }
 
-/** Post queued UX events to the API (no-op — will be wired to velo-api once route exists). */
+/** Post queued UX events to velo-api and clear local queue on success. */
 export async function flushUxMetricsToServer(): Promise<void> {
-  // Placeholder: velo-api /ux-metrics-ingest not yet implemented
+  const events = getUxEvents()
+  if (events.length === 0) return
+  try {
+    const { api } = await import('./api')
+    await api.post('/ux-metrics/ingest', { events })
+    localStorage.removeItem(LS_KEY)
+  } catch {
+    // Non-blocking — events remain in localStorage for next flush
+  }
 }
 
