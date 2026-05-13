@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { KeyRound, Link2, Trash2, Copy } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../store/authStore'
 import { useTranslations } from '../../i18n'
 import { hasPermission } from '../../utils/permissions'
+import { api } from '../../lib/api'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { ConfirmDialog } from '../ui/Modal'
@@ -23,25 +23,6 @@ type LeadTokenRow = {
   label: string
   created_at: string
   enabled: boolean
-}
-
-function edgeErrorMessage(error: unknown, fallback: string): string {
-  const e = error as { message?: string; context?: Response }
-  const status = edgeErrorStatus(error)
-  const base = typeof e?.message === 'string' && e.message.trim() ? e.message : ''
-  if (status === 401) return 'Your session is invalid or expired. Please sign in again.'
-  if (status === 403) return 'You do not have permission to perform this action.'
-  if (status === 404) return 'This resource no longer exists. Refresh and try again.'
-  if (status === 409 || status === 400) {
-    return base || 'Validation failed. Please review your input and try again.'
-  }
-  return base || fallback
-}
-
-function edgeErrorStatus(error: unknown): number | null {
-  const e = error as { context?: Response }
-  if (e?.context && typeof e.context.status === 'number') return e.context.status
-  return null
 }
 
 export function SettingsIntegrationsPanel() {
@@ -66,86 +47,37 @@ export function SettingsIntegrationsPanel() {
   const [deletingTokenId, setDeletingTokenId] = useState<string | null>(null)
   const loadGen = useRef(0)
 
-  const invokeWithSessionRetry = useCallback(
-    async (fn: 'api-keys' | 'lead-capture-tokens', body: Record<string, unknown>) => {
-      const client = supabase
-      if (!client) return { data: null, error: new Error('Supabase not configured') as unknown }
-      const invokeOnce = async () => {
-        const { data: sessionData } = await client.auth.getSession()
-        const accessToken = sessionData.session?.access_token
-        if (!accessToken) {
-          return {
-            data: null,
-            error: {
-              message: 'Your session is not available. Please sign in again.',
-              context: { status: 401 },
-            } as unknown,
-          }
-        }
-        return client.functions.invoke(fn, {
-          body,
-          headers: { Authorization: `Bearer ${accessToken}` },
-        })
-      }
-
-      let res = await invokeOnce()
-      if (edgeErrorStatus(res.error) === 401) {
-        await client.auth.refreshSession()
-        res = await invokeOnce()
-      }
-      if (res.error && typeof (res.error as { context?: Response }).context?.clone === 'function') {
-        try {
-          const details = await (res.error as { context: Response }).context.clone().json() as { error?: string }
-          if (details?.error && typeof details.error === 'string') {
-            ;(res.error as { message?: string }).message = details.error
-          }
-        } catch {
-          // Keep default SDK message when no JSON payload is available.
-        }
-      }
-      return res
-    },
-    [],
-  )
-
   const load = useCallback(async () => {
     const snap = (loadGen.current += 1)
-    if (!supabase || !organizationId) {
-      if (snap === loadGen.current) {
-        setApiKeys([])
-        setTokens([])
-        setLoading(false)
-      }
+    if (!organizationId) {
+      setApiKeys([])
+      setTokens([])
+      setLoading(false)
       return
     }
     setLoading(true)
     setLoadError(null)
-    const [kRes, tRes] = await Promise.all([
-      invokeWithSessionRetry('api-keys', { action: 'list', organizationId }),
-      invokeWithSessionRetry('lead-capture-tokens', { action: 'list', organizationId }),
-    ])
-    if (snap !== loadGen.current) return
-    if (kRes.error || tRes.error) {
-      setLoadError(
-        edgeErrorMessage(kRes.error ?? tRes.error, t.settings.integrationsLoadError),
-      )
+    try {
+      const [kRes, tRes] = await Promise.all([
+        api.get<{ keys: ApiKeyRow[] }>('/integrations/api-keys'),
+        api.get<{ tokens: LeadTokenRow[] }>('/integrations/lead-capture-tokens'),
+      ])
+      if (snap !== loadGen.current) return
+      setApiKeys(kRes?.keys ?? [])
+      setTokens(tRes?.tokens ?? [])
+    } catch (err) {
+      if (snap !== loadGen.current) return
+      setLoadError(err instanceof Error ? err.message : t.settings.integrationsLoadError)
       setApiKeys([])
       setTokens([])
-    } else {
-      const kd = kRes.data as { keys?: ApiKeyRow[] }
-      const td = tRes.data as { tokens?: LeadTokenRow[] }
-      setApiKeys(kd.keys ?? [])
-      setTokens(td.tokens ?? [])
+    } finally {
+      if (snap === loadGen.current) setLoading(false)
     }
-    setLoading(false)
-  }, [invokeWithSessionRetry, organizationId, t.settings.integrationsLoadError])
+  }, [organizationId, t.settings.integrationsLoadError])
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: loads integration data on mount; setState inside async `load` is the standard data-fetching pattern
     void load()
-    return () => {
-      loadGen.current += 1
-    }
+    return () => { loadGen.current += 1 }
   }, [load])
 
   const copyText = async (text: string) => {
@@ -158,104 +90,71 @@ export function SettingsIntegrationsPanel() {
   }
 
   const handleCreateKey = async () => {
-    if (!supabase || !organizationId || !canManage) return
+    if (!organizationId || !canManage) return
     const name = keyName.trim()
     if (!name) return
     setSavingKey(true)
-    const { data, error } = await invokeWithSessionRetry('api-keys', { action: 'create', organizationId, name })
-    setSavingKey(false)
-    if (error) {
-      toast.error(edgeErrorMessage(error, t.settings.integrationsLoadError))
-      return
+    try {
+      const res = await api.post<{ apiKey?: string }>('/integrations/api-keys', { name })
+      if (res?.apiKey) setLastShownApiKey(res.apiKey)
+      setKeyName('')
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.integrationsLoadError)
+    } finally {
+      setSavingKey(false)
     }
-    const d = data as { error?: string; apiKey?: string }
-    if (d.error) {
-      toast.error(d.error)
-      return
-    }
-    if (d.apiKey) {
-      setLastShownApiKey(d.apiKey)
-    }
-    setKeyName('')
-    void load()
   }
 
   const handleDeleteKey = async () => {
-    if (!supabase || !organizationId || !deleteKeyId) return
+    if (!organizationId || !deleteKeyId) return
     const id = deleteKeyId
     setDeleteKeyId(null)
     setDeletingKeyId(id)
-    const { data, error } = await invokeWithSessionRetry('api-keys', {
-      action: 'delete',
-      organizationId,
-      keyId: id,
-    })
-    setDeletingKeyId(null)
-    if (error) {
-      toast.error(edgeErrorMessage(error, t.settings.integrationsLoadError))
-      return
+    try {
+      await api.delete(`/integrations/api-keys/${id}`)
+      toast.success(t.settings.integrationsDeleted)
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.integrationsLoadError)
+    } finally {
+      setDeletingKeyId(null)
     }
-    const d = data as { error?: string }
-    if (d.error) {
-      toast.error(d.error)
-      return
-    }
-    toast.success(t.settings.integrationsDeleted)
-    void load()
   }
 
   const handleCreateToken = async () => {
-    if (!supabase || !organizationId || !canManage) return
+    if (!organizationId || !canManage) return
     setSavingToken(true)
-    const { data, error } = await invokeWithSessionRetry('lead-capture-tokens', {
-      action: 'create',
-      organizationId,
-      label: tokenLabel.trim() || undefined,
-    })
-    setSavingToken(false)
-    if (error) {
-      toast.error(edgeErrorMessage(error, t.settings.integrationsLoadError))
-      return
+    try {
+      const res = await api.post<{ token?: string }>('/integrations/lead-capture-tokens', {
+        label: tokenLabel.trim() || undefined,
+      })
+      if (res?.token) setLastShownToken(res.token)
+      setTokenLabel('')
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.integrationsLoadError)
+    } finally {
+      setSavingToken(false)
     }
-    const d = data as { error?: string; token?: string }
-    if (d.error) {
-      toast.error(d.error)
-      return
-    }
-    if (d.token) {
-      setLastShownToken(d.token)
-    }
-    setTokenLabel('')
-    void load()
   }
 
   const handleDeleteToken = async () => {
-    if (!supabase || !organizationId || !deleteTokenId) return
+    if (!organizationId || !deleteTokenId) return
     const id = deleteTokenId
     setDeleteTokenId(null)
     setDeletingTokenId(id)
-    const { data, error } = await invokeWithSessionRetry('lead-capture-tokens', {
-      action: 'delete',
-      organizationId,
-      tokenId: id,
-    })
-    setDeletingTokenId(null)
-    if (error) {
-      toast.error(edgeErrorMessage(error, t.settings.integrationsLoadError))
-      return
+    try {
+      await api.delete(`/integrations/lead-capture-tokens/${id}`)
+      toast.success('Token deleted')
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.integrationsLoadError)
+    } finally {
+      setDeletingTokenId(null)
     }
-    const d = data as { error?: string }
-    if (d.error) {
-      toast.error(d.error)
-      return
-    }
-    toast.success('Token deleted')
-    void load()
   }
 
-  if (!supabase) {
-    return <p className="text-sm text-fg-muted">{t.settings.webhooksRequiresSupabase}</p>
-  }
   if (!organizationId) return null
 
   return (

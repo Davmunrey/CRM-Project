@@ -1,14 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Mail, ServerCog, ShieldCheck, ShieldAlert, Send } from 'lucide-react'
 import { useTranslations } from '../../i18n'
-import { supabase, isSupabaseConfigured } from '../../lib/supabase'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { toast } from '../../store/toastStore'
 import { resolveEmailProviderName } from '../../services/emailProviders'
-
-const SMTP_FUNCTION = 'smtp-send-email'
 
 type SmtpSecurity = 'starttls' | 'ssl' | 'none'
 
@@ -54,28 +51,8 @@ const DEFAULT_FORM: FormState = {
   testRecipient: '',
 }
 
-async function callSmtpFunction(action: string, payload: Record<string, unknown>): Promise<unknown> {
-  if (!isSupabaseConfigured || !supabase) {
-    throw new Error('Supabase is not configured.')
-  }
-  const { data: sessionData } = await supabase.auth.getSession()
-  const accessToken = sessionData.session?.access_token
-  if (!accessToken) {
-    throw new Error('Not authenticated.')
-  }
-  const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${SMTP_FUNCTION}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ action, ...payload }),
-  })
-  const data = (await res.json().catch(() => ({}))) as { error?: string }
-  if (!res.ok) {
-    throw new Error(data.error ?? `Edge function error ${res.status}`)
-  }
-  return data
+async function callSmtpFunction(_action: string, _payload: Record<string, unknown>): Promise<unknown> {
+  throw new Error('Per-org SMTP configuration via API not yet implemented.')
 }
 
 export function SettingsSmtpPanel() {
@@ -93,40 +70,8 @@ export function SettingsSmtpPanel() {
   const isConfigured = existing !== null && existing.is_active
 
   const load = useCallback(async () => {
-    if (!isSupabaseConfigured || !supabase) return
-    setLoading(true)
-    try {
-      const { data, error } = await supabase
-        .from('email_smtp_settings_public')
-        .select(
-          'id, organization_id, host, port, username, from_address, from_name, reply_to, secure, is_active, last_test_at, last_test_ok, last_test_error, created_at, updated_at',
-        )
-        .eq('is_active', true)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      if (error) {
-        setExisting(null)
-        return
-      }
-      const row = data as SmtpSettingsRow | null
-      setExisting(row)
-      if (row) {
-        setForm({
-          host: row.host,
-          port: String(row.port),
-          username: row.username,
-          password: '',
-          fromAddress: row.from_address,
-          fromName: row.from_name ?? '',
-          replyTo: row.reply_to ?? '',
-          secure: row.secure,
-          testRecipient: '',
-        })
-      }
-    } finally {
-      setLoading(false)
-    }
+    setLoading(false)
+    setExisting(null)
   }, [])
 
   useEffect(() => {
@@ -232,9 +177,6 @@ export function SettingsSmtpPanel() {
     }
   }
 
-  if (!supabase) {
-    return <p className="text-sm text-fg-muted">{t.errors.supabaseNotConfiguredDetail}</p>
-  }
 
   return (
     <div className="space-y-4">

@@ -16,7 +16,6 @@ import { SmartViewBar } from '../components/shared/SmartViewBar'
 import { EntityListsToolbar } from '../components/shared/EntityListsToolbar'
 import { EmptyState } from '../components/shared/EmptyState'
 import { SlideOver, ConfirmDialog } from '../components/ui/Modal'
-import { isSupabaseConfigured } from '../lib/supabase'
 import { enqueueBulkEmailJobs } from '../features/inbox'
 import { ContactForm } from '../components/contacts/ContactForm'
 import { ContactStatusBadge } from '../components/contacts/ContactStatusBadge'
@@ -657,9 +656,6 @@ export function Contacts() {
         width="md"
       >
         <div className="space-y-3 px-1 pb-4">
-          {!isSupabaseConfigured && (
-            <p className="text-xs text-warning">{t.contacts.bulkEmailNeedSupabase}</p>
-          )}
           <div>
             <label className="text-xs font-medium text-fg-muted" htmlFor="bulk-email-subject">{t.contacts.bulkEmailSubject}</label>
             <input
@@ -702,8 +698,7 @@ export function Contacts() {
           <Button
             variant="primary"
             disabled={
-              !isSupabaseConfigured
-              || bulkEmailSubmitting
+              bulkEmailSubmitting
               || !bulkEmailSubject.trim()
               || !bulkEmailBody.trim()
               || selectedIds.size === 0

@@ -11,7 +11,6 @@ import { GmailTokenProvider } from './contexts/GmailTokenContext'
 import { useSettingsStore } from './store/settingsStore'
 import { applyTheme, applyUiDensity } from './lib/theme'
 import { applyBrandingAccentToDocument } from './lib/brandingAccent'
-import { isBootstrapFatalError } from './lib/supabase'
 import { loadDateFnsLocale } from './lib/dateFnsLocale'
 import { flushUxMetricsToServer } from './lib/uxMetrics'
 
@@ -85,25 +84,6 @@ function CatchAllRedirect() {
   return <Navigate to={user ? '/' : '/'} replace />
 }
 
-/** Shown before router when production/staging build lacks Supabase env (copy is localized). */
-function BootstrapFatalScreen() {
-  const t = useTranslations()
-  return (
-    <div className="min-h-screen bg-surface-0 text-fg flex items-center justify-center p-8">
-      <div className="max-w-lg rounded-2xl border border-danger/30 bg-danger/10 p-8 text-center">
-        <h1 className="text-xl font-semibold text-fg mb-2">{t.errors.configurationBootstrapTitle}</h1>
-        <p className="text-sm text-fg-muted mb-4">
-          {t.errors.configurationBootstrapUses}{' '}
-          <code className="text-accent-300">VITE_APP_CHANNEL=production</code> {t.errors.configurationBootstrapOr}{' '}
-          <code className="text-accent-300">VITE_APP_CHANNEL=staging</code> {t.errors.configurationBootstrapRequiresValid}{' '}
-          <code className="text-accent-300">VITE_SUPABASE_URL</code> {t.errors.configurationBootstrapAnd}{' '}
-          <code className="text-accent-300">VITE_SUPABASE_ANON_KEY</code>.
-        </p>
-        <p className="text-xs text-fg-subtle">{t.errors.configurationBootstrapFooter}</p>
-      </div>
-    </div>
-  )
-}
 
 function AppRoutes() {
   const t = useTranslations()
@@ -290,10 +270,6 @@ export default function App() {
       mediaQuery.removeEventListener('change', handleSystemThemeChange)
     }
   }, [])
-
-  if (isBootstrapFatalError) {
-    return <BootstrapFatalScreen />
-  }
 
   return (
     <BrowserRouter>

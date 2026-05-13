@@ -1,7 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { hasPermission } from '../../utils/permissions'
-import { isSupabaseConfigured } from '../../lib/supabase'
 import type { Permission } from '../../types/auth'
 import { useTranslations } from '../../i18n'
 import { Button } from '../ui/Button'
@@ -34,19 +33,18 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
   }
 
   // AUTH-06: Authenticated users without an org must create one before accessing Velo.
-  // When Supabase is not configured, org resolution is skipped (unconfigured runtime).
-  if (isAuthenticated && !organizationId && isSupabaseConfigured) {
+  if (isAuthenticated && !organizationId) {
     if (tenantResolutionStatus === 'needs_invitation') {
       return <Navigate to="/org-access-required" replace />
     }
     return <Navigate to="/org-setup" replace />
   }
 
-  if (isAuthenticated && organizationId && isSupabaseConfigured && workspaceHostResolutionPending) {
+  if (isAuthenticated && organizationId && workspaceHostResolutionPending) {
     return null
   }
 
-  if (isAuthenticated && organizationId && isSupabaseConfigured && workspaceHostMismatch) {
+  if (isAuthenticated && organizationId && workspaceHostMismatch) {
     return (
       <div className="min-h-screen bg-surface-0 text-fg flex items-center justify-center p-8">
         <div className="max-w-md rounded-2xl border border-danger/25 bg-danger/10 p-8 text-center">

@@ -1,5 +1,4 @@
-import { supabase } from '../lib/supabase'
-import { getToken } from '../lib/api'
+import { api } from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import { getGmailRedirectUri } from './gmailService'
 
@@ -20,60 +19,10 @@ function getCurrentOrganizationId(): string | undefined {
   return normalized || undefined
 }
 
-async function getAccessToken(): Promise<string | undefined> {
-  if (!supabase) return getToken() ?? undefined
-  const { data: sessionData } = await supabase.auth.getSession()
-  let accessToken = sessionData.session?.access_token
-  if (!accessToken) {
-    const { data: refreshed } = await supabase.auth.refreshSession()
-    accessToken = refreshed.session?.access_token
-  }
-  return accessToken
-}
-
-async function directEdgeFetch<T>(functionName: string, body: Record<string, unknown>): Promise<T> {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
-  const anonKey =
-    (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ??
-    (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined)
-  if (!supabaseUrl) {
-    throw new Error('Failed to send a request to the Edge Function: server not configured')
-  }
-  const accessToken = await getAccessToken()
-  const res = await fetch(`${supabaseUrl.replace(/\/+$/, '')}/functions/v1/${functionName}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(anonKey ? { apikey: anonKey } : {}),
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    },
-    body: JSON.stringify(body),
-  }).catch(() => null)
-  if (!res) throw new Error('Failed to send a request to the Edge Function: network error')
-  const payload = (await res.json().catch(() => null)) as { error?: string } | null
-  if (!res.ok || payload?.error) {
-    throw new Error(payload?.error ?? `Failed to send a request to the Edge Function: HTTP ${res.status}`)
-  }
-  return payload as T
-}
-
-async function invokeEdgeWithFallback<T>(functionName: string, body: Record<string, unknown>): Promise<T> {
-  if (!supabase) return directEdgeFetch<T>(functionName, body)
-
-  const primary = await supabase.functions.invoke(functionName, { body })
-  if (!primary.error) return primary.data as T
-
-  if (!/Failed to send a request to the Edge Function/i.test(primary.error.message)) {
-    throw new Error(primary.error.message)
-  }
-
-  return directEdgeFetch<T>(functionName, body)
-}
-
 export async function fetchGoogleOAuthStartUrl(bundle: GoogleOAuthBundle = 'primary'): Promise<string> {
-  const data = await invokeEdgeWithFallback<{ url?: string }>('google-oauth-start', {
-    redirect_uri: getGmailRedirectUri(),
-    original_origin: window.location.origin,
+  const redirectUri = getGmailRedirectUri()
+  const data = await api.post<{ url: string }>('/gmail/oauth-start', {
+    redirect_uri: redirectUri,
     bundle,
     organizationId: getCurrentOrganizationId(),
   })
@@ -85,7 +34,6 @@ export async function fetchGoogleOAuthStartUrl(bundle: GoogleOAuthBundle = 'prim
 }
 
 export type GoogleIntegrationStatusResponse = {
-  /** True when Gmail (primary) scopes are active — same as legacy `connected` for the Google card. */
   connected: boolean
   gmailConnected: boolean
   calendarConnected: boolean
@@ -101,18 +49,8 @@ export type GoogleIntegrationStatusResponse = {
 }
 
 export async function fetchGoogleIntegrationStatus(): Promise<GoogleIntegrationStatusResponse> {
-  if (!supabase) {
-    return {
-      connected: false,
-      gmailConnected: false,
-      calendarConnected: false,
-      account: null,
-    }
-  }
   try {
-    const data = await invokeEdgeWithFallback<GoogleIntegrationStatusResponse>('google-integration-status', {
-      organizationId: getCurrentOrganizationId(),
-    })
+    const data = await api.get<GoogleIntegrationStatusResponse>('/gmail/integration-status')
     const d = data as GoogleIntegrationStatusResponse
     return {
       ...d,
@@ -125,13 +63,13 @@ export async function fetchGoogleIntegrationStatus(): Promise<GoogleIntegrationS
       gmailConnected: false,
       calendarConnected: false,
       account: null,
-      error: error instanceof Error ? error.message : 'google-integration-status failed',
+      error: error instanceof Error ? error.message : 'integration-status failed',
     }
   }
 }
 
 export async function disconnectGoogleIntegration(): Promise<void> {
-  await invokeEdgeWithFallback('gmail-disconnect', {
+  await api.post('/gmail/disconnect', {
     organizationId: getCurrentOrganizationId(),
   })
 }

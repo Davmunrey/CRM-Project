@@ -4,12 +4,9 @@ import type { CRMEmail, GmailThread } from '../types'
 import { getGmailProfile, listGmailThreads } from '../services/gmailService'
 import { getEmailProvider, resolveEmailProviderName } from '../services/emailProviders'
 import { useAuditStore } from './auditStore'
-import { supabase, isSupabaseConfigured } from '../lib/supabase'
-import { getOrgId, runSupabaseWrite } from '../lib/supabaseHelpers'
+import { api } from '../lib/api'
 import { useAuthStore } from './authStore'
-import { useLeadsStore } from './leadsStore'
 import { getTranslations } from '../i18n'
-import type { Database } from '../lib/database.types'
 import { injectOpenPixel, normalizeBodyToHtml, rewriteLinksForTracking } from '../lib/emailTracking'
 import { buildCrmFromLabel } from '../utils/outboundEmailIdentity'
 import { syncSequenceEnrollmentsAfterGmailSync } from '../features/sequences-flow/syncEnrollmentRepliesFromGmailThreads'
@@ -168,7 +165,6 @@ export interface EmailStore {
   getEmailsByDeal: (dealId: string) => CRMEmail[]
 }
 
-type GmailThreadLinkRow = Database['public']['Tables']['gmail_thread_links']['Row']
 
 export const useEmailStore = create<EmailStore>()(
   persist(
@@ -267,50 +263,42 @@ export const useEmailStore = create<EmailStore>()(
         }
 
         let trackedHtmlBody = params.htmlBody
-        if (params.trackingEnabled && isSupabaseConfigured && supabase && currentUserId) {
-          const supabaseBase = import.meta.env.VITE_SUPABASE_URL as string | undefined
-          if (supabaseBase) {
+        if (params.trackingEnabled && currentUserId) {
+          try {
+            const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
             const openToken = crypto.randomUUID()
-            const openUrl = `${supabaseBase}/functions/v1/track-open?token=${openToken}`
-            const clickBaseUrl = `${supabaseBase}/functions/v1/track-click`
+            const openUrl = `${apiBase}/email-tracking/open?token=${openToken}`
+            const clickBaseUrl = `${apiBase}/email-tracking/click`
             const bodyHtml = params.htmlBody ?? normalizeBodyToHtml(params.body)
             const rewritten = rewriteLinksForTracking(bodyHtml, clickBaseUrl)
             trackedHtmlBody = injectOpenPixel(rewritten.htmlBody, openUrl)
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-            const { data: trackingMessage, error: trackingMessageError } = await (supabase as any)
-              .from('email_tracking_messages')
-              .insert({
-                email_id: emailId,
-                organization_id: getOrgId(),
-                user_id: currentUserId,
-                contact_id: params.contactId ?? null,
-                company_id: params.companyId ?? null,
-                deal_id: params.dealId ?? null,
-                open_token: openToken,
-              })
-              .select('id')
-              .single()
-            if (!trackingMessageError && trackingMessage?.id && rewritten.links.length > 0) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-              await (supabase as any)
-                .from('email_tracking_links')
-                .insert(rewritten.links.map((link) => ({
-                  tracking_message_id: trackingMessage.id,
+            const tmRes = await api.post<{ id: string }>('/email-tracking/messages', {
+              email_id: emailId,
+              open_token: openToken,
+              contact_id: params.contactId ?? null,
+              company_id: params.companyId ?? null,
+              deal_id: params.dealId ?? null,
+            }).catch(() => null)
+            if (tmRes?.id && rewritten.links.length > 0) {
+              await api.post('/email-tracking/links', {
+                links: rewritten.links.map((link) => ({
+                  tracking_message_id: tmRes.id,
                   email_id: emailId,
-                  organization_id: getOrgId(),
-                  user_id: currentUserId,
-                  contact_id: params.contactId ?? null,
                   original_url: link.original_url,
                   click_token: link.click_token,
-                })))
+                  contact_id: params.contactId ?? null,
+                })),
+              }).catch(() => null)
             }
+          } catch {
+            // tracking failure must not block send
           }
         }
 
         let sendSucceeded = false
         let sendError: string | undefined
-        const mockRuntime = !isSupabaseConfigured
+        const mockRuntime = false
 
         try {
           if (shouldUseProvider) {
@@ -531,53 +519,39 @@ export const useEmailStore = create<EmailStore>()(
             const providerName = resolveEmailProviderName()
             const emailProvider = getEmailProvider()
             let trackedHtmlBody = job.payload.htmlBody
-            if (job.payload.trackingEnabled && isSupabaseConfigured && supabase && job.payload.ownerUserId) {
-              const supabaseBase = import.meta.env.VITE_SUPABASE_URL as string | undefined
-              if (supabaseBase) {
+            if (job.payload.trackingEnabled && job.payload.ownerUserId) {
+              try {
+                const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
                 const openToken = crypto.randomUUID()
-                const openUrl = `${supabaseBase}/functions/v1/track-open?token=${openToken}`
-                const clickBaseUrl = `${supabaseBase}/functions/v1/track-click`
+                const openUrl = `${apiBase}/email-tracking/open?token=${openToken}`
+                const clickBaseUrl = `${apiBase}/email-tracking/click`
                 const bodyHtml = job.payload.htmlBody ?? normalizeBodyToHtml(job.payload.body)
                 const rewritten = rewriteLinksForTracking(bodyHtml, clickBaseUrl)
                 trackedHtmlBody = injectOpenPixel(rewritten.htmlBody, openUrl)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-                const { data: trackingMessage, error: trackingInsertError } = await (supabase as any)
-                  .from('email_tracking_messages')
-                  .insert({
-                    email_id: job.emailId,
-                    organization_id: getOrgId(),
-                    user_id: job.payload.ownerUserId,
-                    contact_id: job.payload.contactId ?? null,
-                    company_id: job.payload.companyId ?? null,
-                    deal_id: job.payload.dealId ?? null,
-                    open_token: openToken,
-                  })
-                  .select('id')
-                  .single()
-                if (trackingInsertError) {
-                  console.error('[emailStore] tracking_messages insert failed', trackingInsertError.message)
-                  // No insertar tracking_links para evitar phantom opens — continuar sin tracking
-                } else if (trackingMessage?.id && rewritten.links.length > 0) {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-                  const { error: linksInsertError } = await (supabase as any)
-                    .from('email_tracking_links')
-                    .insert(rewritten.links.map((link) => ({
-                      tracking_message_id: trackingMessage.id,
+                const tmRes = await api.post<{ id: string }>('/email-tracking/messages', {
+                  email_id: job.emailId,
+                  open_token: openToken,
+                  contact_id: job.payload.contactId ?? null,
+                  company_id: job.payload.companyId ?? null,
+                  deal_id: job.payload.dealId ?? null,
+                }).catch(() => null)
+                if (tmRes?.id && rewritten.links.length > 0) {
+                  await api.post('/email-tracking/links', {
+                    links: rewritten.links.map((link) => ({
+                      tracking_message_id: tmRes.id,
                       email_id: job.emailId,
-                      organization_id: getOrgId(),
-                      user_id: job.payload.ownerUserId,
-                      contact_id: job.payload.contactId ?? null,
                       original_url: link.original_url,
                       click_token: link.click_token,
-                    })))
-                  if (linksInsertError) {
-                    console.error('[emailStore] tracking_links insert failed', linksInsertError.message)
-                  }
+                      contact_id: job.payload.contactId ?? null,
+                    })),
+                  }).catch(() => null)
                 }
+              } catch {
+                // tracking failure must not block send
               }
             }
             const shouldUseProvider = providerName !== 'gmail' || get().isGmailConnected()
-            const mockRuntime = !isSupabaseConfigured
+            const mockRuntime = false
             let sendSucceeded = false
             let sendError: string | undefined
 
@@ -689,61 +663,29 @@ export const useEmailStore = create<EmailStore>()(
       },
 
       fetchThreadLinks: async () => {
-        if (!isSupabaseConfigured || !supabase) return
         try {
-          const { data, error } = await supabase
-            .from('gmail_thread_links')
-            .select('thread_id, contact_id, company_id, deal_id, source, updated_at')
-
-          if (error) return
-
+          const rows = await api.get<Array<{
+            threadId: string; contactId?: string; companyId?: string; dealId?: string; source: string; updatedAt?: string
+          }>>('/gmail/thread-links')
           const links: Record<string, GmailThreadLink> = {}
-          for (const row of (data ?? []) as Pick<GmailThreadLinkRow, 'thread_id' | 'contact_id' | 'company_id' | 'deal_id' | 'source' | 'updated_at'>[]) {
-            links[row.thread_id] = {
-              threadId: row.thread_id,
-              contactId: row.contact_id ?? undefined,
-              companyId: row.company_id ?? undefined,
-              dealId: row.deal_id ?? undefined,
+          for (const row of (rows ?? [])) {
+            links[row.threadId] = {
+              threadId: row.threadId,
+              contactId: row.contactId ?? undefined,
+              companyId: row.companyId ?? undefined,
+              dealId: row.dealId ?? undefined,
               source: row.source === 'manual' ? 'manual' : 'auto',
-              updatedAt: row.updated_at ?? new Date().toISOString(),
+              updatedAt: row.updatedAt ?? new Date().toISOString(),
             }
           }
           set({ threadLinks: links })
         } catch (err) {
-          // Non-critical: link hydration failure does not block Inbox
           console.error('[emailStore] fetchThreadLinks failed', err instanceof Error ? err.message : err)
         }
       },
 
       fetchThreadWorkspace: async () => {
-        if (!isSupabaseConfigured || !supabase) return
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-          const { data, error } = await (supabase as any)
-            .from('gmail_thread_workspace')
-            .select('thread_id, owner_user_id, internal_note, updated_at')
-
-          if (error) return
-
-          const workspace: Record<string, GmailThreadWorkspaceMeta> = {}
-          for (const row of (data ?? []) as Array<{
-            thread_id: string
-            owner_user_id?: string | null
-            internal_note?: string | null
-            updated_at?: string | null
-          }>) {
-            workspace[row.thread_id] = {
-              threadId: row.thread_id,
-              ownerUserId: row.owner_user_id ?? undefined,
-              internalNote: row.internal_note ?? undefined,
-              updatedAt: row.updated_at ?? new Date().toISOString(),
-            }
-          }
-          set({ threadWorkspace: workspace })
-        } catch (err) {
-          // Non-critical: local state is still available
-          console.error('[emailStore] fetchThreadWorkspace failed', err instanceof Error ? err.message : err)
-        }
+        // gmail_thread_workspace not yet in velo-api — local state only
       },
 
       setThreadLink: (link) => {
@@ -755,22 +697,13 @@ export const useEmailStore = create<EmailStore>()(
           threadLinks: { ...s.threadLinks, [link.threadId]: next },
         }))
 
-        if (isSupabaseConfigured && supabase) {
-          const currentUserId = useAuthStore.getState().currentUser?.id
-          if (!currentUserId) return
-          runSupabaseWrite(
-            'emailStore:setThreadLink',
-            supabase.from('gmail_thread_links').upsert({
-              thread_id: link.threadId,
-              user_id: currentUserId,
-              contact_id: link.contactId ?? null,
-              company_id: link.companyId ?? null,
-              deal_id: link.dealId ?? null,
-              source: link.source,
-              organization_id: getOrgId(),
-            } as never, { onConflict: 'thread_id,user_id,organization_id' }),
-          )
-        }
+        api.post('/gmail/thread-links', {
+          thread_id: link.threadId,
+          contact_id: link.contactId ?? null,
+          company_id: link.companyId ?? null,
+          deal_id: link.dealId ?? null,
+          source: link.source,
+        }).catch(() => null)
       },
 
       clearThreadLink: (threadId) => {
@@ -780,12 +713,7 @@ export const useEmailStore = create<EmailStore>()(
           return { threadLinks: next }
         })
 
-        if (isSupabaseConfigured && supabase) {
-          runSupabaseWrite(
-            'emailStore:clearThreadLink',
-            supabase.from('gmail_thread_links').delete().eq('thread_id', threadId),
-          )
-        }
+        api.delete(`/gmail/thread-links/${encodeURIComponent(threadId)}`).catch(() => null)
       },
 
       setThreadOwner: (threadId, ownerUserId) => {
@@ -797,28 +725,9 @@ export const useEmailStore = create<EmailStore>()(
           updatedAt: new Date().toISOString(),
         }
         set((s) => ({
-          threadWorkspace: {
-            ...s.threadWorkspace,
-            [threadId]: next,
-          },
+          threadWorkspace: { ...s.threadWorkspace, [threadId]: next },
         }))
-
-        if (isSupabaseConfigured && supabase) {
-          const currentUserId = useAuthStore.getState().currentUser?.id
-          if (!currentUserId) return
-          runSupabaseWrite(
-            'emailStore:setThreadOwner',
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-            (supabase as any).from('gmail_thread_workspace').upsert({
-              thread_id: threadId,
-              user_id: currentUserId,
-              owner_user_id: next.ownerUserId ?? null,
-              internal_note: next.internalNote ?? null,
-              organization_id: getOrgId(),
-              updated_at: next.updatedAt,
-            }, { onConflict: 'thread_id,user_id,organization_id' }),
-          )
-        }
+        // gmail_thread_workspace not yet in velo-api — local state only
       },
 
       setThreadNote: (threadId, internalNote) => {
@@ -830,141 +739,15 @@ export const useEmailStore = create<EmailStore>()(
           updatedAt: new Date().toISOString(),
         }
         set((s) => ({
-          threadWorkspace: {
-            ...s.threadWorkspace,
-            [threadId]: next,
-          },
+          threadWorkspace: { ...s.threadWorkspace, [threadId]: next },
         }))
-
-        if (isSupabaseConfigured && supabase) {
-          const currentUserId = useAuthStore.getState().currentUser?.id
-          if (!currentUserId) return
-          runSupabaseWrite(
-            'emailStore:setThreadNote',
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-            (supabase as any).from('gmail_thread_workspace').upsert({
-              thread_id: threadId,
-              user_id: currentUserId,
-              owner_user_id: next.ownerUserId ?? null,
-              internal_note: next.internalNote ?? null,
-              organization_id: getOrgId(),
-              updated_at: next.updatedAt,
-            }, { onConflict: 'thread_id,user_id,organization_id' }),
-          )
-        }
+        // gmail_thread_workspace not yet in velo-api — local state only
       },
 
       getEmailsByContact: (contactId) => get().emails.filter((e) => e.contactId === contactId),
       getEmailsByDeal: (dealId) => get().emails.filter((e) => e.dealId === dealId),
       refreshTrackingMetrics: async () => {
-        if (!isSupabaseConfigured || !supabase) return
-        const currentUserId = useAuthStore.getState().currentUser?.id
-        const legacyOwnedCandidates = get().emails
-          .filter((e) => !e.ownerUserId && e.trackingEnabled)
-          .map((e) => e.id)
-        if (currentUserId && legacyOwnedCandidates.length > 0) {
-          await supabase.functions.invoke('backfill-email-tracking-user', {
-            body: { emailIds: legacyOwnedCandidates },
-          })
-          set((s) => ({
-            emails: s.emails.map((email) => (
-              legacyOwnedCandidates.includes(email.id)
-                ? { ...email, ownerUserId: currentUserId }
-                : email
-            )),
-          }))
-        }
-        const effectiveScopedEmails = get().emails.filter((e) => e.ownerUserId && e.ownerUserId === currentUserId)
-        const trackedIds = effectiveScopedEmails.filter((e) => e.trackingEnabled).map((e) => e.id)
-        if (trackedIds.length === 0) return
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-        const { data, error } = await (supabase as any)
-          .from('email_tracking_events')
-          .select('id,email_id,event_type,created_at')
-          .in('email_id', trackedIds)
-          .order('created_at', { ascending: false })
-        if (error) return
-        const grouped = new Map<string, { opens: string[]; clicks: string[] }>()
-        for (const row of (data ?? []) as Array<{ email_id: string; event_type: 'open' | 'click'; created_at: string }>) {
-          const curr = grouped.get(row.email_id) ?? { opens: [], clicks: [] }
-          if (row.event_type === 'open') curr.opens.push(row.created_at)
-          if (row.event_type === 'click') curr.clicks.push(row.created_at)
-          grouped.set(row.email_id, curr)
-        }
-        set((s) => ({
-          emails: s.emails.map((email) => {
-            const stat = grouped.get(email.id)
-            if (!stat) return email
-            const newestOpen = stat.opens[0]
-            const oldestOpen = stat.opens[stat.opens.length - 1]
-            const newestClick = stat.clicks[0]
-            return {
-              ...email,
-              openCount: stat.opens.length,
-              clickCount: stat.clicks.length,
-              openedAt: oldestOpen ?? email.openedAt,
-              lastOpenedAt: newestOpen ?? email.lastOpenedAt,
-              lastClickedAt: newestClick ?? email.lastClickedAt,
-            }
-          }),
-        }))
-
-        // Feed Leads scoring engine from tracking telemetry (HubSpot-like behavior).
-        const emailById = new Map(effectiveScopedEmails.map((email) => [email.id, email]))
-        const recipientEmails = new Set<string>()
-        const leadsToRecompute = new Set<string>()
-        for (const row of (data ?? []) as Array<{ id: string; email_id: string; event_type: 'open' | 'click'; created_at: string }>) {
-          const crmEmail = emailById.get(row.email_id)
-          const recipient = crmEmail?.to?.[0]?.trim().toLowerCase()
-          if (recipient) recipientEmails.add(recipient)
-        }
-        if (recipientEmails.size === 0) return
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-        const { data: leadsRows } = await (supabase as any)
-          .from('leads')
-          .select('id,email')
-          .limit(2000)
-        const leadIdByEmail = new Map<string, string>(
-          ((leadsRows ?? []) as Array<{ id: string; email: string }>)
-            .map((row) => [row.email.trim().toLowerCase(), row.id]),
-        )
-
-        for (const row of (data ?? []) as Array<{ id: string; email_id: string; event_type: 'open' | 'click'; created_at: string }>) {
-          const crmEmail = emailById.get(row.email_id)
-          const recipient = crmEmail?.to?.[0]?.trim().toLowerCase()
-          if (!recipient) continue
-          const leadId = leadIdByEmail.get(recipient)
-          if (!leadId) continue
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-          const { data: existing } = await (supabase as any)
-            .from('lead_events')
-            .select('id')
-            .eq('lead_id', leadId)
-            .eq('metadata->>tracking_event_id', row.id)
-            .limit(1)
-            .maybeSingle()
-          if (existing?.id) continue
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for this table
-          await (supabase as any)
-            .from('lead_events')
-            .insert({
-              organization_id: getOrgId(),
-              lead_id: leadId,
-              event_type: row.event_type === 'open' ? 'email_open' : 'email_click',
-              metadata: {
-                tracking_event_id: row.id,
-                email_id: row.email_id,
-                tracked_at: row.created_at,
-              },
-            })
-          leadsToRecompute.add(leadId)
-        }
-        for (const leadId of leadsToRecompute) {
-          await useLeadsStore.getState().recomputeLeadScore(leadId, { reason: 'tracking_event_ingested' })
-        }
+        // Per-email tracking event refresh not yet implemented in velo-api — no-op
       },
     }),
     {

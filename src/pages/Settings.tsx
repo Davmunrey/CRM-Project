@@ -28,7 +28,7 @@ import { CSVImport } from '../components/import/CSVImport'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { useNotificationsStore, ALL_NOTIFICATION_TYPES } from '../store/notificationsStore'
 import { useTranslations, useI18nStore, LANGUAGE_LABELS, LANGUAGE_FLAGS } from '../i18n'
-import { supabase } from '../lib/supabase'
+import { disconnectGoogleIntegration } from '../services/googleIntegrationService'
 import { useAuthStore } from '../store/authStore'
 import { useOnboardingStore } from '../store/onboardingStore'
 import { getUxActionCount, trackUxAction } from '../lib/uxMetrics'
@@ -236,7 +236,7 @@ export function Settings() {
   useEffect(() => {
     setBrandingDraft(settings.branding)
   }, [settings.branding])
-  const [maintenanceRuns, setMaintenanceRuns] = useState<Array<{
+  const [maintenanceRuns] = useState<Array<{
     id: string
     status: 'running' | 'success' | 'error'
     mode: 'single_org' | 'all_orgs'
@@ -533,16 +533,9 @@ export function Settings() {
   }
 
   const handleDisconnectGmail = async () => {
-    if (!supabase) {
-      disconnectGmail()
-      toast.success(t.settings.gmailDisconnected)
-      return
-    }
-
     setDisconnectingGmail(true)
     try {
-      const { error } = await supabase.functions.invoke('gmail-disconnect')
-      if (error) throw error
+      await disconnectGoogleIntegration()
       disconnectGmail()
       toast.success(t.settings.gmailDisconnected)
     } catch (err) {
@@ -562,21 +555,8 @@ export function Settings() {
   }
 
   const loadMaintenanceRuns = async () => {
-    if (!supabase) return
-    setLoadingMaintenanceRuns(true)
-    try {
-      const { data, error } = await supabase
-        .from('lead_score_maintenance_runs')
-        .select('id,status,mode,processed,error_message,started_at,finished_at')
-        .order('started_at', { ascending: false })
-        .limit(15)
-      if (error) throw error
-      setMaintenanceRuns((data ?? []) as typeof maintenanceRuns)
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : t.errors.generic)
-    } finally {
-      setLoadingMaintenanceRuns(false)
-    }
+    // lead_score_maintenance_runs is not available in velo-api
+    setLoadingMaintenanceRuns(false)
   }
 
   useEffect(() => {

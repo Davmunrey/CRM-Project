@@ -1,20 +1,11 @@
 import { useEffect } from 'react'
 import { useAuthStore } from '../../store/authStore'
-import { supabase, isSupabaseConfigured } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { devConsole } from '../../lib/devConsole'
 import { resolveWorkspaceSlugFromWindowHostname } from '../../lib/workspaceSlug'
 
-/**
- * Resolves workspace context from the current hostname: optional `VITE_WORKSPACE_ROOT_DOMAIN`
- * for strict multi-tenant roots; otherwise infers `{slug}.rest.of.host` like Pipedrive company URLs.
- */
 export function WorkspaceHostBootstrap() {
   useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) {
-      useAuthStore.getState().setWorkspaceHostContext(null)
-      return
-    }
-
     const rootRaw = import.meta.env.VITE_WORKSPACE_ROOT_DOMAIN as string | undefined
     const slug = resolveWorkspaceSlugFromWindowHostname(window.location.hostname, rootRaw)
     if (!slug) {
@@ -35,31 +26,28 @@ export function WorkspaceHostBootstrap() {
     })
 
     void (async () => {
-      const { data, error } = await supabase.functions.invoke('resolve-workspace-slug', {
-        body: { slug },
-      })
-      if (error) {
-        devConsole.warn('[workspaceHost] resolve-workspace-slug', error.message)
+      try {
+        const data = await api.get<{ organization?: { id: string; name: string } | null }>(`/auth/resolve-org/${encodeURIComponent(slug)}`)
+        const row = data?.organization ?? null
+        useAuthStore.getState().setWorkspaceHostContext({
+          slug,
+          pending: false,
+          resolved: row,
+          slugNotFound: !row,
+        })
+      } catch (err) {
+        devConsole.warn('[workspaceHost] resolve slug failed', err instanceof Error ? err.message : err)
         useAuthStore.getState().setWorkspaceHostContext({
           slug,
           pending: false,
           resolved: null,
           slugNotFound: true,
         })
-        return
       }
-      const row = (data as { organization?: { id: string; name: string } | null } | null)?.organization ?? null
-      useAuthStore.getState().setWorkspaceHostContext({
-        slug,
-        pending: false,
-        resolved: row,
-        slugNotFound: !row,
-      })
     })()
   }, [])
 
   const workspaceHostResolutionPending = useAuthStore((s) => s.workspaceHostResolutionPending)
-  /** Primitive deps only — `workspaceFromHost` object identity can change across unrelated store updates. */
   const workspaceFromHostId = useAuthStore((s) => s.workspaceFromHost?.id ?? null)
   const organizationId = useAuthStore((s) => s.organizationId)
 

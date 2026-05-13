@@ -18,7 +18,7 @@ import { useAuthStore } from '../store/authStore'
 import type { DealStage, ActivityType } from '../types'
 import { subMonths, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns'
 import { useTranslations } from '../i18n'
-import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import { api } from '../lib/api'
 import { useChartTheme } from '../lib/chartTheme'
 import { PageHeader } from '../components/ui/PageHeader'
 import { StatCard } from '../components/ui/StatCard'
@@ -44,11 +44,6 @@ export function Reports() {
   }>({ opens: 0, clicks: 0, loading: false, error: false })
 
   useEffect(() => {
-    if (!isSupabaseConfigured || !supabase) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional: immediately clears stats when Supabase is not configured, then loads asynchronously
-      setEmailTrackingStats({ opens: 0, clicks: 0, loading: false, error: false })
-      return
-    }
     let cancelled = false
     const load = async () => {
       setEmailTrackingStats((s) => ({ ...s, loading: true, error: false }))
@@ -57,33 +52,11 @@ export function Reports() {
           ? startOfDay(parseISO(dateFrom)).toISOString()
           : startOfDay(subMonths(new Date(), 6)).toISOString()
         const end = dateTo ? endOfDay(parseISO(dateTo)).toISOString() : endOfDay(new Date()).toISOString()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- supabase client lacks generated types for tracking tables
-        const sb = supabase as any
-        const [openRes, clickRes] = await Promise.all([
-          sb
-            .from('email_tracking_events')
-            .select('*', { count: 'exact', head: true })
-            .eq('event_type', 'open')
-            .gte('created_at', start)
-            .lte('created_at', end),
-          sb
-            .from('email_tracking_events')
-            .select('*', { count: 'exact', head: true })
-            .eq('event_type', 'click')
-            .gte('created_at', start)
-            .lte('created_at', end),
-        ])
+        const data = await api.get<{ opens: number; clicks: number }>(
+          `/email-tracking/stats?from=${encodeURIComponent(start)}&to=${encodeURIComponent(end)}`,
+        )
         if (cancelled) return
-        if (openRes.error || clickRes.error) {
-          setEmailTrackingStats({ opens: 0, clicks: 0, loading: false, error: true })
-          return
-        }
-        setEmailTrackingStats({
-          opens: openRes.count ?? 0,
-          clicks: clickRes.count ?? 0,
-          loading: false,
-          error: false,
-        })
+        setEmailTrackingStats({ opens: data?.opens ?? 0, clicks: data?.clicks ?? 0, loading: false, error: false })
       } catch {
         if (!cancelled) setEmailTrackingStats({ opens: 0, clicks: 0, loading: false, error: true })
       }
@@ -266,31 +239,11 @@ export function Reports() {
             <h3 className="text-sm font-semibold text-fg-muted">{t.reports.emailTrackingTitle}</h3>
             <p className="text-xs text-fg-subtle mt-1 max-w-3xl">{t.reports.emailTrackingSubtitle}</p>
           </div>
-          <span
-            className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md shrink-0 border ${
-              isSupabaseConfigured
-                ? 'bg-success/10 text-success border-success/20'
-                : 'bg-warning/10 text-warning border-warning/20'
-            }`}
-          >
-            {isSupabaseConfigured ? t.reports.emailTrackingServerBadge : t.reports.emailTrackingUnconfiguredBadge}
+          <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md shrink-0 border bg-success/10 text-success border-success/20">
+            {t.reports.emailTrackingServerBadge}
           </span>
         </div>
-        {!isSupabaseConfigured ? (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
-              <div>
-                <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p>
-                <p className="text-2xl font-bold text-success">-</p>
-              </div>
-              <div>
-                <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p>
-                <p className="text-2xl font-bold text-info">-</p>
-              </div>
-            </div>
-            <p className="text-sm text-fg-subtle pt-2">{t.reports.emailTrackingNotConfigured}</p>
-          </>
-        ) : emailTrackingStats.error ? (
+        {emailTrackingStats.error ? (
           <p className="text-sm text-danger">{t.reports.emailTrackingLoadError}</p>
         ) : emailTrackingStats.loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
@@ -329,12 +282,10 @@ export function Reports() {
             </div>
           </div>
         )}
-        {isSupabaseConfigured && (
-          <div className="text-[11px] text-fg-subtle border-t border-fg/6 pt-3 space-y-2">
-            <p>{t.reports.emailTrackingPrivacyNote}</p>
-            <p className="text-fg-subtle">{t.reports.emailTrackingReliabilityNote}</p>
-          </div>
-        )}
+        <div className="text-[11px] text-fg-subtle border-t border-fg/6 pt-3 space-y-2">
+          <p>{t.reports.emailTrackingPrivacyNote}</p>
+          <p className="text-fg-subtle">{t.reports.emailTrackingReliabilityNote}</p>
+        </div>
       </div>
 
       {/* Charts row 1 */}

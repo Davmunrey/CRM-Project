@@ -15,7 +15,7 @@ import { downloadGmailAttachment, modifyGmailThreadLabels, trashGmailThread } fr
 import { withGmailToken } from '../services/gmailTokenRefresh'
 import { fetchGoogleOAuthStartUrl } from '../services/googleIntegrationService'
 import { useGmailToken } from '../contexts/GmailTokenContext'
-import { supabase } from '../lib/supabase'
+import { disconnectGoogleIntegration } from '../services/googleIntegrationService'
 import { useViewsStore } from '../store/viewsStore'
 import { EmailComposer } from '../components/email/EmailComposer'
 import { toast } from '../store/toastStore'
@@ -1192,15 +1192,9 @@ export function Inbox() {
   }
 
   const handleDisconnectGmail = async () => {
-    if (!supabase) {
-      clearGmailToken()
-      disconnectGmail()
-      return
-    }
     setDisconnecting(true)
     try {
-      const { error } = await supabase.functions.invoke('gmail-disconnect')
-      if (error) throw error
+      await disconnectGoogleIntegration()
       clearGmailToken()
       disconnectGmail()
       toast.success(t.settings.gmailDisconnected)

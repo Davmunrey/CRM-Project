@@ -10,7 +10,6 @@ import { useCompaniesStore } from '../store/companiesStore'
 import { useDealsStore } from '../store/dealsStore'
 import { useActivitiesStore } from '../store/activitiesStore'
 import { useEmailStore } from '../store/emailStore'
-import { isSupabaseConfigured } from '../lib/supabase'
 import { Avatar } from '../components/ui/Avatar'
 import { Badge, type BadgeVariant } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
@@ -76,7 +75,6 @@ export function ContactDetail() {
   const deals = useDealsStore((s) => s.deals)
   const { activities, addActivity, completeActivity, deleteActivity } = useActivitiesStore()
   const emails = useEmailStore((s) => s.emails)
-  const { trackEmailOpen, trackEmailClick } = useEmailStore()
 
   const displayContact = useMemo(
     () => (contactRaw ? localizedContact(contactRaw, getTranslations()) : undefined),
@@ -440,27 +438,7 @@ export function ContactDetail() {
                     )}
                     {email.trackingEnabled && (
                       <div className="mt-1.5 min-h-[1.75rem] flex flex-col justify-center">
-                        {!isSupabaseConfigured ? (
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="text-[10px] text-fg-subtle">{t.inbox.trackingDemoSimulate}:</span>
-                            <button
-                              type="button"
-                              onClick={() => trackEmailOpen(email.id)}
-                              className="text-[10px] px-2 py-0.5 rounded-full bg-fg/5 hover:bg-success/15 text-fg-subtle hover:text-success border border-fg/8 transition-colors"
-                            >
-                              {t.common.view}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => trackEmailClick(email.id)}
-                              className="text-[10px] px-2 py-0.5 rounded-full bg-fg/5 hover:bg-info/15 text-fg-subtle hover:text-info border border-fg/8 transition-colors"
-                            >
-                              {t.inbox.clicks}
-                            </button>
-                          </div>
-                        ) : (
-                          <p className="text-[10px] text-fg-subtle max-w-xl">{t.inbox.trackingServerMetricsHint}</p>
-                        )}
+                        <p className="text-[10px] text-fg-subtle max-w-xl">{t.inbox.trackingServerMetricsHint}</p>
                       </div>
                     )}
                   </div>

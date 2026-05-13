@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Trash2, FlaskConical, Sparkles, Link2, HelpCircle, RotateCcw } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { api } from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { useTranslations } from '../../i18n'
 import { hasPermission } from '../../utils/permissions'
@@ -83,16 +83,14 @@ export function SettingsWebhooksPanel() {
   const [customHeadersJson, setCustomHeadersJson] = useState('{}')
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [testingId, setTestingId] = useState<string | null>(null)
   const [rotateId, setRotateId] = useState<string | null>(null)
   const [rotateSecret, setRotateSecret] = useState('')
   const [failedRows, setFailedRows] = useState<FailedOutboxRow[]>([])
-  const [replayingId, setReplayingId] = useState<string | null>(null)
   const loadGenerationRef = useRef(0)
 
   const load = useCallback(async () => {
     const snapshot = (loadGenerationRef.current += 1)
-    if (!supabase || !organizationId) {
+    if (!organizationId) {
       if (snapshot === loadGenerationRef.current) {
         setRows([])
         setFailedRows([])
@@ -102,32 +100,17 @@ export function SettingsWebhooksPanel() {
     }
     setLoading(true)
     setLoadError(null)
-    const [subsRes, failedRes] = await Promise.all([
-      supabase
-        .from('webhook_subscriptions')
-        .select(
-          'id, name, target_url, enabled, event_filters, custom_headers, last_http_status, last_delivery_error, last_delivery_at',
-        )
-        .eq('organization_id', organizationId)
-        .order('created_at', { ascending: false }),
-      supabase.functions.invoke('webhook-subscriptions', {
-        body: { action: 'listFailedOutbox', organizationId, limit: 25 },
-      }),
-    ])
-    if (snapshot !== loadGenerationRef.current) return
-    if (subsRes.error) {
+    try {
+      const data = await api.get<WebhookRow[]>('/webhook-subscriptions')
+      if (snapshot !== loadGenerationRef.current) return
+      setLoadError(null)
+      setRows(data ?? [])
+    } catch {
+      if (snapshot !== loadGenerationRef.current) return
       setLoadError(t.settings.webhooksLoadErrorInline)
       setRows([])
-    } else {
-      setLoadError(null)
-      setRows((subsRes.data ?? []) as WebhookRow[])
     }
-    const fd = failedRes.data as { rows?: FailedOutboxRow[]; error?: string } | null
-    if (failedRes.error || fd?.error) {
-      setFailedRows([])
-    } else {
-      setFailedRows(fd?.rows ?? [])
-    }
+    setFailedRows([])
     setLoading(false)
   }, [organizationId, t])
 
@@ -161,140 +144,81 @@ export function SettingsWebhooksPanel() {
   }
 
   const handleCreate = async () => {
-    if (!supabase || !organizationId || !canManage) return
+    if (!organizationId || !canManage) return
     const headers = parseHeaders()
     if (headers === null) {
       toast.error(t.settings.webhooksInvalidHeadersJson)
       return
     }
-    if (signingSecret.trim().length < 16) {
-      toast.error(t.settings.webhooksSecretMin)
-      return
-    }
     setSaving(true)
-    const { data, error } = await supabase.functions.invoke('webhook-subscriptions', {
-      body: {
-        action: 'create',
-        organizationId,
+    try {
+      await api.post('/webhook-subscriptions', {
         name: name.trim(),
-        targetUrl: targetUrl.trim(),
-        signingSecret: signingSecret.trim(),
-        eventFilters: parseFilters(),
-        customHeaders: headers,
-      },
-    })
-    setSaving(false)
-    if (error) {
-      toast.error(error.message ?? t.settings.webhooksLoadError)
-      return
+        target_url: targetUrl.trim(),
+        event_filters: parseFilters(),
+        custom_headers: headers,
+      })
+      toast.success(t.settings.webhooksCreated)
+      setName('')
+      setTargetUrl('')
+      setSigningSecret('')
+      setEventFilters('*')
+      setCustomHeadersJson('{}')
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.webhooksLoadError)
+    } finally {
+      setSaving(false)
     }
-    const errMsg = (data as { error?: string })?.error
-    if (errMsg) {
-      toast.error(errMsg)
-      return
-    }
-    toast.success(t.settings.webhooksCreated)
-    setName('')
-    setTargetUrl('')
-    setSigningSecret('')
-    setEventFilters('*')
-    setCustomHeadersJson('{}')
-    void load()
   }
 
   const toggleEnabled = async (row: WebhookRow, next: boolean) => {
-    if (!supabase || !canManage) return
-    const { error } = await supabase.from('webhook_subscriptions').update({ enabled: next }).eq('id', row.id)
-    if (error) {
-      toast.error(error.message)
-      return
+    if (!canManage) return
+    try {
+      await api.patch(`/webhook-subscriptions/${row.id}`, { enabled: next })
+      setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, enabled: next } : r)))
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.webhooksLoadError)
     }
-    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, enabled: next } : r)))
   }
 
   const handleDelete = async () => {
-    if (!supabase || !deleteId) return
+    if (!deleteId) return
     const id = deleteId
     setDeleteId(null)
-    const { error } = await supabase.from('webhook_subscriptions').delete().eq('id', id)
-    if (error) {
-      toast.error(error.message)
-      return
+    try {
+      await api.delete(`/webhook-subscriptions/${id}`)
+      toast.success(t.common.delete)
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.webhooksLoadError)
     }
-    toast.success(t.common.delete)
-    void load()
   }
 
-  const handleTest = async (id: string) => {
-    if (!supabase || !organizationId || !canManage) return
-    setTestingId(id)
-    const { data, error } = await supabase.functions.invoke('webhook-subscriptions', {
-      body: { action: 'test', organizationId, subscriptionId: id },
-    })
-    setTestingId(null)
-    if (error) {
-      toast.error(error.message)
-      return
-    }
-    const d = data as { success?: boolean; error?: string | null }
-    if (d.success) toast.success(t.settings.webhooksTestOk)
-    else toast.error(d.error || t.settings.webhooksTestFail)
-    void load()
+  const handleTest = async (_id: string) => {
+    // Webhook test delivery not yet implemented in velo-api
+    toast.error(t.settings.webhooksTestFail)
   }
 
-  const handleReplayFailed = async (outboxId: string) => {
-    if (!supabase || !organizationId || !canManage) return
-    setReplayingId(outboxId)
-    const { data, error } = await supabase.functions.invoke('webhook-subscriptions', {
-      body: { action: 'replayOutbox', organizationId, outboxId },
-    })
-    setReplayingId(null)
-    if (error) {
-      toast.error(error.message ?? t.settings.webhooksLoadFailed)
-      return
-    }
-    const d = data as { error?: string }
-    if (d.error) {
-      toast.error(d.error)
-      return
-    }
-    toast.success(t.settings.webhooksReplayed)
-    void load()
+  const handleReplayFailed = async (_outboxId: string) => {
+    // Outbox replay not yet implemented in velo-api
+    toast.error(t.settings.webhooksLoadFailed ?? 'Not available')
   }
 
   const handleRotate = async () => {
-    if (!supabase || !organizationId || !rotateId || !canManage) return
-    if (rotateSecret.trim().length < 16) {
-      toast.error(t.settings.webhooksSecretMin)
-      return
-    }
+    if (!rotateId || !canManage) return
     setSaving(true)
-    const { data, error } = await supabase.functions.invoke('webhook-subscriptions', {
-      body: {
-        action: 'rotateSecret',
-        organizationId,
-        subscriptionId: rotateId,
-        signingSecret: rotateSecret.trim(),
-      },
-    })
-    setSaving(false)
-    if (error) {
-      toast.error(error.message)
-      return
+    try {
+      await api.post(`/webhook-subscriptions/${rotateId}/rotate-secret`)
+      toast.success(t.settings.webhooksRotated)
+      setRotateId(null)
+      setRotateSecret('')
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.webhooksLoadError)
+    } finally {
+      setSaving(false)
     }
-    const errMsg = (data as { error?: string })?.error
-    if (errMsg) {
-      toast.error(errMsg)
-      return
-    }
-    toast.success(t.settings.webhooksRotated)
-    setRotateId(null)
-    setRotateSecret('')
-    void load()
-  }
-
-  if (!supabase) {
-    return <p className="text-sm text-fg-muted">{t.settings.webhooksRequiresSupabase}</p>
   }
 
   if (!organizationId) {
@@ -453,7 +377,7 @@ export function SettingsWebhooksPanel() {
                     type="button"
                     size="sm"
                     variant="secondary"
-                    disabled={replayingId === f.id}
+                    disabled={false}
                     leftIcon={<RotateCcw size={14} aria-hidden />}
                     onClick={() => void handleReplayFailed(f.id)}
                   >
@@ -505,7 +429,7 @@ export function SettingsWebhooksPanel() {
                         type="button"
                         size="sm"
                         variant="secondary"
-                        disabled={testingId === row.id}
+                        disabled={false}
                         onClick={() => void handleTest(row.id)}
                       >
                         <FlaskConical size={14} className="mr-1 inline" aria-hidden />
