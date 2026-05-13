@@ -131,13 +131,13 @@ export function TeamManagement() {
     }
   }
 
-  const handleResetPassword = (userId: string) => {
+  const handleResetPassword = async (userId: string) => {
     const strengthIssues = getPasswordStrengthIssues(newPw)
     if (strengthIssues.length > 0) {
       toast.error(formatPasswordStrengthIssues(strengthIssues, passwordIssueLabels))
       return
     }
-    resetPassword(userId, newPw)
+    await resetPassword(userId, newPw)
     toast.success(t.team.toastPasswordReset)
     setResetPwUser(null)
     setNewPw('')

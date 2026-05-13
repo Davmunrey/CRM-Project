@@ -93,8 +93,8 @@ export interface AuthState {
   changeUserRole: (id: string, role: UserRole) => void
   deactivateUser: (id: string) => void
   reactivateUser: (id: string) => void
-  changePassword: (userId: string, currentPassword: string, newPassword: string) => { success: boolean; error?: string }
-  resetPassword: (userId: string, newPassword: string) => void
+  changePassword: (userId: string, currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>
+  resetPassword: (userId: string, newPassword: string) => Promise<void>
 
   createInvitation: (email: string, role: UserRole) => Invitation
   acceptInvitation: (invitationId: string, name: string, password: string) => { success: boolean; error?: string }
@@ -391,13 +391,21 @@ export const useAuthStore = create<AuthState>()(
         set((s) => ({ users: s.users.map((u) => u.id === id ? { ...u, isActive: true, updatedAt: new Date().toISOString() } : u) }))
       },
 
-      changePassword: (_userId, _currentPassword, _newPassword) => {
-        // TODO: call PATCH /auth/password when endpoint is added
-        return { success: true }
+      changePassword: async (_userId, currentPassword, newPassword) => {
+        try {
+          await api.patch('/auth/password', { currentPassword, newPassword })
+          return { success: true }
+        } catch (err) {
+          return { success: false, error: err instanceof Error ? err.message : 'Password change failed' }
+        }
       },
 
-      resetPassword: (_userId, _newPassword) => {
-        // TODO: call POST /auth/reset-password
+      resetPassword: async (userId, newPassword) => {
+        try {
+          await api.post('/auth/admin/reset-password', { userId, newPassword })
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : 'Password reset failed')
+        }
       },
 
       createInvitation: (email, role) => {

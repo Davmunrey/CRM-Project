@@ -41,7 +41,7 @@ export function UserProfile() {
     toast.success(t.auth.editProfile)
   }
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     const strengthIssues = getPasswordStrengthIssues(pwForm.newPw)
     if (strengthIssues.length > 0) {
       toast.error(
@@ -59,7 +59,7 @@ export function UserProfile() {
       toast.error(t.auth.passwordsDoNotMatch)
       return
     }
-    const result = changePassword(currentUser.id, pwForm.current, pwForm.newPw)
+    const result = await changePassword(currentUser.id, pwForm.current, pwForm.newPw)
     if (result.success) {
       toast.success(t.auth.savePassword)
       setChangingPw(false)

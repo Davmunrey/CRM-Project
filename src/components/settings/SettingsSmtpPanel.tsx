@@ -6,12 +6,12 @@ import { Input } from '../ui/Input'
 import { Select } from '../ui/Select'
 import { toast } from '../../store/toastStore'
 import { resolveEmailProviderName } from '../../services/emailProviders'
+import { api } from '../../lib/api'
 
 type SmtpSecurity = 'starttls' | 'ssl' | 'none'
 
 interface SmtpSettingsRow {
   id: string
-  organization_id: string
   host: string
   port: number
   username: string
@@ -51,32 +51,46 @@ const DEFAULT_FORM: FormState = {
   testRecipient: '',
 }
 
-async function callSmtpFunction(_action: string, _payload: Record<string, unknown>): Promise<unknown> {
-  throw new Error('Per-org SMTP configuration via API not yet implemented.')
-}
-
 export function SettingsSmtpPanel() {
   const t = useTranslations()
   const [form, setForm] = useState<FormState>(DEFAULT_FORM)
   const [existing, setExisting] = useState<SmtpSettingsRow | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [disabling, setDisabling] = useState(false)
 
   const activeProvider = resolveEmailProviderName()
   const isActiveProvider = activeProvider === 'smtp'
-
   const isConfigured = existing !== null && existing.is_active
 
   const load = useCallback(async () => {
-    setLoading(false)
-    setExisting(null)
+    setLoading(true)
+    try {
+      const res = await api.get<{ settings: SmtpSettingsRow | null }>('/smtp')
+      const row = res?.settings ?? null
+      setExisting(row)
+      if (row) {
+        setForm({
+          host: row.host,
+          port: String(row.port),
+          username: row.username,
+          password: '',
+          fromAddress: row.from_address,
+          fromName: row.from_name ?? '',
+          replyTo: row.reply_to ?? '',
+          secure: row.secure,
+          testRecipient: '',
+        })
+      }
+    } catch {
+      setExisting(null)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
-  useEffect(() => {
-    void load()
-  }, [load])
+  useEffect(() => { void load() }, [load])
 
   const setField = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }))
@@ -98,14 +112,11 @@ export function SettingsSmtpPanel() {
     }
     setSaving(true)
     try {
-      // Edge function reuses the existing encrypted password when `password` is empty
-      // on a row that is already active; first-time setup requires a value, which we
-      // already validated above.
-      await callSmtpFunction('save_settings', {
+      await api.post('/smtp', {
         host: form.host.trim(),
         port: portNumber,
         username: form.username.trim(),
-        password: form.password,
+        password: form.password || undefined,
         fromAddress: form.fromAddress.trim(),
         fromName: form.fromName.trim() || undefined,
         replyTo: form.replyTo.trim() || undefined,
@@ -116,13 +127,7 @@ export function SettingsSmtpPanel() {
       await load()
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
-      if (msg.toLowerCase().includes('admin')) {
-        toast.error(t.settings.smtpToastNeedAdmin)
-      } else if (msg.toLowerCase().includes('required')) {
-        toast.error(t.settings.smtpToastMissingFields)
-      } else {
-        toast.error(`${t.settings.smtpToastSaveFailed}: ${msg}`)
-      }
+      toast.error(`${t.settings.smtpToastSaveFailed}: ${msg}`)
     } finally {
       setSaving(false)
     }
@@ -135,22 +140,18 @@ export function SettingsSmtpPanel() {
     }
     setTesting(true)
     try {
-      const inlinePayload =
-        form.password.trim().length > 0
-          ? {
-              host: form.host.trim(),
-              port: portNumber,
-              username: form.username.trim(),
-              password: form.password,
-              fromAddress: form.fromAddress.trim(),
-              fromName: form.fromName.trim() || undefined,
-              secure: form.secure,
-            }
-          : {}
-      await callSmtpFunction('test', {
-        to: form.testRecipient.trim(),
-        ...inlinePayload,
-      })
+      const inlinePayload = form.password.trim()
+        ? {
+            host: form.host.trim(),
+            port: portNumber,
+            username: form.username.trim(),
+            password: form.password,
+            fromAddress: form.fromAddress.trim(),
+            fromName: form.fromName.trim() || undefined,
+            secure: form.secure,
+          }
+        : {}
+      await api.post('/smtp/test', { to: form.testRecipient.trim(), ...inlinePayload })
       toast.success(t.settings.smtpToastTestSent)
       await load()
     } catch (err) {
@@ -165,18 +166,16 @@ export function SettingsSmtpPanel() {
   const handleDisable = async () => {
     setDisabling(true)
     try {
-      await callSmtpFunction('delete_settings', {})
+      await api.delete('/smtp')
       toast.success(t.settings.smtpToastDisabled)
       setExisting(null)
       setForm(DEFAULT_FORM)
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      toast.error(msg)
+      toast.error(err instanceof Error ? err.message : String(err))
     } finally {
       setDisabling(false)
     }
   }
-
 
   return (
     <div className="space-y-4">
@@ -186,9 +185,7 @@ export function SettingsSmtpPanel() {
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="text-base font-semibold text-fg">{t.settings.smtpTitle}</h2>
-          <p className="text-sm text-fg-muted mt-1 max-w-3xl leading-relaxed">
-            {t.settings.smtpBlurb}
-          </p>
+          <p className="text-sm text-fg-muted mt-1 max-w-3xl leading-relaxed">{t.settings.smtpBlurb}</p>
         </div>
         <div
           className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
@@ -316,13 +313,7 @@ export function SettingsSmtpPanel() {
             {t.settings.smtpButtonTest}
           </Button>
           {isConfigured ? (
-            <Button
-              variant="danger"
-              size="sm"
-              loading={disabling}
-              onClick={handleDisable}
-              disabled={loading}
-            >
+            <Button variant="danger" size="sm" loading={disabling} onClick={handleDisable} disabled={loading}>
               {t.settings.smtpButtonDisable}
             </Button>
           ) : null}

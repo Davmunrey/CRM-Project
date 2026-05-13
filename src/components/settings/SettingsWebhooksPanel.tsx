@@ -195,13 +195,21 @@ export function SettingsWebhooksPanel() {
     }
   }
 
-  const handleTest = async (_id: string) => {
-    // Webhook test delivery not yet implemented in velo-api
-    toast.error(t.settings.webhooksTestFail)
+  const handleTest = async (id: string) => {
+    try {
+      const res = await api.post<{ ok: boolean; status?: number }>(`/webhook-subscriptions/${id}/test`)
+      if (res?.ok) {
+        toast.success(`${t.settings.webhooksTest} — HTTP ${res.status ?? 200}`)
+      } else {
+        toast.error(`${t.settings.webhooksTestFail} (HTTP ${res?.status ?? '?'})`)
+      }
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.webhooksTestFail)
+    }
   }
 
   const handleReplayFailed = async (_outboxId: string) => {
-    // Outbox replay not yet implemented in velo-api
     toast.error(t.settings.webhooksLoadFailed ?? 'Not available')
   }
 
