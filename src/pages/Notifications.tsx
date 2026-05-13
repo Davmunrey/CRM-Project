@@ -147,8 +147,8 @@ export function Notifications() {
   }
 
   const todayStr = new Date().toISOString().split('T')[0]
-  const todayNotifs = filtered.filter((n) => n.createdAt.startsWith(todayStr))
-  const olderNotifs = filtered.filter((n) => !n.createdAt.startsWith(todayStr))
+  const todayNotifs = filtered.filter((n) => n.createdAt?.startsWith(todayStr))
+  const olderNotifs = filtered.filter((n) => !n.createdAt?.startsWith(todayStr))
 
   return (
     <div className="crm-page space-y-6">

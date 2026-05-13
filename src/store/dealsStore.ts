@@ -97,8 +97,9 @@ export const useDealsStore = create<DealsState>()(
       if (!options?.silent) set({ isLoading: true, error: null })
       else set({ error: null })
       try {
-        const data = await api.get<Deal[]>('/deals')
-        set({ deals: (data ?? []).map((r) => mapDeal(r as unknown as Record<string, unknown>)), isLoading: false })
+        const res = await api.get<{ data: Deal[] } | Deal[]>('/deals')
+        const rows = (res && !Array.isArray(res) && 'data' in res) ? res.data : (res as Deal[] ?? [])
+        set({ deals: rows.map((r) => mapDeal(r as unknown as Record<string, unknown>)), isLoading: false })
       } catch (e: unknown) {
         set({ error: getErrorMessage(e), isLoading: false })
       }

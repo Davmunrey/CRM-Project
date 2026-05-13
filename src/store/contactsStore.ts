@@ -72,8 +72,9 @@ export const useContactsStore = create<ContactsState>()(
     fetchContacts: async () => {
       set({ isLoading: true, error: null })
       try {
-        const data = await api.get<Contact[]>('/contacts')
-        set({ contacts: (data ?? []).map((r) => mapContactFromSupabaseRow(r as unknown as Record<string, unknown>)), isLoading: false })
+        const res = await api.get<{ data: Contact[] } | Contact[]>('/contacts')
+        const rows = (res && !Array.isArray(res) && 'data' in res) ? res.data : (res as Contact[] ?? [])
+        set({ contacts: rows.map((r) => mapContactFromSupabaseRow(r as unknown as Record<string, unknown>)), isLoading: false })
       } catch (e: unknown) {
         set({ error: getErrorMessage(e), isLoading: false })
       }

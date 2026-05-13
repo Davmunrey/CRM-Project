@@ -228,7 +228,7 @@ export function Sidebar() {
         to: `/${v.entityType === 'contact' ? 'contacts' : v.entityType === 'company' ? 'companies' : 'deals'}?view=${v.id}`,
         icon: VIEW_ICON_MAP[v.icon ?? ''] ?? <Bookmark size={18} />,
         label: (() => {
-          const key = v.nameKey ?? (v.id.startsWith('sv-') ? v.id.replace('sv-', 'sv').replace('-', '') : null)
+          const key = v.nameKey ?? (v.id?.startsWith('sv-') ? v.id.replace('sv-', 'sv').replace('-', '') : null)
           return key ? (t.views as Record<string, string>)[key] ?? v.name : v.name
         })(),
       }))

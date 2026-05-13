@@ -64,8 +64,9 @@ export const useCompaniesStore = create<CompaniesState>()(
     fetchCompanies: async () => {
       set({ isLoading: true, error: null })
       try {
-        const data = await api.get<Company[]>('/companies')
-        set({ companies: (data ?? []).map((r) => mapCompany(r as unknown as Record<string, unknown>)), isLoading: false })
+        const res = await api.get<{ data: Company[] } | Company[]>('/companies')
+        const rows = (res && !Array.isArray(res) && 'data' in res) ? res.data : (res as Company[] ?? [])
+        set({ companies: rows.map((r) => mapCompany(r as unknown as Record<string, unknown>)), isLoading: false })
       } catch (e: unknown) {
         set({ error: getErrorMessage(e), isLoading: false })
       }

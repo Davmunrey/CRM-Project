@@ -18,9 +18,9 @@ function formatFileSize(bytes: number, t: ReturnType<typeof useTranslations>): s
   return t.attachments.fileSizeMb.replace('{size}', `${(bytes / (1024 * 1024)).toFixed(1)}`)
 }
 
-function getFileIcon(mimeType: string) {
-  if (mimeType.startsWith('image/')) return <Image size={16} className="text-accent-400" />
-  if (mimeType.includes('pdf')) return <FileText size={16} className="text-danger" />
+function getFileIcon(mimeType: string | undefined) {
+  if (mimeType?.startsWith('image/')) return <Image size={16} className="text-accent-400" />
+  if (mimeType?.includes('pdf')) return <FileText size={16} className="text-danger" />
   return <File size={16} className="text-fg-muted" />
 }
 
