@@ -1,141 +1,43 @@
-# Supabase Setup
+# Supabase — Edge Functions (Legacy)
 
-This directory contains the SQL artifacts required to run the CRM in Supabase mode (auth, data model, RLS, and migrations).
+Core CRM functionality has migrated to `velo-api` (Fastify + PostgreSQL). The Edge Functions in this directory are **legacy** — the frontend no longer calls them directly.
 
-## Quick Navigation
+## What moved to velo-api
 
-- Main project README: `../README.md`
-- Documentation index: `../docs/README.md`
-- Base schema file: `supabase/schema.sql`
-- Incremental changes: `supabase/migrations/`
+| Was Supabase Edge Function | Now velo-api route |
+|----------------------------|--------------------|
+| Gmail OAuth + token management | `/gmail/*` |
+| API keys + lead capture tokens | `/integrations/*` |
+| Public CRM read API | `/public/v1/*` |
+| Email tracking (open/click pixel) | `/email-tracking/*` |
+| Org creation, invitations | `/orgs`, `/invitations/*` |
+| Email send (Resend / SMTP) | `/email/send`, `/smtp/*` |
 
-## Quick Start
+## Background jobs still in Supabase (if deployed)
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Copy your project URL and anon key from **Settings -> API**.
-3. Create a `.env.local` file in the project root:
+These functions may remain deployed as Supabase scheduled jobs:
 
-```bash
-# Optional locally; required on CI for production/staging channels (see ../docs/deployment-spa-and-env.md)
-# VITE_APP_CHANNEL=staging
+- `lead-score-maintenance` — nightly lead score recomputation
+- `sequence-advance` — advances email sequence enrollments
+- `promote-lead` — converts leads to contacts/deals
+- `purge-soft-deleted` — hard-deletes soft-deleted rows after retention period
+- `data-export` — org data export jobs
 
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
+## Supabase SQL migrations
 
-4. In Supabase SQL Editor, run `supabase/schema.sql`.
-5. Apply pending files under `supabase/migrations/` in chronological order (includes `20260421190000_realtime_publication_more_tables.sql`, which registers extra tables on the `supabase_realtime` publication so the app’s `initRealtimeSubscriptions` receives changes for enrollments, automation runs, leads, audit rows, and org members).
-6. Restart the dev server (`npm run dev`).
+`supabase/migrations/` contains the historical Supabase PostgreSQL schema. **Not used by velo-api** — velo-api has its own migrations under `../velo-api/migrations/`.
 
-When Supabase is configured, the app uses real authentication and PostgreSQL. Without valid `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`, the client stays **unconfigured** (no mock tenant data in this branch) — see [`docs/deployment-spa-and-env.md`](../docs/deployment-spa-and-env.md) and root [`README.md`](../README.md).
+These remain in the repo for reference.
 
-## Remote project (CLI): migrations + webhooks
+## Outbound webhooks (if still using Supabase)
 
-### Without a local terminal (GitHub Actions)
+If webhook delivery runs through Supabase:
 
-If you cannot run a shell locally, use **[`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml)** (auto on `master` push, plus manual trigger):
+- `webhook-subscriptions` — manages subscriptions + signing secrets
+- `webhook-worker` — processes `webhook_outbox`, delivers to subscriber URLs with HMAC-SHA256
 
-1. In GitHub: **Settings → Secrets and variables → Actions**, add:
-   - `SUPABASE_ACCESS_TOKEN` — [Account tokens](https://supabase.com/dashboard/account/tokens)
-   - `SUPABASE_PROJECT_ID` — project ref from the dashboard URL (`…/project/<ref>`)
-   - `SUPABASE_DB_PASSWORD` — **Settings → Database** (reset if you do not have it)
-   - `SUPABASE_URL` and `SUPABASE_ANON_KEY` — used by post-deploy smoke checks
-   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `GOOGLE_OAUTH_REDIRECT_URIS` — synced into Supabase Edge secrets during deploy
-   - *(Recommended)* `WEBHOOK_WORKER_SECRET` — long random string for the `webhook-worker` Edge function
-   - *(Recommended)* `EDGE_CORS_ORIGINS` — production browser-origin allowlist
-2. Optional manual run: **Actions → “Supabase remote deploy” → Run workflow**.
-
-That applies `supabase/migrations/`, syncs required Google OAuth Edge secrets, deploys **all** Edge Functions via `npm run supabase:deploy:all-functions`, and then runs `npm run supabase:smoke:google-edge` to verify Google/Gmail endpoints are reachable.
-
-### On your machine (CLI)
-
-From the repo root after `npm install` (installs the `supabase` dev dependency):
-
-1. `npm run supabase:login` — opens the browser and stores an access token for the CLI.
-2. `npm run supabase:link -- --project-ref <your-project-ref>` — links the repo to the project (creates local config under `.supabase/`, gitignored).
-3. `npm run supabase:db:push` — applies pending SQL in `supabase/migrations/` to the linked remote database (review with `supabase db diff` if you use a branching workflow).
-4. **Once per project:** `npm run supabase:secrets:set-webhook-worker` — sets Edge secret `WEBHOOK_WORKER_SECRET`. If the env var `WEBHOOK_WORKER_SECRET` is unset, a new random value is generated and printed; save it for GitHub Actions / cron.
-5. **Deploy Edge Functions** — pick one:
-  - **Everything (recommended after pulling security or infra changes):** `npm run supabase:deploy:all-functions` — includes `data-export`, `ux-metrics-ingest`, `purge-soft-deleted` (set secrets below), `api-keys`, `backfill-email-tracking-user`, `create-org`, `crm-public-api`, `ensure-tenant`, Gmail/Google suite, `invite-member`, `lead-capture`, `lead-capture-tokens`, `lead-score-maintenance`, `list-org-members-with-identity`, `promote-lead`, `resend-send-email`, `resolve-workspace-slug`, `sequence-advance`, `track-click`, `track-open`, `webhook-subscriptions`, `webhook-worker`.
-   - **Partial bundles:** `npm run supabase:deploy:webhooks` · `npm run supabase:deploy:integrations` · `npm run supabase:deploy:google` (same names as in `package.json`).
-
-**Data retention (soft-delete purge):** set Edge secrets `PURGE_SOFT_DELETED_SECRET` (and optional `PURGE_RETENTION_DAYS`, default 90), then call `purge-soft-deleted` with header `x-purge-secret` — see [`.github/workflows/data-retention-purge.yml`](../.github/workflows/data-retention-purge.yml).
-
-Operator runbook (Google secrets + redirect matrix): [`docs/google-gmail-oauth-verification.md`](../docs/google-gmail-oauth-verification.md#operator-setup-google-oauth). **Open tasks (Console, verification, product):** [`#outstanding-google-integration`](../docs/google-gmail-oauth-verification.md#outstanding-google-integration).
-
-Optional Edge secret **`EDGE_CORS_ORIGINS`:** comma-separated exact browser origins for tightened CORS on browser-called functions — see [`.env.example`](../.env.example) and [`docs/master-security-compliance.md`](../docs/master-security-compliance.md#supabase-external-hardening-checklist).
-
-Shortcut for steps 3 + webhooks after the first secret setup: `npm run supabase:webhooks:push`.
-
-`npm run supabase:deploy:all-edge` is an **alias** for `supabase:deploy:all-functions` (full deploy, not only webhooks + integrations).
-
-## API & capture troubleshooting runbook
-
-Use this checklist when `Settings > Integrations` shows API key/token errors.
-
-1. **Capture context first**
-   - Save the failing endpoint (`api-keys`, `lead-capture-tokens`, `crm-public-api`, or `lead-capture`).
-   - Copy the response payload, especially `status`, `code`, and `request_id`.
-2. **Interpret status/code quickly**
-   - `401` / `unauthorized`: expired or missing user JWT, invalid API key format, revoked/deleted key, or invalid/disabled lead token.
-   - `403` / `forbidden`: user is authenticated but lacks `admin|owner|manager` for mutations.
-   - `400` / `validation_error`: request body is missing required fields (`organizationId`, `name`, `keyId`, `tokenId`, form required fields).
-3. **Verify session and permissions**
-   - Re-authenticate in UI and retry (the panel already refreshes session once on 401).
-   - Confirm membership role in `organization_members` for the same `organizationId`.
-4. **Check idempotent semantics**
-   - Repeating API key delete or token delete should remain `200` and return `deleted: false` when already removed.
-5. **Correlate with Edge logs**
-   - Search logs by `request_id`.
-   - Structured logs include `action`, `organization_id`, `user_id` (when applicable), `result`, `status`, and `latency_ms`.
-
-## Migration Notes
-
-- Migration filenames are timestamped and should be applied in ascending order.
-- Never edit an already applied migration; create a new migration for follow-up changes.
-- Keep migration behavior aligned with related docs in `docs/` (runbooks/contracts).
-- `20260415120000_list_organization_members_with_identity.sql` — `list_organization_members_with_identity()` helper RPC for backend/Edge use.
-- `20260420140000_webhooks_outbound.sql` — outbound webhooks: `webhook_subscriptions`, `webhook_subscription_secrets`, `webhook_outbox`, `webhook_delivery_log`, triggers on deals/contacts/companies/activities.
-- `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` — DELETE webhook payload shape (JSON null `data`), `organization_api_keys`, `lead_capture_tokens`, failed-outbox index.
-- `20260428101000_security_definer_rpc_lockdown.sql` — revokes `anon`/`authenticated` execute access for high-privilege definer RPCs and routes public/authenticated access through Edge Functions (`resolve-workspace-slug`, `list-org-members-with-identity`, `backfill-email-tracking-user`, `create-org`).
-
-## Edge Functions: outbound webhooks
-
-Deploy:
-
-- `webhook-subscriptions` — JWT-authenticated: create subscription + signing secret, rotate secret, send test `ping` payload, **list failed outbox rows** (`action: listFailedOutbox`), **replay a failed delivery** (`action: replayOutbox` + `outboxId`).
-- `webhook-worker` — **no JWT**; requires header `x-webhook-worker-secret` matching the Edge secret `WEBHOOK_WORKER_SECRET`.
-
-**Payload contract:** JSON body `{ meta, data, previous }` with HMAC-SHA256 over the raw body in header **`X-Velo-Signature`** (hex). Delete events use JSON `null` for `data` and the last row snapshot in `previous` (Pipedrive-style). After deploying migration `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql`, also deploy **`api-keys`**, **`crm-public-api`**, **`lead-capture`**, **`lead-capture-tokens`** (see [`../docs/public-api-phase1.md`](../docs/public-api-phase1.md) and [`../docs/lead-capture-public-endpoint.md`](../docs/lead-capture-public-endpoint.md)).
-
-**Delivery policy (Velo vs Pipedrive-style bans):** failed rows stay in `webhook_outbox` with status `failed` after retry exhaustion; they are **not** silently dropped. Operators can **replay** from Settings (or via `replayOutbox`). Subscriptions are **not** auto-deleted after N days of failures.
-
-From the repo root (after `npm install` and `supabase login` / `supabase link`): `npm run supabase:deploy:webhooks`
-
-**Supabase secrets (Dashboard → Edge Functions → Secrets):**
-
-- `WEBHOOK_WORKER_SECRET` — long random string; use the same value when invoking the worker (cron, GitHub Actions, etc.).
-
-**`supabase/config.toml`** sets `[functions.webhook-worker] verify_jwt = false` so schedulers can call the worker without a user session.
-
-**Process the queue** (example):
-
-```bash
-curl -sS -X POST "https://<project-ref>.supabase.co/functions/v1/webhook-worker" \
-  -H "x-webhook-worker-secret: $WEBHOOK_WORKER_SECRET" \
-  -H "Content-Type: application/json" \
-  -d "{}"
-```
-
-Schedule the above every 1–5 minutes (Supabase scheduled functions, external cron, or **GitHub Actions**) so `webhook_outbox` rows move to subscribers.
-
-**GitHub Actions (optional):** workflow [`.github/workflows/webhook-worker.yml`](../.github/workflows/webhook-worker.yml) runs every five minutes when repository secrets are set:
-
-- `WEBHOOK_WORKER_INVOKE_URL` — full URL, e.g. `https://<project-ref>.supabase.co/functions/v1/webhook-worker`
-- `WEBHOOK_WORKER_SECRET` — same string as the Edge secret `WEBHOOK_WORKER_SECRET`
-
-If either secret is missing, the job exits successfully without calling the worker (safe for forks and local-only repos).
+Otherwise webhooks are handled by velo-api (`/webhook-subscriptions/*`).
 
 ---
 
-*Last updated (git): **2026-04-22** — full-function deploy script, `EDGE_CORS_ORIGINS`, GitHub remote deploy uses `npm run supabase:deploy:all-functions`.*
+*Last updated: 2026-05-14*
