@@ -39,12 +39,23 @@ export function isTokenExpired(token: string): boolean {
   return exp * 1000 < Date.now()
 }
 
+function enforceTokenExpiry(): void {
+  const token = getToken()
+  if (token && isTokenExpired(token)) {
+    clearToken()
+    if (!window.location.pathname.startsWith('/login')) {
+      window.location.replace('/login')
+    }
+  }
+}
+
 async function request<T>(
   method: string,
   path: string,
   body?: unknown,
   signal?: AbortSignal,
 ): Promise<T> {
+  enforceTokenExpiry()
   const token = getToken()
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
