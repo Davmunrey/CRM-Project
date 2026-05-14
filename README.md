@@ -24,44 +24,56 @@ Realtime: Socket.io from the same velo-api process; frontend subscribes to `__ve
 
 | Module | Key features |
 |--------|-------------|
-| Dashboard | KPI cards, revenue chart, deal funnel, top deals, activity feed |
+| Dashboard | KPI cards, revenue chart, deal funnel, top deals, activity heatmap, onboarding checklist |
 | Contacts | Table/grid, CSV export, duplicate detection, bulk actions, smart views, distribution lists |
-| Companies | Same pattern — domain/name dedup, industry/status/size filters |
-| Deals | Kanban + list, stage progression, quote builder (save/export/email) |
+| Companies | Industry/status/size filters, domain dedup, revenue tracking |
+| Deals | Kanban + list, multi-pipeline, stage auto-resolve, quote builder (save/export/email) |
 | Activities | Unified feed, overdue highlighting, quick complete/delete |
-| Leads | Scoring engine, score snapshots, events timeline, scoring rules editor |
+| Leads | Scoring engine (configurable rules), score snapshots, events timeline |
 | Automations | Rule builder (trigger/condition/action), execution log |
-| Sequences | Email sequences, enrollment management, step scheduling |
-| Products | Product catalog for quotes and deal line items |
-| Reports | Revenue forecast, Won/Lost donut, activities by type, conversion funnel |
-| Inbox | Gmail OAuth via velo-api, real thread sync, pinned thread-to-record links |
-| Custom Fields | Per-entity definitions, values, i18n labels |
-| Goals | Sales targets per rep/team, progress tracking |
-| Audit Log | Org activity trail with filters |
-| Settings | Tags, pipeline stages, team, SMTP, integrations, webhooks, language (en/es/pt/fr/de/it) |
+| Sequences | Email sequences with A/B variants, enrollment management, step scheduling |
+| Products | Product catalog for deal line items and quotes |
+| Reports | Revenue by month, Won/Lost donut, activities by type, conversion funnel, email open/click stats |
+| Forecast | Weighted pipeline forecast, pipeline health score, best-bet deals |
+| Inbox | Gmail OAuth, full thread sync, send/reply/compose, attachment download, thread-to-record linking |
+| Calendar | Google Calendar sync, event create/edit, month/week/day view, Meet link display |
+| Custom Fields | Per-entity (contact/company/deal/lead) definitions, values, multilingual labels |
+| Goals | Sales targets per rep, period tracking, current progress |
+| Audit Log | Org activity trail |
+| Settings | Team management, SMTP, Google OAuth integration guide, API keys, webhooks, language (en/es/pt/fr/de/it) |
 | Notifications | In-app feed, mark-read, bulk clear |
 
 ---
 
 ## Dev Setup
 
-Requires: **Node 22+**, **velo-api running** (see `../velo-api/README.md`).
+Requires: **Node 22+**, **velo-api running** at `http://localhost:3001` (see `../velo-api/README.md`).
 
 ```bash
 cp .env.example .env
 # VITE_API_URL defaults to http://localhost:3001
 npm install
-npm run dev   # localhost:5174
+npm run dev   # http://localhost:5173
 ```
 
-Start the full stack first:
+Start the full stack first (Homebrew):
+
+```bash
+brew services start postgresql@16 redis
+
+cd ../velo-api
+npm run db:migrate && npm run db:seed
+npm run dev
+# admin@velo.local / Admin1234!
+```
+
+Or with Docker (Postgres + Redis only):
 
 ```bash
 cd ../velo-api
 docker-compose up postgres redis -d
 npm run db:migrate && npm run db:seed
 npm run dev
-# admin@velo.local / Admin1234!
 ```
 
 Full Docker stack (frontend + API + Postgres + Redis):
