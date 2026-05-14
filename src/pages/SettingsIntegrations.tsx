@@ -3,6 +3,7 @@ import { ChevronLeft } from 'lucide-react'
 import { useTranslations } from '../i18n'
 import { CalendarIntegrationCard } from '../components/integrations/CalendarIntegrationCard'
 import { GoogleIntegrationCard } from '../components/integrations/GoogleIntegrationCard'
+import { SlackIntegrationCard } from '../components/integrations/SlackIntegrationCard'
 
 export function SettingsIntegrations() {
   const t = useTranslations()
@@ -23,6 +24,7 @@ export function SettingsIntegrations() {
 
       <GoogleIntegrationCard />
       <CalendarIntegrationCard />
+      <SlackIntegrationCard />
     </div>
   )
 }
