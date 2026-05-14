@@ -5,6 +5,7 @@ import { CalendarIntegrationCard } from '../components/integrations/CalendarInte
 import { GoogleIntegrationCard } from '../components/integrations/GoogleIntegrationCard'
 import { SlackIntegrationCard } from '../components/integrations/SlackIntegrationCard'
 import { GoogleContactsCard } from '../components/integrations/GoogleContactsCard'
+import { ZoomIntegrationCard } from '../components/integrations/ZoomIntegrationCard'
 
 export function SettingsIntegrations() {
   const t = useTranslations()
@@ -26,6 +27,7 @@ export function SettingsIntegrations() {
       <GoogleIntegrationCard />
       <CalendarIntegrationCard />
       <GoogleContactsCard />
+      <ZoomIntegrationCard />
       <SlackIntegrationCard />
     </div>
   )
