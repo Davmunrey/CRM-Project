@@ -1,66 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const recomputeLeadScore = vi.fn().mockResolvedValue(undefined)
-const leadEventInsert = vi.fn().mockResolvedValue({ data: null, error: null })
-const invokeMock = vi.fn().mockResolvedValue({ data: { success: true }, error: null })
+// Mock the velo-api client
+const getMock = vi.fn()
 
-const trackedEvents = [
-  { id: 'evt-1', email_id: 'mail-1', event_type: 'open', created_at: '2026-04-13T10:00:00.000Z' },
-  { id: 'evt-2', email_id: 'mail-1', event_type: 'click', created_at: '2026-04-13T10:05:00.000Z' },
-]
-
-const fromMock = vi.fn((table: string) => {
-  if (table === 'email_tracking_events') {
-    return {
-      select: vi.fn().mockReturnValue({
-        in: vi.fn().mockReturnValue({
-          order: vi.fn().mockResolvedValue({ data: trackedEvents, error: null }),
-        }),
-      }),
-    }
-  }
-
-  if (table === 'leads') {
-    return {
-      select: vi.fn().mockReturnValue({
-        limit: vi.fn().mockResolvedValue({
-          data: [{ id: 'lead-1', email: 'lead@acme.com' }],
-          error: null,
-        }),
-      }),
-    }
-  }
-
-  if (table === 'lead_events') {
-    return {
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            limit: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-            }),
-          }),
-        }),
-      }),
-      insert: leadEventInsert,
-    }
-  }
-
-  return {
-    select: vi.fn(),
-    insert: vi.fn(),
-  }
-})
-
-vi.mock('../../src/lib/supabase', () => ({
-  isSupabaseConfigured: true,
-  isBootstrapFatalError: false,
-  supabase: { from: fromMock, functions: { invoke: invokeMock } },
+vi.mock('../../src/lib/api', () => ({
+  api: { get: getMock, post: vi.fn(), patch: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  getToken: vi.fn().mockReturnValue('fake-token'),
+  setToken: vi.fn(),
+  clearToken: vi.fn(),
+  decodeToken: vi.fn(),
+  isTokenExpired: vi.fn().mockReturnValue(false),
+  TOKEN_KEY: 'velo_token',
 }))
 
-vi.mock('../../src/lib/supabaseHelpers', () => ({
-  getOrgId: vi.fn().mockReturnValue('org-1'),
-  runSupabaseWrite: vi.fn(),
+vi.mock('../../src/lib/supabase', () => ({
+  isSupabaseConfigured: false,
+  isBootstrapFatalError: false,
+  supabase: null,
 }))
 
 vi.mock('../../src/store/authStore', () => ({
@@ -71,39 +27,13 @@ vi.mock('../../src/store/authStore', () => ({
 
 vi.mock('../../src/store/leadsStore', () => ({
   useLeadsStore: {
-    getState: vi.fn().mockReturnValue({ recomputeLeadScore }),
+    getState: vi.fn().mockReturnValue({ recomputeLeadScore: vi.fn() }),
   },
 }))
 
-describe('emailStore tracking ingestion', () => {
+describe('emailStore tracking metrics (velo-api)', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
-    const { useEmailStore } = await import('../../src/store/emailStore')
-    useEmailStore.setState({
-      emails: [{
-        id: 'mail-1',
-        from: 'rep@acme.com',
-        to: ['lead@acme.com'],
-        subject: 'Follow up',
-        body: 'Hello',
-        status: 'sent',
-        ownerUserId: 'user-1',
-        trackingEnabled: true,
-        createdAt: '2026-04-13T09:00:00.000Z',
-      }],
-    })
-  })
-
-  it('recomputes score once per lead when multiple tracking events arrive', async () => {
-    const { useEmailStore } = await import('../../src/store/emailStore')
-    await useEmailStore.getState().refreshTrackingMetrics()
-
-    expect(leadEventInsert).toHaveBeenCalledTimes(2)
-    expect(recomputeLeadScore).toHaveBeenCalledTimes(1)
-    expect(recomputeLeadScore).toHaveBeenCalledWith('lead-1', { reason: 'tracking_event_ingested' })
-  })
-
-  it('ignores tracking events from emails owned by another user', async () => {
     const { useEmailStore } = await import('../../src/store/emailStore')
     useEmailStore.setState({
       emails: [
@@ -111,7 +41,7 @@ describe('emailStore tracking ingestion', () => {
           id: 'mail-1',
           from: 'rep@acme.com',
           to: ['lead@acme.com'],
-          subject: 'Owned',
+          subject: 'Follow up',
           body: 'Hello',
           status: 'sent',
           ownerUserId: 'user-1',
@@ -120,121 +50,60 @@ describe('emailStore tracking ingestion', () => {
         },
         {
           id: 'mail-2',
-          from: 'rep2@acme.com',
-          to: ['lead@acme.com'],
-          subject: 'Foreign',
-          body: 'Hello',
+          from: 'rep@acme.com',
+          to: ['other@acme.com'],
+          subject: 'Not tracked',
+          body: 'Hi',
           status: 'sent',
-          ownerUserId: 'user-2',
-          trackingEnabled: true,
+          ownerUserId: 'user-1',
+          trackingEnabled: false,
           createdAt: '2026-04-13T09:01:00.000Z',
         },
       ],
     })
-
-    fromMock.mockImplementation((table: string) => {
-      if (table === 'email_tracking_events') {
-        return {
-          select: vi.fn().mockReturnValue({
-            in: vi.fn().mockReturnValue({
-              order: vi.fn().mockResolvedValue({
-                data: [
-                  { id: 'evt-1', email_id: 'mail-1', event_type: 'open', created_at: '2026-04-13T10:00:00.000Z' },
-                  { id: 'evt-2', email_id: 'mail-2', event_type: 'click', created_at: '2026-04-13T10:05:00.000Z' },
-                ],
-                error: null,
-              }),
-            }),
-          }),
-        }
-      }
-      return {
-        select: vi.fn().mockReturnValue({
-          limit: vi.fn().mockResolvedValue({
-            data: [{ id: 'lead-1', email: 'lead@acme.com' }],
-            error: null,
-          }),
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              limit: vi.fn().mockReturnValue({
-                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-              }),
-            }),
-          }),
-        }),
-        insert: leadEventInsert,
-      }
-    })
-
-    await useEmailStore.getState().refreshTrackingMetrics()
-
-    expect(leadEventInsert).toHaveBeenCalledTimes(1)
-    expect(recomputeLeadScore).toHaveBeenCalledTimes(1)
   })
 
-  it('claims legacy tracked emails via edge function backfill for current user', async () => {
-    const { useEmailStore } = await import('../../src/store/emailStore')
-    useEmailStore.setState({
-      emails: [
-        {
-          id: 'legacy-mail-1',
-          from: 'rep@acme.com',
-          to: ['lead@acme.com'],
-          subject: 'Legacy owned',
-          body: 'Hello',
-          status: 'sent',
-          trackingEnabled: true,
-          createdAt: '2026-04-13T09:00:00.000Z',
-        },
-      ],
-    })
+  it('fetches stats for tracked emails and updates openCount/clickCount', async () => {
+    getMock.mockResolvedValue({ opens: 3, clicks: 1 })
 
-    fromMock.mockImplementation((table: string) => {
-      if (table === 'email_tracking_events') {
-        return {
-          select: vi.fn().mockReturnValue({
-            in: vi.fn().mockReturnValue({
-              order: vi.fn().mockResolvedValue({
-                data: [
-                  { id: 'evt-legacy-1', email_id: 'legacy-mail-1', event_type: 'open', created_at: '2026-04-13T10:00:00.000Z' },
-                ],
-                error: null,
-              }),
-            }),
-          }),
-        }
-      }
-      if (table === 'leads') {
-        return {
-          select: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({
-              data: [{ id: 'lead-1', email: 'lead@acme.com' }],
-              error: null,
-            }),
-          }),
-        }
-      }
-      if (table === 'lead_events') {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                limit: vi.fn().mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-                }),
-              }),
-            }),
-          }),
-          insert: leadEventInsert,
-        }
-      }
-      return { select: vi.fn(), insert: vi.fn() }
-    })
+    const { useEmailStore } = await import('../../src/store/emailStore')
+    await useEmailStore.getState().refreshTrackingMetrics()
+
+    expect(getMock).toHaveBeenCalledTimes(1)
+    expect(getMock).toHaveBeenCalledWith('/email-tracking/messages/mail-1/stats')
+
+    const updated = useEmailStore.getState().emails.find((e) => e.id === 'mail-1')
+    expect(updated?.openCount).toBe(3)
+    expect(updated?.clickCount).toBe(1)
+  })
+
+  it('skips emails with trackingEnabled=false', async () => {
+    getMock.mockResolvedValue({ opens: 0, clicks: 0 })
+
+    const { useEmailStore } = await import('../../src/store/emailStore')
+    await useEmailStore.getState().refreshTrackingMetrics()
+
+    // Only tracked email triggers an API call
+    expect(getMock).toHaveBeenCalledTimes(1)
+    // Non-tracked email stats unchanged
+    const untouched = useEmailStore.getState().emails.find((e) => e.id === 'mail-2')
+    expect(untouched?.openCount).toBeUndefined()
+  })
+
+  it('returns early when no tracked emails', async () => {
+    const { useEmailStore } = await import('../../src/store/emailStore')
+    useEmailStore.setState({ emails: [] })
 
     await useEmailStore.getState().refreshTrackingMetrics()
 
-    expect(invokeMock).toHaveBeenCalledWith('backfill-email-tracking-user', {
-      body: { emailIds: ['legacy-mail-1'] },
-    })
+    expect(getMock).not.toHaveBeenCalled()
+  })
+
+  it('continues despite individual stat fetch failure', async () => {
+    getMock.mockRejectedValue(new Error('network error'))
+
+    const { useEmailStore } = await import('../../src/store/emailStore')
+    // Should not throw
+    await expect(useEmailStore.getState().refreshTrackingMetrics()).resolves.not.toThrow()
   })
 })

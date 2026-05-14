@@ -55,6 +55,8 @@ describe('ProtectedRoute', () => {
     const now = Date.now()
     useAuthStore.setState({
       isLoadingAuth: false,
+      organizationId: 'org-1',
+      tenantResolutionStatus: 'ready',
       currentUser: {
         id: 'u1',
         email: 'test@test.com',
@@ -68,7 +70,7 @@ describe('ProtectedRoute', () => {
       session: {
         userId: 'u1',
         token: 'tok',
-        expiresAt: now + 3600000, // 1 hour from now
+        expiresAt: now + 3600000,
         createdAt: new Date().toISOString(),
       },
     })
