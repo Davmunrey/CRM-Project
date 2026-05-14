@@ -2,6 +2,19 @@ import { api } from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import { getGmailRedirectUri } from './gmailService'
 
+export type GoogleOAuthConfigStatus = {
+  configured: boolean
+  redirectUri: string | null
+}
+
+export async function fetchGoogleOAuthConfigStatus(): Promise<GoogleOAuthConfigStatus> {
+  try {
+    return await api.get<GoogleOAuthConfigStatus>('/gmail/oauth-configured')
+  } catch {
+    return { configured: false, redirectUri: null }
+  }
+}
+
 export const GOOGLE_OAUTH_MESSAGE_SOURCE = 'velo-google-oauth' as const
 
 export type GoogleOAuthBundle = 'primary' | 'calendar'

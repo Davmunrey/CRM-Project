@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import {
   ChevronLeft,
   ChevronRight,
@@ -13,6 +13,8 @@ import {
   Linkedin,
   X,
   Trash2,
+  RefreshCw,
+  Video,
 } from 'lucide-react'
 import { useActivitiesStore } from '../store/activitiesStore'
 import { useDealsStore } from '../store/dealsStore'
@@ -22,6 +24,12 @@ import { useTranslations, useI18nStore } from '../i18n'
 import type { Activity, ActivityType, Deal, Contact } from '../types'
 import { ActivityForm } from '../components/activities/ActivityForm'
 import { SlideOver } from '../components/ui/Modal'
+import {
+  listCalendarEvents,
+  syncCalendarEvents,
+  type CalendarEvent as GCalEvent,
+} from '../services/calendarService'
+import { fetchGoogleIntegrationStatus } from '../services/googleIntegrationService'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -324,9 +332,10 @@ interface MonthViewProps {
   onDayClick: (date: Date) => void
   typeLabels: Record<ActivityType, string>
   dayHeaders: string[]
+  googleEventsByDay: Map<string, GCalEvent[]>
 }
 
-function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, onDayClick, typeLabels, dayHeaders }: MonthViewProps) {
+function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, onDayClick, typeLabels, dayHeaders, googleEventsByDay }: MonthViewProps) {
   const today = new Date()
   const days = useMemo(
     () => getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth()),
@@ -454,6 +463,23 @@ function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, o
                   )}
                 </div>
               )}
+
+              {/* Google Calendar events */}
+              {(() => {
+                const gEvents = googleEventsByDay.get(key) ?? []
+                if (gEvents.length === 0) return null
+                return (
+                  <div className="flex flex-wrap gap-0.5 mt-0.5">
+                    {gEvents.slice(0, 2).map((e) => (
+                      <span key={e.id} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-medium bg-emerald-500/15 text-emerald-400 leading-none max-w-full">
+                        {e.meetLink ? <Video className="w-2 h-2 shrink-0" /> : <CalendarIcon className="w-2 h-2 shrink-0" />}
+                        <span className="truncate max-w-[40px]">{e.title}</span>
+                      </span>
+                    ))}
+                    {gEvents.length > 2 && <span className="text-[9px] text-emerald-500">+{gEvents.length - 2}</span>}
+                  </div>
+                )
+              })()}
             </button>
           )
         })}
@@ -473,9 +499,10 @@ interface WeekViewProps {
   locale: string
   hourLabel: string
   allDayLabel: string
+  googleEventsByDay: Map<string, GCalEvent[]>
 }
 
-function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, locale, hourLabel, allDayLabel }: WeekViewProps) {
+function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, locale, hourLabel, allDayLabel, googleEventsByDay }: WeekViewProps) {
   const today = new Date()
   const weekDays = useMemo(() => getWeekDays(currentDate), [currentDate])
 
@@ -573,6 +600,12 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
                     <span className="truncate">{deal.title}</span>
                   </div>
                 ))}
+                {(googleEventsByDay.get(key) ?? []).slice(0, 2).map((e) => (
+                  <div key={e.id} className="flex items-center gap-1 px-1 py-0.5 rounded text-[9px] bg-emerald-500/15 text-emerald-400 truncate">
+                    {e.meetLink ? <Video className="w-2.5 h-2.5 shrink-0" /> : <CalendarIcon className="w-2.5 h-2.5 shrink-0" />}
+                    <span className="truncate">{e.title}</span>
+                  </div>
+                ))}
               </div>
             )
           })}
@@ -616,6 +649,21 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
   )
 }
 
+// ─── Google Calendar event helpers ───────────────────────────────────────────
+
+function gCalEventsByDay(events: GCalEvent[]): Map<string, GCalEvent[]> {
+  const map = new Map<string, GCalEvent[]>()
+  for (const e of events) {
+    if (e.status === 'cancelled') continue
+    const d = new Date(e.startAt)
+    if (isNaN(d.getTime())) continue
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(e)
+  }
+  return map
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 type ViewMode = 'month' | 'week'
@@ -653,12 +701,43 @@ export function Calendar() {
     () => useContactsStore.getState().contacts
   )
 
+  // Google Calendar state
+  const [googleEvents, setGoogleEvents] = useState<GCalEvent[]>([])
+  const [calendarConnected, setCalendarConnected] = useState(false)
+  const [syncing, setSyncing] = useState(false)
+
   useEffect(() => {
     const unsubA = useActivitiesStore.subscribe((s) => setActivities(s.activities))
     const unsubD = useDealsStore.subscribe((s) => setDeals(s.deals))
     const unsubC = useContactsStore.subscribe((s) => setContacts(s.contacts))
     return () => { unsubA(); unsubD(); unsubC() }
   }, [])
+
+  // Load Google Calendar status + cached events on mount
+  useEffect(() => {
+    void fetchGoogleIntegrationStatus().then((status) => {
+      setCalendarConnected(status.calendarConnected)
+      if (status.calendarConnected) {
+        void listCalendarEvents().then(setGoogleEvents).catch(() => null)
+      }
+    }).catch(() => null)
+  }, [])
+
+  const handleGCalSync = useCallback(async () => {
+    setSyncing(true)
+    try {
+      await syncCalendarEvents()
+      const events = await listCalendarEvents()
+      setGoogleEvents(events)
+      toast.success('Google Calendar synced')
+    } catch {
+      toast.error('Sync failed — check Google Calendar connection')
+    } finally {
+      setSyncing(false)
+    }
+  }, [])
+
+  const googleEventsByDay = useMemo(() => gCalEventsByDay(googleEvents), [googleEvents])
 
   // UI state
   const [viewMode, setViewMode] = useState<ViewMode>('month')
@@ -810,6 +889,19 @@ export function Calendar() {
         {/* Spacer */}
         <div className="flex-1" />
 
+        {/* Google Calendar sync */}
+        {calendarConnected && (
+          <button
+            type="button"
+            onClick={() => void handleGCalSync()}
+            disabled={syncing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing…' : 'Sync Google Cal'}
+          </button>
+        )}
+
         {/* Type filter pills */}
         <div className="flex items-center gap-1.5 flex-wrap">
           {ALL_TYPES.map((type) => {
@@ -851,6 +943,7 @@ export function Calendar() {
               onDayClick={handleDayClick}
               typeLabels={typeLabels}
               dayHeaders={dayHeaders}
+              googleEventsByDay={googleEventsByDay}
             />
           ) : (
             <WeekView
@@ -862,6 +955,7 @@ export function Calendar() {
               locale={locale}
               hourLabel={hourLabel}
               allDayLabel={allDayLabel}
+              googleEventsByDay={googleEventsByDay}
             />
           )}
         </div>
