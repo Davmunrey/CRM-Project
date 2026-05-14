@@ -50,12 +50,18 @@ Auth is **email/password via velo-api** (`POST /auth/login`, `POST /auth/registe
 | Endpoint | Auth | Description |
 |----------|------|-------------|
 | `POST /auth/register` | public | Create account; returns JWT with `org: null` |
-| `POST /auth/login` | public | Email/password; returns JWT with org claim |
+| `POST /auth/login` | public | Email/password; returns JWT with `org` claim |
 | `GET /auth/me` | Bearer JWT | Returns user + org info |
-| `POST /auth/forgot-password` | public | Creates reset token (always 200) |
-| `POST /auth/reset-password` | public | Validates token TTL, updates password |
+| `PATCH /auth/me` | Bearer JWT | Update profile (name, jobTitle, phone, avatarUrl) |
+| `POST /auth/refresh` | Bearer JWT | Rotate JWT — old `jti` revoked, new `jti` issued |
+| `PATCH /auth/password` | Bearer JWT | Change password (requires current password) |
+| `POST /auth/admin/reset-password` | Bearer JWT (owner/admin) | Set another org member's password |
+| `POST /auth/forgot-password` | public | Creates reset token with 1-hour TTL (always 200) |
+| `POST /auth/reset-password` | public | Validate token + update password |
+| `POST /auth/logout` | Bearer JWT | Revoke JWT in Redis denylist (`jwt:deny:{jti}`) + clear session |
+| `GET /auth/resolve-org/:slug` | public | Resolve org slug → org metadata |
 
-JWT payload: `{ sub: userId, org: organizationId | null, role: UserRole }`. Expiry: 7 days.
+JWT payload: `{ sub: userId, org: organizationId | null, role: UserRole, jti: randomHex32 }`. Expiry: 7 days. The `jti` (JWT ID) enables per-token revocation — `POST /auth/logout` and `POST /auth/refresh` add the old `jti` to a Redis denylist with TTL equal to the token's remaining lifetime. Every authenticated request checks the denylist.
 
 ## SSO — future work
 
@@ -82,7 +88,7 @@ This matrix tracks production hardening posture across security, reliability, op
 
 - Status: Active
 - Owner: Security/Ops/Backend
-- Last updated: 2026-04-22
+- Last updated: 2026-05-14
 - Canonical: Yes
 
 ## Scoring Legend
@@ -160,7 +166,7 @@ This index ties **internal documentation**, **code controls**, and **external ch
 
 ## ASVS (informal)
 
-- **V2 Authentication** — Supabase Auth + SSO discovery: [#auth-sso-backend-handoff](#auth-sso-backend-handoff); `tests/auth/*`
+- **V2 Authentication** — velo-api JWT (bcrypt cost 12, per-token `jti` denylist, rate-limited auth routes): [#auth-sso-backend-handoff](#auth-sso-backend-handoff); `tests/auth/*`
 - **V4 Access control** — RLS + app gates: [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist); `src/utils/permissions.ts`
 - **V9 Communications** — TLS to APIs + outbound mail controls: external CDN/infra; `supabase/functions/resend-send-email/index.ts`; [`master-email-operations`](./master-email-operations.md#email-deliverability-resend)
 - **V7 Error handling / logging** — `audit_log`, maintenance telemetry, failed send audit: [`master-lead-management`](./master-lead-management.md#lead-maintenance-runbook); [#hardening-matrix](#hardening-matrix); `src/store/emailStore.ts`
@@ -183,7 +189,7 @@ Use this checklist when validating a **production** deployment. Record evidence 
 
 ## 1. Authentication and sessions (velo-api)
 
-- [ ] `JWT_SECRET` is at least 32 random bytes (`openssl rand -hex 32`); rotated on compromise.
+- [ ] `JWT_SECRET` is at least 64 chars / 32 random bytes (`openssl rand -hex 32`); min length enforced at startup in `config/env.ts`; rotate on compromise.
 - [ ] JWT expiry (`JWT_EXPIRES_IN`) aligned with product risk (default 7d).
 - [ ] `CORS_ORIGIN` on velo-api matches frontend production origin exactly.
 - [ ] `POST /auth/forgot-password` always returns 200 (email enumeration prevention — already implemented).

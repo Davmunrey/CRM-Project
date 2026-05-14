@@ -84,7 +84,7 @@
 **Product decision:** The CRM does **not** ship Claude, Anthropic, or a `claude-proxy` Edge Function. Generative chat, Anthropic-backed drafting, and related items are **out of scope** unless replanned with an explicit non-Anthropic provider and security review.
 
 - [x] **AI-01**: **Cancelled.** ~~Supabase Edge Function `claude-proxy` for Claude~~ — not pursued (no Anthropic integration).
-- [ ] **AI-02**: Lead scoring recalculates automatically when activity is logged for a contact *(still open — product backlog)*.
+- [x] **AI-02**: Lead scoring recalculates automatically when activity is logged for a contact — `activitiesStore.ts` calls `useLeadsStore.getState().recomputeLeadScore(lead.id)` on activity create (2026-05-13).
 - [x] **AI-03**: **Cancelled.** ~~AI email drafting via generative model~~ — not pursued under current scope.
 - [x] **AI-04**: **Cancelled.** ~~Call summary from pasted transcript~~ — not pursued under current scope.
 - [x] **AI-05**: **Cancelled.** ~~AIAgent chat via Edge proxy to Anthropic~~ — not pursued (no Claude stack).

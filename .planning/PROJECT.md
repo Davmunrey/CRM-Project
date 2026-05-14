@@ -45,7 +45,7 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 - [ ] Phase 10 production deployment and release checklist (DEPLOY-01–05)
 - [ ] Production environment validation (`VITE_API_URL`, `JWT_SECRET`, `RESEND_API_KEY` or SMTP, `REDIS_URL`)
-- [ ] Gmail Edge Functions updated to accept velo-api JWT (currently blocked — Edge Functions require Supabase JWT)
+- [x] Gmail fully migrated to velo-api `/gmail/*` routes — no longer uses Supabase Edge Functions (2026-05-13)
 - [ ] End-to-end UAT: org bootstrap, team invitations, password reset email, quote export/email
 - [x] Transactional emails wired: password reset + invitation accept links via `sendEmail` (velo-api nodemailer)
 - [x] Org directory hydration: `fetchOrgUsers` populates `authStore.users` from `GET /users` on login/org-create/invite-accept
