@@ -36,5 +36,6 @@ verify-smoke.txt
 docs/security-audit-*.md
 
 .vercel
+.env
 .env*.local
 .mcp.json
