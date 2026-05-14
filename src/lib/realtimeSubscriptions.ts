@@ -13,6 +13,7 @@ import { useCustomFieldsStore } from '../store/customFieldsStore'
 import { useLeadsStore } from '../store/leadsStore'
 import { useAuditStore } from '../store/auditStore'
 import { useAuthStore } from '../store/authStore'
+import { usePipelinesStore } from '../store/pipelinesStore'
 import { getToken } from './api'
 
 type TableHandler = () => void
@@ -41,6 +42,7 @@ const TABLE_HANDLERS: Record<string, TableHandler> = {
   email_templates: () => useTemplateStore.getState().fetchTemplates(),
   products: () => useProductsStore.getState().fetchProducts(),
   custom_field_definitions: () => useCustomFieldsStore.getState().fetchCustomFields(),
+  pipelines: () => usePipelinesStore.getState().fetchPipelines(),
 }
 
 export function initRealtimeSubscriptions(): () => void {

@@ -14,6 +14,7 @@ import { useAuditStore } from '../store/auditStore'
 import { useCustomFieldsStore } from '../store/customFieldsStore'
 import { useLeadsStore } from '../store/leadsStore'
 import { useNavigationPrefsStore } from '../store/navigationPrefsStore'
+import { usePipelinesStore } from '../store/pipelinesStore'
 import { initRealtimeSubscriptions } from '../lib/realtimeSubscriptions'
 
 /**
@@ -46,6 +47,7 @@ export function useDataInit() {
     useAuditStore.getState().fetchEntries()
     useCustomFieldsStore.getState().fetchCustomFields()
     useLeadsStore.getState().fetchLeads()
+    usePipelinesStore.getState().fetchPipelines()
     useNavigationPrefsStore.getState().loadPreferences()
 
     const cleanup = initRealtimeSubscriptions()

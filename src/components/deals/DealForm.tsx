@@ -11,29 +11,35 @@ import type { Deal } from '../../types'
 import { useContactsStore } from '../../store/contactsStore'
 import { useAuthStore } from '../../store/authStore'
 import { useCompaniesStore } from '../../store/companiesStore'
-import { useSettingsStore } from '../../store/settingsStore'
+import { usePipelinesStore } from '../../store/pipelinesStore'
 import { useLocalizedContacts, useLocalizedCompanies, useLocalizedOrgUsers, useTranslations } from '../../i18n'
 
 type FormValues = z.infer<ReturnType<typeof createDealSchema>>
 
 interface DealFormProps {
   deal?: Deal
+  pipelineId?: string
   onSubmit: (data: Omit<Deal, 'id' | 'createdAt' | 'updatedAt' | 'activities'>) => void
   onCancel: () => void
 }
 
-export function DealForm({ deal, onSubmit, onCancel }: DealFormProps) {
+export function DealForm({ deal, pipelineId, onSubmit, onCancel }: DealFormProps) {
   const t = useTranslations()
   const contacts = useLocalizedContacts(useContactsStore((s) => s.contacts))
   const companies = useLocalizedCompanies(useCompaniesStore((s) => s.companies))
   const orgUsers = useLocalizedOrgUsers(useAuthStore((s) => s.users))
-  const pipelineStages = useSettingsStore((s) => s.settings.pipelineStages)
+  const getActiveStages = usePipelinesStore((s) => s.getActiveStages)
+  const pipelines = usePipelinesStore((s) => s.pipelines)
+  const pipelineStages = useMemo(() => {
+    if (pipelineId) {
+      const p = pipelines.find((pl) => pl.id === pipelineId)
+      return p ? [...p.stages].sort((a, b) => a.order - b.order) : getActiveStages()
+    }
+    return getActiveStages()
+  }, [pipelineId, pipelines, getActiveStages])
   const stageLabels = t.deals.stageLabels as Record<string, string>
   const stageOptions = useMemo(
-    () => pipelineStages
-      .slice()
-      .sort((a, b) => a.order - b.order)
-      .map((stage) => ({ value: stage.id, label: stageLabels[stage.id] ?? stage.name })),
+    () => pipelineStages.map((stage) => ({ value: stage.id, label: stageLabels[stage.id] ?? stage.name })),
     [pipelineStages, stageLabels]
   )
   const availableStages = useMemo(() => stageOptions.map((opt) => opt.value), [stageOptions])
@@ -64,6 +70,7 @@ export function DealForm({ deal, onSubmit, onCancel }: DealFormProps) {
       value: Number(data.value),
       currency: data.currency,
       stage: data.stage,
+      pipelineId,
       probability: Number(data.probability),
       expectedCloseDate: data.expectedCloseDate,
       contactId: data.contactId,

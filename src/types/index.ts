@@ -93,6 +93,7 @@ export interface Deal {
   value: number
   currency: DealCurrency
   stage: DealStage
+  pipelineId?: string
   probability: number
   expectedCloseDate: string
   contactId: string
@@ -136,6 +137,21 @@ export interface PipelineStage {
   color: string
   order: number
   probability: number
+}
+
+export interface Pipeline {
+  id: string
+  organizationId: string
+  name: string
+  description?: string
+  isDefault: boolean
+  isArchived: boolean
+  stages: PipelineStage[]
+  viewAccess: 'all' | 'members_only'
+  createdBy?: string
+  memberCount?: number
+  createdAt: string
+  updatedAt: string
 }
 
 export interface User {

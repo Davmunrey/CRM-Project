@@ -45,6 +45,7 @@ import { SettingsIntegrationsPanel } from '../components/settings/SettingsIntegr
 import { SettingsMfaPanel } from '../components/settings/SettingsMfaPanel'
 import { SettingsSsoScimPanel } from '../components/settings/SettingsSsoScimPanel'
 import { SettingsSmtpPanel } from '../components/settings/SettingsSmtpPanel'
+import { SettingsPipelinesPanel } from '../components/settings/SettingsPipelinesPanel'
 import { SignatureRichEditor } from '../components/settings/SignatureRichEditor'
 const ENTITY_TABS: CustomFieldEntityType[] = ['contact', 'company', 'deal']
 
@@ -58,6 +59,7 @@ type SettingsTab =
   | 'onboarding'
   | 'branding'
   | 'pipeline'
+  | 'pipelines'
   | 'email'
   | 'permissions'
   | 'security'
@@ -75,6 +77,7 @@ export function Settings() {
     { id: 'onboarding', label: t.settings.tabOnboarding },
     { id: 'branding', label: t.settings.tabBranding },
     { id: 'pipeline', label: t.settings.tabPipeline },
+    { id: 'pipelines', label: t.settings.tabPipelines },
     { id: 'email', label: t.settings.tabEmail },
     { id: 'permissions', label: t.settings.tabPermissions },
     { id: 'security', label: t.settings.tabSecurity },
@@ -1405,6 +1408,11 @@ export function Settings() {
             {t.common.cancel}
           </Button>
         </div>
+      </section>
+
+      {/* Pipelines (multi-pipeline management) */}
+      <section className={`crm-surface-section p-6 ${tabVisible('pipelines') ? '' : 'hidden'}`}>
+        <SettingsPipelinesPanel />
       </section>
 
       {/* Tags */}

@@ -751,6 +751,7 @@ export interface Translations {
     tabGeneral: string
     tabBranding: string
     tabPipeline: string
+    tabPipelines: string
     tabEmail: string
     tabPermissions: string
     tabSecurity: string
@@ -1882,4 +1883,41 @@ export interface Translations {
 
   // Additional inbox labels used by inbox views/actions
   // (kept here to preserve existing translation structure)
+
+  // ─── Pipelines ───────────────────────────────────────────────────────────────
+  pipelines: {
+    pipeline: string
+    pipelines: string
+    default: string
+    manage: string
+    newPipeline: string
+    editPipeline: string
+    namePlaceholder: string
+    descriptionPlaceholder: string
+    viewAccess: string
+    viewAccessAll: string
+    viewAccessMembersOnly: string
+    setAsDefault: string
+    archive: string
+    archiveConfirm: string
+    archived: string
+    cannotArchiveDefault: string
+    created: string
+    updated: string
+    stages: string
+    addStage: string
+    stageName: string
+    stageColor: string
+    stageProbability: string
+    membersTitle: string
+    addMember: string
+    removeMember: string
+    memberRole: string
+    memberRoleOwner: string
+    memberRoleMember: string
+    emptyTitle: string
+    emptyHint: string
+    loadError: string
+    noPipelineSelected: string
+  }
 }

@@ -41,6 +41,7 @@ export const it: Translations = {
     tabGeneral: 'Generale',
     tabBranding: 'Branding',
     tabPipeline: 'Pipeline',
+    tabPipelines: 'Pipelines',
     tabEmail: 'Email',
     tabPermissions: 'Permessi',
     tabData: 'Dati',

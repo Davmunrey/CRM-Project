@@ -31,6 +31,7 @@ function mapDeal(row: Record<string, unknown>): Deal {
     value: (row.value as number) ?? 0,
     currency: (row.currency as Deal['currency']) ?? 'EUR',
     stage: (row.stage as Deal['stage']) ?? 'lead',
+    pipelineId: (row.pipelineId ?? row.pipeline_id) as string | undefined,
     probability: (row.probability as number) ?? 0,
     expectedCloseDate: (row.expectedCloseDate ?? row.expected_close_date ?? '') as string,
     contactId: (row.contactId ?? row.contact_id ?? '') as string,
@@ -54,7 +55,7 @@ interface DealsState {
   error: string | null
   viewMode: 'kanban' | 'list'
 
-  fetchDeals: (options?: { silent?: boolean }) => Promise<void>
+  fetchDeals: (options?: { silent?: boolean; pipelineId?: string }) => Promise<void>
   addDeal: (deal: Omit<Deal, 'id' | 'createdAt' | 'updatedAt'>) => Deal
   updateDeal: (id: string, updates: Partial<Deal>) => void
   deleteDeal: (id: string) => void
@@ -97,7 +98,8 @@ export const useDealsStore = create<DealsState>()(
       if (!options?.silent) set({ isLoading: true, error: null })
       else set({ error: null })
       try {
-        const res = await api.get<{ data: Deal[] } | Deal[]>('/deals')
+        const url = options?.pipelineId ? `/deals?pipelineId=${options.pipelineId}` : '/deals'
+        const res = await api.get<{ data: Deal[] } | Deal[]>(url)
         const rows = (res && !Array.isArray(res) && 'data' in res) ? res.data : (res as Deal[] ?? [])
         set({ deals: rows.map((r) => mapDeal(r as unknown as Record<string, unknown>)), isLoading: false })
       } catch (e: unknown) {

@@ -36,6 +36,8 @@ import { EmailComposer } from '../components/email/EmailComposer'
 import { useAuthStore } from '../store/authStore'
 import { useProductsStore } from '../store/productsStore'
 import { useSettingsStore } from '../store/settingsStore'
+import { usePipelinesStore } from '../store/pipelinesStore'
+import { PipelineSelector } from '../components/deals/PipelineSelector'
 import { CustomFieldsForm } from '../components/shared/CustomFieldRenderer'
 import { rowActivationKeyDown } from '../utils/a11y'
 
@@ -756,7 +758,10 @@ export function Deals() {
   const addActivity = useActivitiesStore((s) => s.addActivity)
   const completeActivity = useActivitiesStore((s) => s.completeActivity)
   const deleteActivity = useActivitiesStore((s) => s.deleteActivity)
-  const pipelineStages = useSettingsStore((s) => s.settings.pipelineStages)
+  const getActiveStages = usePipelinesStore((s) => s.getActiveStages)
+  const activePipelineId = usePipelinesStore((s) => s.activePipelineId)
+  const fetchDeals = useDealsStore((s) => s.fetchDeals)
+  const pipelineStages = useMemo(() => getActiveStages(), [getActiveStages, activePipelineId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentUser = useAuthStore((s) => s.currentUser)
   const orgUsers = useLocalizedOrgUsers(useAuthStore((s) => s.users))
@@ -784,6 +789,10 @@ export function Deals() {
   const [selectedDealIds, setSelectedDealIds] = useState<Set<string>>(new Set())
   const [showBulkDelete, setShowBulkDelete] = useState(false)
   const [viewFilters, setViewFilters] = useState<SmartViewFilter[]>([])
+
+  useEffect(() => {
+    if (activePipelineId) fetchDeals({ silent: true, pipelineId: activePipelineId })
+  }, [activePipelineId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (searchParams.get('create') === '1') {
@@ -971,6 +980,7 @@ export function Deals() {
           className="!flex-row flex-wrap items-center gap-3 py-3 shrink-0"
         >
           <div className="flex w-full flex-wrap items-center gap-3">
+            <PipelineSelector />
             <SearchBar value={search} onChange={setSearch} placeholder={t.common.searchPlaceholder} className="w-64" />
             <Button
               variant={showFilters ? 'secondary' : 'ghost'}
@@ -1215,7 +1225,7 @@ export function Deals() {
 
       {/* Create deal */}
       <SlideOver isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} title={t.deals.newDeal}>
-        <DealForm onSubmit={handleCreate} onCancel={() => setIsFormOpen(false)} />
+        <DealForm onSubmit={handleCreate} onCancel={() => setIsFormOpen(false)} pipelineId={activePipelineId ?? undefined} />
       </SlideOver>
 
       {/* Deal detail */}
@@ -1342,7 +1352,7 @@ export function Deals() {
       {/* Edit deal */}
       <SlideOver isOpen={isEditing} onClose={() => setIsEditing(false)} title={t.deals.editDeal}>
         {selectedDeal && (
-          <DealForm deal={selectedDeal} onSubmit={handleEdit} onCancel={() => setIsEditing(false)} />
+          <DealForm deal={selectedDeal} onSubmit={handleEdit} onCancel={() => setIsEditing(false)} pipelineId={selectedDeal.pipelineId ?? activePipelineId ?? undefined} />
         )}
       </SlideOver>
 
