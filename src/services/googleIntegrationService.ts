@@ -17,7 +17,7 @@ export async function fetchGoogleOAuthConfigStatus(): Promise<GoogleOAuthConfigS
 
 export const GOOGLE_OAUTH_MESSAGE_SOURCE = 'velo-google-oauth' as const
 
-export type GoogleOAuthBundle = 'primary' | 'calendar'
+export type GoogleOAuthBundle = 'primary' | 'calendar' | 'contacts'
 
 export type GoogleOAuthMessagePayload = {
   ok: boolean
@@ -50,6 +50,7 @@ export type GoogleIntegrationStatusResponse = {
   connected: boolean
   gmailConnected: boolean
   calendarConnected: boolean
+  contactsConnected?: boolean
   account: {
     email: string
     name: string | null
@@ -69,16 +70,22 @@ export async function fetchGoogleIntegrationStatus(): Promise<GoogleIntegrationS
       ...d,
       gmailConnected: d.gmailConnected ?? d.connected,
       calendarConnected: d.calendarConnected ?? false,
+      contactsConnected: d.contactsConnected ?? false,
     }
   } catch (error) {
     return {
       connected: false,
       gmailConnected: false,
       calendarConnected: false,
+      contactsConnected: false,
       account: null,
       error: error instanceof Error ? error.message : 'integration-status failed',
     }
   }
+}
+
+export async function syncGoogleContacts(): Promise<{ imported: number; skipped: number; total: number }> {
+  return api.post<{ imported: number; skipped: number; total: number }>('/gmail/sync-contacts', {})
 }
 
 export async function disconnectGoogleIntegration(): Promise<void> {

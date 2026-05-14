@@ -4,6 +4,7 @@ import { useTranslations } from '../i18n'
 import { CalendarIntegrationCard } from '../components/integrations/CalendarIntegrationCard'
 import { GoogleIntegrationCard } from '../components/integrations/GoogleIntegrationCard'
 import { SlackIntegrationCard } from '../components/integrations/SlackIntegrationCard'
+import { GoogleContactsCard } from '../components/integrations/GoogleContactsCard'
 
 export function SettingsIntegrations() {
   const t = useTranslations()
@@ -24,6 +25,7 @@ export function SettingsIntegrations() {
 
       <GoogleIntegrationCard />
       <CalendarIntegrationCard />
+      <GoogleContactsCard />
       <SlackIntegrationCard />
     </div>
   )
