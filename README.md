@@ -25,7 +25,7 @@ Realtime: Socket.io from the same velo-api process; frontend subscribes to `__ve
 | Module | Key features |
 |--------|-------------|
 | Dashboard | KPI cards, revenue chart, deal funnel, top deals, activity heatmap, onboarding checklist |
-| Contacts | Table/grid, CSV export, duplicate detection, bulk actions, smart views, distribution lists |
+| Contacts | Table/grid, CSV export, duplicate detection, bulk actions, smart views, distribution lists, LinkedIn URL enrichment |
 | Companies | Industry/status/size filters, domain dedup, revenue tracking |
 | Deals | Kanban + list, multi-pipeline, stage auto-resolve, quote builder (save/export/email) |
 | Activities | Unified feed, overdue highlighting, quick complete/delete |
