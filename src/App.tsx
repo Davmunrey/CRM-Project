@@ -51,6 +51,7 @@ const Automations = lazy(() => import('./pages/Automations').then((m) => ({ defa
 const Products = lazy(() => import('./pages/Products').then((m) => ({ default: m.Products })))
 const GmailCallback = lazy(() => import('./pages/GmailCallback').then((m) => ({ default: m.GmailCallback })))
 const Landing = lazy(() => import('./pages/Landing').then((m) => ({ default: m.Landing })))
+const Admin = lazy(() => import('./pages/Admin').then((m) => ({ default: m.Admin })))
 
 function ProtectedPage({ title, children, requiredPermission }: { title: string; children: React.ReactNode; requiredPermission?: import('./types/auth').Permission }) {
   return (
@@ -233,6 +234,7 @@ function AppRoutes() {
         <Route path="/products" element={<ProtectedPage title={t.nav.products} requiredPermission="products:read"><Products /></ProtectedPage>} />
         <Route path="/calendar" element={<ProtectedPage title={t.nav.calendar} requiredPermission="activities:read"><Calendar /></ProtectedPage>} />
         <Route path="/profile" element={<ProtectedPage title={t.auth.profile}><UserProfile /></ProtectedPage>} />
+        <Route path="/admin" element={<ProtectedPage title="Super Admin"><Admin /></ProtectedPage>} />
 
         <Route path="*" element={<CatchAllRedirect />} />
       </Routes>

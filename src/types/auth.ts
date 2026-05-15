@@ -52,6 +52,7 @@ export interface AuthUser {
   phone?: string
   organizationId?: string
   isActive: boolean
+  isSuperAdmin?: boolean
   lastLoginAt?: string
   createdAt: string
   updatedAt: string

@@ -296,7 +296,7 @@ function NotificationRow({
   markReadTitle: string
   deleteTitle: string
 }) {
-  const cfg = config[notification.type]
+  const cfg = config[notification.type] ?? config.system
 
   return (
     <div

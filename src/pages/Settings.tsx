@@ -47,6 +47,7 @@ import { SettingsSsoScimPanel } from '../components/settings/SettingsSsoScimPane
 import { SettingsSmtpPanel } from '../components/settings/SettingsSmtpPanel'
 import { SettingsPipelinesPanel } from '../components/settings/SettingsPipelinesPanel'
 import { SignatureRichEditor } from '../components/settings/SignatureRichEditor'
+import { api } from '../lib/api'
 const ENTITY_TABS: CustomFieldEntityType[] = ['contact', 'company', 'deal']
 
 const FIELD_TYPES: CustomFieldType[] = [
@@ -413,7 +414,7 @@ export function Settings() {
   }
 
   const handleSaveBranding = () => {
-    updateBranding({
+    const merged = {
       appName: brandingDraft.appName.trim() || t.brand.defaultAppName,
       primaryColor: brandingDraft.primaryColor || '#7c3aed',
       logoUrl: brandingDraft.logoUrl?.trim() || undefined,
@@ -429,7 +430,18 @@ export function Settings() {
       billingEmail: brandingDraft.billingEmail?.trim() || undefined,
       billingPhone: brandingDraft.billingPhone?.trim() || undefined,
       quoteFooter: brandingDraft.quoteFooter?.trim() || undefined,
-    })
+    }
+    updateBranding(merged)
+    // Persist to API (non-blocking)
+    void api.patch('/orgs/me/branding', {
+      name: merged.appName,
+      logoUrl: merged.logoUrl ?? null,
+      primaryColor: merged.primaryColor,
+      customDomain: merged.customDomain ?? null,
+      privacyUrl: merged.privacyUrl ?? null,
+      termsUrl: merged.termsUrl ?? null,
+      quoteFooter: merged.quoteFooter ?? null,
+    }).catch(() => {/* silent — local state already saved */})
     toast.success(t.common.save + ' ✓')
   }
 

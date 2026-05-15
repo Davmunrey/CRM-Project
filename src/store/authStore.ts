@@ -26,6 +26,7 @@ interface LoginResponse {
     email: string
     name: string
     role: string
+    isSuperAdmin?: boolean
     organizationId: string | null
     orgSlug: string | null
   }
@@ -234,6 +235,7 @@ export const useAuthStore = create<AuthState>()(
             email: res.user.email,
             name: res.user.name,
             role: normalizeRole(res.user.role),
+            isSuperAdmin: res.user.isSuperAdmin === true,
             jobTitle: '',
             organizationId: res.user.organizationId ?? undefined,
             isActive: true,
@@ -485,7 +487,7 @@ export function initSupabaseAuth(): (() => void) | undefined {
   }
 
   // Token valid — restore session from persisted state; fetch fresh user profile
-  api.get<{ user: { id: string; email: string; name: string; role: string; organizationId: string | null } }>('/auth/me')
+  api.get<{ user: { id: string; email: string; name: string; role: string; isSuperAdmin?: boolean; organizationId: string | null } }>('/auth/me')
     .then((res) => {
       const u = res.user
       const now = new Date().toISOString()
@@ -494,6 +496,7 @@ export function initSupabaseAuth(): (() => void) | undefined {
         email: u.email,
         name: u.name,
         role: normalizeRole(u.role),
+        isSuperAdmin: u.isSuperAdmin === true,
         jobTitle: '',
         organizationId: u.organizationId ?? undefined,
         isActive: true,

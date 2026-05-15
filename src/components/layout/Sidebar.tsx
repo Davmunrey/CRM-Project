@@ -5,7 +5,7 @@ import {
   Activity, BarChart3, Settings, ChevronLeft, ChevronRight,
   Mail, UserCheck, FileText, ScrollText, Target, UsersRound, BellRing, GanttChart,
   LineChart, ListOrdered, Workflow, Package, FunnelPlus,
-  Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays, LayoutGrid,
+  Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays, LayoutGrid, Crown,
 } from 'lucide-react'
 import { Logo } from '../brand/Logo'
 import { useViewsStore } from '../../store/viewsStore'
@@ -191,6 +191,7 @@ export function Sidebar() {
   const t = useTranslations()
   const [collapsed, setCollapsed] = useState(false)
   const [userRole, setUserRole] = useState<UserRole>('viewer')
+  const [isSuperAdmin, setIsSuperAdmin] = useState(useAuthStore.getState().currentUser?.isSuperAdmin === true)
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
 
   const [overdueCount, setOverdueCount] = useState(0)
@@ -203,7 +204,11 @@ export function Sidebar() {
   // Auth subscription
   useEffect(() => {
     setUserRole(useAuthStore.getState().currentUser?.role || 'viewer')
-    const unsub = useAuthStore.subscribe((s) => setUserRole(s.currentUser?.role || 'viewer'))
+    setIsSuperAdmin(useAuthStore.getState().currentUser?.isSuperAdmin === true)
+    const unsub = useAuthStore.subscribe((s) => {
+      setUserRole(s.currentUser?.role || 'viewer')
+      setIsSuperAdmin(s.currentUser?.isSuperAdmin === true)
+    })
     return unsub
   }, [])
 
@@ -384,6 +389,29 @@ export function Sidebar() {
           <SidebarSection key={section.id} label={section.label} items={section.items} collapsed={collapsed} icon={section.icon} />
         ))}
       </nav>
+
+      {/* Super admin link */}
+      {isSuperAdmin && (
+        <div className="border-t border-fg/6 px-2 pt-2">
+          <NavLink
+            to="/admin"
+            className={({ isActive }) => `
+              flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium
+              transition-all duration-fast
+              ${isActive
+                ? 'nav-active sidebar-active text-fg'
+                : 'sidebar-inactive text-fg-subtle hover:text-fg hover:bg-fg/5 border-l-2 border-transparent'
+              }
+              ${collapsed ? 'justify-center' : ''}
+            `}
+            aria-label={collapsed ? 'Admin' : undefined}
+            title={collapsed ? 'Admin' : undefined}
+          >
+            <Crown size={15} className="flex-shrink-0 text-accent-400" />
+            {!collapsed && <span>Admin</span>}
+          </NavLink>
+        </div>
+      )}
 
       {/* Collapse toggle */}
       <div className="border-t border-fg/6 p-2 flex-shrink-0">
