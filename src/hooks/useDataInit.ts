@@ -15,6 +15,9 @@ import { useCustomFieldsStore } from '../store/customFieldsStore'
 import { useLeadsStore } from '../store/leadsStore'
 import { useNavigationPrefsStore } from '../store/navigationPrefsStore'
 import { usePipelinesStore } from '../store/pipelinesStore'
+import { useViewsStore } from '../store/viewsStore'
+import { useDistributionListsStore } from '../store/distributionListsStore'
+import { useOnboardingStore } from '../store/onboardingStore'
 import { initRealtimeSubscriptions } from '../lib/realtimeSubscriptions'
 
 /**
@@ -49,6 +52,9 @@ export function useDataInit() {
     useLeadsStore.getState().fetchLeads()
     usePipelinesStore.getState().fetchPipelines()
     useNavigationPrefsStore.getState().loadPreferences()
+    useViewsStore.getState().loadViews()
+    useDistributionListsStore.getState().loadLists()
+    useOnboardingStore.getState().loadForOrg(organizationId)
 
     const cleanup = initRealtimeSubscriptions()
     const runServerMaintenance = () => {
