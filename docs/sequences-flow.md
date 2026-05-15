@@ -2,7 +2,7 @@
 
 **Status:** Active  
 **Owner:** Engineering  
-**Last updated:** 2026-04-22  
+**Last updated:** 2026-05-15  
 **Canonical:** Yes (with code in `src/features/sequences-flow/` and `src/pages/Sequences.tsx`)
 
 ## Overview

@@ -132,8 +132,8 @@ The app ships **EN** (source), **ES**, and **PT** with full catalogs. **FR, DE, 
 
 ---
 
-*Last updated: 2026-04-29 — Google integration infrastructure marked stable: `EDGE_CORS_ORIGINS` + `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` secrets set, `google-oauth-state-origin` deployed, `original_origin` migration applied, Vercel env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_GMAIL_REDIRECT_URI`) extended to Preview + Development environments. Supabase SMTP (Resend) configured — auth emails now work in production. `create-org` Edge Function switched from revoked `set_claim` RPC to `adminClient.auth.admin.updateUserById`.*
+*Last updated: 2026-05-15 — Post-audit documentation pass. Gmail fully self-hosted (no Supabase Edge Function dependency). LinkedIn URL enrichment: migration 012, backend Zod/routes, frontend ContactForm + ContactDetail + contactsStore. Security hardened: Redis JWT denylist, Socket.io JWT verification, AES-256-GCM encryption for OAuth/SMTP/webhook secrets, auth rate limiting. All Supabase bypass delete routes (sbDelete, sbBulkDelete) replaced with api.delete() REST calls. Double-invite bug in TeamManagement fixed. CSVImport assignedTo hardcoded 'u1' replaced with currentUser.id.*
 
 ---
 
-*Last updated (git): **2026-04-29***
+*Last updated (git): **2026-05-15***

@@ -60,11 +60,11 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 ## Context
 
-**Current state:** All CRM modules backed by velo-api (Fastify 5, Node.js 22, PostgreSQL 16). Auth is velo-api JWT — no Supabase Auth. Stores fetch from `VITE_API_URL` REST endpoints. Real-time via Socket.io. 218 tests passing. Gmail Edge Functions remain deployed but require Supabase JWT (blocked until updated to accept velo-api JWT). Transactional emails (password reset, invitations) now wired via nodemailer/Resend.
+**Current state:** All CRM modules backed by velo-api (Fastify 5, Node.js 22, PostgreSQL 16). Auth is velo-api JWT — no Supabase Auth. Stores fetch from `VITE_API_URL` REST endpoints. Real-time via Socket.io. Gmail fully self-hosted via velo-api `/gmail/*` — no Supabase Edge Function dependency. LinkedIn URL enrichment on contacts (migration 012). Security hardened (Redis JWT denylist, Socket.io JWT verification, AES-256-GCM for secrets, rate limiting). All delete operations use REST API (no Supabase bypass). Transactional emails (password reset, invitations) wired via nodemailer/Resend.
 
-**Known critical issues (current):**
-- Gmail OAuth connect/refresh blocked (Edge Functions require Supabase JWT)
+**Known issues (current):**
 - Production deploy not yet executed (DEPLOY-01–05 operator tasks)
+- Google OAuth app verification for restricted Gmail scopes takes 4–6 weeks (blocks production Gmail for non-test users)
 
 **Tech stack:** React 18, TypeScript (strict), Vite 8, Tailwind CSS 3, Zustand 5, React Router v6, React Hook Form + Zod v4, Recharts, @hello-pangea/dnd, date-fns, lucide-react. **Backend:** Fastify 5, postgres.js, BullMQ, Socket.io.
 
@@ -108,7 +108,7 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 — documentation + codebase-map alignment (Automations, removed client AI stack, Knip, Vitest baseline). Prior narrative: 2026-04-10 after Gmail hardening + inbox collaboration migration updates + post-phase UX/UI upgrade + build hardening.*
+*Last updated: 2026-05-15 — Context updated: Gmail fully self-hosted (no Supabase dependency), LinkedIn enrichment added (migration 012), security hardening (Redis JWT denylist, Socket.io JWT verification, AES-256-GCM encryption, rate limiting), all Supabase bypass delete routes replaced. Known issues simplified to pending deploy + Google OAuth verification only.*
 ---
 
-*Last updated (git): **2026-04-21***
+*Last updated (git): **2026-05-15***

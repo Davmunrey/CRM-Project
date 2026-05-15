@@ -6,7 +6,7 @@
 - `npm install`
 - Copy `.env.example` → `.env`, set `VITE_API_URL=http://localhost:3001`
 - Start `velo-api` with Postgres + Redis (see `../velo-api/README.md`)
-- `npm run dev` → `http://localhost:5174`
+- `npm run dev` → `http://localhost:5173`
 
 ## Quality gates (run before pushing)
 
@@ -42,4 +42,4 @@ Optional: `npm run build:analyze` — bundle stats in `dist/stats.html`.
 
 ---
 
-*Last updated: 2026-05-14*
+*Last updated: 2026-05-15*

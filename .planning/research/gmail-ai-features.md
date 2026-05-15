@@ -1020,4 +1020,4 @@ bundle, remove `dangerouslyAllowBrowser: true` and remove the direct SDK instant
 | Google OAuth verification timeline | MEDIUM | 4-6 weeks is historical average; current timeline may vary |
 ---
 
-*Last updated (git): **2026-04-21** — archive notice added; body remains March 2026 research.*
+*Last updated (git): **2026-05-15** — archive notice remains; Gmail OAuth implementation has fully moved to velo-api (no Supabase Edge Functions); body remains March 2026 research (historical archive).*

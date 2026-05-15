@@ -24,15 +24,16 @@ Auth is now handled by velo-api (Fastify + PostgreSQL). Supabase Auth is no long
 
 ### Current state
 
-- `POST /auth/forgot-password` creates a 1-hour reset token in `password_reset_tokens` table. **Email delivery not yet implemented** — SMTP/Resend integration is a pending blocker.
+- `POST /auth/forgot-password` creates a 1-hour reset token in `password_reset_tokens` table and sends the reset email via `sendEmail` (nodemailer/Resend). **Wired 2026-05-13.**
 - `POST /auth/reset-password` consumes the token.
+- `POST /invitations` and `POST /orgs/me/invite` send invitation emails via `sendEmail`. **Wired 2026-05-13.**
 
-### Operator checklist (pending)
+### Operator checklist
 
-- [ ] Wire Resend (or SMTP) into velo-api `POST /auth/forgot-password` to send the reset link.
+- [x] Wire Resend (or SMTP) into velo-api `POST /auth/forgot-password` to send the reset link. (done 2026-05-13)
 - [ ] HTML template for password reset email with branded design.
 - [ ] Test email received for forgot-password flow.
-- [ ] CTA button opens `{FRONTEND_URL}/reset-password?token=<token>`.
+- [x] CTA button opens `{APP_URL}/reset-password?token=<token>`. (uses `APP_URL` env var)
 - [ ] Copy includes "ignore if you did not request this" language.
 - [ ] SPF/DKIM/DMARC verified for sender domain.
 

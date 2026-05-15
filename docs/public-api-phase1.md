@@ -50,4 +50,4 @@ The query-style `collection=...` form remains supported for compatibility during
 - See [`deployment-spa-and-env.md` — E2E integrations smoke](./deployment-spa-and-env.md#e2e-integrations-smoke) for env vars, CI secrets, and `npm run test:e2e:integrations:local`.
 ---
 
-*Last updated (git): **2026-04-22***
+*Last updated (git): **2026-05-15***

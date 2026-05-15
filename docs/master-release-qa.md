@@ -97,7 +97,7 @@ Use this checklist before shipping a "sell-ready" baseline release.
 
 - Status: Active
 - Owner: Product/QA
-- Last updated: 2026-04-17
+- Last updated: 2026-05-15
 - Canonical: Yes
 
 ## Scope and Planning

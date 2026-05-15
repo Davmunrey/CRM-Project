@@ -65,4 +65,4 @@ flowchart TD
 - Lead scoring and lifecycle: [`master-lead-management.md`](./master-lead-management.md)
 ---
 
-*Last updated (git): **2026-04-22***
+*Last updated (git): **2026-05-15***

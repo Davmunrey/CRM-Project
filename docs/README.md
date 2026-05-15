@@ -30,7 +30,7 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 | Leads: scoring backend, maintenance, retention | [`master-lead-management.md`](./master-lead-management.md) | Edge maintenance contract, Ops dashboard, runbook, data retention |
 | Design system, theme, navigation, profiles | [`master-design-ui.md`](./master-design-ui.md) · [`design-system-reference.md`](./design-system-reference.md) | Page shells, **main canvas** (`.app-main-surface`), mobile drawer + command palette; **reference** adds tokens, motion buckets, charts/locale loading, `ui:lint`, density |
 | Release, QA, go/no-go, production handoff | [`master-release-qa.md`](./master-release-qa.md) | Sell-ready checklist, QA evidence, go/no-go, production handoff |
-| Implementation history (full handoff) | [`master-implementation-history.md`](./master-implementation-history.md) | Part A §1–12 · Part B §13–28 |
+| Implementation history (full handoff) | [`master-implementation-history.md`](./master-implementation-history.md) | Part A §1–12 · Part B §13–29 |
 | Public REST API (phase 1, read) | [`public-api-phase1.md`](./public-api-phase1.md) | Bearer `crm_live_…` keys, `crm-public-api` collection query |
 | Public lead capture | [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md) | `lct_…` tokens, honeypot, duplicate handling |
 | Roadmap 30/60/90 + execution backlog | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Horizon roadmap · **PRO** execution backlog (legacy section IDs, not the old product name) |
@@ -57,7 +57,7 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 | Lead maintenance, scoring backend, retention | Ops + telemetry + retention policy | [`master-lead-management.md`](./master-lead-management.md) |
 | Design system, theme, navigation, profiles, **list toolbars** | UI reference | [`master-design-ui.md`](./master-design-ui.md#entity-list-toolbars-contacts-companies-deals) |
 | Release, QA, go/no-go, production handoff | Gates and evidence | [`master-release-qa.md`](./master-release-qa.md) |
-| Implementation history (full handoff) | Part A + Part B (§1–12 + §13–28) | [`master-implementation-history.md`](./master-implementation-history.md) |
+| Implementation history (full handoff) | Part A + Part B (§1–12 + §13–29) | [`master-implementation-history.md`](./master-implementation-history.md) |
 | Roadmap 30/60/90 + execution backlog | Forward plan | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
 | Pipedrive comparison, webhooks/API parity | Active narrative | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) |
 | v1 milestone + deploy IDs + bridge / gaps | Tracker + explainer | [`.planning/`](../.planning/) · [`project-state.md`](./project-state.md) |
@@ -104,5 +104,5 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-05-14  
+- **Last updated:** 2026-05-15  
 - **Canonical:** Yes  

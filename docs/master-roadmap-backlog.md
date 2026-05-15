@@ -19,13 +19,13 @@
 
 This roadmap starts from the current implemented baseline and prioritizes features that move the product closer to HubSpot/Pipedrive-level value.
 
-> **Status refresh (2026-04-16):** Navigation customization, core i18n (EN/ES/PT + partial FR/DE/IT), sell-ready **product** baseline (checklist + QA + go/no-go), sell-ready **security/compliance** engineering baseline (section **19** in `docs/master-implementation-history.md#implementation-history`), **Workflow Automations v1 + Lead Scoring v2** (section **21**), and **Manager Dashboard Pack + Onboarding** (section **23**) are shipped. This roadmap tracks **remaining** horizons (API, SSO depth, AI, org-wide email rollups). **Ola C (docs):** i18n execution waves, per-release translation QA template, **Next**→release assignment table, deploy research neutrality — see [`master-implementation-history` — section 22](./master-implementation-history.md#implementation-history-section-22).
+> **Status refresh (2026-05-15):** Navigation customization, core i18n (EN/ES/PT + partial FR/DE/IT), sell-ready **product** baseline, security hardening (Redis JWT denylist, Socket.io JWT verification, AES-256-GCM encryption, rate limiting), **Workflow Automations v1 + Lead Scoring v2**, **Manager Dashboard Pack + Onboarding**, Gmail fully self-hosted, **LinkedIn URL enrichment on contacts** (migration 012), Slack/Zoom/Google Calendar integrations are shipped. This roadmap tracks **remaining** horizons (API, SSO depth, AI, org-wide email rollups, production deploy). **Ola C (docs):** i18n execution waves, per-release translation QA template — see [`master-implementation-history` — section 22](./master-implementation-history.md#implementation-history-section-22).
 
 ## Document Control
 
 - Status: Active
 - Owner: Product
-- Last updated: 2026-04-16
+- Last updated: 2026-05-15
 - Canonical: Yes
 
 ## 0-30 days (Revenue + execution fundamentals)

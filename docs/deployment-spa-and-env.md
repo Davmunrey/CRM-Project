@@ -62,4 +62,4 @@ Services: `postgres` (5432), `redis` (6379), `migrate` (runs on boot), `api` (30
 
 After deploy: run through [smoke-checklist-production.md](./smoke-checklist-production.md).
 
-*Last updated: 2026-05-13*
+*Last updated: 2026-05-15*

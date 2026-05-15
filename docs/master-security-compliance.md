@@ -36,13 +36,13 @@
 <a id="auth-sso-backend-handoff"></a>
 ## Auth / SSO backend handoff
 
-Auth is **email/password via velo-api** (`POST /auth/login`, `POST /auth/register`). JWT HS256 with `sub/org/role` claims. SSO (Google/Azure/Apple/SAML) is roadmap — the frontend has feature-flag toggles wired but backend routes are not yet implemented.
+Auth is **email/password via velo-api** (`POST /auth/login`, `POST /auth/register`). JWT HS256 with `sub/org/role/jti` claims. SSO (Google/Azure/Apple/SAML) is roadmap — the frontend has feature-flag toggles wired but backend routes are not yet implemented.
 
 ## Document Control
 
 - Status: Active
 - Owner: Backend/Auth
-- Last updated: 2026-05-13 (migrated from Supabase Auth to velo-api JWT)
+- Last updated: 2026-05-15 (security hardening: Redis JWT denylist, Socket.io JWT verification, AES-256-GCM for all secrets, auth rate limiting, CSP, jti claim added)
 - Canonical: Yes
 
 ## velo-api auth endpoints

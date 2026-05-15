@@ -25,7 +25,7 @@ This document defines how backend jobs can execute lead score maintenance withou
 
 - Status: Active
 - Owner: Backend
-- Last updated: 2026-04-21
+- Last updated: 2026-05-15
 - Canonical: Yes
 
 ## Edge Function

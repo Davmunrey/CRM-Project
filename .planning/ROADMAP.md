@@ -3,8 +3,8 @@
 **Milestone:** v1.0 — Full SaaS Upgrade
 **Status:** Phase 10 Pending Deploy
 **Phases:** 10
-**Last updated:** 2026-05-13
-**Architecture note:** Auth migrated from Supabase to velo-api (Fastify + PostgreSQL). JWT claims: `{ sub, org, role }`. All data via velo-api REST. Supabase client is `null` at runtime.
+**Last updated:** 2026-05-15
+**Architecture note:** Auth migrated from Supabase to velo-api (Fastify + PostgreSQL). JWT claims: `{ sub, org, role, jti }`. All data via velo-api REST. Supabase client is `null` at runtime. Gmail fully self-hosted via velo-api `/gmail/*`.
 
 ---
 

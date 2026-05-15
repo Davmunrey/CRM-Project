@@ -15,7 +15,7 @@
 <a id="chronological-index-oldest--newest"></a>
 ## Chronological index (oldest → newest)
 
-Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part A, 13–28 in Part B) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
+Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part A, 13–29 in Part B) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
 
 | Date | Section | Summary |
 |------|---------|---------|
@@ -36,6 +36,7 @@ Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part
 | 2026-04-21 | [§26](#implementation-history-section-26) | Integration fabric: webhook DELETE payload parity, `listFailedOutbox` / `replayOutbox`, Edge Functions `api-keys`, `crm-public-api`, `lead-capture`, `lead-capture-tokens`; Settings tab **API & capture** + webhooks failed-queue UI; `npm run supabase:deploy:integrations` / `supabase:deploy:all-edge`. |
 | 2026-04-22 | [§27](#implementation-history-section-27) | API & capture hardening: idempotent delete contracts, standardized error payloads (`error/code/status/request_id`), structured Edge logs, requestId propagation, resilient Settings feedback, Playwright smoke coverage, and English runbooks. |
 | 2026-04-22 | [§28](#implementation-history-section-28) | Supabase-only SPA shell: remove offline/mock demo paths and SSO buttons; default settings from `defaultAppSettings.ts`; strong password UX (`SecurePasswordField`, `src/lib/securePassword.ts`, Team + auth forms); workspace host mismatch effect uses primitive deps; memoized `GmailTokenContext` value; **Dashboard** onboarding flags read `byOrg[id]` + `useMemo` (never `getFlags()` inside a Zustand selector — new object per tick caused React maximum update depth after login). |
+| 2026-05-15 | [§29](#implementation-history-section-29) | Quality audit + LinkedIn enrichment: 35-page frontend audit, Supabase bypass fix (sbDelete → api.delete), double-invite fix, CSVImport assignedTo fix, LinkedIn enrichment (migration 012, backend + frontend), full .md documentation sweep. |
 
 ---
 
@@ -558,3 +559,34 @@ Narrative layout and tokens: [`master-design-ui.md`](./master-design-ui.md#main-
 - **i18n:** Workflow template marketing strings moved from `src/i18n/seed/*.demo.ts` to **`src/i18n/workflowLibrary/`** (EN/ES/PT); automation rule English seeds remain under `src/i18n/seed/automationSeedRulesEn.ts`.
 
 **Related:** [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) (runtime table) · [`master-security-compliance.md` — Client password policy](./master-security-compliance.md#client-password-policy-and-zustand-selectors) · [`README.md`](../README.md) (quick start).
+
+<a id="implementation-history-section-29"></a>
+## 29) Quality audit, LinkedIn enrichment, and documentation sweep (May 2026)
+
+### 35-page frontend audit
+
+Audited all 35 frontend pages against velo-api routes. Result: 95%+ alignment. Critical issues found and fixed:
+
+- **Supabase bypass deletes:** `contactsStore` and `companiesStore` used `sbDelete`/`sbBulkDelete` (direct Supabase PostgREST) instead of the REST API, bypassing auth and the audit log. Fixed: replaced with `api.delete('/contacts/:id')` and `api.delete('/companies/:id')`.
+- **Double team invite:** `authStore.createInvitation()` called `api.post('/orgs/me/invite', ...)` AND `TeamManagement.tsx`'s `handleInvite` called the same endpoint — result was two DB rows per invite. Fixed: removed the API call from `createInvitation`, keeping only local state update; `handleInvite` remains the sole API caller.
+- **CSVImport hardcoded assignedTo:** `assignedTo: 'u1'` was hardcoded, causing UUID validation failure on the backend. Fixed: replaced with `useAuthStore(s => s.currentUser?.id ?? '')`.
+
+### LinkedIn enrichment (end-to-end)
+
+- **Migration 012** (`velo-api/migrations/012_contacts_linkedin_url.sql`): `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS linkedin_url text`
+- **velo-api `contacts.ts`:** `linkedinUrl` added to Zod schema; included in `GET` list SELECT, `POST` INSERT, and `PATCH` updates (maps to `linkedin_url` column)
+- **velo-crm `types/index.ts`:** `Contact.linkedinUrl?: string`
+- **`src/lib/schemas/contact.ts`:** `linkedinUrl: z.string().url().optional().or(z.literal(''))`
+- **`ContactForm.tsx`:** LinkedIn URL input field with type=url, placeholder, and error display
+- **`ContactDetail.tsx`:** LinkedIn link with `<Linkedin>` icon from lucide-react; strips `https://linkedin.com/in/` prefix for display
+- **`contactsStore.ts`:** `mapContactFromSupabaseRow` maps `row.linkedinUrl ?? row.linkedin_url`
+
+### Documentation sweep
+
+All `.md` files in both repos updated to reflect 2026-05-15 state. Key updates:
+- Gmail no longer blocked — fully self-hosted via velo-api
+- JWT payload now includes `jti` claim
+- Security hardening noted throughout (Redis denylist, Socket.io JWT, AES-256-GCM, rate limiting)
+- LinkedIn enrichment referenced in README modules table, velo-api route docs, and planning docs
+- CODEBASE.md Gmail flow updated to remove "blocked" note
+- STATE.md, PROJECT.md, REQUIREMENTS.md all updated with current status

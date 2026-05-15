@@ -226,5 +226,5 @@ Scoring: **A** adoption / dependency, **R** revenue cycle, **I** integration rel
 
 - **Status:** Active  
 - **Owner:** Product / Engineering  
-- **Last updated:** 2026-04-21  
+- **Last updated:** 2026-05-15  
 - **Canonical:** Yes  

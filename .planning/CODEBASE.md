@@ -9,13 +9,13 @@ This file consolidates the prior `.planning/codebase/*.md` documents into a sing
 
 ### Pattern overview
 
-**Overall:** React SPA + `velo-api` (Fastify 5, PostgreSQL 16, Redis). Zustand stores for client state. Auth via HS256 JWT (`{ sub, org, role }`). Real-time via Socket.io. Supabase Edge Functions retained for Gmail OAuth only (`supabase` client is `null` at runtime — all data goes through velo-api).
+**Overall:** React SPA + `velo-api` (Fastify 5, PostgreSQL 16, Redis). Zustand stores for client state. Auth via HS256 JWT (`{ sub, org, role, jti }`). Real-time via Socket.io. No Supabase runtime dependency — `supabase` client is `null` at runtime; all data goes through velo-api including Gmail OAuth.
 
 **Key characteristics:**
 - `velo-api` is the primary backend for auth, persistence, and realtime sync.
 - Zustand remains the app state layer; all mutations go through `src/lib/api.ts` (`VITE_API_URL`).
 - Route-level protection via `ProtectedRoute` + JWT `org`/`role` claims.
-- Gmail integration uses PKCE + Supabase Edge Functions for token exchange (blocked until Edge Functions accept velo-api JWT).
+- Gmail integration uses PKCE + velo-api `/gmail/*` routes for token exchange (fully self-hosted — no Supabase Edge Function dependency).
 
 ### Layers
 
@@ -57,8 +57,8 @@ This file consolidates the prior `.planning/codebase/*.md` documents into a sing
 
 **Gmail:**
 1. User connects via Google OAuth popup (PKCE).
-2. Code exchange via Supabase Edge Function (currently blocked — requires Supabase JWT).
-3. Short-lived access tokens used client-side; inbox loads/syncs Gmail threads.
+2. Code exchange via `POST /gmail/oauth-exchange` (velo-api — no Supabase dependency). Refresh token stored AES-256-GCM encrypted in `gmail_tokens`.
+3. Short-lived access tokens used client-side; inbox loads/syncs Gmail threads via `GET /gmail/threads`.
 4. Thread links pinned/unpinned and persisted in `gmail_thread_links` table.
 
 ### Cross-cutting concerns
@@ -218,6 +218,6 @@ The module matrix and permission list were folded into the Coding Conventions so
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-04-28  
+- **Last updated:** 2026-05-15  
 - **Canonical:** Yes  
 

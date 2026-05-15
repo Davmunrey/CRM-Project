@@ -3,12 +3,15 @@
 **Defined:** 2026-03-31
 **Core Value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time — with lead scoring, reporting, and collaboration (no Anthropic/Claude LLM stack in product scope).
 
-## Current Snapshot (2026-05-13)
+## Current Snapshot (2026-05-15)
 
 - Execution source of truth: `.planning/STATE.md` and `.planning/ROADMAP.md`.
 - Phases 1–9 complete; Phase 10 (production deploy) pending operator action.
-- **Backend:** velo-api (Fastify 5 + PostgreSQL 16 + Redis). Supabase Auth removed. JWT `{ sub, org, role }`.
-- Gmail integration wired (PKCE + Edge Functions) but blocked — Edge Functions require Supabase JWT, not yet updated.
+- **Backend:** velo-api (Fastify 5 + PostgreSQL 16 + Redis). Supabase Auth removed. JWT `{ sub, org, role, jti }`.
+- Gmail fully self-hosted via velo-api `/gmail/*` — no Supabase Edge Function dependency.
+- LinkedIn URL enrichment on contacts: migration 012, backend Zod schema, frontend form + detail display.
+- Security hardened: Redis JWT denylist per token, Socket.io JWT verification, AES-256-GCM for OAuth/SMTP/webhook secrets, auth rate limiting (10/15min), CSP headers.
+- All CRM delete operations use REST API (no Supabase bypass). Team invite de-duplicated.
 - Transactional emails (password reset, invitations) wired via nodemailer/Resend in velo-api.
 - i18n: 6 languages (`en`, `es`, `pt`, `fr`, `de`, `it`), 1603 keys each, parity verified.
 - Test suite: **218 passing, 1 skipped** (42 files). Build clean.
@@ -188,7 +191,7 @@ Check **`DEPLOY-*`** only after the work exists on the **target** environment (n
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-04-21 — English doc pass: AI-01/03/04/05 cancelled (no Claude); DEPLOY-01/03 wording aligned to private static hosting (not Vercel); SEC-02/SEC-04 wording generalized. Prior 2026-04-16 — Phase 10 “Recording DEPLOY completion” gate; see `docs/smoke-checklist-production.md`.*
+*Last updated: 2026-05-15 — Snapshot updated: Gmail fully self-hosted, LinkedIn enrichment shipped, security hardened (Redis JWT denylist, Socket.io JWT verification, rate limiting, AES-256-GCM secrets), all Supabase bypass deletes replaced. Prior 2026-05-13 — AI-02 marked done (lead score recompute on activity). Prior 2026-04-21 — product constraints and traceability aligned.*
 ---
 
-*Last updated (git): **2026-04-21** — product constraints (no Claude; private static hosting narrative) and traceability table aligned.*
+*Last updated (git): **2026-05-15***
