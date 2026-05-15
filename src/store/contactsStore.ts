@@ -3,7 +3,7 @@ import type { Contact, ContactFilters } from '../types'
 import { useAuditStore } from './auditStore'
 import { getTranslations } from '../i18n'
 import { api } from '../lib/api'
-import { getErrorMessage, sbDelete, sbBulkDelete } from '../lib/supabaseHelpers'
+import { getErrorMessage } from '../lib/supabaseHelpers'
 import { toast } from './toastStore'
 
 export function mapContactFromSupabaseRow(row: Record<string, unknown>): Contact {
@@ -28,6 +28,7 @@ export function mapContactFromSupabaseRow(row: Record<string, unknown>): Contact
     marketingOptIn: (row.marketingOptIn ?? row.marketing_opt_in ?? false) as boolean,
     marketingOptInAt: (row.marketingOptInAt ?? row.marketing_opt_in_at) as string | undefined,
     marketingOptInSource: (row.marketingOptInSource ?? row.marketing_opt_in_source) as string | undefined,
+    linkedinUrl: (row.linkedinUrl ?? row.linkedin_url) as string | undefined,
   }
 }
 
@@ -114,13 +115,13 @@ export const useContactsStore = create<ContactsState>()(
     deleteContact: (id) => {
       set((state) => ({ contacts: state.contacts.filter((c) => c.id !== id) }))
       useAuditStore.getState().logAction('contact_deleted', 'contact', id, '', getTranslations().auditMessages.contactDeleted)
-      sbDelete('contacts', id).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.delete(`/contacts/${id}`).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     bulkDelete: (ids) => {
       const idSet = new Set(ids)
       set((state) => ({ contacts: state.contacts.filter((c) => !idSet.has(c.id)) }))
-      sbBulkDelete('contacts', ids).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      Promise.all(ids.map((id) => api.delete(`/contacts/${id}`))).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     setFilter: (key, value) => {

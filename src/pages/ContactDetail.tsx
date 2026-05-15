@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import {
   ArrowLeft, Edit2, Plus, Building2, Phone, Mail, Calendar,
-  FileText, CheckCircle2, Eye, MousePointerClick,
+  FileText, CheckCircle2, Eye, MousePointerClick, Linkedin,
 } from 'lucide-react'
 import { useContactsStore } from '../store/contactsStore'
 import { useCompaniesStore } from '../store/companiesStore'
@@ -301,6 +301,20 @@ export function ContactDetail() {
                   <p className="text-sm text-fg">{value}</p>
                 </div>
               ))}
+              {displayContact.linkedinUrl && (
+                <div>
+                  <p className="text-xs text-fg-subtle mb-0.5">LinkedIn</p>
+                  <a
+                    href={displayContact.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-accent flex items-center gap-1 hover:underline"
+                  >
+                    <Linkedin size={13} />
+                    {displayContact.linkedinUrl.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '').replace(/\/$/, '')}
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 

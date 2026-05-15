@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import type { Company, CompanyFilters } from '../types'
 import { api } from '../lib/api'
-import { getErrorMessage, sbDelete } from '../lib/supabaseHelpers'
+import { getErrorMessage } from '../lib/supabaseHelpers'
 import { normalizeIndustryValue } from '../lib/industries'
 
 function mapCompany(row: Record<string, unknown>): Company {
@@ -101,7 +101,7 @@ export const useCompaniesStore = create<CompaniesState>()(
 
     deleteCompany: (id) => {
       set((state) => ({ companies: state.companies.filter((c) => c.id !== id) }))
-      sbDelete('companies', id).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.delete(`/companies/${id}`).catch((e: unknown) => set({ error: getErrorMessage(e) }))
     },
 
     setFilter: (key, value) => {

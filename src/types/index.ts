@@ -21,6 +21,7 @@ export interface Contact {
   notes: string
   linkedDeals: string[]
   avatar?: string
+  linkedinUrl?: string
   /** Marketing email consent (bulk / campaigns); default false when unknown. */
   marketingOptIn?: boolean
   marketingOptInAt?: string

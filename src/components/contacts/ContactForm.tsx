@@ -41,6 +41,7 @@ export function ContactForm({ contact, onSubmit, onCancel, isLoading }: ContactF
       source: contact?.source ?? 'website',
       assignedTo: contact?.assignedTo ?? (orgUsers[0]?.name ?? ''),
       notes: contact?.notes ?? '',
+      linkedinUrl: contact?.linkedinUrl ?? '',
     },
   })
 
@@ -103,6 +104,7 @@ export function ContactForm({ contact, onSubmit, onCancel, isLoading }: ContactF
         error={errors.assignedTo?.message}
       />
 
+      <Input label="LinkedIn URL" type="url" placeholder="https://linkedin.com/in/username" {...register('linkedinUrl')} error={errors.linkedinUrl?.message} />
       <Textarea label={t.common.notes} rows={3} {...register('notes')} />
 
       {contact && (

@@ -414,9 +414,6 @@ export const useAuthStore = create<AuthState>()(
           createdAt: now.toISOString(),
           expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         }
-        void api.post('/orgs/me/invite', { email, role }).catch((e: unknown) => {
-          toast.error(e instanceof Error ? e.message : 'Invite failed')
-        })
         set((s) => ({ invitations: [...s.invitations, invitation] }))
         return invitation
       },

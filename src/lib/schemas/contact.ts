@@ -13,6 +13,7 @@ export const createContactSchema = (t: Translations) =>
     source: z.enum(['website', 'referral', 'outbound', 'event', 'linkedin', 'other']),
     assignedTo: z.string().min(1, t.formErrors.contactAssignedToRequired),
     notes: z.string(),
+    linkedinUrl: z.string().url().optional().or(z.literal('')),
   })
 
 export type ContactFormData = z.infer<ReturnType<typeof createContactSchema>>
