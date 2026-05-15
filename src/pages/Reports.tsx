@@ -1,40 +1,82 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
   FunnelChart, Funnel, LabelList,
 } from 'recharts'
-import { useDealsStore } from '../store/dealsStore'
-import { useContactsStore } from '../store/contactsStore'
-import { useActivitiesStore } from '../store/activitiesStore'
+import { api } from '../lib/api'
 import { formatCurrency } from '../utils/formatters'
-import { DEAL_STAGES_ORDER } from '../utils/constants'
 import { Input } from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import { Avatar } from '../components/ui/Avatar'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import { Download, BarChart3, CheckCircle2, Layers, Percent } from 'lucide-react'
-import { useAuthStore } from '../store/authStore'
-import type { DealStage, ActivityType } from '../types'
-import { subMonths, parseISO, isWithinInterval, startOfDay, endOfDay } from 'date-fns'
+import { subMonths, parseISO, startOfDay, endOfDay } from 'date-fns'
 import { useTranslations } from '../i18n'
-import { api } from '../lib/api'
 import { useChartTheme } from '../lib/chartTheme'
 import { PageHeader } from '../components/ui/PageHeader'
 import { StatCard } from '../components/ui/StatCard'
+import type { ActivityType } from '../types'
+
+// ─── API response types ───────────────────────────────────────────────────────
+
+interface AnalyticsSummary {
+  pipeline: number
+  won: number
+  lostValue: number
+  activeDeals: number
+  wonDeals: number
+  lostDeals: number
+  totalDeals: number
+  conversionRate: number
+  avgDealSize: number
+}
+
+interface DealsByStage {
+  stage: string
+  count: number
+  value: number
+  weighted: number
+}
+
+interface ActivityByType {
+  type: string
+  count: number
+}
+
+interface ContactBySource {
+  source: string
+  count: number
+}
+
+interface SalesRep {
+  userId: string
+  name: string
+  wonDeals: number
+  wonValue: number
+  pipelineValue: number
+  activeDeals: number
+  winRate: number
+  activitiesCount: number
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function Reports() {
   const t = useTranslations()
   const chart = useChartTheme()
-  const deals = useDealsStore((s) => s.deals)
-  const contacts = useContactsStore((s) => s.contacts)
-  const activities = useActivitiesStore((s) => s.activities)
-  const orgUsers = useAuthStore((s) => s.users)
 
-  const [dateFrom, setDateFrom] = useState(() => {
-    return subMonths(new Date(), 6).toISOString().split('T')[0]
-  })
+  const [dateFrom, setDateFrom] = useState(() =>
+    subMonths(new Date(), 6).toISOString().split('T')[0],
+  )
   const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0])
+
+  const [summary, setSummary] = useState<AnalyticsSummary | null>(null)
+  const [dealsByStage, setDealsByStage] = useState<DealsByStage[]>([])
+  const [activitiesByType, setActivitiesByType] = useState<ActivityByType[]>([])
+  const [contactsBySource, setContactsBySource] = useState<ContactBySource[]>([])
+  const [salesReps, setSalesReps] = useState<SalesRep[]>([])
+  const [loading, setLoading] = useState(true)
 
   const [emailTrackingStats, setEmailTrackingStats] = useState<{
     opens: number
@@ -42,6 +84,37 @@ export function Reports() {
     loading: boolean
     error: boolean
   }>({ opens: 0, clicks: 0, loading: false, error: false })
+
+  const fetchAnalytics = useCallback(async (from: string, to: string) => {
+    setLoading(true)
+    const fromIso = from ? startOfDay(parseISO(from)).toISOString() : undefined
+    const toIso = to ? endOfDay(parseISO(to)).toISOString() : undefined
+    const qs = [fromIso ? `from=${encodeURIComponent(fromIso)}` : '', toIso ? `to=${encodeURIComponent(toIso)}` : ''].filter(Boolean).join('&')
+    const q = qs ? `?${qs}` : ''
+
+    try {
+      const [sum, stages, acts, sources, reps] = await Promise.all([
+        api.get<AnalyticsSummary>(`/analytics/summary${q}`),
+        api.get<{ data: DealsByStage[] }>(`/analytics/deals-by-stage${q}`),
+        api.get<{ data: ActivityByType[] }>(`/analytics/activities-by-type${q}`),
+        api.get<{ data: ContactBySource[] }>('/analytics/contacts-by-source'),
+        api.get<{ data: SalesRep[] }>(`/analytics/sales-reps${q}`),
+      ])
+      setSummary(sum)
+      setDealsByStage(stages.data)
+      setActivitiesByType(acts.data)
+      setContactsBySource(sources.data)
+      setSalesReps(reps.data)
+    } catch {
+      // keep previous data on error
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    void fetchAnalytics(dateFrom, dateTo)
+  }, [fetchAnalytics, dateFrom, dateTo])
 
   useEffect(() => {
     let cancelled = false
@@ -62,113 +135,64 @@ export function Reports() {
       }
     }
     void load()
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [dateFrom, dateTo])
 
-  const filteredDeals = useMemo(() => {
-    if (!dateFrom && !dateTo) return deals
-    return deals.filter((d) => {
-      try {
-        const date = parseISO(d.createdAt)
-        return isWithinInterval(date, {
-          start: dateFrom ? startOfDay(parseISO(dateFrom)) : new Date(0),
-          end: dateTo ? endOfDay(parseISO(dateTo)) : new Date(),
-        })
-      } catch { return false }
-    })
-  }, [deals, dateFrom, dateTo])
+  // ── Chart data derived from API results ───────────────────────────────────
 
-  // Revenue forecast (pipeline × probability)
-  const forecastData = useMemo(() => {
-    const stages: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation']
-    return stages.map((stage) => {
-      const stageDeals = filteredDeals.filter((d) => d.stage === stage)
-      const totalValue = stageDeals.reduce((sum, d) => sum + d.value, 0)
-      const weightedValue = stageDeals.reduce((sum, d) => sum + d.value * (d.probability / 100), 0)
+  const activeStages = ['lead', 'qualified', 'proposal', 'negotiation']
+
+  const forecastData = useMemo(() =>
+    activeStages.map((stage) => {
+      const s = dealsByStage.find((d) => d.stage === stage)
       return {
         name: t.deals.stageLabels[stage as keyof typeof t.deals.stageLabels] ?? stage,
-        value: totalValue,
-        weighted: weightedValue,
+        value: s?.value ?? 0,
+        weighted: s?.weighted ?? 0,
       }
-    })
-  }, [filteredDeals, t])
+    }),
+    [dealsByStage, t],
+  )
 
-  // Won vs Lost
   const wonLostData = useMemo(() => {
-    const won = filteredDeals.filter((d) => d.stage === 'closed_won').length
-    const lost = filteredDeals.filter((d) => d.stage === 'closed_lost').length
+    const won = dealsByStage.find((d) => d.stage === 'closed_won')
+    const lost = dealsByStage.find((d) => d.stage === 'closed_lost')
     return [
-      { name: t.deals.won, value: won, color: chart.success },
-      { name: t.deals.lost, value: lost, color: chart.danger },
-    ].filter((d) => d.value > 0)
-  }, [filteredDeals, chart, t])
+      won && won.count > 0 ? { name: t.deals.won, value: won.count, color: chart.success } : null,
+      lost && lost.count > 0 ? { name: t.deals.lost, value: lost.count, color: chart.danger } : null,
+    ].filter(Boolean) as { name: string; value: number; color: string }[]
+  }, [dealsByStage, chart, t])
 
-  // Activities by type
   const activityTypeData = useMemo(() => {
     const types = Object.keys(t.activities.typeLabels) as ActivityType[]
     const palette = chart.seriesPalette
-    return types.map((type, i) => ({
-      name: t.activities.typeLabels[type],
-      value: activities.filter((a) => a.type === type).length,
-      fill: palette[i % palette.length],
-    })).filter((d) => d.value > 0)
-  }, [activities, chart, t])
+    return types.map((type, i) => {
+      const found = activitiesByType.find((a) => a.type === type)
+      return { name: t.activities.typeLabels[type], value: found?.count ?? 0, fill: palette[i % palette.length] }
+    }).filter((d) => d.value > 0)
+  }, [activitiesByType, chart, t])
 
-  // Contacts by source
-  const contactsBySource = useMemo(() => {
-    const sources: Record<string, number> = {}
-    contacts.forEach((c) => {
-      sources[c.source] = (sources[c.source] ?? 0) + 1
-    })
+  const contactsBySourceChart = useMemo(() => {
     const palette = chart.seriesPalette
-    return Object.entries(sources).map(([source, count], i) => ({
-      name: source,
-      value: count,
-      color: palette[i % palette.length],
-    }))
-  }, [contacts, chart.seriesPalette])
+    return contactsBySource.map((c, i) => ({ name: c.source, value: c.count, color: palette[i % palette.length] }))
+  }, [contactsBySource, chart.seriesPalette])
 
-  // Funnel conversion
   const funnelData = useMemo(() => {
-    return DEAL_STAGES_ORDER.filter((s) => s !== 'closed_lost').map((stage) => ({
-      name: t.deals.stageLabels[stage as keyof typeof t.deals.stageLabels] ?? stage,
-      value: filteredDeals.filter((d) => d.stage === stage).length,
-      fill: chart.barPrimary,
-    })).filter((d) => d.value > 0)
-  }, [filteredDeals, chart.barPrimary, t])
-
-  const totalPipeline = filteredDeals
-    .filter((d) => !['closed_won', 'closed_lost'].includes(d.stage))
-    .reduce((sum, d) => sum + d.value, 0)
-
-  const totalWon = filteredDeals
-    .filter((d) => d.stage === 'closed_won')
-    .reduce((sum, d) => sum + d.value, 0)
-
-  // Per-salesperson breakdown
-  const salesRepData = useMemo(() => {
-    return orgUsers.map((u) => { const name = u.name;
-      const userDeals = filteredDeals.filter((d) => d.assignedTo === name)
-      const won = userDeals.filter((d) => d.stage === 'closed_won')
-      const lost = userDeals.filter((d) => d.stage === 'closed_lost')
-      const active = userDeals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage))
-      const wonValue = won.reduce((s, d) => s + d.value, 0)
-      const pipelineValue = active.reduce((s, d) => s + d.value, 0)
-      const winRate = won.length + lost.length > 0
-        ? Math.round((won.length / (won.length + lost.length)) * 100)
-        : 0
-      const activitiesCount = activities.filter((a) => a.createdBy === name).length
-      return { name, wonDeals: won.length, wonValue, pipelineValue, activeDeals: active.length, winRate, activitiesCount }
-    }).sort((a, b) => b.wonValue - a.wonValue)
-  }, [filteredDeals, activities, orgUsers])
+    const order = ['lead', 'qualified', 'proposal', 'negotiation', 'closed_won']
+    return order.map((stage) => {
+      const s = dealsByStage.find((d) => d.stage === stage)
+      return { name: t.deals.stageLabels[stage as keyof typeof t.deals.stageLabels] ?? stage, value: s?.count ?? 0, fill: chart.barPrimary }
+    }).filter((d) => d.value > 0)
+  }, [dealsByStage, chart.barPrimary, t])
 
   const handleExportCSV = () => {
     const rows = [
-      [t.common.type, t.common.name, t.common.value, t.deals.stage, t.common.assignedTo, t.common.createdAt],
-      ...filteredDeals.map((d) => [
-        'Deal', d.title, String(d.value), t.deals.stageLabels[d.stage as keyof typeof t.deals.stageLabels] ?? d.stage, d.assignedTo, d.createdAt.split('T')[0],
+      ['Stage', 'Count', 'Value', 'Weighted'],
+      ...dealsByStage.map((d) => [
+        t.deals.stageLabels[d.stage as keyof typeof t.deals.stageLabels] ?? d.stage,
+        String(d.count),
+        String(d.value),
+        String(Math.round(d.weighted)),
       ]),
     ]
     const csv = rows.map((r) => r.map((v) => `"${v}"`).join(',')).join('\n')
@@ -191,6 +215,7 @@ export function Reports() {
         <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-40" />
         <span className="text-fg-subtle">→</span>
         <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-40" />
+        {loading && <span className="text-xs text-fg-subtle animate-pulse ml-2">{t.common.loading}…</span>}
         <div className="ml-auto">
           <PermissionGate permission="reports:export">
             <Button variant="secondary" size="sm" leftIcon={<Download size={14} />} onClick={handleExportCSV}>
@@ -204,35 +229,31 @@ export function Reports() {
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           title={t.reports.pipeline}
-          value={formatCurrency(totalPipeline)}
+          value={summary ? formatCurrency(summary.pipeline) : '…'}
           icon={<BarChart3 size={18} />}
           accent="info"
         />
         <StatCard
           title={t.deals.stageLabels.closed_won}
-          value={formatCurrency(totalWon)}
+          value={summary ? formatCurrency(summary.won) : '…'}
           icon={<CheckCircle2 size={18} />}
           accent="success"
         />
         <StatCard
           title={t.dashboard.activeDealsLabel}
-          value={filteredDeals.filter((d) => !['closed_won', 'closed_lost'].includes(d.stage)).length}
+          value={summary ? summary.activeDeals : '…'}
           icon={<Layers size={18} />}
           accent="accent"
         />
         <StatCard
           title={t.reports.conversionRate}
-          value={(() => {
-            const closed = filteredDeals.filter((d) => ['closed_won', 'closed_lost'].includes(d.stage)).length
-            const won = filteredDeals.filter((d) => d.stage === 'closed_won').length
-            return closed > 0 ? `${Math.round((won / closed) * 100)}%` : '-'
-          })()}
+          value={summary ? `${summary.conversionRate}%` : '…'}
           icon={<Percent size={18} />}
           accent="warning"
         />
       </div>
 
-      {/* Server-tracked outbound email (RLS: current user’s sends) */}
+      {/* Server-tracked outbound email */}
       <div className="glass p-5 space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -247,40 +268,19 @@ export function Reports() {
           <p className="text-sm text-danger">{t.reports.emailTrackingLoadError}</p>
         ) : emailTrackingStats.loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
-            <div>
-              <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p>
-              <p className="text-2xl font-bold text-success">…</p>
-            </div>
-            <div>
-              <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p>
-              <p className="text-2xl font-bold text-info">…</p>
-            </div>
+            <div><p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p><p className="text-2xl font-bold text-success">…</p></div>
+            <div><p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p><p className="text-2xl font-bold text-info">…</p></div>
           </div>
-        ) : emailTrackingStats.opens === 0 && emailTrackingStats.clicks === 0 ? (
+        ) : (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
-              <div>
-                <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p>
-                <p className="text-2xl font-bold text-success">0</p>
-              </div>
-              <div>
-                <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p>
-                <p className="text-2xl font-bold text-info">0</p>
-              </div>
+              <div><p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p><p className="text-2xl font-bold text-success">{emailTrackingStats.opens}</p></div>
+              <div><p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p><p className="text-2xl font-bold text-info">{emailTrackingStats.clicks}</p></div>
             </div>
-            <p className="text-sm text-fg-subtle pt-2">{t.reports.emailTrackingEmpty}</p>
+            {emailTrackingStats.opens === 0 && emailTrackingStats.clicks === 0 && (
+              <p className="text-sm text-fg-subtle pt-2">{t.reports.emailTrackingEmpty}</p>
+            )}
           </>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-1">
-            <div>
-              <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingOpens}</p>
-              <p className="text-2xl font-bold text-success">{emailTrackingStats.opens}</p>
-            </div>
-            <div>
-              <p className="text-xs text-fg-subtle mb-1">{t.reports.emailTrackingClicks}</p>
-              <p className="text-2xl font-bold text-info">{emailTrackingStats.clicks}</p>
-            </div>
-          </div>
         )}
         <div className="text-[11px] text-fg-subtle border-t border-fg/6 pt-3 space-y-2">
           <p>{t.reports.emailTrackingPrivacyNote}</p>
@@ -290,7 +290,7 @@ export function Reports() {
 
       {/* Charts row 1 */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {/* Revenue forecast */}
+        {/* Revenue forecast by stage */}
         <div className="glass p-5">
           <h3 className="text-sm font-semibold text-fg-muted mb-1">{t.reports.salesOverview}</h3>
           <p className="text-xs text-fg-subtle mb-4">{t.forecast.weighted}</p>
@@ -353,8 +353,8 @@ export function Reports() {
           <h3 className="text-sm font-semibold text-fg-muted mb-4">{t.contacts.title} ({t.contacts.source})</h3>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={contactsBySource} cx="50%" cy="50%" outerRadius={75} dataKey="value" label labelLine={false} fontSize={10}>
-                {contactsBySource.map((entry, index) => (
+              <Pie data={contactsBySourceChart} cx="50%" cy="50%" outerRadius={75} dataKey="value" label labelLine={false} fontSize={10}>
+                {contactsBySourceChart.map((entry, index) => (
                   <Cell key={index} fill={entry.color} />
                 ))}
               </Pie>
@@ -386,55 +386,42 @@ export function Reports() {
         <h3 className="text-sm font-semibold text-fg-muted mb-4">{t.reports.performance}</h3>
         <div className="overflow-hidden rounded-xl border border-fg/8">
           <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <caption className="sr-only">{t.reports.performance}</caption>
-            <thead>
-              <tr className="border-b border-fg/8">
-                {[t.common.name, t.leaderboard.dealsWon, t.leaderboard.revenue, t.reports.pipeline, t.dashboard.activeDealsLabel, t.reports.conversionRate, t.activities.title].map((h) => (
-                  <th key={h} scope="col" className="text-left text-xs font-semibold text-fg-subtle py-2 pr-4 last:pr-0">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-subtle">
-              {salesRepData.map((rep, idx) => (
-                <tr key={rep.name} className="hover:bg-fg/[0.02] transition-colors">
-                  <td className="py-3 pr-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-fg-subtle w-4">{idx + 1}</span>
-                      <Avatar name={rep.name} size="xs" />
-                      <span className="text-sm font-medium text-fg">{rep.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className="text-sm font-semibold text-success">{rep.wonDeals}</span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className="text-sm font-semibold text-success">{formatCurrency(rep.wonValue)}</span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className="text-sm text-accent-400">{formatCurrency(rep.pipelineValue)}</span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <span className="text-sm text-fg">{rep.activeDeals}</span>
-                  </td>
-                  <td className="py-3 pr-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-fg/8 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-accent-500"
-                          style={{ width: `${rep.winRate}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-fg-muted">{rep.winRate}%</span>
-                    </div>
-                  </td>
-                  <td className="py-3">
-                    <span className="text-sm text-warning">{rep.activitiesCount}</span>
-                  </td>
+            <table className="w-full text-sm">
+              <caption className="sr-only">{t.reports.performance}</caption>
+              <thead>
+                <tr className="border-b border-fg/8">
+                  {[t.common.name, t.leaderboard.dealsWon, t.leaderboard.revenue, t.reports.pipeline, t.dashboard.activeDealsLabel, t.reports.conversionRate, t.activities.title].map((h) => (
+                    <th key={h} scope="col" className="text-left text-xs font-semibold text-fg-subtle py-2 pr-4 last:pr-0">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-border-subtle">
+                {salesReps.map((rep, idx) => (
+                  <tr key={rep.userId} className="hover:bg-fg/[0.02] transition-colors">
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-fg-subtle w-4">{idx + 1}</span>
+                        <Avatar name={rep.name} size="xs" />
+                        <span className="text-sm font-medium text-fg">{rep.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4"><span className="text-sm font-semibold text-success">{rep.wonDeals}</span></td>
+                    <td className="py-3 pr-4"><span className="text-sm font-semibold text-success">{formatCurrency(rep.wonValue)}</span></td>
+                    <td className="py-3 pr-4"><span className="text-sm text-accent-400">{formatCurrency(rep.pipelineValue)}</span></td>
+                    <td className="py-3 pr-4"><span className="text-sm text-fg">{rep.activeDeals}</span></td>
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 bg-fg/8 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-accent-500" style={{ width: `${rep.winRate}%` }} />
+                        </div>
+                        <span className="text-xs text-fg-muted">{rep.winRate}%</span>
+                      </div>
+                    </td>
+                    <td className="py-3"><span className="text-sm text-warning">{rep.activitiesCount}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
