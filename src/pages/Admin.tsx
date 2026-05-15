@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Building2, Users, BarChart3, KanbanSquare, Search, RefreshCw,
   ChevronDown, ChevronRight, Shield, Zap, Crown, LogIn, X,
-  Package, Plus, Edit2, ToggleLeft, ToggleRight,
+  Package, Plus, Edit2, ToggleLeft, ToggleRight, Download, ClipboardList,
+  PauseCircle, PlayCircle,
 } from 'lucide-react'
 import { api } from '../lib/api'
 import { toast } from '../store/toastStore'
@@ -42,6 +43,21 @@ interface AdminOrg {
   dealCount: number | string
   subscriptionStatus: string | null
   currentPeriodEnd: string | null
+  status: 'active' | 'suspended' | 'trial'
+}
+
+interface ImpersonationLog {
+  id: string
+  superAdminId: string
+  superAdminName: string
+  superAdminEmail: string
+  targetOrgId: string
+  targetOrgName: string
+  targetUserId: string
+  targetUserName: string
+  targetUserEmail: string
+  impersonatedAt: string
+  endedAt: string | null
 }
 
 interface AdminOrgDetail extends AdminOrg {
@@ -57,6 +73,7 @@ interface AdminOrgDetail extends AdminOrg {
   maxContacts: number | null
   maxDeals: number | null
   planFeatures: Record<string, boolean> | null
+  status: 'active' | 'suspended' | 'trial'
 }
 
 interface AdminMember {
@@ -100,7 +117,7 @@ interface Plan {
   sortOrder: number
 }
 
-type AdminTab = 'overview' | 'orgs' | 'users' | 'plans'
+type AdminTab = 'overview' | 'orgs' | 'users' | 'plans' | 'audit'
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -143,6 +160,19 @@ function StatusBadge({ status }: { status: string | null }) {
   return <span className={`text-xs font-medium ${colors[status] ?? 'text-fg-muted'}`}>{status}</span>
 }
 
+function OrgStatusBadge({ status }: { status: 'active' | 'suspended' | 'trial' | undefined }) {
+  if (!status || status === 'active') return null
+  const styles: Record<string, string> = {
+    suspended: 'bg-danger/15 text-danger',
+    trial: 'bg-info/15 text-info',
+  }
+  return (
+    <span className={`text-2xs font-semibold px-2 py-0.5 rounded-full ${styles[status] ?? ''}`}>
+      {status}
+    </span>
+  )
+}
+
 // ── Org Detail Modal ──────────────────────────────────────────────────────────
 
 function OrgDetailModal({ orgId, onClose, onRefresh }: { orgId: string; onClose: () => void; onRefresh: () => void }) {
@@ -152,6 +182,7 @@ function OrgDetailModal({ orgId, onClose, onRefresh }: { orgId: string; onClose:
   const [planSlug, setPlanSlug] = useState('')
   const [subStatus, setSubStatus] = useState<'trialing' | 'active' | 'past_due' | 'canceled' | 'expired'>('active')
   const [savingSub, setSavingSub] = useState(false)
+  const [suspending, setSuspending] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -176,6 +207,23 @@ function OrgDetailModal({ orgId, onClose, onRefresh }: { orgId: string; onClose:
     } catch {
       toast.error('Impersonation failed')
       setImpersonating(false)
+    }
+  }
+
+  const handleSuspend = async () => {
+    if (!org) return
+    setSuspending(true)
+    try {
+      const isSuspended = org.status === 'suspended'
+      const endpoint = isSuspended ? `/admin/orgs/${orgId}/unsuspend` : `/admin/orgs/${orgId}/suspend`
+      await api.post(endpoint)
+      setOrg((prev) => prev ? { ...prev, status: isSuspended ? 'active' : 'suspended' } : prev)
+      toast.success(isSuspended ? 'Organization reactivated' : 'Organization suspended')
+      onRefresh()
+    } catch {
+      toast.error('Failed to update org status')
+    } finally {
+      setSuspending(false)
     }
   }
 
@@ -210,8 +258,11 @@ function OrgDetailModal({ orgId, onClose, onRefresh }: { orgId: string; onClose:
             {/* Info */}
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div><span className="text-fg-muted">Slug:</span> <span className="text-fg font-mono">{org.slug}</span></div>
-              <div><span className="text-fg-muted">Plan:</span> <PlanBadge plan={org.plan} /></div>
-              <div><span className="text-fg-muted">Status:</span> <StatusBadge status={org.subscriptionStatus} /></div>
+              <div className="flex items-center gap-2">
+                <span className="text-fg-muted">Plan:</span> <PlanBadge plan={org.plan} />
+                <OrgStatusBadge status={org.status} />
+              </div>
+              <div><span className="text-fg-muted">Sub status:</span> <StatusBadge status={org.subscriptionStatus} /></div>
               <div><span className="text-fg-muted">Members:</span> <span className="text-fg">{org.userCount}</span></div>
               <div><span className="text-fg-muted">Contacts:</span> <span className="text-fg">{org.contactCount}</span></div>
               <div><span className="text-fg-muted">Deals:</span> <span className="text-fg">{org.dealCount}</span></div>
@@ -249,18 +300,30 @@ function OrgDetailModal({ orgId, onClose, onRefresh }: { orgId: string; onClose:
               </Button>
             </div>
 
-            {/* Impersonate */}
-            <div className="border border-fg/8 rounded-xl p-4">
-              <p className="text-xs font-semibold text-fg-muted uppercase tracking-widest mb-2">Acceso al CRM</p>
-              <Button
-                size="sm"
-                onClick={handleImpersonate}
-                disabled={impersonating}
-                leftIcon={<LogIn size={13} />}
-              >
-                {impersonating ? 'Entrando…' : 'Entrar en este CRM'}
-              </Button>
-              <p className="text-2xs text-fg-muted mt-1">Abre el CRM de esta org como su admin. Expira en 1h. Verás un banner para volver al panel.</p>
+            {/* Impersonate + Suspend */}
+            <div className="border border-fg/8 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-semibold text-fg-muted uppercase tracking-widest">Acceso al CRM</p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleImpersonate}
+                  disabled={impersonating || org.status === 'suspended'}
+                  leftIcon={<LogIn size={13} />}
+                >
+                  {impersonating ? 'Entrando…' : 'Entrar en este CRM'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant={org.status === 'suspended' ? 'ghost' : 'ghost'}
+                  onClick={handleSuspend}
+                  disabled={suspending}
+                  leftIcon={org.status === 'suspended' ? <PlayCircle size={13} /> : <PauseCircle size={13} />}
+                  className={org.status === 'suspended' ? 'text-success hover:text-success' : 'text-danger hover:text-danger'}
+                >
+                  {suspending ? '…' : org.status === 'suspended' ? 'Reactivate org' : 'Suspend org'}
+                </Button>
+              </div>
+              <p className="text-2xs text-fg-muted">Impersonate: abre el CRM como admin. Expira en 1h. Suspend: bloquea acceso a todos los usuarios.</p>
             </div>
 
             {/* Members */}
@@ -401,6 +464,13 @@ export function Admin() {
   const [editingPlan, setEditingPlan] = useState<Plan | null | 'new'>('new' as never)
   const [showPlanModal, setShowPlanModal] = useState(false)
 
+  // Audit
+  const [impersonationLogs, setImpersonationLogs] = useState<ImpersonationLog[]>([])
+  const [logsLoading, setLogsLoading] = useState(false)
+  const [logsTotal, setLogsTotal] = useState(0)
+  const [logsOffset, setLogsOffset] = useState(0)
+  const LOGS_LIMIT = 25
+
   const ORG_LIMIT = 25
   const USER_LIMIT = 25
 
@@ -443,12 +513,33 @@ export function Admin() {
       .finally(() => setPlansLoading(false))
   }, [])
 
+  const fetchLogs = useCallback((offset = 0) => {
+    setLogsLoading(true)
+    const params = new URLSearchParams({ limit: String(LOGS_LIMIT), offset: String(offset) })
+    api.get<{ data: ImpersonationLog[]; total: number }>(`/admin/impersonation-logs?${params}`)
+      .then((res) => { setImpersonationLogs(res.data); setLogsTotal(res.total); setLogsOffset(offset) })
+      .catch(() => toast.error('Failed to load audit logs'))
+      .finally(() => setLogsLoading(false))
+  }, [])
+
+  const handleExportOrgs = () => {
+    const params = new URLSearchParams()
+    if (orgSearch) params.set('search', orgSearch)
+    if (orgPlanFilter) params.set('plan', orgPlanFilter)
+    window.open(`${import.meta.env.VITE_API_URL ?? ''}/admin/orgs/export?${params}`, '_blank')
+  }
+
+  const handleExportUsers = () => {
+    window.open(`${import.meta.env.VITE_API_URL ?? ''}/admin/users/export`, '_blank')
+  }
+
   useEffect(() => {
     if (tab === 'overview') fetchStats()
     if (tab === 'orgs') fetchOrgs(0)
     if (tab === 'users') fetchUsers(0)
     if (tab === 'plans') fetchPlans()
-  }, [tab, fetchStats, fetchOrgs, fetchUsers, fetchPlans])
+    if (tab === 'audit') fetchLogs(0)
+  }, [tab, fetchStats, fetchOrgs, fetchUsers, fetchPlans, fetchLogs])
 
   const handleToggleSuperAdmin = async (user: AdminUser) => {
     try {
@@ -475,6 +566,7 @@ export function Admin() {
     { id: 'orgs', label: 'Organizations', icon: <Building2 size={15} /> },
     { id: 'users', label: 'Users', icon: <Users size={15} /> },
     { id: 'plans', label: 'Plans', icon: <Package size={15} /> },
+    { id: 'audit', label: 'Audit', icon: <ClipboardList size={15} /> },
   ]
 
   if (!currentUser?.isSuperAdmin) {
@@ -572,6 +664,9 @@ export function Admin() {
             <Button size="sm" onClick={() => fetchOrgs(0)} disabled={orgsLoading}>
               Search
             </Button>
+            <Button size="sm" variant="ghost" leftIcon={<Download size={13} />} onClick={handleExportOrgs}>
+              Export CSV
+            </Button>
           </div>
 
           <div className="crm-surface-section overflow-x-auto">
@@ -595,7 +690,10 @@ export function Admin() {
                 ) : orgs.map((org) => (
                   <tr key={org.id} className="border-b border-fg/5 hover:bg-fg/3 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-fg">{org.name}</div>
+                      <div className="font-medium text-fg flex items-center gap-1.5">
+                        {org.name}
+                        <OrgStatusBadge status={org.status} />
+                      </div>
                       <div className="text-xs text-fg-muted font-mono">{org.slug}</div>
                     </td>
                     <td className="px-4 py-3"><PlanBadge plan={org.plan} /></td>
@@ -650,6 +748,9 @@ export function Admin() {
               />
             </div>
             <Button size="sm" onClick={() => fetchUsers(0)} disabled={usersLoading}>Search</Button>
+            <Button size="sm" variant="ghost" leftIcon={<Download size={13} />} onClick={handleExportUsers}>
+              Export CSV
+            </Button>
           </div>
 
           <div className="crm-surface-section overflow-x-auto">
@@ -779,6 +880,63 @@ export function Admin() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Audit */}
+      {tab === 'audit' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-fg-muted">Impersonation audit log</p>
+            <Button size="sm" variant="ghost" leftIcon={<RefreshCw size={13} />} onClick={() => fetchLogs(0)} disabled={logsLoading}>
+              Refresh
+            </Button>
+          </div>
+
+          <div className="crm-surface-section overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-fg/8 text-fg-muted text-xs">
+                  <th className="text-left px-4 py-3 font-medium">Super admin</th>
+                  <th className="text-left px-4 py-3 font-medium">Target org</th>
+                  <th className="text-left px-4 py-3 font-medium">Target user</th>
+                  <th className="text-left px-4 py-3 font-medium">Started</th>
+                  <th className="text-left px-4 py-3 font-medium">Ended</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logsLoading ? (
+                  <tr><td colSpan={5} className="text-center py-8 text-fg-muted">Loading…</td></tr>
+                ) : impersonationLogs.length === 0 ? (
+                  <tr><td colSpan={5} className="text-center py-8 text-fg-muted">No impersonation logs</td></tr>
+                ) : impersonationLogs.map((log) => (
+                  <tr key={log.id} className="border-b border-fg/5 hover:bg-fg/3 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-fg">{log.superAdminName}</div>
+                      <div className="text-xs text-fg-muted">{log.superAdminEmail}</div>
+                    </td>
+                    <td className="px-4 py-3 text-fg-muted">{log.targetOrgName}</td>
+                    <td className="px-4 py-3">
+                      <div className="text-fg">{log.targetUserName}</div>
+                      <div className="text-xs text-fg-muted">{log.targetUserEmail}</div>
+                    </td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">{formatDateShort(log.impersonatedAt)}</td>
+                    <td className="px-4 py-3 text-fg-muted text-xs">{log.endedAt ? formatDateShort(log.endedAt) : <span className="text-info">active</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {logsTotal > LOGS_LIMIT && (
+            <div className="flex items-center justify-between text-sm text-fg-muted">
+              <span>{logsOffset + 1}–{Math.min(logsOffset + LOGS_LIMIT, logsTotal)} of {logsTotal}</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="ghost" disabled={logsOffset === 0} onClick={() => fetchLogs(logsOffset - LOGS_LIMIT)}>Prev</Button>
+                <Button size="sm" variant="ghost" disabled={logsOffset + LOGS_LIMIT >= logsTotal} onClick={() => fetchLogs(logsOffset + LOGS_LIMIT)}>Next</Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
