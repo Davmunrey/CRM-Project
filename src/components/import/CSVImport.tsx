@@ -3,6 +3,7 @@ import { X, Upload, FileSpreadsheet, ArrowRight, Check, AlertTriangle, Loader2, 
 import { useContactsStore } from '../../store/contactsStore'
 import { useCompaniesStore } from '../../store/companiesStore'
 import { useAuditStore } from '../../store/auditStore'
+import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../store/toastStore'
 import type { ContactStatus, ContactSource } from '../../types'
 import { useTranslations } from '../../i18n'
@@ -146,6 +147,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
 
   const addContact = useContactsStore((s) => s.addContact)
   const addCompany = useCompaniesStore((s) => s.addCompany)
+  const currentUserId = useAuthStore((s) => s.currentUser?.id ?? '')
 
   if (!isOpen) return null
 
@@ -247,7 +249,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
             status: parseContactStatus(c.status) as ContactStatus,
             source: parseContactSource(c.source) as ContactSource,
             tags: [],
-            assignedTo: 'u1',
+            assignedTo: currentUserId,
             notes: c.notes,
             linkedDeals: [],
             lastContactedAt: '',
