@@ -186,7 +186,14 @@ export const useDealsStore = create<DealsState>()(
           : newStage === 'closed_lost'
             ? 'deal_closed_lost'
             : 'deal_stage_changed'
-        useAutomationsStore.getState().executeRulesForTrigger(triggerType, { deal, fromStage: oldDeal?.stage, toStage: newStage })
+        // Server-side execution (reliable even when browser closes)
+        api.post('/automations/trigger', {
+          triggerType,
+          context: { dealId: deal.id, dealTitle: deal.title, fromStage: oldDeal?.stage, toStage: newStage },
+        }).catch(() => {
+          // Fallback to client-side execution if server is unreachable
+          useAutomationsStore.getState().executeRulesForTrigger(triggerType, { deal, fromStage: oldDeal?.stage, toStage: newStage })
+        })
       }
 
       api.patch(`/deals/${id}`, { stage: newStage }).catch((e: unknown) => set({ error: getErrorMessage(e) }))
