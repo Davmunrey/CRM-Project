@@ -1,35 +1,49 @@
-# Manual production bundle: set repository secrets first (see docs/deployment-spa-and-env.md).
-# Gitea: Settings -> Actions -> Secrets (names must match exactly).
-name: Build production (Supabase)
+name: Build & publish Docker image
 
 on:
+  push:
+    branches: [master]
   workflow_dispatch:
+
+env:
+  REGISTRY: gitea.apps.privateprompt.tech
+  IMAGE: gitea.apps.privateprompt.tech/clovrlabs/velo-crm
 
 jobs:
   build:
     runs-on: self-hosted
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Log in to Gitea registry
+        uses: docker/login-action@v3
         with:
-          node-version: 22
-          cache: npm
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USER }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Vite production build
-        env:
-          VITE_APP_CHANNEL: production
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: npm run build
-
-      - name: Upload dist
-        uses: actions/upload-artifact@v4
+      - name: Docker meta (tags + labels)
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          name: dist-production
-          path: dist/
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=sha-,format=short
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.IMAGE }}:buildcache
+          cache-to:   type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max
+          build-args: |
+            VITE_APP_CHANNEL=production

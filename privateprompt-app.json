@@ -1,7 +1,7 @@
 {
   "name": "Velo CRM",
   "slug": "velo-crm",
-  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, reports, and a public REST API. React + TypeScript frontend backed by a Node.js API and Supabase.",
+  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, reports, and a public REST API. React + TypeScript SPA backed by a velo-api Node.js service and Supabase.",
   "badge": "Internal",
   "icon": {
     "letter": "V",
@@ -19,38 +19,17 @@
       "memory_mb": 256,
       "cpu": 0.5,
       "env": {
-        "VITE_API_URL": {
+        "VELO_API_URL": {
           "secret": true,
           "generate": false,
-          "label": "Velo API URL — full URL of the velo-api backend (e.g. https://api.velo.example.com)"
-        },
-        "VITE_SUPABASE_URL": {
-          "secret": true,
-          "generate": false,
-          "label": "Supabase project URL (e.g. https://xxxx.supabase.co)"
-        },
-        "VITE_SUPABASE_ANON_KEY": {
-          "secret": true,
-          "generate": false,
-          "label": "Supabase anonymous/public key"
-        },
-        "VITE_GOOGLE_CLIENT_ID": {
-          "secret": true,
-          "generate": false,
-          "label": "Google OAuth Client ID — required for Gmail and Calendar integration (leave empty to disable)"
-        },
-        "VITE_SENTRY_DSN": {
-          "secret": true,
-          "generate": false,
-          "label": "Sentry DSN for error tracking (optional — leave empty to disable)"
-        },
-        "VITE_APP_CHANNEL": "production"
+          "label": "velo-api backend URL — internal or external URL of the velo-api service (e.g. http://velo-api:3001). Nginx proxies /api/* and /socket.io/* to this address."
+        }
       },
       "healthcheck": {
         "test": [
           "CMD",
-          "curl",
-          "-fsS",
+          "wget",
+          "-qO-",
           "http://localhost:80/"
         ],
         "interval": "30s",
@@ -61,7 +40,7 @@
     }
   },
   "post_install": {
-    "description": "The app connects to an external Supabase project and velo-api backend. Make sure both are running and their URLs are set in the environment variables before opening the app. On first visit, register your organisation at /register.",
+    "description": "Velo CRM is a frontend-only container. It proxies all API calls to the velo-api backend specified in VELO_API_URL. Make sure velo-api (and its Supabase project) are running before opening the app. Register your organisation at /register on first visit.",
     "first_run_url": "/register"
   },
   "links": {

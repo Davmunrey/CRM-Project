@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.gitea
+.github
+docs
+e2e
+tests
+coverage
+*.md
+.env*
+*.local
+.DS_Store
+Thumbs.db
