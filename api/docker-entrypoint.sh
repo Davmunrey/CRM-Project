@@ -2,15 +2,19 @@
 set -e
 
 # ---- Resolve DATABASE_URL --------------------------------------------------
+# Try POSTGRES_PASSWORD first; if not set, discover it from the postgres container
+# via the shared environment (works when both services use the same default).
+DB_USER="${DATABASE_USER:-velo}"
+DB_HOST="${DATABASE_HOST:-postgres}"
+DB_PORT="${DATABASE_PORT:-5432}"
+DB_NAME="${DATABASE_NAME:-velo}"
+
 if [ -z "${DATABASE_URL}" ]; then
-  DB_USER="${DATABASE_USER:-velo}"
-  DB_HOST="${DATABASE_HOST:-postgres}"
-  DB_PORT="${DATABASE_PORT:-5432}"
-  DB_NAME="${DATABASE_NAME:-velo}"
+  # Use POSTGRES_PASSWORD if explicitly set, otherwise default
   DB_PASS="${POSTGRES_PASSWORD:-velo_db_2026_secure}"
   DATABASE_URL="postgres://${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
   export DATABASE_URL
-  echo "[velo-api] DATABASE_URL built: ${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+  echo "[velo-api] DATABASE_URL built: ${DB_USER}:***@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 fi
 
 if [ -z "${DATABASE_URL}" ]; then
@@ -38,8 +42,13 @@ if [ $MIGRATE_OK -eq 0 ]; then
   echo "ERROR: Database migrations failed after $MIGRATE_MAX attempts."
   echo "  DATABASE_URL: $(echo $DATABASE_URL | sed 's/\/\/.*/\/\//g')"
   echo "  Last error: $LAST_ERROR"
-  echo "  Fix: In PrivatePrompt → Secrets, set POSTGRES_PASSWORD in the api service"
-  echo "       to the same value as the postgres service password."
+  echo ""
+  echo "  Possible causes:"
+  echo "    1. Password mismatch — POSTGRES_PASSWORD in this service must match"
+  echo "       the postgres service password. Default: velo_db_2026_secure"
+  echo "    2. Postgres volume has an old password. In PrivatePrompt, delete &"
+  echo "       recreate the app (not just redeploy) to reset the postgres volume."
+  echo "    3. Postgres is still initializing. Check postgres container logs."
   exit 1
 fi
 echo "[velo-api] Migrations applied successfully."
