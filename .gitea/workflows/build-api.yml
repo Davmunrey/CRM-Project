@@ -1,13 +1,15 @@
-name: Build & publish Docker image
+name: Build & publish API image
 
 on:
   push:
     branches: [master]
+    paths:
+      - 'api/**'
   workflow_dispatch:
 
 env:
   REGISTRY: gitea.apps.privateprompt.tech
-  IMAGE: gitea.apps.privateprompt.tech/clovrlabs/velo-crm
+  IMAGE: gitea.apps.privateprompt.tech/clovrlabs/velo-api
 
 jobs:
   build:
@@ -39,11 +41,9 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: frontend
+          context: api
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ env.IMAGE }}:buildcache
           cache-to:   type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max
-          build-args: |
-            VITE_APP_CHANNEL=production

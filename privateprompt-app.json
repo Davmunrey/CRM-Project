@@ -1,7 +1,7 @@
 {
   "name": "Velo CRM",
   "slug": "velo-crm",
-  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, reports, and a public REST API. React + TypeScript SPA backed by a velo-api Node.js service and Supabase.",
+  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, and reports. React + TypeScript SPA (frontend) backed by a Fastify + PostgreSQL API (api).",
   "badge": "Internal",
   "icon": {
     "letter": "V",
@@ -10,28 +10,75 @@
   },
   "open_btn_class": "bg-blue-500/20 hover:bg-blue-500/30 text-blue-400",
   "entrypoint": "web",
-  "memory_mb": 256,
-  "cpu": 0.5,
+  "memory_mb": 896,
+  "cpu": 1.5,
   "services": {
-    "web": {
-      "image": "gitea.apps.privateprompt.tech/clovrlabs/velo-crm:latest",
-      "port": 80,
+    "postgres": {
+      "image": "postgres:16-alpine",
       "memory_mb": 256,
       "cpu": 0.5,
       "env": {
-        "VELO_API_URL": {
-          "secret": true,
-          "generate": false,
-          "label": "velo-api backend URL — internal or external URL of the velo-api service (e.g. http://velo-api:3001). Nginx proxies /api/* and /socket.io/* to this address."
-        }
+        "POSTGRES_DB": { "secret": false, "generate": false, "label": "Database name", "default": "velo" },
+        "POSTGRES_USER": { "secret": false, "generate": false, "label": "Database user", "default": "velo" },
+        "POSTGRES_PASSWORD": { "secret": true, "generate": true, "label": "Database password" }
       },
       "healthcheck": {
-        "test": [
-          "CMD",
-          "wget",
-          "-qO-",
-          "http://localhost:80/"
-        ],
+        "test": ["CMD-SHELL", "pg_isready -U velo"],
+        "interval": "5s",
+        "timeout": "5s",
+        "retries": 10,
+        "start_period": "10s"
+      }
+    },
+    "redis": {
+      "image": "redis:7-alpine",
+      "memory_mb": 64,
+      "cpu": 0.25,
+      "healthcheck": {
+        "test": ["CMD", "redis-cli", "ping"],
+        "interval": "5s",
+        "timeout": "3s",
+        "retries": 5,
+        "start_period": "5s"
+      }
+    },
+    "api": {
+      "image": "gitea.apps.privateprompt.tech/clovrlabs/velo-api:latest",
+      "port": 3001,
+      "memory_mb": 384,
+      "cpu": 0.5,
+      "env": {
+        "NODE_ENV": { "secret": false, "generate": false, "label": "Node environment", "default": "production" },
+        "DATABASE_URL": { "secret": true, "generate": false, "label": "PostgreSQL connection string — e.g. postgres://velo:<POSTGRES_PASSWORD>@postgres:5432/velo" },
+        "REDIS_URL": { "secret": false, "generate": false, "label": "Redis URL", "default": "redis://redis:6379" },
+        "JWT_SECRET": { "secret": true, "generate": true, "label": "JWT signing secret (32+ random bytes)" },
+        "CORS_ORIGIN": { "secret": false, "generate": false, "label": "Allowed CORS origin — set to your frontend public URL, e.g. https://velo.yourdomain.com" },
+        "TOKEN_ENCRYPTION_KEY": { "secret": true, "generate": true, "label": "32-byte hex key for encrypting OAuth tokens (openssl rand -hex 32)" },
+        "RESEND_API_KEY": { "secret": true, "generate": false, "label": "Resend API key for transactional email (optional)" },
+        "EMAIL_FROM": { "secret": false, "generate": false, "label": "From address for transactional emails", "default": "noreply@velo.app" },
+        "GOOGLE_CLIENT_ID": { "secret": true, "generate": false, "label": "Google OAuth client ID (Gmail/Calendar integration — optional)" },
+        "GOOGLE_CLIENT_SECRET": { "secret": true, "generate": false, "label": "Google OAuth client secret (optional)" },
+        "GOOGLE_REDIRECT_URI": { "secret": false, "generate": false, "label": "Google OAuth redirect URI — must match Google Cloud Console (optional)" },
+        "ANTHROPIC_API_KEY": { "secret": true, "generate": false, "label": "Anthropic API key for AI features — AI assistant, email drafting (optional)" }
+      },
+      "healthcheck": {
+        "test": ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"],
+        "interval": "30s",
+        "timeout": "5s",
+        "retries": 3,
+        "start_period": "60s"
+      }
+    },
+    "web": {
+      "image": "gitea.apps.privateprompt.tech/clovrlabs/velo-crm:latest",
+      "port": 80,
+      "memory_mb": 192,
+      "cpu": 0.25,
+      "env": {
+        "VELO_API_URL": { "secret": false, "generate": false, "label": "Internal URL of the api service", "default": "http://api:3001" }
+      },
+      "healthcheck": {
+        "test": ["CMD", "wget", "-qO-", "http://localhost:80/"],
         "interval": "30s",
         "timeout": "5s",
         "retries": 3,
@@ -40,7 +87,7 @@
     }
   },
   "post_install": {
-    "description": "Velo CRM is a frontend-only container. It proxies all API calls to the velo-api backend specified in VELO_API_URL. Make sure velo-api (and its Supabase project) are running before opening the app. Register your organisation at /register on first visit.",
+    "description": "On first run the api service runs all database migrations automatically. Register your organisation at /register. Required secrets: DATABASE_URL (pointing at the postgres service), JWT_SECRET (auto-generated). Optional: RESEND_API_KEY for email, GOOGLE_* for Gmail/Calendar, ANTHROPIC_API_KEY for AI features.",
     "first_run_url": "/register"
   },
   "links": {

@@ -1,0 +1,49 @@
+{
+  "name": "Velo CRM",
+  "slug": "velo-crm",
+  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, reports, and a public REST API. React + TypeScript SPA backed by a velo-api Node.js service and Supabase.",
+  "badge": "Internal",
+  "icon": {
+    "letter": "V",
+    "bg": "bg-blue-500/20",
+    "color": "text-blue-400"
+  },
+  "open_btn_class": "bg-blue-500/20 hover:bg-blue-500/30 text-blue-400",
+  "entrypoint": "web",
+  "memory_mb": 256,
+  "cpu": 0.5,
+  "services": {
+    "web": {
+      "image": "gitea.apps.privateprompt.tech/clovrlabs/velo-crm:latest",
+      "port": 80,
+      "memory_mb": 256,
+      "cpu": 0.5,
+      "env": {
+        "VELO_API_URL": {
+          "secret": true,
+          "generate": false,
+          "label": "velo-api backend URL — internal or external URL of the velo-api service (e.g. http://velo-api:3001). Nginx proxies /api/* and /socket.io/* to this address."
+        }
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "wget",
+          "-qO-",
+          "http://localhost:80/"
+        ],
+        "interval": "30s",
+        "timeout": "5s",
+        "retries": 3,
+        "start_period": "30s"
+      }
+    }
+  },
+  "post_install": {
+    "description": "Velo CRM is a frontend-only container. It proxies all API calls to the velo-api backend specified in VELO_API_URL. Make sure velo-api (and its Supabase project) are running before opening the app. Register your organisation at /register on first visit.",
+    "first_run_url": "/register"
+  },
+  "links": {
+    "repository": "https://gitea.apps.privateprompt.tech/clovrlabs/velo-crm"
+  }
+}
