@@ -14,63 +14,37 @@ import {
   Webhook,
 } from 'lucide-react'
 import { Logo } from '../components/brand/Logo'
-
-const FEATURES = [
-  {
-    icon: Inbox,
-    title: 'Unified Inbox',
-    description: 'Gmail sync nativo. Lee, responde y rastrea emails directamente desde Velo sin cambiar de pestaña.',
-  },
-  {
-    icon: GitBranch,
-    title: 'Sequences automáticas',
-    description: 'Cadencias multi-paso con lógica condicional. El CRM avanza solo cuando el lead responde.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Pipeline & Forecast',
-    description: 'Kanban drag-and-drop, timeline de pipeline y forecast en tiempo real para el equipo y managers.',
-  },
-  {
-    icon: Bot,
-    title: 'AI Orchestrator',
-    description: 'Puntuación de leads, resúmenes de conversación y sugerencias de siguiente acción impulsadas por IA.',
-  },
-  {
-    icon: Users,
-    title: 'Multi-tenant & SCIM',
-    description: 'Un workspace por organización con SSO, MFA, provisioning SCIM v2 y control de permisos por rol.',
-  },
-  {
-    icon: Mail,
-    title: 'SMTP propio',
-    description: 'Trae tu propio servidor SMTP o usa Resend. Dominio propio, reputación propia, máxima entregabilidad.',
-  },
-  {
-    icon: Webhook,
-    title: 'Webhooks & API pública',
-    description: 'Conecta Velo a tu stack: Zapier, Make, o directo vía API REST documentada con API keys por org.',
-  },
-  {
-    icon: Shield,
-    title: 'Seguridad enterprise',
-    description: 'RLS por organización, audit log completo, 2FA obligatorio y exportación de datos en un clic.',
-  },
-  {
-    icon: Globe,
-    title: 'Multilingüe',
-    description: 'Interfaz disponible en inglés, español, portugués, francés, alemán e italiano. Más en camino.',
-  },
-]
-
-const STATS = [
-  { value: '9', label: 'idiomas' },
-  { value: '29', label: 'funciones edge' },
-  { value: '∞', label: 'workspaces' },
-  { value: '0', label: 'downtime objetivo' },
-]
+import { useTranslations } from '../i18n'
 
 export function Landing() {
+  const t = useTranslations()
+
+  const FEATURES = [
+    { icon: Inbox,    title: t.landing.f1Title, description: t.landing.f1Desc },
+    { icon: GitBranch, title: t.landing.f2Title, description: t.landing.f2Desc },
+    { icon: BarChart3, title: t.landing.f3Title, description: t.landing.f3Desc },
+    { icon: Bot,       title: t.landing.f4Title, description: t.landing.f4Desc },
+    { icon: Users,     title: t.landing.f5Title, description: t.landing.f5Desc },
+    { icon: Mail,      title: t.landing.f6Title, description: t.landing.f6Desc },
+    { icon: Webhook,   title: t.landing.f7Title, description: t.landing.f7Desc },
+    { icon: Shield,    title: t.landing.f8Title, description: t.landing.f8Desc },
+    { icon: Globe,     title: t.landing.f9Title, description: t.landing.f9Desc },
+  ]
+
+  const STATS = [
+    { value: '9',  label: t.landing.stat1Label },
+    { value: '29', label: t.landing.stat2Label },
+    { value: '∞',  label: t.landing.stat3Label },
+    { value: '0',  label: t.landing.stat4Label },
+  ]
+
+  const SELF_HOST_ITEMS = [
+    t.landing.selfHostItem1,
+    t.landing.selfHostItem2,
+    t.landing.selfHostItem3,
+    t.landing.selfHostItem4,
+  ]
+
   return (
     <div className="min-h-screen bg-surface-0 text-fg overflow-x-hidden">
       {/* Nav */}
@@ -87,15 +61,15 @@ export function Landing() {
           </div>
 
           <nav className="hidden md:flex items-center gap-6 text-sm text-fg/60">
-            <a href="#features" className="hover:text-fg transition-colors duration-150">Funciones</a>
-            <a href="#stack" className="hover:text-fg transition-colors duration-150">Stack</a>
+            <a href="#features" className="hover:text-fg transition-colors duration-150">{t.landing.navFeatures}</a>
+            <a href="#stack" className="hover:text-fg transition-colors duration-150">{t.landing.navStack}</a>
           </nav>
 
           <Link
             to="/login"
             className="flex items-center gap-2 rounded-full bg-fg/10 hover:bg-fg/15 border border-fg/10 hover:border-fg/20 px-4 py-2 text-sm font-medium text-fg transition-all duration-150"
           >
-            Iniciar sesión
+            {t.landing.navLogin}
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -105,19 +79,18 @@ export function Landing() {
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-velo-500/30 bg-velo-500/10 px-4 py-1.5 text-xs font-medium text-velo-300 mb-8">
           <Zap className="w-3.5 h-3.5" />
-          CRM outbound-native · Self-hosted · Open stack
+          {t.landing.badge}
         </div>
 
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-fg mb-6 leading-tight">
-          Cierra más deals.{' '}
+          {t.landing.heroHeadline}{' '}
           <span className="bg-gradient-to-r from-velo-400 to-brandAccent bg-clip-text text-transparent">
-            Sin depender de nadie.
+            {t.landing.heroHeadlineAccent}
           </span>
         </h1>
 
         <p className="max-w-2xl mx-auto text-lg text-fg/60 mb-10 leading-relaxed">
-          Velo es un CRM construido para equipos de ventas outbound que necesitan velocidad, control total sobre sus datos
-          y una herramienta que no les falle cuando más importa.
+          {t.landing.heroSubtitle}
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -125,14 +98,14 @@ export function Landing() {
             to="/login"
             className="flex items-center gap-2 rounded-full bg-velo-600 hover:bg-velo-500 px-7 py-3.5 text-base font-semibold text-fg shadow-lg shadow-velo-900/40 hover:shadow-velo-800/50 transition-all duration-200 hover:scale-[1.02]"
           >
-            Entrar al CRM
+            {t.landing.heroCta}
             <ArrowRight className="w-5 h-5" />
           </Link>
           <Link
             to="/register"
             className="flex items-center gap-2 rounded-full border border-fg/15 hover:border-fg/25 bg-fg/5 hover:bg-fg/10 px-7 py-3.5 text-base font-medium text-fg/80 hover:text-fg transition-all duration-200"
           >
-            Crear cuenta
+            {t.landing.heroCtaSecondary}
           </Link>
         </div>
       </section>
@@ -153,10 +126,10 @@ export function Landing() {
       <section id="features" className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-fg mb-4">
-            Todo lo que tu equipo necesita
+            {t.landing.featuresTitle}
           </h2>
           <p className="text-fg/50 max-w-xl mx-auto">
-            Sin módulos de pago extra. Sin límites artificiales. Sin sorpresas.
+            {t.landing.featuresSubtitle}
           </p>
         </div>
 
@@ -184,21 +157,15 @@ export function Landing() {
           <div className="relative grid lg:grid-cols-2 gap-10 items-center">
             <div>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-fg mb-4">
-                Tu infra. Tus datos.{' '}
-                <span className="text-velo-400">Siempre.</span>
+                {t.landing.selfHostTitle}{' '}
+                <span className="text-velo-400">{t.landing.selfHostTitleAccent}</span>
               </h2>
               <p className="text-fg/60 leading-relaxed mb-6">
-                Velo está diseñado para correrse en tu propio servidor. Docker Compose, Postgres propio y un API
-                Fastify que reemplaza cualquier BaaS. Sin lock-in, sin facturas sorpresa.
+                {t.landing.selfHostSubtitle}
               </p>
 
               <ul className="space-y-3">
-                {[
-                  'Postgres + Fastify API — sin Supabase',
-                  'Nginx para el frontend — sin Vercel',
-                  'Socket.io para realtime',
-                  'Docker Compose listo para producción',
-                ].map((item) => (
+                {SELF_HOST_ITEMS.map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-fg/70">
                     <CheckCircle className="w-4 h-4 text-velo-400 shrink-0" />
                     {item}
@@ -208,12 +175,12 @@ export function Landing() {
             </div>
 
             <div className="font-mono text-sm bg-surface-0/60 rounded-xl border border-fg/8 p-6 text-left">
-              <p className="text-fg/30 mb-3"># Deploy en 5 minutos</p>
+              <p className="text-fg/30 mb-3">{t.landing.codeComment1}</p>
               <p><span className="text-velo-400">$</span> <span className="text-fg/80">git clone velo-crm</span></p>
               <p><span className="text-velo-400">$</span> <span className="text-fg/80">cp .env.example .env</span></p>
               <p><span className="text-velo-400">$</span> <span className="text-fg/80">docker compose up -d</span></p>
-              <p className="mt-3 text-fg/30"># CRM disponible en :80</p>
-              <p className="text-success mt-1">✓ Postgres, API y frontend levantados</p>
+              <p className="mt-3 text-fg/30">{t.landing.codeComment2}</p>
+              <p className="text-success mt-1">{t.landing.codeSuccess}</p>
             </div>
           </div>
         </div>
@@ -223,16 +190,16 @@ export function Landing() {
       <section className="border-t border-fg/5">
         <div className="max-w-2xl mx-auto px-6 py-20 text-center">
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-fg mb-4">
-            Listo para cerrar más deals
+            {t.landing.ctaTitle}
           </h2>
           <p className="text-fg/50 mb-8">
-            Entra a tu workspace o crea una cuenta nueva. Sin tarjeta. Sin demos de 45 minutos.
+            {t.landing.ctaSubtitle}
           </p>
           <Link
             to="/login"
             className="inline-flex items-center gap-2 rounded-full bg-velo-600 hover:bg-velo-500 px-8 py-4 text-base font-semibold text-fg shadow-xl shadow-velo-900/50 hover:shadow-velo-800/60 transition-all duration-200 hover:scale-[1.02]"
           >
-            Entrar a Velo
+            {t.landing.ctaButton}
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
@@ -250,7 +217,7 @@ export function Landing() {
             </div>
             <span className="text-sm font-semibold text-fg/60">Velo</span>
           </div>
-          <p className="text-xs text-fg/25">CRM outbound-native · Self-hosted · {new Date().getFullYear()}</p>
+          <p className="text-xs text-fg/25">{t.landing.footerTagline} · {new Date().getFullYear()}</p>
         </div>
       </footer>
     </div>
