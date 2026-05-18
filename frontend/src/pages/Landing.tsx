@@ -14,10 +14,10 @@ import {
   Webhook,
 } from 'lucide-react'
 import { Logo } from '../components/brand/Logo'
-import { useTranslations } from '../i18n'
+import { en } from '../i18n/en'
 
 export function Landing() {
-  const t = useTranslations()
+  const t = en
 
   const FEATURES = [
     { icon: Inbox,    title: t.landing.f1Title, description: t.landing.f1Desc },

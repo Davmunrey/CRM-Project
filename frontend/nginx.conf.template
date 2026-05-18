@@ -5,8 +5,8 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # API runs as a sibling process in the same container — no DNS needed.
-    set $api "http://localhost:3001";
+    resolver ${NAMESERVER} valid=30s ipv6=off;
+    set $api "${VELO_API_URL}";
 
     # ── SPA routing ──────────────────────────────────────────────────────────
     location / {
@@ -27,7 +27,7 @@ server {
         proxy_read_timeout 3600s;
     }
 
-    # ── API proxy → velo-api backend (same container) ─────────────────────────
+    # ── API proxy → velo-api service ─────────────────────────────────────────
     location /api/ {
         rewrite ^/api/(.*) /$1 break;
         proxy_pass $api;
