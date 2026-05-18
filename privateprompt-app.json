@@ -9,6 +9,7 @@
     "color": "text-blue-400"
   },
   "open_btn_class": "bg-blue-500/20 hover:bg-blue-500/30 text-blue-400",
+  "access_level": "public",
   "entrypoint": "web",
   "memory_mb": 896,
   "cpu": 1.5,
