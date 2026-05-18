@@ -5,6 +5,8 @@ on:
     branches: [master]
     paths:
       - 'frontend/**'
+      - 'api/**'
+      - '.gitea/workflows/build-production.yml'
   workflow_dispatch:
 
 env:
@@ -41,7 +43,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: frontend
+          context: .
+          file: frontend/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

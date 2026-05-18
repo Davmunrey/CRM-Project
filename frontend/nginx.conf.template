@@ -2,16 +2,11 @@ server {
     listen 80;
     server_name _;
 
-    # Nameserver injected at startup from /etc/resolv.conf — works on Docker,
-    # Kubernetes, and any other container runtime without hardcoding an IP.
-    resolver ${NAMESERVER} valid=30s ipv6=off;
-
     root /usr/share/nginx/html;
     index index.html;
 
-    # Populated by envsubst at container start (e.g. http://api:3001).
-    # Using a variable forces per-request DNS lookup instead of startup lookup.
-    set $api "${VELO_API_URL}";
+    # API runs as a sibling process in the same container — no DNS needed.
+    set $api "http://localhost:3001";
 
     # ── SPA routing ──────────────────────────────────────────────────────────
     location / {
@@ -19,7 +14,6 @@ server {
     }
 
     # ── Socket.io (WebSocket upgrade) ────────────────────────────────────────
-    # Must come before the generic /api/ block (more specific match wins).
     location /api/socket.io/ {
         rewrite ^/api/(.*) /$1 break;
         proxy_pass $api;
@@ -33,7 +27,7 @@ server {
         proxy_read_timeout 3600s;
     }
 
-    # ── API proxy → velo-api backend ─────────────────────────────────────────
+    # ── API proxy → velo-api backend (same container) ─────────────────────────
     location /api/ {
         rewrite ^/api/(.*) /$1 break;
         proxy_pass $api;
@@ -49,7 +43,7 @@ server {
         proxy_buffers 4 16k;
     }
 
-    # ── Security headers (mirrors vercel.json) ────────────────────────────────
+    # ── Security headers ──────────────────────────────────────────────────────
     add_header X-Frame-Options          "DENY"                            always;
     add_header X-Content-Type-Options   "nosniff"                         always;
     add_header Referrer-Policy          "strict-origin-when-cross-origin" always;

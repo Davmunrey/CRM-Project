@@ -1,7 +1,7 @@
 {
   "name": "Velo CRM",
   "slug": "velo-crm",
-  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, and reports. React + TypeScript SPA (frontend) backed by a Fastify + PostgreSQL API (api).",
+  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, and reports. Single-container web+api with nginx reverse proxy on localhost, backed by PostgreSQL and Redis services.",
   "badge": "Internal",
   "icon": {
     "letter": "V",
@@ -43,53 +43,30 @@
         "start_period": "5s"
       }
     },
-    "api": {
-      "image": "gitea.apps.privateprompt.tech/clovrlabs/velo-api:latest",
-      "port": 3001,
-      "memory_mb": 384,
-      "cpu": 0.5,
-      "env": {
-        "NODE_ENV": { "secret": false, "generate": false, "label": "Node environment", "default": "production" },
-        "POSTGRES_PASSWORD": { "secret": true, "generate": false, "label": "PostgreSQL password (must match postgres service)", "default": "velo_db_2026_secure" },
-        "DATABASE_URL": { "secret": true, "generate": false, "label": "PostgreSQL connection string (leave blank — auto-built from POSTGRES_PASSWORD)" },
-        "REDIS_URL": { "secret": false, "generate": false, "label": "Redis URL", "default": "redis://redis:6379" },
-        "JWT_SECRET": { "secret": true, "generate": true, "label": "JWT signing secret (32+ random bytes)" },
-        "CORS_ORIGIN": { "secret": false, "generate": false, "label": "Allowed CORS origin — set to your frontend public URL, e.g. https://velo.yourdomain.com" },
-        "TOKEN_ENCRYPTION_KEY": { "secret": true, "generate": true, "label": "32-byte hex key for encrypting OAuth tokens (openssl rand -hex 32)" },
-        "RESEND_API_KEY": { "secret": true, "generate": false, "label": "Resend API key for transactional email (optional)" },
-        "EMAIL_FROM": { "secret": false, "generate": false, "label": "From address for transactional emails", "default": "noreply@velo.app" },
-        "GOOGLE_CLIENT_ID": { "secret": true, "generate": false, "label": "Google OAuth client ID (Gmail/Calendar integration — optional)" },
-        "GOOGLE_CLIENT_SECRET": { "secret": true, "generate": false, "label": "Google OAuth client secret (optional)" },
-        "GOOGLE_REDIRECT_URI": { "secret": false, "generate": false, "label": "Google OAuth redirect URI — must match Google Cloud Console (optional)" },
-        "ANTHROPIC_API_KEY": { "secret": true, "generate": false, "label": "Anthropic API key for AI features — AI assistant, email drafting (optional)" }
-      },
-      "healthcheck": {
-        "test": ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"],
-        "interval": "30s",
-        "timeout": "5s",
-        "retries": 3,
-        "start_period": "60s"
-      }
-    },
     "web": {
       "image": "gitea.apps.privateprompt.tech/clovrlabs/velo-crm:latest",
       "port": 80,
-      "memory_mb": 192,
-      "cpu": 0.25,
+      "memory_mb": 576,
+      "cpu": 1.0,
       "env": {
-        "VELO_API_URL": { "secret": false, "generate": false, "label": "Internal URL of the api service", "default": "http://api:3001" }
+        "POSTGRES_PASSWORD": { "secret": true, "generate": false, "label": "PostgreSQL password (shared with postgres service)", "default": "velo_db_2026_secure" },
+        "JWT_SECRET": { "secret": true, "generate": true, "label": "JWT signing secret (32+ random bytes)" },
+        "TOKEN_ENCRYPTION_KEY": { "secret": true, "generate": true, "label": "32-byte hex key for encrypting OAuth tokens (openssl rand -hex 32)" },
+        "RESEND_API_KEY": { "secret": true, "generate": false, "label": "Resend API key for transactional email (optional)" },
+        "EMAIL_FROM": { "secret": false, "generate": false, "label": "From address for transactional emails", "default": "noreply@velo.app" },
+        "ANTHROPIC_API_KEY": { "secret": true, "generate": false, "label": "Anthropic API key for AI features — AI assistant, email drafting (optional)" }
       },
       "healthcheck": {
         "test": ["CMD", "wget", "-qO-", "http://localhost:80/"],
         "interval": "30s",
         "timeout": "5s",
         "retries": 3,
-        "start_period": "30s"
+        "start_period": "60s"
       }
     }
   },
   "post_install": {
-    "description": "On first run the api service runs all database migrations automatically. Register your organisation at /register. Required secrets: DATABASE_URL (pointing at the postgres service), JWT_SECRET (auto-generated). Optional: RESEND_API_KEY for email, GOOGLE_* for Gmail/Calendar, ANTHROPIC_API_KEY for AI features.",
+    "description": "On first run the API runs all database migrations automatically, then the server starts. Register your organisation at /register. Required secrets: POSTGRES_PASSWORD (default velo_db_2026_secure), JWT_SECRET (auto-generated). Optional: RESEND_API_KEY, ANTHROPIC_API_KEY.",
     "first_run_url": "/register"
   },
   "links": {
