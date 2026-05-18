@@ -21,7 +21,7 @@
       "env": {
         "POSTGRES_DB": { "secret": false, "generate": false, "label": "Database name", "default": "velo" },
         "POSTGRES_USER": { "secret": false, "generate": false, "label": "Database user", "default": "velo" },
-        "POSTGRES_PASSWORD": { "secret": true, "generate": false, "label": "Database password", "default": "velo_db_2026_secure" }
+        "POSTGRES_PASSWORD": { "secret": true, "generate": true, "label": "Database password" }
       },
       "healthcheck": {
         "test": ["CMD-SHELL", "pg_isready -U velo"],
@@ -49,7 +49,7 @@
       "memory_mb": 576,
       "cpu": 1.0,
       "env": {
-        "POSTGRES_PASSWORD": { "secret": true, "generate": false, "label": "PostgreSQL password (shared with postgres service)", "default": "velo_db_2026_secure" },
+        "POSTGRES_PASSWORD": { "secret": true, "generate": true, "label": "PostgreSQL password (auto-generated, shared with postgres service)" },
         "JWT_SECRET": { "secret": true, "generate": true, "label": "JWT signing secret (32+ random bytes)" },
         "TOKEN_ENCRYPTION_KEY": { "secret": true, "generate": true, "label": "32-byte hex key for encrypting OAuth tokens (openssl rand -hex 32)" },
         "RESEND_API_KEY": { "secret": true, "generate": false, "label": "Resend API key for transactional email (optional)", "default": "" },
