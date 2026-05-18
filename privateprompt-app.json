@@ -49,8 +49,8 @@
       "cpu": 0.5,
       "env": {
         "NODE_ENV": { "secret": false, "generate": false, "label": "Node environment", "default": "production" },
-        "DATABASE_URL": { "secret": true, "generate": false, "label": "PostgreSQL connection string (auto-built from POSTGRES_PASSWORD if blank)" },
-        "POSTGRES_PASSWORD": { "secret": true, "generate": false, "label": "PostgreSQL password (link to postgres service password for auto DATABASE_URL)" },
+        "POSTGRES_PASSWORD": { "secret": true, "generate": false, "label": "PostgreSQL password (copy this value from the postgres service so the api can connect)" },
+        "DATABASE_URL": { "secret": true, "generate": false, "label": "PostgreSQL connection string (leave blank — auto-built from POSTGRES_PASSWORD)" },
         "REDIS_URL": { "secret": false, "generate": false, "label": "Redis URL", "default": "redis://redis:6379" },
         "JWT_SECRET": { "secret": true, "generate": true, "label": "JWT signing secret (32+ random bytes)" },
         "CORS_ORIGIN": { "secret": false, "generate": false, "label": "Allowed CORS origin — set to your frontend public URL, e.g. https://velo.yourdomain.com" },
