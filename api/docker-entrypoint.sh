@@ -13,10 +13,8 @@ if [ -z "${DATABASE_URL}" ]; then
   echo "[velo-api] DATABASE_URL built: ${DB_USER}:${DB_PASS}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 fi
 
-# ---- Validate --------------------------------------------------------------
 if [ -z "${DATABASE_URL}" ]; then
   echo "ERROR: DATABASE_URL is not configured."
-  echo "  Set DATABASE_URL or POSTGRES_PASSWORD env vars."
   exit 1
 fi
 
@@ -28,7 +26,10 @@ MIGRATE_MAX=30
 LAST_ERROR=""
 while [ $MIGRATE_ATTEMPT -lt $MIGRATE_MAX ]; do
   MIGRATE_ATTEMPT=$((MIGRATE_ATTEMPT + 1))
-  LAST_ERROR=$(node --import tsx/esm scripts/migrate.ts 2>&1) && { MIGRATE_OK=1; break; }
+  if LAST_ERROR=$(node --import tsx/esm scripts/migrate.ts 2>&1); then
+    MIGRATE_OK=1
+    break
+  fi
   echo "[velo-api] Attempt $MIGRATE_ATTEMPT/$MIGRATE_MAX failed — retrying in 2s..."
   sleep 2
 done
@@ -37,9 +38,8 @@ if [ $MIGRATE_OK -eq 0 ]; then
   echo "ERROR: Database migrations failed after $MIGRATE_MAX attempts."
   echo "  DATABASE_URL: $(echo $DATABASE_URL | sed 's/\/\/.*/\/\//g')"
   echo "  Last error: $LAST_ERROR"
-  echo ""
-  echo "  Fix: In PrivatePrompt → Secrets, set POSTGRES_PASSWORD in the api"
-  echo "  service to the same value as the postgres service password."
+  echo "  Fix: In PrivatePrompt → Secrets, set POSTGRES_PASSWORD in the api service"
+  echo "       to the same value as the postgres service password."
   exit 1
 fi
 echo "[velo-api] Migrations applied successfully."
