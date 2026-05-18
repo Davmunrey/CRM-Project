@@ -2,9 +2,9 @@ server {
     listen 80;
     server_name _;
 
-    # Docker's embedded DNS — defers upstream resolution to request time.
-    # Required so nginx starts even when the api container isn't ready yet.
-    resolver 127.0.0.11 valid=30s ipv6=off;
+    # Nameserver injected at startup from /etc/resolv.conf — works on Docker,
+    # Kubernetes, and any other container runtime without hardcoding an IP.
+    resolver ${NAMESERVER} valid=30s ipv6=off;
 
     root /usr/share/nginx/html;
     index index.html;

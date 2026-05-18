@@ -12,12 +12,17 @@ fi
 VELO_API_URL="${VELO_API_URL%/}"
 export VELO_API_URL
 
+# Extract the container's nameserver so nginx can resolve upstream hostnames at
+# request time. Works on Docker (127.0.0.11), Kubernetes (CoreDNS), and others.
+NAMESERVER=$(grep -i '^nameserver' /etc/resolv.conf | head -1 | awk '{print $2}')
+NAMESERVER="${NAMESERVER:-127.0.0.11}"
+export NAMESERVER
+
 # ── Render Nginx config from template ────────────────────────────────────────
-# Only substitute ${VELO_API_URL} — leave all nginx $variables untouched.
-envsubst '${VELO_API_URL}' \
+envsubst '${VELO_API_URL} ${NAMESERVER}' \
   < /etc/nginx/conf.d/default.conf.template \
   > /etc/nginx/conf.d/default.conf
 
-echo "Velo CRM starting — proxying /api → ${VELO_API_URL}"
+echo "Velo CRM starting — proxying /api → ${VELO_API_URL} (resolver: ${NAMESERVER})"
 
 exec "$@"

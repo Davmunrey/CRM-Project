@@ -471,12 +471,12 @@ function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, o
                 return (
                   <div className="flex flex-wrap gap-0.5 mt-0.5">
                     {gEvents.slice(0, 2).map((e) => (
-                      <span key={e.id} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-medium bg-emerald-500/15 text-emerald-400 leading-none max-w-full">
+                      <span key={e.id} className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded text-[9px] font-medium bg-success/15 text-success leading-none max-w-full">
                         {e.meetLink ? <Video className="w-2 h-2 shrink-0" /> : <CalendarIcon className="w-2 h-2 shrink-0" />}
                         <span className="truncate max-w-[40px]">{e.title}</span>
                       </span>
                     ))}
-                    {gEvents.length > 2 && <span className="text-[9px] text-emerald-500">+{gEvents.length - 2}</span>}
+                    {gEvents.length > 2 && <span className="text-[9px] text-success">+{gEvents.length - 2}</span>}
                   </div>
                 )
               })()}
@@ -601,7 +601,7 @@ function WeekView({ currentDate, activities, deals, activeTypes, onDayClick, loc
                   </div>
                 ))}
                 {(googleEventsByDay.get(key) ?? []).slice(0, 2).map((e) => (
-                  <div key={e.id} className="flex items-center gap-1 px-1 py-0.5 rounded text-[9px] bg-emerald-500/15 text-emerald-400 truncate">
+                  <div key={e.id} className="flex items-center gap-1 px-1 py-0.5 rounded text-[9px] bg-success/15 text-success truncate">
                     {e.meetLink ? <Video className="w-2.5 h-2.5 shrink-0" /> : <CalendarIcon className="w-2.5 h-2.5 shrink-0" />}
                     <span className="truncate">{e.title}</span>
                   </div>
@@ -895,7 +895,7 @@ export function Calendar() {
             type="button"
             onClick={() => void handleGCalSync()}
             disabled={syncing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-emerald-500/30 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-success/30 text-success bg-success/10 hover:bg-success/20 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
             {syncing ? 'Syncing…' : 'Sync Google Cal'}

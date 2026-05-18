@@ -83,7 +83,7 @@ export function ZoomIntegrationCard() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex items-start gap-4 min-w-0">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-1 shadow-sm">
-            <Video className="h-5 w-5 text-[#2D8CFF]" aria-hidden />
+            <Video className="h-5 w-5 text-info" aria-hidden />
           </div>
           <div className="min-w-0">
             <h2 className="text-base font-semibold text-fg">Zoom Meetings</h2>
