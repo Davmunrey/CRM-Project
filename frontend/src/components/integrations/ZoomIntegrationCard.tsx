@@ -10,6 +10,8 @@ interface ZoomStatus {
   configured: boolean
 }
 
+const ERR_ZOOM_SECRET_LENGTH = 'Webhook secret must be at least 8 characters'
+
 export function ZoomIntegrationCard() {
   const [status, setStatus] = useState<ZoomStatus | null>(null)
   const [secret, setSecret] = useState('')
@@ -33,7 +35,7 @@ export function ZoomIntegrationCard() {
 
   const save = async () => {
     if (secret.length < 8) {
-      setError('Webhook secret must be at least 8 characters')
+      setError(ERR_ZOOM_SECRET_LENGTH)
       return
     }
     setSaving(true)

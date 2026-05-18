@@ -10,6 +10,8 @@ import {
 } from '../../services/googleIntegrationService'
 import { useContactsStore } from '../../store/contactsStore'
 
+const ERR_CONTACTS_SCOPE = 'Re-connect with Contacts permission to enable this feature.'
+
 export function GoogleContactsCard() {
   const [status, setStatus] = useState<GoogleIntegrationStatusResponse | null>(null)
   const [syncing, setSyncing] = useState(false)
@@ -48,7 +50,7 @@ export function GoogleContactsCard() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Sync failed'
       if (msg.includes('contacts_scope_required')) {
-        setError('Re-connect with Contacts permission to enable this feature.')
+        setError(ERR_CONTACTS_SCOPE)
       } else {
         setError(msg)
       }

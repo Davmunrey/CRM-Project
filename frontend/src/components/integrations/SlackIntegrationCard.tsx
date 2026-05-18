@@ -10,6 +10,8 @@ interface SlackStatus {
   channel: string | null
 }
 
+const ERR_SLACK_WEBHOOK_URL = 'Must be a valid Slack incoming webhook URL (https://hooks.slack.com/services/...)'
+
 export function SlackIntegrationCard() {
   const [status, setStatus] = useState<SlackStatus | null>(null)
   const [webhookUrl, setWebhookUrl] = useState('')
@@ -33,7 +35,7 @@ export function SlackIntegrationCard() {
 
   const save = async () => {
     if (!webhookUrl.startsWith('https://hooks.slack.com/services/')) {
-      setError('Must be a valid Slack incoming webhook URL (https://hooks.slack.com/services/...)')
+      setError(ERR_SLACK_WEBHOOK_URL)
       return
     }
     setSaving(true)
