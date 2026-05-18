@@ -1,7 +1,7 @@
 {
   "name": "Velo CRM",
   "slug": "velo-crm",
-  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, and reports. Single-container web+api with nginx reverse proxy on localhost, backed by PostgreSQL and Redis services.",
+  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, and reports. Nginx SPA frontend proxying /api/* to the Velo API service (velo-api). Deploy alongside velo-api.",
   "badge": "Internal",
   "icon": {
     "letter": "V",
@@ -70,6 +70,7 @@
     "first_run_url": "/register"
   },
   "links": {
-    "repository": "https://gitea.apps.privateprompt.tech/clovrlabs/velo-crm"
+    "repository": "https://gitea.apps.privateprompt.tech/clovrlabs/velo-crm",
+    "api": "https://gitea.apps.privateprompt.tech/clovrlabs/velo-api"
   }
 }
