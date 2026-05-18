@@ -52,9 +52,9 @@
         "POSTGRES_PASSWORD": { "secret": true, "generate": false, "label": "PostgreSQL password (shared with postgres service)", "default": "velo_db_2026_secure" },
         "JWT_SECRET": { "secret": true, "generate": true, "label": "JWT signing secret (32+ random bytes)" },
         "TOKEN_ENCRYPTION_KEY": { "secret": true, "generate": true, "label": "32-byte hex key for encrypting OAuth tokens (openssl rand -hex 32)" },
-        "RESEND_API_KEY": { "secret": true, "generate": false, "label": "Resend API key for transactional email (optional)" },
+        "RESEND_API_KEY": { "secret": true, "generate": false, "label": "Resend API key for transactional email (optional)", "default": "" },
         "EMAIL_FROM": { "secret": false, "generate": false, "label": "From address for transactional emails", "default": "noreply@velo.app" },
-        "ANTHROPIC_API_KEY": { "secret": true, "generate": false, "label": "Anthropic API key for AI features — AI assistant, email drafting (optional)" }
+        "ANTHROPIC_API_KEY": { "secret": true, "generate": false, "label": "Anthropic API key for AI features — AI assistant, email drafting (optional)", "default": "" }
       },
       "healthcheck": {
         "test": ["CMD", "wget", "-qO-", "http://localhost:80/"],
