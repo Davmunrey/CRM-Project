@@ -2,8 +2,16 @@ server {
     listen 80;
     server_name _;
 
+    # Docker's embedded DNS — defers upstream resolution to request time.
+    # Required so nginx starts even when the api container isn't ready yet.
+    resolver 127.0.0.11 valid=30s ipv6=off;
+
     root /usr/share/nginx/html;
     index index.html;
+
+    # Populated by envsubst at container start (e.g. http://api:3001).
+    # Using a variable forces per-request DNS lookup instead of startup lookup.
+    set $api "${VELO_API_URL}";
 
     # ── SPA routing ──────────────────────────────────────────────────────────
     location / {
@@ -13,7 +21,8 @@ server {
     # ── Socket.io (WebSocket upgrade) ────────────────────────────────────────
     # Must come before the generic /api/ block (more specific match wins).
     location /api/socket.io/ {
-        proxy_pass ${VELO_API_URL}/socket.io/;
+        rewrite ^/api/(.*) /$1 break;
+        proxy_pass $api;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -26,7 +35,8 @@ server {
 
     # ── API proxy → velo-api backend ─────────────────────────────────────────
     location /api/ {
-        proxy_pass ${VELO_API_URL}/;
+        rewrite ^/api/(.*) /$1 break;
+        proxy_pass $api;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
