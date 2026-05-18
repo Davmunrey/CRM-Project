@@ -3,7 +3,7 @@ import { readdir, readFile } from 'node:fs/promises'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import postgres from 'postgres'
-import { env } from '../src/config/env.js'
+import { env } from '../dist/config/env.js'
 
 const db = postgres(env.DATABASE_URL)
 const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'migrations')
