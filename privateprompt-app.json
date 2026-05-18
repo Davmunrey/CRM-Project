@@ -1,0 +1,70 @@
+{
+  "name": "Velo CRM",
+  "slug": "velo-crm",
+  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, reports, and a public REST API. React + TypeScript frontend backed by a Node.js API and Supabase.",
+  "badge": "Internal",
+  "icon": {
+    "letter": "V",
+    "bg": "bg-blue-500/20",
+    "color": "text-blue-400"
+  },
+  "open_btn_class": "bg-blue-500/20 hover:bg-blue-500/30 text-blue-400",
+  "entrypoint": "web",
+  "memory_mb": 256,
+  "cpu": 0.5,
+  "services": {
+    "web": {
+      "image": "gitea.apps.privateprompt.tech/clovrlabs/velo-crm:latest",
+      "port": 80,
+      "memory_mb": 256,
+      "cpu": 0.5,
+      "env": {
+        "VITE_API_URL": {
+          "secret": true,
+          "generate": false,
+          "label": "Velo API URL — full URL of the velo-api backend (e.g. https://api.velo.example.com)"
+        },
+        "VITE_SUPABASE_URL": {
+          "secret": true,
+          "generate": false,
+          "label": "Supabase project URL (e.g. https://xxxx.supabase.co)"
+        },
+        "VITE_SUPABASE_ANON_KEY": {
+          "secret": true,
+          "generate": false,
+          "label": "Supabase anonymous/public key"
+        },
+        "VITE_GOOGLE_CLIENT_ID": {
+          "secret": true,
+          "generate": false,
+          "label": "Google OAuth Client ID — required for Gmail and Calendar integration (leave empty to disable)"
+        },
+        "VITE_SENTRY_DSN": {
+          "secret": true,
+          "generate": false,
+          "label": "Sentry DSN for error tracking (optional — leave empty to disable)"
+        },
+        "VITE_APP_CHANNEL": "production"
+      },
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "curl",
+          "-fsS",
+          "http://localhost:80/"
+        ],
+        "interval": "30s",
+        "timeout": "5s",
+        "retries": 3,
+        "start_period": "30s"
+      }
+    }
+  },
+  "post_install": {
+    "description": "The app connects to an external Supabase project and velo-api backend. Make sure both are running and their URLs are set in the environment variables before opening the app. On first visit, register your organisation at /register.",
+    "first_run_url": "/register"
+  },
+  "links": {
+    "repository": "https://gitea.apps.privateprompt.tech/clovrlabs/velo-crm"
+  }
+}

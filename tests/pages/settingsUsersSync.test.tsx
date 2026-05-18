@@ -37,7 +37,7 @@ describe('Settings users sync', () => {
 
   it('renders organization users from auth store in settings users section', () => {
     render(
-      <TestRouter>
+      <TestRouter initialEntries={['/settings?tab=permissions']}>
         <Settings />
       </TestRouter>,
     )

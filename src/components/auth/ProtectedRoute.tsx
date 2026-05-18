@@ -58,7 +58,11 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
     )
   }
 
-  if (requiredPermission && currentUser && !hasPermission(currentUser.role, requiredPermission)) {
+  if (requiredPermission === 'admin:access' && !currentUser?.isSuperAdmin) {
+    return <Navigate to="/" replace />
+  }
+
+  if (requiredPermission && requiredPermission !== 'admin:access' && currentUser && !hasPermission(currentUser.role, requiredPermission)) {
     return (
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="text-center">

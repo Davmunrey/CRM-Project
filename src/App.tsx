@@ -234,7 +234,7 @@ function AppRoutes() {
         <Route path="/products" element={<ProtectedPage title={t.nav.products} requiredPermission="products:read"><Products /></ProtectedPage>} />
         <Route path="/calendar" element={<ProtectedPage title={t.nav.calendar} requiredPermission="activities:read"><Calendar /></ProtectedPage>} />
         <Route path="/profile" element={<ProtectedPage title={t.auth.profile}><UserProfile /></ProtectedPage>} />
-        <Route path="/admin" element={<ProtectedPage title="Super Admin"><Admin /></ProtectedPage>} />
+        <Route path="/admin" element={<ProtectedPage title="Super Admin" requiredPermission="admin:access"><Admin /></ProtectedPage>} />
 
         <Route path="*" element={<CatchAllRedirect />} />
       </Routes>

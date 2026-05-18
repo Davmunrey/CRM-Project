@@ -9,6 +9,7 @@ import { useAuthStore } from './authStore'
 import { getTranslations } from '../i18n'
 import { injectOpenPixel, normalizeBodyToHtml, rewriteLinksForTracking } from '../lib/emailTracking'
 import { buildCrmFromLabel } from '../utils/outboundEmailIdentity'
+import { devConsole } from '../lib/devConsole'
 import { syncSequenceEnrollmentsAfterGmailSync } from '../features/sequences-flow/syncEnrollmentRepliesFromGmailThreads'
 
 export interface GmailThreadLink {
@@ -298,7 +299,6 @@ export const useEmailStore = create<EmailStore>()(
 
         let sendSucceeded = false
         let sendError: string | undefined
-        const mockRuntime = false
 
         try {
           if (shouldUseProvider) {
@@ -325,7 +325,7 @@ export const useEmailStore = create<EmailStore>()(
               gmailThreadId = sent.providerThreadId
             }
             sendSucceeded = true
-          } else if (mockRuntime || params.allowLocalFallbackWhenNoToken) {
+          } else if (params.allowLocalFallbackWhenNoToken) {
             sendSucceeded = true
           } else {
             sendError =
@@ -551,7 +551,6 @@ export const useEmailStore = create<EmailStore>()(
               }
             }
             const shouldUseProvider = providerName !== 'gmail' || get().isGmailConnected()
-            const mockRuntime = false
             let sendSucceeded = false
             let sendError: string | undefined
 
@@ -579,8 +578,6 @@ export const useEmailStore = create<EmailStore>()(
                   gmailMessageId = sent.providerMessageId
                   gmailThreadId = sent.providerThreadId
                 }
-                sendSucceeded = true
-              } else if (mockRuntime) {
                 sendSucceeded = true
               } else {
                 sendError =
@@ -680,7 +677,7 @@ export const useEmailStore = create<EmailStore>()(
           }
           set({ threadLinks: links })
         } catch (err) {
-          console.error('[emailStore] fetchThreadLinks failed', err instanceof Error ? err.message : err)
+          devConsole.error('[emailStore] fetchThreadLinks failed', err instanceof Error ? err.message : err)
         }
       },
 

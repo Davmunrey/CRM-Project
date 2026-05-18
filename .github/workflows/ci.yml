@@ -39,13 +39,22 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Unit tests
-        run: npx vitest run
+      - name: Unit tests with coverage
+        run: npx vitest run --coverage
 
       - name: Production build
         run: npm run build
         env:
           VITE_API_URL: /api
+
+      - name: Install Playwright (Chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E smoke tests (public pages, no API required)
+        run: npx playwright test e2e/smoke.spec.ts e2e/a11y.spec.ts --reporter=line
+        env:
+          VITE_API_URL: /api
+          CI_SKIP_BUILD: '1'
 
       - name: Bundle size budget
         run: npm run bundle:check

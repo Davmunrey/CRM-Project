@@ -39,6 +39,8 @@ export type Permission =
   | 'goals:read' | 'goals:create' | 'goals:update' | 'goals:delete'
   // Import
   | 'import:csv' | 'import:json'
+  // Super-admin platform access (isSuperAdmin only)
+  | 'admin:access'
 
 // ─── Auth User ──────────────────────────────────────────────────────────────
 

@@ -59,6 +59,12 @@ export default defineConfig(({ mode }) => {
         reporter: ['text', 'lcov'],
         include: ['src/store/**', 'src/utils/**', 'src/lib/schemas/**'],
         exclude: [],
+        thresholds: {
+          lines: 50,
+          functions: 50,
+          branches: 45,
+          statements: 50,
+        },
       },
     },
   }
