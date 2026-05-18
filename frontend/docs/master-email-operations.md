@@ -20,19 +20,22 @@
 <a id="transactional-auth-emails"></a>
 ## Transactional auth emails (velo-api)
 
-Auth is now handled by velo-api (Fastify + PostgreSQL). Supabase Auth is no longer used for login/registration.
+Auth is handled by velo-api (Fastify 5 + Node.js 22 in `api/` directory). Supabase Auth is no longer used for login/registration.
 
 ### Current state
 
-- `POST /auth/forgot-password` creates a 1-hour reset token in `password_reset_tokens` table and sends the reset email via `sendEmail` (nodemailer/Resend). **Wired 2026-05-13.**
-- `POST /auth/reset-password` consumes the token.
+- `POST /auth/forgot-password` creates a 1-hour reset token in `password_reset_tokens` table (stored as SHA-256 hash, not plaintext) and sends the reset email via `sendEmail` (nodemailer/Resend). **Wired 2026-05-13; hardened 2026-05-18 (hash storage).**
+- `POST /auth/reset-password` consumes the token; rate-limited to 10 requests per 15 minutes per IP. **Rate limit added 2026-05-18.**
 - `POST /invitations` and `POST /orgs/me/invite` send invitation emails via `sendEmail`. **Wired 2026-05-13.**
+- Login (`POST /auth/login`) uses bcrypt cost 12 with constant-time comparison to prevent timing-based user enumeration. **Hardened 2026-05-18.**
 
 ### Operator checklist
 
 - [x] Wire Resend (or SMTP) into velo-api `POST /auth/forgot-password` to send the reset link. (done 2026-05-13)
+- [x] Password reset tokens stored as SHA-256 hashes in DB (not plaintext). (done 2026-05-18)
+- [x] Rate limit on `/auth/reset-password`: 10 requests per 15 minutes per IP. (done 2026-05-18)
 - [ ] HTML template for password reset email with branded design.
-- [ ] Test email received for forgot-password flow.
+- [ ] Test email received for forgot-password flow (within 60 seconds).
 - [x] CTA button opens `{APP_URL}/reset-password?token=<token>`. (uses `APP_URL` env var)
 - [ ] Copy includes "ignore if you did not request this" language.
 - [ ] SPF/DKIM/DMARC verified for sender domain.
@@ -113,6 +116,7 @@ CRM-specific outbound and inbox behavior (complements the Resend DNS checklist a
 - **SPF, DKIM, DMARC** on the domain you send from (Google Workspace for Gmail OAuth users, or your DNS when using Resend or another ESP).
 - **Reputation:** avoid sudden high volume from a single mailbox; use the **communication_jobs** queue with spacing for bulk sends.
 - **Marketing:** only queue contacts with `marketing_opt_in`; provide a real unsubscribe URL before adding `List-Unsubscribe` headers (future hardening).
+- **Auth email security:** reset token TTL is 1 hour and single-use (enforced in velo-api `/auth/reset-password` handler); password change uses bcrypt constant-time comparison.
 
 ### Limits
 

@@ -1,6 +1,6 @@
 # Static hosting: SPA routing and build-time env
 
-Backend is **velo-api** (self-hosted Fastify + PostgreSQL). No Supabase dependency.
+Backend is **api/** (self-hosted Fastify + PostgreSQL) in the velo-crm monorepo. No Supabase dependency.
 
 ## SPA fallback
 
@@ -36,21 +36,20 @@ Optional checked-in artifacts:
 
 ## Docker full stack
 
-```bash
-# 1. Build frontend with nginx proxy path
-cd velo-crm
-VITE_API_URL=/api npm run build
+From repo root:
 
-# 2. Start everything
-cd ../velo-api
-cp .env.example .env
-# Edit JWT_SECRET (openssl rand -hex 32)
+```bash
+# 1. Configure API environment
+cp api/.env.example api/.env
+# Edit JWT_SECRET (openssl rand -hex 32) and TOKEN_ENCRYPTION_KEY
+
+# 2. Start full stack (compose orchestrates frontend build, migrations, all services)
 docker-compose up -d
 ```
 
 Frontend: `http://localhost`. API: `http://localhost:3001`.
 
-Services: `postgres` (5432), `redis` (6379), `migrate` (runs on boot), `api` (3001), `frontend` (80).
+Services: `postgres` (5432 internal), `redis` (6379 internal), `api` (3001 internal), `web` (nginx + frontend on 80).
 
 ## Staging vs production
 
@@ -58,8 +57,17 @@ Services: `postgres` (5432), `redis` (6379), `migrate` (runs on boot), `api` (30
 - Use separate DBs (separate `DATABASE_URL`) for staging vs production
 - Add allowed CORS origins in `CORS_ORIGIN` env on the API side
 
+## Private Prompt deployment
+
+A single `privateprompt-app.json` manifest at repo root deploys the full Velo CRM stack:
+- Postgres 16 + Redis
+- `api/` service (Fastify, runs migrations on boot)
+- `frontend/` service (React SPA with nginx proxy)
+
+All environment variables (`JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `CORS_ORIGIN`, etc.) are configured via Private Prompt secrets interface.
+
 ## Smoke
 
 After deploy: run through [smoke-checklist-production.md](./smoke-checklist-production.md).
 
-*Last updated: 2026-05-15*
+*Last updated: 2026-05-18*

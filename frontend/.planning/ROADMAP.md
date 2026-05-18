@@ -1,25 +1,26 @@
 # Velo — Roadmap
 
 **Milestone:** v1.0 — Full SaaS Upgrade
-**Status:** Phase 10 Pending Deploy
+**Status:** Phase 10 Pending Deploy (Monorepo Complete)
 **Phases:** 10
-**Last updated:** 2026-05-15
-**Architecture note:** Auth migrated from Supabase to velo-api (Fastify + PostgreSQL). JWT claims: `{ sub, org, role, jti }`. All data via velo-api REST. Supabase client is `null` at runtime. Gmail fully self-hosted via velo-api `/gmail/*`.
+**Last updated:** 2026-05-18
+**Architecture note:** Monorepo: frontend/ (React 18 + Vite) + api/ (Fastify 5 + PostgreSQL 16 + Redis) + docker-compose.yml at root. Auth via velo-api JWT (HS256, claims `{ sub, org, role, jti }`). All data via velo-api REST. Supabase client is `null` at runtime. Gmail fully self-hosted via velo-api `/gmail/*`. CI: Gitea Actions (ci.yml, build-production.yml, build-api.yml).
 
 ---
 
 ## Phases
 
 - [x] **Phase 1: Schema & Multi-Tenancy** — Add `organization_id` + RLS to all tables; create organizations, members, invitations, and gmail_tokens tables (completed 2026-03-31)
-- [x] **Phase 2: Supabase Auth** — Replace mock djb2 auth with real Supabase Auth (signup, login, session, password reset, logout) (completed 2026-04-05)
+- [x] **Phase 2: velo-api Auth** — Replace Supabase Auth with velo-api JWT (HS256, signup, login, session, password reset, logout) (completed 2026-05-13)
 - [x] **Phase 3: Organization Onboarding** — First-login org creation, member invitations, roles, and org-scoped JWT claims (completed 2026-04-06)
 - [x] **Phase 4: Security Fixes** — Remove API keys from localStorage, fix XSS, remove dangerouslyAllowBrowser, add dev warning for missing env vars (completed 2026-04-07)
-- [x] **Phase 5: Core Data Stores + Real-Time** — Migrate contacts, companies, deals, activities, notifications to Supabase with real-time subscriptions (completed 2026-04-07)
+- [x] **Phase 5: Core Data Stores + Real-Time** — Migrate contacts, companies, deals, activities, notifications to velo-api with Socket.io real-time (completed 2026-04-07)
 - [x] **Phase 6: Secondary Stores & Real Users** — Migrate remaining stores; replace MOCK_USERS; remove AI features and Leaderboard; unify Lead=Contact (completed 2026-04-08)
-- [x] **Phase 7: Gmail Integration** — Auth Code + PKCE OAuth flow; Edge Functions for token exchange and refresh; inbox, send, and contact linking (completed 2026-04-09)
+- [x] **Phase 7: Gmail Integration** — Auth Code + PKCE OAuth flow; velo-api `/gmail/*` routes for token exchange and refresh; inbox, send, and contact linking (completed 2026-05-13)
 - [x] **Phase 8: i18n English** — English translation file and language switcher persistence (completed 2026-04-09)
-- [x] **Phase 9: Test Suite** — Vitest setup; unit tests for stores, Zod schemas, and **Gitea Actions** CI (`.gitea/workflows/ci.yml`; optional `.github/workflows` mirrors) (completed 2026-04-10)
-- [ ] **Phase 10: Production deployment** — SPA routing for `dist/`, env vars per environment, preview vs staging Supabase, production deploy, custom domain + HTTPS
+- [x] **Phase 9: Test Suite** — Vitest setup; unit tests for stores, Zod schemas, and **Gitea Actions** CI (`.gitea/workflows/ci.yml`, `build-production.yml`, `build-api.yml`) (completed 2026-04-10)
+- [x] **Phase 10: Monorepo + Infra Hardening** — Migrate api/ into monorepo; Docker Compose orchestration; JWT denylist (Redis), Socket.io JWT verification, AES-256-GCM encryption, rate limiting, CORS/CSP (completed 2026-05-18)
+- [ ] **Phase 11: Production deployment** — SPA routing for `dist/`, Docker image deployment, env vars per environment (production vs staging), custom domain + HTTPS (operator tasks DEPLOY-01–05)
 
 ---
 
@@ -27,16 +28,17 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Schema & Multi-Tenancy | 5/5 | Complete    | 2026-03-31 |
-| 2. Supabase Auth | 5/5 | Complete    | 2026-04-05 |
-| 3. Organization Onboarding | 4/4 | Complete   | 2026-04-06 |
+| 1. Schema & Multi-Tenancy | 5/5 | ✅ Complete | 2026-03-31 |
+| 2. velo-api Auth (was Supabase) | 5/5 | ✅ Complete | 2026-05-13 |
+| 3. Organization Onboarding | 4/4 | ✅ Complete | 2026-04-06 |
 | 4. Security Fixes | 4/4 | ✅ Complete | 2026-04-07 |
 | 5. Core Data Stores + Real-Time | 4/4 | ✅ Complete | 2026-04-07 |
 | 6. Secondary Stores & Real Users | 5/5 | ✅ Complete | 2026-04-08 |
-| 7. Gmail Integration | 5/5 | ✅ Complete | 2026-04-09 |
+| 7. Gmail Integration (velo-api) | 5/5 | ✅ Complete | 2026-05-13 |
 | 8. i18n English | 3/3 | ✅ Complete | 2026-04-09 |
 | 9. Test Suite | 6/6 | ✅ Complete | 2026-04-10 |
-| 10. Production deployment | 0/5 | Pending Deploy | - |
+| 10. Monorepo + Infra Hardening | 5/5 | ✅ Complete | 2026-05-18 |
+| 11. Production deployment | 0/5 | Pending Deploy | - |
 
 ---
 
@@ -71,18 +73,19 @@ SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, SCHEMA-05
 
 ---
 
-## Phase 2: Supabase Auth
+## Phase 2: velo-api Auth (was Supabase Auth)
 
-**Goal:** Users can register, log in, reset their password, and have their session persist across page refreshes — replacing the mock djb2 system entirely.
+**Goal:** Users can register, log in, reset their password, and have their session persist across page refreshes — via velo-api JWT (not Supabase Auth).
 **Dependencies:** Phase 1
+**Status:** Completed 2026-05-13
 
-### Plans
+### Plans (completed)
 
-- 2.1: Wire Supabase Auth signup — replace `authStore.register()` mock with `supabase.auth.signUp()`; handle email verification state in UI
-- 2.2: Wire Supabase Auth login and session — replace `authStore.login()` with `supabase.auth.signInWithPassword()`; implement `onAuthStateChange` listener to hydrate `AuthUser` from the Supabase session
-- 2.3: Implement password reset flow — trigger `supabase.auth.resetPasswordForEmail()` on forgot-password page; handle the `PASSWORD_RECOVERY` event in `onAuthStateChange` to show the reset form
-- 2.4: Session persistence and race condition guard — implement `isLoadingAuth: true` initial state in `authStore`; prevent `ProtectedRoute` redirect until `onAuthStateChange` fires the first event
-- 2.5: Implement logout — call `supabase.auth.signOut()`, clear all persisted Zustand state, redirect to `/login`
+- [x] 2.1: Wire velo-api signup — `POST /auth/register` returns JWT; authStore sets token in localStorage
+- [x] 2.2: Wire velo-api login and session — `POST /auth/login` returns JWT; `GET /auth/me` on mount restores session from JWT
+- [x] 2.3: Implement password reset flow — `POST /auth/forgot-password` → email link with token; `POST /auth/reset-password` with token + new password
+- [x] 2.4: Session persistence and race condition guard — `isLoadingAuth: true` initial state in authStore; prevents redirect until `GET /auth/me` completes
+- [x] 2.5: Implement logout — `POST /auth/logout` revokes JWT via Redis denylist; localStorage JWT cleared; no state restoration on Back
 
 ### Requirements Covered
 
@@ -90,10 +93,10 @@ AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, SEC-01, SEC-06
 
 ### Done When
 
-- [x] New user can register with email/password via `POST /auth/register` (no email verification step — direct JWT issuance)
-- [x] Logged-in user survives page refresh (JWT in localStorage, restored via `GET /auth/me` on mount)
-- [x] User who requests password reset via `POST /auth/forgot-password` now receives the email link (wired 2026-05-13); can set new password via `POST /auth/reset-password`
-- [x] Logging out clears JWT from authStore; pressing Back does not restore authenticated state (JWT gone)
+- [x] New user can register with email/password via `POST /auth/register` (direct JWT issuance, no email verification step)
+- [x] Logged-in user survives page refresh (JWT in localStorage via `GET /auth/me` on mount)
+- [x] User who requests password reset via `POST /auth/forgot-password` receives email with reset link; can set password via `POST /auth/reset-password`
+- [x] Logging out via `POST /auth/logout` clears JWT and adds jti to Redis denylist; pressing Back does not restore state
 - [x] Cold-open while unauthenticated shows login page; `isLoadingAuth` guard prevents flash
 
 ---
@@ -204,16 +207,17 @@ DATA-09, DATA-10, DATA-11, DATA-12, DATA-13, DATA-14, DATA-15, USERS-01, USERS-0
 
 ---
 
-## Phase 7: Gmail Integration
+## Phase 7: Gmail Integration (velo-api, no Supabase)
 
-**Goal:** Users can connect Gmail via Auth Code + PKCE, and the CRM can read their inbox, send emails from contact/deal pages, and link incoming emails to contacts automatically.
-**Dependencies:** Phase 5 (contacts in Supabase for email linking)
+**Goal:** Users can connect Gmail via Auth Code + PKCE, and the CRM can read their inbox, send emails from contact/deal pages, and link incoming emails to contacts automatically — fully hosted in velo-api.
+**Dependencies:** Phase 5 (contacts via velo-api for email linking)
+**Status:** Completed 2026-05-13
 
-**Plans:** 5/5 plans executed
+**Plans:** 5/5 plans executed (all migrated to velo-api)
 
 Plans:
 - [x] 07-1-PLAN.md — PKCE OAuth initiation + GmailTokenContext + emailStore cleanup (Wave 1)
-- [x] 07-2-PLAN.md — gmail_tokens schema + gmail-oauth-exchange + gmail-refresh-token Edge Functions (Wave 1)
+- [x] 07-2-PLAN.md — gmail_tokens schema + `/gmail/oauth-exchange` + `/gmail/refresh` velo-api routes (was Edge Functions)
 - [x] 07-3-PLAN.md — GmailCallback page + App.tsx route + useDataInit silent refresh (Wave 2)
 - [x] 07-4-PLAN.md — Inbox wired to real Gmail threads + contact email matching chips (Wave 3)
 - [x] 07-5-PLAN.md — Send email from ContactDetail/Deals + activity logging on send (Wave 4)
@@ -286,18 +290,48 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 ---
 
-## Phase 10: Production deployment
+## Phase 10: Monorepo + Infra Hardening (formerly Phase 10)
+
+**Goal:** Migrate velo-api into monorepo (frontend/ + api/ + docker-compose.yml at root); harden security (JWT denylist, Socket.io verification, encryption, rate limiting, CORS/CSP); confirm all services deployable as single Docker Compose unit.
+**Dependencies:** Phase 9 (CI green)
+**Status:** Completed 2026-05-18
+
+### Plans (completed)
+
+- [x] 10.1: Monorepo structure — move velo-api into `api/` subdirectory; update docker-compose.yml to orchestrate postgres + redis + api:3001 + web (nginx)
+- [x] 10.2: Security audit — implement Socket.io JWT verification, Redis JWT denylist (jti tracking), AES-256-GCM encryption for secrets, auth rate limiting (10/15min), CSP headers
+- [x] 10.3: CI workflows — 3 Gitea Actions: `ci.yml` (frontend type + tests), `build-production.yml` (frontend Docker), `build-api.yml` (api Docker)
+- [x] 10.4: Deployment manifest — add `privateprompt-app.json` for Private Prompt deployment; document `docker-compose up` local development flow
+- [x] 10.5: Documentation — update `.planning/` and canonical docs to reflect monorepo, velo-api migrations, security hardening
+
+### Requirements Covered
+
+(Restructuring + hardening; Phase 10 DEPLOY-01–05 moved to Phase 11)
+
+### Done When
+
+- [x] Monorepo structure: frontend/ + api/ + docker-compose.yml at root; both subdirectories have independent package.json
+- [x] `docker-compose up` starts postgres + redis + api:3001 + web (nginx:80) with correct networking
+- [x] Frontend nginx configuration: requests to `/api/*` proxied to api:3001; all other routes serve `index.html` (SPA routing)
+- [x] Socket.io JWT verified on connect; every authenticated request checks Redis JWT denylist
+- [x] All secrets (Gmail refresh tokens, SMTP passwords, webhook signing keys) encrypted with AES-256-GCM
+- [x] `POST /auth/logout` revokes token + adds jti to Redis denylist; refresh token rotation via jti
+- [x] Tests passing (218 passing, 1 skipped); build clean
+
+---
+
+## Phase 11: Production deployment (new Phase 11)
 
 **Goal:** The built SPA (`dist/`) is served from a static host or CDN with correct client-side routing; velo-api deployed with PostgreSQL + Redis; production served on a custom domain over HTTPS.
-**Dependencies:** Phase 9 (CI must pass before production deploy)
+**Dependencies:** Phase 10 (monorepo + CI passing)
 
 ### Plans
 
-- 10.1: SPA catch-all routing — on **private** static hosting, configure nginx `try_files` or CDN so unknown paths serve `index.html`; verify React Router deep links on direct load. `velo-api/docker-compose.yml` includes nginx frontend service as reference.
-- 10.2: Connect the repository to **your** deploy pipeline and set build-time env vars — `VITE_API_URL` pointing to production velo-api; `VITE_APP_CHANNEL` (`production` vs `staging`); set velo-api env vars (`DATABASE_URL`, `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
-- 10.3: Verify **staging** deployments — build from a non-production branch; confirm the **staging** URL hits the staging velo-api instance; confirm data isolation (separate DB)
-- 10.4: Production deploy — merge to `main`; confirm production URL serves the expected build; smoke test: signup, login, create contact, log activity
-- 10.5: Custom domain — add DNS records per your host; confirm HTTPS/TLS is valid
+- 11.1: SPA catch-all routing — on **private** static hosting, configure nginx `try_files` or CDN so unknown paths serve `index.html`; verify React Router deep links on direct load. Monorepo `docker-compose.yml` includes nginx frontend service as reference.
+- 11.2: Connect the repository to **your** deploy pipeline and set build-time env vars — `VITE_API_URL` pointing to production velo-api; `VITE_APP_CHANNEL` (`production` vs `staging`); set velo-api env vars (`DATABASE_URL`, `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
+- 11.3: Verify **staging** deployments — build from a non-production branch; confirm the **staging** URL hits the staging velo-api instance; confirm data isolation (separate DB)
+- 11.4: Production deploy — merge to `main`; confirm production URL serves the expected build; smoke test: signup, login, create contact, log activity
+- 11.5: Custom domain — add DNS records per your host; confirm HTTPS/TLS is valid
 
 ### Requirements Covered
 
@@ -392,14 +426,15 @@ DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05
 | TEST-03 | Phase 9 | ✅ Complete |
 | TEST-04 | Phase 9 | ✅ Complete |
 | TEST-05 | Phase 9 | ✅ Complete |
-| DEPLOY-01 | Phase 10 | Pending Deploy |
-| DEPLOY-02 | Phase 10 | Pending Deploy |
-| DEPLOY-03 | Phase 10 | Pending Deploy |
-| DEPLOY-04 | Phase 10 | Pending Deploy |
-| DEPLOY-05 | Phase 10 | Pending Deploy |
+| DEPLOY-01 | Phase 11 | Pending Deploy |
+| DEPLOY-02 | Phase 11 | Pending Deploy |
+| DEPLOY-03 | Phase 11 | Pending Deploy |
+| DEPLOY-04 | Phase 11 | Pending Deploy |
+| DEPLOY-05 | Phase 11 | Pending Deploy |
 
-**Requirements mapped:** see the table above for per-requirement status; only Phase 10 deployment requirements remain pending for release readiness.
+**Requirements mapped:** see the table above for per-requirement status; Phase 10 (monorepo + infra hardening) is complete; Phase 11 (production deployment) pending operator action.
 
 ---
 
 *Roadmap created: 2026-03-31*
+*Last updated: 2026-05-18 — Phase 2 renamed to velo-api Auth (from Supabase); Phase 7 updated to note velo-api migration (no Supabase Edge Functions); Phase 10 renamed to Monorepo + Infra Hardening (complete 2026-05-18); new Phase 11 created for Production deployment (operator tasks DEPLOY-01–05).*

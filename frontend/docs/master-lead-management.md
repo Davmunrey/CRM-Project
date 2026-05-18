@@ -25,22 +25,22 @@ This document defines how backend jobs can execute lead score maintenance withou
 
 - Status: Active
 - Owner: Backend
-- Last updated: 2026-05-15
+- Last updated: 2026-05-18
 - Canonical: Yes
 
-## Edge Function
+## Backend route
 
-- Function name: `lead-score-maintenance`
-- Path: `supabase/functions/lead-score-maintenance/index.ts`
+- Route name: `lead-score-maintenance`
+- Path: `api/src/routes/leads.ts` (or similar backend route file)
 
-## Auth Modes
+## Auth modes
 
 - User mode (existing behavior):
   - Requires `Authorization: Bearer <user_jwt>`
   - Recomputes only the caller's active organization
-- System mode (new, scheduler-ready):
+- System mode (scheduler-ready):
   - Requires header `x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>`
-  - Secret value must match the Edge Function env var `LEAD_MAINTENANCE_SECRET`
+  - Secret value must match the backend env var `LEAD_MAINTENANCE_SECRET`
   - Does not require user JWT
 
 ## Request Body (System mode)
@@ -60,7 +60,7 @@ Use exactly one of:
 
 ## Health / Execution Status
 
-- Endpoint: `POST /functions/v1/lead-score-maintenance?mode=health`
+- Endpoint: `POST /leads/maintenance?mode=health` (on your API server)
 - Auth: requires `x-maintenance-secret` header (system mode).
 - Optional filter:
   - query `organizationId=<uuid>` or body `{ "organizationId": "<uuid>" }`
@@ -69,16 +69,15 @@ Use exactly one of:
 Example:
 
 ```bash
-curl -X POST "https://<project-ref>.supabase.co/functions/v1/lead-score-maintenance?mode=health&organizationId=<org-id>" \
+curl -X POST "http://localhost:3000/leads/maintenance?mode=health&organizationId=<org-id>" \
   -H "Content-Type: application/json" \
-  -H "apikey: <SUPABASE_ANON_KEY>" \
   -H "x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>" \
   -d '{}'
 ```
 
 ## SLA Guardrails
 
-- Endpoint: `POST /functions/v1/lead-score-maintenance?mode=sla`
+- Endpoint: `POST /leads/maintenance?mode=sla`
 - Auth: requires `x-maintenance-secret` header (system mode).
 - Parameters (query or body):
   - `thresholdHours` (default `8`): max age since last successful run per tenant
@@ -89,9 +88,8 @@ curl -X POST "https://<project-ref>.supabase.co/functions/v1/lead-score-maintena
 Example:
 
 ```bash
-curl -X POST "https://<project-ref>.supabase.co/functions/v1/lead-score-maintenance?mode=sla" \
+curl -X POST "http://localhost:3000/leads/maintenance?mode=sla" \
   -H "Content-Type: application/json" \
-  -H "apikey: <SUPABASE_ANON_KEY>" \
   -H "x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>" \
   -d '{ "thresholdHours": 8, "cooldownHours": 6, "notifyManagers": true }'
 ```
@@ -99,9 +97,8 @@ curl -X POST "https://<project-ref>.supabase.co/functions/v1/lead-score-maintena
 ## Example (Single Tenant)
 
 ```bash
-curl -X POST "https://<project-ref>.supabase.co/functions/v1/lead-score-maintenance" \
+curl -X POST "http://localhost:3000/leads/maintenance" \
   -H "Content-Type: application/json" \
-  -H "apikey: <SUPABASE_ANON_KEY>" \
   -H "x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>" \
   -d '{ "organizationId": "00000000-0000-0000-0000-000000000000" }'
 ```
@@ -109,16 +106,15 @@ curl -X POST "https://<project-ref>.supabase.co/functions/v1/lead-score-maintena
 ## Example (All Tenants)
 
 ```bash
-curl -X POST "https://<project-ref>.supabase.co/functions/v1/lead-score-maintenance" \
+curl -X POST "http://localhost:3000/leads/maintenance" \
   -H "Content-Type: application/json" \
-  -H "apikey: <SUPABASE_ANON_KEY>" \
   -H "x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>" \
   -d '{ "runAllOrgs": true }'
 ```
 
-## What the function does
+## What the route does
 
-- Recomputes lead score with recency decay and confidence gate
+- Recomputes lead scores with recency decay and confidence gate
 - Writes snapshots to `lead_score_snapshots`
 - Sends manager/admin notifications when score drops significantly
 - Persists job telemetry in `lead_score_maintenance_runs` with status, counts, and errors
@@ -139,7 +135,7 @@ This document describes the operational dashboard added to `Settings` for lead s
 
 - Status: Active
 - Owner: Ops/Frontend
-- Last updated: 2026-04-15
+- Last updated: 2026-05-18
 - Canonical: Yes
 
 ## Goal
@@ -189,10 +185,10 @@ The panel uses translation keys under `settings.*` and is fully wired for:
 
 ## Related backend pieces
 
-- Edge Function:
-  - `supabase/functions/lead-score-maintenance/index.ts`
+- Backend route:
+  - `api/src/routes/leads.ts` (lead score maintenance endpoint)
 - Telemetry table migration:
-  - `supabase/migrations/20260413152000_lead_score_maintenance_runs.sql`
+  - `api/migrations/20260413152000_lead_score_maintenance_runs.sql`
 - Backend contract: [#lead-score-maintenance-backend](#lead-score-maintenance-backend)
 
 ---
@@ -207,12 +203,12 @@ This runbook is for on-call and operations teams maintaining lead score maintena
 
 - Status: Active
 - Owner: Ops
-- Last updated: 2026-04-15
+- Last updated: 2026-05-18
 - Canonical: Yes
 
 ## Scope
 
-- Edge Function: `lead-score-maintenance`
+- Backend route: `lead-score-maintenance` in `api/src/routes/leads.ts`
 - Telemetry table: `public.lead_score_maintenance_runs`
 - Scripts:
   - `npm run maintenance:lead:org`
@@ -370,7 +366,7 @@ Defines **how long** categories of data are kept and **how to enforce** reductio
 
 ## SPA — lead row delete (UI)
 
-The **Leads** inbox (`src/pages/Leads.tsx`) calls **`deleteLead`** in `src/store/leadsStore.ts`. As of April 2026:
+The **Leads** inbox (`frontend/src/pages/Leads.tsx`) calls **`deleteLead`** in `frontend/src/store/leadsStore.ts`. As of May 2026:
 
 - The client **awaits** `DELETE` on `public.leads` when Supabase is configured.
 - On **error** (e.g. **RLS** denying delete, network failure), the store shows **`leads.deleteFailed`** (i18n) plus the server message, then **refetches** leads so the UI matches the database (rows that “came back” were never deleted server-side).

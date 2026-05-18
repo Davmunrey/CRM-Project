@@ -11,17 +11,17 @@ For product-facing layout narrative and navigation runbooks, keep using [`master
 
 | Area | Path |
 |------|------|
-| Semantic tokens (RGB, typography, spacing, elevation, z-index, motion, density, legacy aliases) | `src/styles/tokens.css` |
-| Global base, components, utilities, light-mode overrides | `src/index.css` |
-| Tailwind theme extensions | `tailwind.config.js` |
-| Brand accent → CSS variables | `src/lib/brandingAccent.ts` |
-| Theme class on `<html>` | `src/lib/theme.ts` (`applyTheme`, `resolveTheme`) |
-| UI density `data-density` on `<html>` | `src/lib/theme.ts` (`applyUiDensity`, `normalizeUiDensity`) |
-| Persisted settings (includes `themePreference`, `uiDensity`) | `src/store/settingsStore.ts` |
-| Chart colors from CSS variables (Recharts) | `src/lib/chartTheme.ts` |
-| `date-fns` locale bundles (dynamic import) | `src/lib/dateFnsLocale.ts` |
-| Hook: load active locale for `date-fns` | `src/hooks/useDateLocale.ts` |
-| Focus trap / modal a11y helpers | `src/utils/a11y.ts` |
+| Semantic tokens (RGB, typography, spacing, elevation, z-index, motion, density, legacy aliases) | `frontend/src/styles/tokens.css` |
+| Global base, components, utilities, light-mode overrides | `frontend/src/index.css` |
+| Tailwind theme extensions | `frontend/tailwind.config.js` |
+| Brand accent → CSS variables | `frontend/src/lib/brandingAccent.ts` |
+| Theme class on `<html>` | `frontend/src/lib/theme.ts` (`applyTheme`, `resolveTheme`) |
+| UI density `data-density` on `<html>` | `frontend/src/lib/theme.ts` (`applyUiDensity`, `normalizeUiDensity`) |
+| Persisted settings (includes `themePreference`, `uiDensity`) | `frontend/src/store/settingsStore.ts` |
+| Chart colors from CSS variables (Recharts) | `frontend/src/lib/chartTheme.ts` |
+| `date-fns` locale bundles (dynamic import) | `frontend/src/lib/dateFnsLocale.ts` |
+| Hook: load active locale for `date-fns` | `frontend/src/hooks/useDateLocale.ts` |
+| Focus trap / modal a11y helpers | `frontend/src/utils/a11y.ts` |
 
 ---
 
@@ -109,7 +109,7 @@ Tailwind: `duration-fast`, `duration-base`, `duration-slow`, and animations `ani
 
 ## App shell (main canvas)
 
-- **`.app-main-surface`** on `<main>` (`src/index.css`, applied in `Layout.tsx`) gives a single brand-tinted background for **all** authenticated routes. Do not add alternate main-region backdrops per route.
+- **`.app-main-surface`** on `<main>` (`frontend/src/index.css`, applied in `Layout.tsx`) gives a single brand-tinted background for **all** authenticated routes. Do not add alternate main-region backdrops per route.
 - **Responsive shell:** Below `md`, the sidebar is a drawer; `Topbar` exposes a hamburger and a compact search entry that opens the command palette on the narrowest breakpoints. Product narrative: [`master-design-ui.md` — Main canvas and responsive shell](./master-design-ui.md#main-canvas-and-responsive-shell).
 
 ---
@@ -117,22 +117,22 @@ Tailwind: `duration-fast`, `duration-base`, `duration-slow`, and animations `ani
 <a id="charts-and-locale-loading"></a>
 ## Charts and locale loading
 
-- **Charts:** `useChartTheme()` in `src/lib/chartTheme.ts` reads semantic colors from CSS variables for Recharts (Dashboard, Reports, Forecast). Avoid hardcoded hex in chart configs.
-- **`date-fns`:** Locales are loaded **on demand** via `loadDateFnsLocale` (`src/lib/dateFnsLocale.ts`) and `useDateLocale` so inactive locale packs are not bundled with the main chunk. Vite `manualChunks` in `vite.config.ts` also splits **`recharts`** and **`date-fns`** into separate async chunks.
+- **Charts:** `useChartTheme()` in `frontend/src/lib/chartTheme.ts` reads semantic colors from CSS variables for Recharts (Dashboard, Reports, Forecast). Avoid hardcoded hex in chart configs.
+- **`date-fns`:** Locales are loaded **on demand** via `loadDateFnsLocale` (`frontend/src/lib/dateFnsLocale.ts`) and `useDateLocale` so inactive locale packs are not bundled with the main chunk. Vite `manualChunks` in `frontend/vite.config.ts` also splits **`recharts`** and **`date-fns`** into separate async chunks.
 
 ---
 
 ## Density
 
 - **Settings:** `AppSettings.uiDensity`: `'comfortable' | 'compact'` (default `comfortable` in `seedSettings`).
-- **DOM:** `document.documentElement.dataset.density` is set on load (`main.tsx`) and when settings change (`App.tsx` subscription).
-- **Tokens:** `html[data-density='compact']` lowers `--control-h` and `--row-h` in `tokens.css`. Use these variables for new dense layouts (e.g. table rows, form controls) instead of one-off pixel hacks.
+- **DOM:** `document.documentElement.dataset.density` is set on load (`frontend/src/main.tsx`) and when settings change (`frontend/src/App.tsx` subscription).
+- **Tokens:** `html[data-density='compact']` lowers `--control-h` and `--row-h` in `frontend/src/styles/tokens.css`. Use these variables for new dense layouts (e.g. table rows, form controls) instead of one-off pixel hacks.
 
 ---
 
 ## Focus ring
 
-- **Utility:** `focus-ring` in `src/index.css` (`@layer utilities`) — double ring using `--color-surface-0` and `--color-ring`.
+- **Utility:** `focus-ring` in `frontend/src/index.css` (`@layer utilities`) — double ring using `--color-surface-0` and `--color-ring`.
 - **Primitives:** `Button`, `IconButton`, `Input`, `Select`, and `Textarea` use `focus-ring`. Inputs also add `focus-visible:border-accent-500/50` for an extra color signal on the control border.
 
 ---
@@ -147,7 +147,7 @@ Tailwind: `size-icon-sm`, `w-icon-md`, `h-icon-lg`, etc. (see `tailwind.config.j
 
 ## React primitives
 
-Under `src/components/ui/`: `Button`, `Input`, `Select`, `Textarea`, `Modal`, `IconButton`, `Card`, `PageHeader`, `Toolbar`, `StatCard`, …
+Under `frontend/src/components/ui/`: `Button`, `Input`, `Select`, `Textarea`, `Modal`, `IconButton`, `Card`, `PageHeader`, `Toolbar`, `StatCard`, …
 
 **Page headers:** Prefer `PageHeader` with `showTitle={false}` when the Topbar already shows the route title; keep an accessible `<h1 class="sr-only">` via the `title` prop.
 
@@ -155,8 +155,8 @@ Under `src/components/ui/`: `Button`, `Input`, `Select`, `Textarea`, `Modal`, `I
 
 ## Industry catalog guardrail
 
-- Canonical data: `src/data/linkedin-industries-v2.json` (LinkedIn Industry Codes V2, English labels). Refresh with `node scripts/sync-linkedin-industries.mjs`.
-- API: `src/lib/industries.ts` — `getIndustryOptions(language)`, `getIndustryLabel(value, language)`, `normalizeIndustryValue(raw)` for legacy slugs.
+- Canonical data: `frontend/src/data/linkedin-industries-v2.json` (LinkedIn Industry Codes V2, English labels). Refresh with `node scripts/sync-linkedin-industries.mjs`.
+- API: `frontend/src/lib/industries.ts` — `getIndustryOptions(language)`, `getIndustryLabel(value, language)`, `normalizeIndustryValue(raw)` for legacy slugs.
 - Do not hardcode industry option arrays in forms, filters, imports, or views.
 - Optional translated overrides: extend `overrides` in `industries.ts`; otherwise labels fall back to English `nameEn`.
 
@@ -164,67 +164,67 @@ Under `src/components/ui/`: `Button`, `Input`, `Select`, `Textarea`, `Modal`, `I
 
 ## Auth shell (`AuthLayout`)
 
-- Component: `src/components/auth/AuthLayout.tsx`.
+- Component: `frontend/src/components/auth/AuthLayout.tsx`.
 - **`variant="centered"`** — single column (`max-w-md`), default branding logo + optional `title` / `subtitle` / `footer`, floating `LanguageSwitcher` + `ThemeSwitcher`.
 - **`variant="split"`** — `lg` grid: left `splitPanel` (marketing), right column for the form; on small screens `splitPanel` stacks above the form. Use for Login.
-- Background: class `auth-page-bg` uses `--auth-page-gradient-dark` / `--auth-page-gradient-light` from `tokens.css` (see `src/index.css`).
+- Background: class `auth-page-bg` uses `--auth-page-gradient-dark` / `--auth-page-gradient-light` from `frontend/src/styles/tokens.css` (see `frontend/src/index.css`).
 
 ## Theme & language switchers
 
-- **`ThemeSwitcher`** (`src/components/ui/ThemeSwitcher.tsx`): `variant="floating"` (`fixed top-4 right-20 z-modal`) or `variant="inline"` (for `Topbar`). Persists via `useSettingsStore`.
-- **`LanguageSwitcher`** (`src/components/shared/LanguageSwitcher.tsx`): flag + ISO code trigger, `DropdownMenu` options, `size="sm" | "md"`. Respects `languageMode` from `useI18nStore` (browser vs manual).
+- **`ThemeSwitcher`** (`frontend/src/components/ui/ThemeSwitcher.tsx`): `variant="floating"` (`fixed top-4 right-20 z-modal`) or `variant="inline"` (for `Topbar`). Persists via `useSettingsStore`.
+- **`LanguageSwitcher`** (`frontend/src/components/shared/LanguageSwitcher.tsx`): flag + ISO code trigger, `DropdownMenu` options, `size="sm" | "md"`. Respects `languageMode` from `useI18nStore` (browser vs manual).
 
 ---
 
 ## UI guardrails (`ui:lint`)
 
 ```bash
-npm run ui:lint
+cd frontend && npm run ui:lint
 ```
 
-Script: `scripts/ui-lint.mjs`.
+Script: `frontend/scripts/ui-lint.mjs`.
 
 **Global rules** (all TS/TSX except allowlist below):
 
 - Navy utilities: `bg-navy-*`, `text-navy-*`, `border-navy-*`, `from|to-navy-*`
 - Arbitrary hex in Tailwind utilities: `bg-[#…]`, `text-[#…]`, `border-[#…]`, `from|to|via-[#…]`
 
-**Strict rules** (everything under `src/` **except** `src/components/ui/**`, where primitives may still use low-level utilities):
+**Strict rules** (everything under `frontend/src/` **except** `frontend/src/components/ui/**`, where primitives may still use low-level utilities):
 
 - Slate / legacy neutrals: `text-slate-*`, `bg-slate-*`, `border-slate-*`, `placeholder-slate-*`
 - Raw white/black: `text-white`, `bg-white`
 - Legacy brand scale: `bg-brand-*`, `text-brand-*`, `border-brand-*`, `from|to|outline|ring|accent-brand-*`
 - Raw status / palette: common `text|bg|border-(red|emerald|amber|blue|rose|sky|…)` Tailwind scales (see script for exact patterns)
 
-Allowlist: `src/lib/brandingAccent.ts` and `src/lib/theme.ts` (which write CSS variables from raw hex).
+Allowlist: `frontend/src/lib/brandingAccent.ts` and `frontend/src/lib/theme.ts` (which write CSS variables from raw hex).
 
-CI: `.github/workflows/ci.yml` runs `npm run ui:lint` and `npm run i18n:lint` after `npm ci`.
+CI: `.github/workflows/ci.yml` runs `npm run ui:lint` and `npm run i18n:lint` after `npm ci` in the frontend.
 
 ### i18n guardrails (`i18n:lint`)
 
 ```bash
-npm run i18n:lint
+cd frontend && npm run i18n:lint
 ```
 
-Script: `scripts/i18n-lint.mjs` — blocks long hardcoded strings in `setError('…')` outside `src/i18n` and `src/components/ui`.
+Script: `frontend/scripts/i18n-lint.mjs` — blocks long hardcoded strings in `setError('…')` outside `frontend/src/i18n` and `frontend/src/components/ui`.
 
-E2E (`npm run test:e2e`): `playwright.config.ts` runs **`npm run build` before `vite preview`** so static routes (including the `*` catch-all) always match the current `App.tsx`.
+E2E (`npm run test:e2e`): `frontend/playwright.config.ts` runs **`npm run build` before `vite preview`** so static routes (including the `*` catch-all) always match the current `App.tsx`.
 
-**Unused code audit:** `npm run audit:unused` runs Knip scoped to **files and dependencies** (export-level noise is excluded until the backlog is triaged). `knip.json` ignores Edge `supabase/functions/*` and a few placeholder modules.
+**Unused code audit:** `npm run audit:unused` runs Knip scoped to **files and dependencies** (export-level noise is excluded until the backlog is triaged). `frontend/knip.json` ignores certain paths and placeholder modules.
 
 ---
 
 ## Accessibility smoke (axe)
 
-- Dependency: `vitest-axe` (extends `expect` in `tests/setup.ts`).
-- Covered pages: `Login`, `Register`, `ForgotPassword` (see `tests/auth/*.test.tsx`); UI primitives smoke in `tests/ui/primitives.test.tsx` (includes `ThemeSwitcher` + `LanguageSwitcher`).
+- Dependency: `vitest-axe` (extends `expect` in `frontend/tests/setup.ts`).
+- Covered pages: `Login`, `Register`, `ForgotPassword` (see `frontend/tests/auth/*.test.tsx`); UI primitives smoke in `frontend/tests/ui/primitives.test.tsx` (includes `ThemeSwitcher` + `LanguageSwitcher`).
 - **Note:** jsdom + static HTML may report false positives for color contrast; tune `axe()` options per case if needed.
 
 ---
 
 ## Cursor rule
 
-Persistent hints for agents: `.cursor/rules/ui-consistency.mdc` (tokens, primitives, lint, no navy/hex in components), `.cursor/rules/i18n.mdc` (user-facing copy via `t.*` / `getTranslations()`).
+Persistent hints for agents: `.cursor/rules/ui-consistency.mdc` (tokens, primitives, lint, no navy/hex in components), `.cursor/rules/i18n.mdc` (user-facing copy via `t.*` / `getTranslations()`). Refer to monorepo structure: frontend/ for UI code, api/ for backend.
 
 ---
 
@@ -232,4 +232,4 @@ Persistent hints for agents: `.cursor/rules/ui-consistency.mdc` (tokens, primiti
 
 - **Status:** Active  
 - **Owner:** Frontend  
-- **Last updated:** 2026-05-15  
+- **Last updated:** 2026-05-18  

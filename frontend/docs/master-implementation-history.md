@@ -15,11 +15,12 @@
 <a id="chronological-index-oldest--newest"></a>
 ## Chronological index (oldest → newest)
 
-Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part A, 13–29 in Part B) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
+Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part A, 13–30 in Part B) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
 
 | Date | Section | Summary |
 |------|---------|---------|
 | 2026-03-31 | [Part A — §1–12](#implementation-history-sections-01-12) | Foundation: platform through operational notes (tenancy, auth, tracking, leads, i18n, SSO, tests). |
+| 2026-05-18 | [§30](#implementation-history-section-30) | **Monorepo restructure:** velo-api merged into api/ subdirectory; frontend moved to frontend/; root docker-compose.yml; auth hardening (JWT HS256 pinning, SHA-256 reset tokens, bcrypt constant-time, rate-limit on reset, non-root Docker, CORS hardening, impersonation audit). |
 | 2026-04-10 | [§13](#implementation-history-section-13) | Current status snapshot — multi-tenant CRM baseline. |
 | 2026-04-10 | [§14](#implementation-history-section-14) | Lead maintenance observability, ops dashboard, SLAs, and runbooks. |
 | 2026-04-10 | [§15](#implementation-history-section-15) | Email privacy hardening (per-user mailbox, RLS, tracking ownership). |
@@ -230,9 +231,9 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 | Part | Location | Sections |
 |------|----------|----------|
 | **A** | [Anchor `#implementation-history-sections-01-12`](#implementation-history-sections-01-12) | 1–12: platform, tenancy, auth, org setup, security, email tracking, **leads**, i18n, UI, SSO, tests, ops notes |
-| **B** | *below in this section* | 13–28 |
+| **B** | *below in this section* | 13–30 |
 
-Cross-references elsewhere in the repo to **“section 19”**, **“section 21”**, etc. mean **Part B** in this file. References to **section 7** (leads baseline) mean **Part A** above.
+Cross-references elsewhere in the repo to **”section 19”**, **”section 21”**, etc. mean **Part B** in this file. References to **section 7** (leads baseline) mean **Part A** above. Section 30 (monorepo restructure, 2026-05-18) is the most recent addition to Part B.
 
 <a id="implementation-history-section-13"></a>
 ## 13) Current status summary
@@ -590,3 +591,46 @@ All `.md` files in both repos updated to reflect 2026-05-15 state. Key updates:
 - LinkedIn enrichment referenced in README modules table, velo-api route docs, and planning docs
 - CODEBASE.md Gmail flow updated to remove "blocked" note
 - STATE.md, PROJECT.md, REQUIREMENTS.md all updated with current status
+
+<a id="implementation-history-section-30"></a>
+## 30) Monorepo restructure and auth hardening (May 2026)
+
+### Repository structure consolidation
+
+- **velo-api merged into api/ subdirectory:** Previously a separate repository (`velo-api`), the Fastify backend is now at `api/` in the same monorepo as `frontend/`.
+- **Frontend moved to frontend/ subdirectory:** React 18 + TypeScript + Vite SPA now at `frontend/` (was at root).
+- **Root docker-compose.yml:** Single orchestration file replaces separate compose configurations; services: frontend (port 3000), api (port 3001), postgres, redis.
+- **CI/CD working directories:** 
+  - `ci.yml` runs from `frontend/` (uses `frontend/package-lock.json` cache)
+  - `build-production.yml` triggers on `frontend/**` changes only
+  - `build-api.yml` triggers on `api/**` changes only
+- **api/docker-entrypoint.sh auto-runs migrations:** No manual `npm run db:migrate` post-deploy needed; entrypoint runs migrations before server start.
+
+### Authentication hardening (comprehensive audit 2026-05-18)
+
+- **JWT HS256 algorithm pinning:** Algorithm hardcoded in `api/config/env.ts`; no `alg: none` attacks possible.
+- **Password reset token hashing:** `password_reset_tokens` stored as SHA-256 hashes in DB (not plaintext); token consumed via secure comparison.
+- **Login constant-time validation:** `POST /auth/login` uses bcrypt cost 12 with constant-time comparison; prevents timing-based user enumeration.
+- **Password reset rate limiting:** `POST /auth/reset-password` limited to 10 requests per 15 minutes per IP.
+- **JWT per-token revocation:** `jti` (JWT ID) claim enables individual token denylist in Redis; `POST /auth/logout` and `POST /auth/refresh` revoke old `jti` with TTL.
+- **Impersonation audit enforcement:** Audit log INSERT must succeed before admin impersonation token is issued (fail-fast on log failure).
+- **CORS hardening:** `CORS_ORIGIN` env parsed into array; each origin validated against exact match (not raw string); production guard checks all split values for `*`.
+- **Docker non-root:** api/Dockerfile uses `USER node` (not root); prevents privilege escalation from container breakout.
+- **Docker image purity:** api/.dockerignore prevents `.env` from leaking into image layers.
+- **Compose secret guards:** `JWT_SECRET` and `TOKEN_ENCRYPTION_KEY` use `:?` fail-fast guards (deploy fails if unset).
+
+### Documentation updates (2026-05-18)
+
+- **master-security-compliance.md:** Hardening matrix expanded; External hardening checklist updated with new auth controls and Docker section.
+- **master-release-qa.md:** Pre-go-live, go-live, and post-go-live checklists updated with monorepo deployment steps and new auth checks.
+- **smoke-checklist-production.md:** Preconditions and flows updated; auth and security flows section added; deployment checklist added.
+- **master-email-operations.md:** Transactional emails section updated; operator checklist marked with new security items completed; auth email security notes added.
+- **master-implementation-history.md:** Section 30 added (this section) to document monorepo restructure and auth hardening snapshot.
+
+### Related documentation
+
+- Monorepo structure: [README](../README.md)
+- CI/CD workflows: `.gitea/workflows/` (or `.github/workflows/`)
+- Backend routes and auth contracts: `api/docs/` or `api/README.md` (velo-api)
+- Frontend environment and channel setup: `frontend/docs/deployment-spa-and-env.md`
+- Security baseline: [`master-security-compliance.md` — Hardening matrix](./master-security-compliance.md#hardening-matrix)

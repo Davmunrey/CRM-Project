@@ -138,20 +138,20 @@ Aligned to [`../README.md`](../README.md) feature table and [`.planning/CODEBASE
 
 | Domain | Velo coverage (summary) | Primary code / doc pointers |
 |--------|----------------------------|----------------------------|
-| Deals / pipeline | Kanban + list, stages in settings, quotes, timeline view | `src/pages/Deals.tsx`, `src/store/dealsStore.ts` |
-| Contacts / companies | CRUD, detail pages, filters, export | `src/pages/Contacts.tsx`, `src/pages/Companies.tsx`, stores |
-| Activities | Feed, overdue, link to deals/contacts | `src/store/activitiesStore.ts` |
-| Email | Gmail OAuth, inbox, thread pin/link to CRM | `docs/master-email-operations.md`, `src/store/emailStore.ts` |
-| Automations | Rule engine + triggers from deal flow | `src/store/automationsStore.ts` |
-| Sequences | Enrollments, templates | `src/store/sequencesStore.ts`, `templateStore` |
-| Reports / dashboard | Charts, KPIs, manager metrics | `src/pages/Reports.tsx`, [`master-implementation-history` — Manager dashboard data contract](./master-implementation-history.md#manager-dashboard-data-contract) |
-| Products / quotes | Catalog, quote line items | `src/store/productsStore.ts` |
-| Custom fields | Definitions + renderer | `src/store/customFieldsStore.ts` |
-| Multi-tenancy | `organization_id`, RLS | `supabase/migrations/`, `docs/master-security-compliance.md` |
-| Audit | Org audit log | `src/store/auditStore.ts` |
-| Auth / roles | Supabase Auth, permission gates | `src/store/authStore.ts`, `src/components/auth/PermissionGate.tsx` |
-| **Outbound webhooks** | **Shipped** (Supabase: subscriptions, HMAC `X-Velo-Signature`, outbox, worker, Settings UI) — replay failed rows via Edge `webhook-subscriptions` actions `listFailedOutbox` / `replayOutbox` | `supabase/migrations/20260420140000_webhooks_outbound.sql`, `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` |
-| **Public REST API** | **Phase 1 (read) in progress** — org-scoped API keys + `crm-public-api` Edge Function (deploy when code lands); see `docs/public-api-phase1.md` | `./master-roadmap-backlog.md` |
+| Deals / pipeline | Kanban + list, stages in settings, quotes, timeline view | `frontend/src/pages/Deals.tsx`, `frontend/src/store/dealsStore.ts` |
+| Contacts / companies | CRUD, detail pages, filters, export | `frontend/src/pages/Contacts.tsx`, `frontend/src/pages/Companies.tsx`, stores |
+| Activities | Feed, overdue, link to deals/contacts | `frontend/src/store/activitiesStore.ts` |
+| Email | Gmail OAuth, inbox, thread pin/link to CRM | `docs/master-email-operations.md`, `frontend/src/store/emailStore.ts` |
+| Automations | Rule engine + triggers from deal flow | `frontend/src/store/automationsStore.ts` |
+| Sequences | Enrollments, templates | `frontend/src/store/sequencesStore.ts`, `templateStore` |
+| Reports / dashboard | Charts, KPIs, manager metrics | `frontend/src/pages/Reports.tsx`, [`master-implementation-history` — Manager dashboard data contract](./master-implementation-history.md#manager-dashboard-data-contract) |
+| Products / quotes | Catalog, quote line items | `frontend/src/store/productsStore.ts` |
+| Custom fields | Definitions + renderer | `frontend/src/store/customFieldsStore.ts` |
+| Multi-tenancy | `organization_id`, RLS | `api/migrations/`, `docs/master-security-compliance.md` |
+| Audit | Org audit log | `frontend/src/store/auditStore.ts` |
+| Auth / roles | JWT HS256 (api/src/routes/auth.ts), permission gates | `frontend/src/store/authStore.ts`, `frontend/src/components/auth/PermissionGate.tsx` |
+| **Outbound webhooks** | **Shipped** (subscriptions, HMAC `X-Velo-Signature`, outbox, worker, Settings UI) — replay failed rows via settings | `api/migrations/20260420140000_webhooks_outbound.sql`, `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` |
+| **Public REST API** | **Phase 1 (read-only) shipped** — org-scoped API keys + `/public/v1/*` routes; see `docs/public-api-phase1.md` | `api/src/routes/public/`, `./master-roadmap-backlog.md` |
 
 ---
 
@@ -213,10 +213,11 @@ Scoring: **A** adoption / dependency, **R** revenue cycle, **I** integration rel
 
 | Topic | Path |
 |-------|------|
-| Routes / lazy pages | `src/App.tsx` |
-| Deal mutations / automations hook | `src/store/dealsStore.ts`, `src/store/automationsStore.ts` |
+| Routes / lazy pages | `frontend/src/App.tsx` |
+| Deal mutations / automations hook | `frontend/src/store/dealsStore.ts`, `frontend/src/store/automationsStore.ts` |
 | Integration audit | `.planning/CODEBASE.md#external-integrations-audit` |
-| Schema | `supabase/migrations/` |
+| Schema / migrations | `api/migrations/` |
+| Public API routes | `api/src/routes/public/` |
 | Roadmap API/Webhooks | `./master-roadmap-backlog.md` |
 | Implementation history (do not duplicate here) | `./master-implementation-history.md` |
 
@@ -226,5 +227,5 @@ Scoring: **A** adoption / dependency, **R** revenue cycle, **I** integration rel
 
 - **Status:** Active  
 - **Owner:** Product / Engineering  
-- **Last updated:** 2026-05-15  
+- **Last updated:** 2026-05-18  
 - **Canonical:** Yes  

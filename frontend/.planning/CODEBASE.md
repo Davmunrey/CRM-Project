@@ -5,11 +5,11 @@ This file consolidates the prior `.planning/codebase/*.md` documents into a sing
 ## Architecture
 
 **Source:** `.planning/codebase/ARCHITECTURE.md`  
-**Analysis date:** 2026-04-22
+**Analysis date:** 2026-05-18
 
 ### Pattern overview
 
-**Overall:** React SPA + `velo-api` (Fastify 5, PostgreSQL 16, Redis). Zustand stores for client state. Auth via HS256 JWT (`{ sub, org, role, jti }`). Real-time via Socket.io. No Supabase runtime dependency — `supabase` client is `null` at runtime; all data goes through velo-api including Gmail OAuth.
+**Overall:** React 18 SPA (frontend/) + `velo-api` Fastify 5 backend (api/) in monorepo. PostgreSQL 16 + Redis. Zustand stores for client state. Auth via HS256 JWT (`{ sub, org, role, jti }`). Real-time via Socket.io. No Supabase runtime dependency — `supabase` client is `null` at runtime; all data goes through velo-api including Gmail OAuth.
 
 **Key characteristics:**
 - `velo-api` is the primary backend for auth, persistence, and realtime sync.
@@ -32,15 +32,15 @@ This file consolidates the prior `.planning/codebase/*.md` documents into a sing
 - Domain-specific Zustand stores.
 - All CRUD via `src/lib/api.ts` REST calls to velo-api; optimistic updates where implemented.
 - `supabase` is `null` — all `!supabase` / `supabase?.` guards fire; Supabase-dependent panels show info states.
-- Real-time: `window.__veloDbChange(table)` global fires Socket.io events → stores refetch.
+- Real-time: Socket.io events (api:3001) → `window.__veloDbChange(table)` global fires → stores refetch.
 
 **Services (`src/services/*`):**
 - Stateless integration adapters (`googleIntegrationService`, `gmailTokenRefresh`, etc.).
-- Gmail token operations attempt direct Edge Function fetch with velo-api JWT as fallback.
+- All Gmail token operations now go through velo-api `/gmail/*` routes (no Supabase Edge Functions).
 
 **Data/infra (`supabase/*`):**
-- Edge Functions for Gmail OAuth (token exchange, refresh, disconnect).
-- SQL migrations: schema history for PostgreSQL (now managed via `velo-api/src/db/migrations/`).
+- Legacy Edge Functions (email tracking, webhooks, public API) — deprecated, not called from frontend.
+- SQL migrations: historical reference only; PostgreSQL schema now managed via `api/migrations/` in velo-api monorepo subdirectory.
 
 ### Core flows
 
@@ -100,39 +100,58 @@ This file consolidates the prior `.planning/codebase/*.md` documents into a sing
 
 ### Directory layout
 
+**Monorepo structure:** This frontend directory is part of the velo-crm monorepo. Root contains: `frontend/` (React SPA), `api/` (Fastify + PostgreSQL), `docker-compose.yml`, `privateprompt-app.json`.
+
 **UI layout conventions:** see `docs/master-design-ui.md` (`crm-page`, `crm-page-full`, shared empty states).
 
 ```
-CRM/
-├── public/                     # Static assets served as-is by Vite
-├── src/
-│   ├── assets/                 # Static assets imported by components
-│   ├── components/
-│   │   ├── activities/         # Activity-domain components (forms, list items)
-│   │   ├── auth/               # Route guard and permission gate components
-│   │   ├── companies/          # Company-domain components
-│   │   ├── contacts/           # Contact-domain components
-│   │   ├── deals/              # Deal-domain components (kanban, forms)
-│   │   ├── email/              # Email composer / inbox components
-│   │   ├── import/             # CSV/JSON import wizard components
-│   │   ├── layout/             # App shell (Sidebar, Topbar, Layout, ErrorBoundary, CommandPalette)
-│   │   ├── settings/           # Settings sub-panels (e.g. webhooks UI)
-│   │   ├── shared/             # Cross-domain reusable components
-│   │   └── ui/                 # Primitive design-system components
-│   ├── hooks/                  # Custom React hooks
-│   ├── i18n/                   # Translations and language store
-│   ├── lib/                    # External client setup (supabase.ts, database.types.ts)
-│   ├── pages/                  # One file per route — full-page view components
-│   ├── services/               # Stateless external API callers
-│   ├── store/                  # Zustand stores (one file per domain)
-│   ├── types/                  # TypeScript interfaces and union types
-│   ├── utils/                  # Pure helper functions and constants
-│   ├── App.tsx                 # Router definition, app-level effects
-│   ├── main.tsx                # React DOM entry point
-│   └── index.css               # Global Tailwind CSS entry
-├── supabase/                   # Supabase schema and migrations
-├── index.html                  # Vite HTML shell
-└── package.json
+velo-crm/
+├── frontend/                   # This directory (React SPA)
+│   ├── .planning/              # Planning documents (this codebase map, requirements, roadmap, etc.)
+│   ├── public/                 # Static assets served as-is by Vite
+│   ├── src/
+│   │   ├── assets/             # Static assets imported by components
+│   │   ├── components/
+│   │   │   ├── activities/     # Activity-domain components (forms, list items)
+│   │   │   ├── auth/           # Route guard and permission gate components
+│   │   │   ├── companies/      # Company-domain components
+│   │   │   ├── contacts/       # Contact-domain components
+│   │   │   ├── deals/          # Deal-domain components (kanban, forms)
+│   │   │   ├── email/          # Email composer / inbox components
+│   │   │   ├── import/         # CSV/JSON import wizard components
+│   │   │   ├── layout/         # App shell (Sidebar, Topbar, Layout, ErrorBoundary, CommandPalette)
+│   │   │   ├── settings/       # Settings sub-panels (e.g. webhooks UI)
+│   │   │   ├── shared/         # Cross-domain reusable components
+│   │   │   └── ui/             # Primitive design-system components
+│   │   ├── hooks/              # Custom React hooks
+│   │   ├── i18n/               # Translations and language store
+│   │   ├── lib/                # External client setup (supabase.ts, database.types.ts)
+│   │   ├── pages/              # One file per route — full-page view components
+│   │   ├── services/           # Stateless external API callers
+│   │   ├── store/              # Zustand stores (one file per domain)
+│   │   ├── types/              # TypeScript interfaces and union types
+│   │   ├── utils/              # Pure helper functions and constants
+│   │   ├── App.tsx             # Router definition, app-level effects
+│   │   ├── main.tsx            # React DOM entry point
+│   │   └── index.css           # Global Tailwind CSS entry
+│   ├── supabase/               # Legacy Supabase schema and migrations (reference only)
+│   ├── index.html              # Vite HTML shell
+│   └── package.json
+├── api/                        # Fastify backend (Node.js 22 + PostgreSQL 16)
+│   ├── migrations/             # PostgreSQL schema migrations
+│   ├── src/
+│   │   ├── routes/             # API route handlers (auth, contacts, deals, gmail, etc.)
+│   │   ├── db/                 # Database utilities and pool
+│   │   └── ...
+│   ├── package.json
+│   └── Dockerfile
+├── docker-compose.yml          # Starts: postgres, redis, api, frontend (nginx)
+├── privateprompt-app.json      # Private Prompt deployment manifest
+└── .gitea/
+    └── workflows/
+        ├── ci.yml              # Frontend type check + tests
+        ├── build-production.yml # Frontend Docker image build
+        └── build-api.yml       # API Docker image build
 ```
 
 ### Directory purposes (selected)
@@ -218,6 +237,6 @@ The module matrix and permission list were folded into the Coding Conventions so
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-05-15  
+- **Last updated:** 2026-05-18  
 - **Canonical:** Yes  
 

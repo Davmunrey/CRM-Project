@@ -19,13 +19,13 @@
 
 This roadmap starts from the current implemented baseline and prioritizes features that move the product closer to HubSpot/Pipedrive-level value.
 
-> **Status refresh (2026-05-15):** Navigation customization, core i18n (EN/ES/PT + partial FR/DE/IT), sell-ready **product** baseline, security hardening (Redis JWT denylist, Socket.io JWT verification, AES-256-GCM encryption, rate limiting), **Workflow Automations v1 + Lead Scoring v2**, **Manager Dashboard Pack + Onboarding**, Gmail fully self-hosted, **LinkedIn URL enrichment on contacts** (migration 012), Slack/Zoom/Google Calendar integrations are shipped. This roadmap tracks **remaining** horizons (API, SSO depth, AI, org-wide email rollups, production deploy). **Ola C (docs):** i18n execution waves, per-release translation QA template — see [`master-implementation-history` — section 22](./master-implementation-history.md#implementation-history-section-22).
+> **Status refresh (2026-05-18):** Monorepo restructure complete (frontend/ + api/ + docker-compose.yml). Navigation customization, core i18n (EN/ES/PT + partial FR/DE/IT), sell-ready **product** baseline, security hardening (Redis JWT denylist, Socket.io JWT verification, AES-256-GCM encryption, rate limiting), **Workflow Automations v1 + Lead Scoring v2**, **Manager Dashboard Pack + Onboarding**, Gmail fully self-hosted (api/src/routes/gmail.ts + calendar.ts), **LinkedIn URL enrichment on contacts** (migration 012), Slack/Zoom/Google Calendar integrations, Public REST API (api/routes/public/v1/*), API key management are shipped. This roadmap tracks **remaining** horizons (SSO depth, AI, org-wide email rollups, advanced webhooks). **Ola C (docs):** i18n execution waves, per-release translation QA template — see [`master-implementation-history` — section 22](./master-implementation-history.md#implementation-history-section-22).
 
 ## Document Control
 
 - Status: Active
 - Owner: Product
-- Last updated: 2026-05-15
+- Last updated: 2026-05-18
 - Canonical: Yes
 
 ## 0-30 days (Revenue + execution fundamentals)
@@ -147,21 +147,21 @@ Move from “feature parity” toward differentiation through intelligence and v
 
 This is the actionable backlog derived from the 30/60/90 roadmap.
 
-> **Status refresh (2026-04-16):** This board lists **remaining** execution work. Shipped items live in **`docs/master-implementation-history.md#implementation-history-sections-01-12`** (Part A) + **`docs/master-implementation-history.md#implementation-history`** (Part B) and in the status table in **`docs/README.md`**. Keep long “done” narratives out of this file.
+> **Status refresh (2026-05-18):** This board lists **remaining** execution work. Shipped items live in **`docs/master-implementation-history.md#implementation-history-sections-01-12`** (Part A) + **`docs/master-implementation-history.md#implementation-history`** (Part B) and in the status table in **`docs/README.md`**. Keep long “done” narratives out of this file.
 
 ## Document Control
 
 - Status: Active
 - Owner: Product/Engineering
-- Last updated: 2026-04-16
+- Last updated: 2026-05-18
 - Canonical: Yes
 
 ## Shipped tracks (do not duplicate here)
 
-All previously listed “in progress” packs (automations v1, scoring v2, lead maintenance ops, ops docs, email privacy/Ola 3, navigation, app shell, sell-ready security wave) are **done**. Narrative and ordering:
+All previously listed “in progress” packs (automations v1, scoring v2, lead maintenance ops, ops docs, email privacy/Ola 3, navigation, app shell, sell-ready security wave, monorepo restructure, backend hardening) are **done**. Narrative and ordering:
 
 - **`docs/master-implementation-history.md#implementation-history-sections-01-12`** — sections **1–12** (includes **section 7** leads baseline).  
-- **`docs/master-implementation-history.md#implementation-history`** (Part B) — sections **13–28** (status, maintenance, email hardening, navigation, UI shell, sell-ready, sprint archive, automations/scoring, Ola C docs, manager dashboard + onboarding, April 2026 UI quality pass, Supabase-only shell + password UX + integrations/API waves).
+- **`docs/master-implementation-history.md#implementation-history`** (Part B) — sections **13–28** (status, maintenance, email hardening, navigation, UI shell, sell-ready, sprint archive, automations/scoring, Ola C docs, manager dashboard + onboarding, April 2026 UI quality pass, Supabase-only shell + password UX + integrations/API waves, May 2026 monorepo + API hardening).
 - **`docs/README.md`** — status snapshot table.
 
 ## Reference docs (team register)

@@ -1,12 +1,21 @@
 # Velo CRM
 
-Internal B2B CRM — React 18 SPA backed by `velo-api` (Fastify + PostgreSQL).
+Internal B2B CRM — React 18 SPA backed by `api/` (Fastify + PostgreSQL). Part of the velo-crm monorepo.
+
+## Monorepo structure
+
+```
+velo-crm/
+  frontend/     ← This directory (React 18 + TypeScript + Vite SPA)
+  api/          ← Fastify 5 + Node.js 22 + PostgreSQL + Redis + Socket.io
+  docker-compose.yml   ← Full-stack orchestration
+```
 
 ## Architecture
 
 ```
 Browser (React SPA)
-  └─ velo-api  (Fastify 5, Node 22, PostgreSQL 16, Redis, Socket.io)
+  └─ api  (Fastify 5, Node 22, PostgreSQL 16, Redis, Socket.io)
        ├─ REST API  — /auth /contacts /deals /companies /activities ...
        ├─ Realtime  — Socket.io, org-scoped rooms, JWT-verified middleware
        └─ Background — BullMQ jobs on Redis
@@ -16,7 +25,7 @@ Auth: HS256 JWT (`sub/org/role/jti`). Every request carries `Authorization: Bear
 
 Data: all Zustand stores are API-backed (optimistic UI + rollback). No Supabase PostgREST — direct Fastify routes scope every query by `organization_id` from JWT.
 
-Realtime: Socket.io from the same velo-api process; frontend subscribes to `__veloDbChange(table)` events for contacts, deals, activities, notifications.
+Realtime: Socket.io from the same `api/` process; frontend subscribes to `__veloDbChange(table)` events for contacts, deals, activities, notifications.
 
 ---
 
@@ -47,9 +56,10 @@ Realtime: Socket.io from the same velo-api process; frontend subscribes to `__ve
 
 ## Dev Setup
 
-Requires: **Node 22+**, **velo-api running** at `http://localhost:3001` (see `../velo-api/README.md`).
+Requires: **Node 22+**, **`api/` backend running** at `http://localhost:3001` (see `../api/README.md`).
 
 ```bash
+cd frontend
 cp .env.example .env
 # VITE_API_URL defaults to http://localhost:3001
 npm install
@@ -61,7 +71,7 @@ Start the full stack first (Homebrew):
 ```bash
 brew services start postgresql@16 redis
 
-cd ../velo-api
+cd api
 npm run db:migrate && npm run db:seed
 npm run dev
 # admin@velo.local / Admin1234!
@@ -70,8 +80,10 @@ npm run dev
 Or with Docker (Postgres + Redis only):
 
 ```bash
-cd ../velo-api
+cd ..
 docker-compose up postgres redis -d
+
+cd api
 npm run db:migrate && npm run db:seed
 npm run dev
 ```
@@ -79,13 +91,11 @@ npm run dev
 Full Docker stack (frontend + API + Postgres + Redis):
 
 ```bash
-# Build SPA first
-VITE_API_URL=/api npm run build
-
-cd ../velo-api
-cp .env.example .env   # set JWT_SECRET
+# From repo root
 docker-compose up -d
-# http://localhost
+
+# Frontend: http://localhost
+# API: http://localhost:3001
 ```
 
 ---
@@ -94,7 +104,7 @@ docker-compose up -d
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VITE_API_URL` | `/api` | velo-api base URL. Local dev: `http://localhost:3001`. Docker: omit (nginx proxies `/api/*`) |
+| `VITE_API_URL` | `/api` | API base URL. Local dev: `http://localhost:3001`. Docker: omit (nginx proxies `/api/*`) |
 | `VITE_APP_CHANNEL` | `development` | Build channel — `production` or `staging` for deployed builds |
 | `VITE_GOOGLE_CLIENT_ID` | — | Gmail OAuth (optional) |
 
@@ -189,3 +199,7 @@ npm run audit:unused     # Knip unused code check
 
 Internal engineering docs under `docs/` — see [`docs/README.md`](docs/README.md).
 Planning, phases, and requirement checkboxes under `.planning/`.
+
+---
+
+*Last updated: 2026-05-18*

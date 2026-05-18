@@ -36,13 +36,13 @@
 <a id="auth-sso-backend-handoff"></a>
 ## Auth / SSO backend handoff
 
-Auth is **email/password via velo-api** (`POST /auth/login`, `POST /auth/register`). JWT HS256 with `sub/org/role/jti` claims. SSO (Google/Azure/Apple/SAML) is roadmap — the frontend has feature-flag toggles wired but backend routes are not yet implemented.
+Auth is **email/password via velo-api** (Fastify backend in `api/` directory). JWT HS256 with `sub/org/role/jti` claims and algorithm pinned to prevent alg:none attacks. SSO (Google/Azure/Apple/SAML) is roadmap — the frontend has feature-flag toggles wired but backend routes are not yet implemented.
 
 ## Document Control
 
 - Status: Active
 - Owner: Backend/Auth
-- Last updated: 2026-05-15 (security hardening: Redis JWT denylist, Socket.io JWT verification, AES-256-GCM for all secrets, auth rate limiting, CSP, jti claim added)
+- Last updated: 2026-05-18 (monorepo restructure, JWT HS256 algorithm pinning, SHA-256 reset tokens, constant-time bcrypt login, rate-limited password reset, non-root Docker, CORS hardening, impersonation log enforcement)
 - Canonical: Yes
 
 ## velo-api auth endpoints
@@ -82,13 +82,13 @@ These toggles only affect visible login options and are all currently `false`.
 
 This matrix tracks production hardening posture across security, reliability, operations, and governance.
 
-**Snapshot (2026-04-15):** P0 email-abuse and auth fail-closed work is reflected in code and [#sell-ready security evidence index](#sell-ready-security-evidence-index). Matrix rows below stay open until **external** sign-offs (RLS review, DR drill calendar, secret rotation log) are attached as evidence.
+**Snapshot (2026-05-18):** Monorepo restructure complete. Auth hardening now includes JWT HS256 algorithm pinning, SHA-256 password reset tokens, constant-time bcrypt login validation, rate-limiting on `/auth/reset-password` (10 req/15 min), and impersonation log enforcement (audit INSERT before token issue). Docker non-root USER enforcement, CORS parsed origins validation, and api/.dockerignore prevent .env layer leakage. P0 email-abuse and auth fail-closed work is reflected in code and [#sell-ready security evidence index](#sell-ready-security-evidence-index). Matrix rows below stay open until **external** sign-offs (RLS review, DR drill calendar, secret rotation log) are attached as evidence.
 
 ## Document Control
 
 - Status: Active
 - Owner: Security/Ops/Backend
-- Last updated: 2026-05-14
+- Last updated: 2026-05-18
 - Canonical: Yes
 
 ## Scoring Legend
@@ -102,7 +102,9 @@ This matrix tracks production hardening posture across security, reliability, op
 | Domain | Risk | Impact | Likelihood | Current Control | Remaining Gap | Priority | Owner | ETA |
 |---|---|---|---|---|---|---|---|---|
 | Multi-tenancy | Cross-tenant data leakage | Critical | Low | `organization_id` model + RLS + claim helpers (`get_org_id`, `get_user_role`) | Periodic tenant-isolation regression in CI | P0 | Backend | 1 sprint |
-| Auth/SSO | Provider misconfiguration blocks sign-in | High | Medium | Login supports Google/Azure/Apple/SAML + backend handoff contract | SCIM lifecycle and IdP drift monitoring | P1 | Backend/Auth | 2 sprints |
+| Auth/SSO | Provider misconfiguration blocks sign-in | High | Medium | JWT HS256 pinned, password reset tokens SHA-256 hashed, bcrypt login constant-time, rate-limit on `/auth/reset-password`, impersonation audit logged | SCIM lifecycle and IdP drift monitoring | P1 | Backend/Auth | 2 sprints |
+| Auth/SSO | User enumeration via timing | High | Low | Bcrypt cost 12 with constant-time comparison on login; password reset always returns 200 (no user leakage) | Validate timing across all login paths in staging | P1 | Backend/Auth | 1 sprint |
+| Auth/SSO | Password reset token exposure | High | Low | SHA-256 hash in DB (not plaintext); 1-hour TTL; single-use | Rotate reset token secret on compromise | P1 | Backend/Auth | Ongoing |
 | Email Infra | Default provider rate limiting disrupts onboarding | High | Medium | SMTP/custom provider guidance documented | Production SMTP failover playbook | P1 | Ops | 1 sprint |
 | Lead Scoring | Stale scoring due to scheduler outage | High | Medium | Backend-first maintenance + telemetry + SLA guardrail alerts | External monitor (pager integration) and weekly trend review | P0 | Ops/Backend | 1 sprint |
 | Data Consistency | Lead conversion partial writes under failure | High | Low | `promote-lead` server-side conversion path | Add explicit idempotency key strategy | P1 | Backend | 2 sprints |
@@ -189,12 +191,17 @@ Use this checklist when validating a **production** deployment. Record evidence 
 
 ## 1. Authentication and sessions (velo-api)
 
-- [ ] `JWT_SECRET` is at least 64 chars / 32 random bytes (`openssl rand -hex 32`); min length enforced at startup in `config/env.ts`; rotate on compromise.
+- [ ] `JWT_SECRET` is at least 64 chars / 32 random bytes (`openssl rand -hex 32`); min length enforced at startup in `api/config/env.ts`; rotate on compromise.
+- [ ] JWT algorithm pinned to HS256 (no `alg: none` attacks possible); verified in `config/env.ts` validation.
 - [ ] JWT expiry (`JWT_EXPIRES_IN`) aligned with product risk (default 7d).
-- [ ] `CORS_ORIGIN` on velo-api matches frontend production origin exactly.
+- [ ] JWT includes `jti` (JWT ID) claim for per-token revocation; denylist in Redis with TTL.
+- [ ] `CORS_ORIGIN` on velo-api parsed into origins array and validated (not raw string match); split values checked for `*` in CORS production guard.
 - [ ] `POST /auth/forgot-password` always returns 200 (email enumeration prevention — already implemented).
-- [ ] `password_reset_tokens` TTL is 1 hour (migration `002` — already applied).
-- [ ] Rate limiting enabled on auth routes (`@fastify/rate-limit` — already configured).
+- [ ] `password_reset_tokens` stored as SHA-256 hashes (not plaintext); TTL is 1 hour (migration `002` — already applied).
+- [ ] `/auth/reset-password` rate-limited: 10 requests per 15 minutes per IP.
+- [ ] `/auth/login` uses bcrypt cost 12 with constant-time comparison (prevents timing-based user enumeration).
+- [ ] `POST /auth/logout` revokes JWT in Redis denylist before clearing session.
+- [ ] Impersonation audit log INSERT must succeed before token is issued (fail-fast on log failure).
 
 ## 2. Row Level Security (RLS — Supabase Edge Functions)
 
@@ -221,11 +228,27 @@ Use this checklist when validating a **production** deployment. Record evidence 
 - [ ] Restore drill documented (who runs it, how long it takes, last drill date).
 - [ ] Database connection pooling and max connections reviewed for expected load.
 
-## 5. Observability
+## 5. Docker and Infrastructure
+
+- [ ] api/Dockerfile runs as non-root `USER node` (not root).
+- [ ] api/.dockerignore prevents `.env` from leaking into image layers.
+- [ ] api/docker-entrypoint.sh auto-runs migrations before server start (no manual post-deploy step).
+- [ ] `JWT_SECRET` and `TOKEN_ENCRYPTION_KEY` use Compose `:?` guards (fail-fast if unset).
+- [ ] Root docker-compose.yml (monorepo structure) starts both frontend and api services with health checks.
+
+## 6. Observability
 
 - [ ] velo-api structured logs reviewed on a schedule (stdout → your log aggregator).
 - [ ] Supabase Edge Function logs reviewed for Gmail, webhook, and public-API errors.
 - [ ] Alerts for auth anomalies, function error rate, and database CPU/storage.
+
+## CI/CD and Secrets
+
+- [ ] CI workflows specify working directory: `ci.yml` uses `frontend/`, `build-api.yml` uses `api/`.
+- [ ] E2E secrets use velo-api endpoints (not Supabase): `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
+- [ ] `build-production.yml` triggers only on `frontend/**` changes.
+- [ ] `build-api.yml` triggers on `api/**` changes.
+- [ ] No secrets committed; all environment variables set in CI/CD platform.
 
 ## Sign-off
 

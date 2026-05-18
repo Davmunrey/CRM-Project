@@ -68,7 +68,7 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 
 - Main app overview + dev setup: [`../README.md`](../README.md)
 - Supabase Edge Functions (legacy background jobs): [`../supabase/README.md`](../supabase/README.md)
-- velo-api (Fastify backend, PostgreSQL, JWT auth): [`../../velo-api/README.md`](../../velo-api/README.md)
+- API (Fastify backend, PostgreSQL, JWT auth): [`../../api/README.md`](../../api/README.md)
 - Deploy + env + Docker full-stack: [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) · Browser smoke: set `E2E_STAGING_URL` (see [`../e2e/smoke.spec.ts`](../e2e/smoke.spec.ts))
 
 ---
@@ -104,5 +104,5 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 
 - **Status:** Active  
 - **Owner:** Engineering  
-- **Last updated:** 2026-05-15  
+- **Last updated:** 2026-05-18  
 - **Canonical:** Yes  

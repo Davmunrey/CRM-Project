@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Backend Migration Complete — Ready for Deploy
-last_updated: "2026-05-15T00:00:00.000Z"
+status: Monorepo Complete — Infra Hardened — Ready for Deploy
+last_updated: "2026-05-18T00:00:00.000Z"
 progress:
   total_phases: 10
   completed_phases: 10
@@ -17,14 +17,14 @@ progress:
 
 See: .planning/PROJECT.md
 
-**Core value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time, with data persisted in PostgreSQL via self-hosted Fastify API (`velo-api`).
-**Current focus:** Deployed — all auth flows working, no Supabase runtime dependency.
+**Core value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time, with data persisted in PostgreSQL via self-hosted Fastify API (`velo-api`) in a monorepo alongside the React frontend.
+**Current focus:** Monorepo complete, infra hardened (Docker, JWT, Socket.io, encryption), security audited, ready for production deploy.
 
 ## Current Status
 
-**Milestone:** v1.0 — Backend Migration Complete
+**Milestone:** v1.0 — Monorepo Complete & Infra Hardened
 **Phase:** 10 of 10 — COMPLETE
-**Next:** Production deploy + email sending (SMTP/Resend for password reset emails)
+**Next:** Production deploy (operator tasks: DEPLOY-01–05)
 
 ## Completed Phases
 
@@ -83,8 +83,25 @@ See: .planning/PROJECT.md
 - Google OAuth app verification (restricted Gmail scopes) takes 4-6 weeks for production approval — dev/test mode works for approved test accounts only.
 - Production deploy not yet executed (DEPLOY-01 through DEPLOY-05 remain operator tasks)
 
-## Notes (Phase 10 — velo-api migration)
+## Notes (Monorepo + Infra Hardening — 2026-05-18)
 
+**Monorepo structure:**
+- `frontend/` — React 18 SPA (Vite, Tailwind, Zustand, React Router)
+- `api/` — Fastify 5 backend (Node.js 22, PostgreSQL 16, Redis, Socket.io, BullMQ)
+- `docker-compose.yml` — Orchestrates postgres + redis + api + web (nginx) for local development and portable deployment
+- `.gitea/workflows/` — CI: `ci.yml` (frontend tests + type check), `build-production.yml` (frontend Docker), `build-api.yml` (api Docker)
+
+**Infrastructure hardening (2026-05-14 security audit):**
+- Socket.io JWT verification (was stub — now verifies with fast-jwt `createVerifier`)
+- Redis JWT denylist (key: `jwt:deny:{jti}` with TTL) checked on every authenticated request
+- All JWT sign calls include `jti: randomBytes(16).toString('hex')` for token revocation tracking
+- Logout requires auth + revokes token via Redis denylist
+- Auth routes rate-limited (10/15min) with helmet rate limiter
+- Secrets encrypted with AES-256-GCM (OAuth refresh tokens, SMTP password, webhook signing secrets)
+- CSP headers: `default-src 'none'; frame-ancestors 'none'`
+- CORS: production wildcard guard, staging allows preview URLs
+
+**Auth flow notes:**
 - `isLoadingAuth` initializes as `true` — prevents race-condition redirect to /login on cold load
 - Auth middleware: IS NULL branch for null-org JWT (PostgreSQL `= null` always false)
 - `useDataInit` guards on both `currentUserId` and `organizationId` — prevents 14 parallel 401s before org exists
@@ -92,9 +109,17 @@ See: .planning/PROJECT.md
 - `POST /invitations/:token/accept` validates email match before assigning user to org
 - `POST /auth/forgot-password` always returns 200 (prevents email enumeration)
 - `password_reset_tokens` table: migration `002` — 1-hour TTL, unique token per user
-- All Supabase Edge Function calls removed from frontend — replaced with `/api/*` routes
+
+**Frontend + API contract:**
+- All Supabase Edge Function calls removed from frontend — replaced with `/api/*` routes via velo-api
 - `supabase` stub: `null as unknown as SupabaseClient | null` — all `!supabase` guards fire correctly
-- Google OAuth verification (restricted scopes) takes 4-6 weeks if pursuing Gmail for production users
+- Store responses unwrap `{ data: [] }` shape; JSON-string columns parsed via Zod `.safeParse()`
+- Socket.io realtime via `window.__veloDbChange(table)` global bridge
+
+**Deployment ready:**
+- Google OAuth verification (restricted scopes) pending: 4-6 week Google review for production users (dev/test mode works for approved test accounts)
+- Build: `npm run build` + `npm run test:run` green (218 tests passing)
+- Docker images: `docker build` for frontend (nginx), `docker build` for api (Node.js)
 
 ---
 *Initialized: 2026-03-31*
@@ -117,3 +142,5 @@ See: .planning/PROJECT.md
 *Session 2026-05-14 (security hardening) — Full cybersecurity audit across both repos. velo-api: Socket.io JWT verification (was a comment/stub — rewrote with fast-jwt createVerifier); Redis JWT denylist (jwt:deny:{jti} with TTL) checked on every authenticated request; all JWT sign calls include `jti: randomBytes(16).toString('hex')`; logout now requires auth + revokes token; refresh rotates jti; bcrypt cost constant (`BCRYPT_ROUNDS=12`); JWT_SECRET min raised to 64 chars; auth routes rate-limited (10/15min); input validation hardened across sequences, customFields, audit, invitations, publicApi, emailTracking, smtp, apiKeys; open redirect guard on email tracking click; webhook inbound HMAC via timingSafeEqual; webhook custom-header SSRF blocklist; AES-256-GCM encryption for webhook signing secrets and inbound secrets; API key rotation endpoint (`POST /integrations/api-keys/:id/rotate`); webhook secret rotation (`POST /webhook-subscriptions/:id/rotate-secret`); global 500 error scrubber in production; CSP `default-src 'none'; frame-ancestors 'none'`; production CORS wildcard guard; Redis connect/close lifecycle. velo-crm: client-side session timeout enforcement (`enforceTokenExpiry()` before every API request); DOMPurify hardened (restricted URI schemes, forbidden tags/attrs); i18n stale Supabase strings updated (9+ keys per locale); `supabaseSession` dead field removed from authStore; `requireSupabase.ts` stub deleted. Docs updated: velo-api README (routes, migrations, env), master-security-compliance.md (auth table, JWT payload, ASVS, hardening checklist), REQUIREMENTS.md AI-02 marked done. Both repos build clean.*
 
 *Session 2026-05-15 (quality audit + LinkedIn enrichment + documentation sweep) — 35-page frontend audit: confirmed 95%+ route alignment between velo-crm pages and velo-api routes. Critical bugs fixed: contactsStore/companiesStore `sbDelete`/`sbBulkDelete` (Supabase bypass) replaced with `api.delete()` REST calls; authStore double-invite (createInvitation fired API call AND TeamManagement.tsx also fired it — removed duplicate from createInvitation); CSVImport `assignedTo` hardcoded `'u1'` replaced with `currentUser?.id`. LinkedIn enrichment: migration 012 (`contacts.linkedin_url text`), backend (Zod schema + GET/POST/PATCH), frontend (`Contact.linkedinUrl`, ContactForm input, ContactDetail display with icon, contactsStore mapping). Documentation sweep: all .md files in both repos updated to reflect current state — Gmail no longer blocked, integrations complete, security hardened, LinkedIn enrichment documented. Both repos built clean and pushed to GitHub.*
+
+*Session 2026-05-18 (monorepo structure + documentation sweep) — Moved velo-api from separate repo into monorepo under `api/` subdirectory. Updated all planning docs: CODEBASE.md (monorepo layout + api/ reference), PROJECT.md (monorepo intro, Git URLs), STATE.md (infra notes, CI workflows, Docker), ROADMAP.md (Phase 10 marked complete, monorepo notes), REQUIREMENTS.md (deployment model clarified), gmail-ai-features.md (archive notice updated), supabase/README.md (legacy notice). Confirmed: docker-compose.yml starts postgres + redis + api:3001 + web (nginx) proxies /api/* to api:3001. CI: 3 Gitea workflows (.gitea/workflows/ci.yml, build-production.yml, build-api.yml). Readiness: 218 tests passing, build clean, all DEPLOY-01–05 tasks remain operator-owned.*

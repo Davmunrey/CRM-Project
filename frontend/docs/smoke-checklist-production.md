@@ -4,10 +4,13 @@ Use after a production deploy. Record pass/fail and who ran it.
 
 ## Preconditions
 
-- [ ] `VITE_API_URL` points to the production `velo-api` instance
+- [ ] Both frontend and api running (via `docker compose up -d` from repo root, or equivalent deployment)
+- [ ] `VITE_API_URL` points to the production `velo-api` instance (or `/api` for Docker nginx proxy)
 - [ ] SPA deep links work (nginx `try_files` or equivalent — see [`deployment-spa-and-env.md`](./deployment-spa-and-env.md))
-- [ ] `velo-api` running, DB migrated (`npm run db:migrate`), seed applied (`npm run db:seed`)
-- [ ] JWT_SECRET set (min 32 chars), CORS_ORIGIN matches frontend origin
+- [ ] `velo-api` running and healthy; api/docker-entrypoint.sh auto-ran migrations on container start
+- [ ] Database seeded (if needed; migrations idempotent)
+- [ ] JWT_SECRET set (min 32 chars), CORS_ORIGIN parsed and validated, Redis available for JWT denylist
+- [ ] E2E test environment variables configured: `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` (velo-api endpoints, not Supabase)
 
 ## Auth flows
 
@@ -23,9 +26,15 @@ Use after a production deploy. Record pass/fail and who ran it.
 
 8. **Create contact** — Create contact; reload; record visible
 9. **Log activity** — Attach activity to contact; navigate away and back; still visible
-10. **Team directory** — Open Settings → Team; member list loads (fetched from `GET /orgs/me/members`)
+10. **Team directory** — Open Settings → Team; member list loads (fetched from velo-api `/orgs/me/members`)
 11. **Kanban** — Move deal across stages; refresh; stage preserved
 12. **Notifications** — Mark-all-read; badge clears
+
+## Auth and security flows
+
+13. **Password reset** — Use forgot-password flow; verify token is single-use; verify email not enumerated (always 200 response)
+14. **Logout revocation** — Logout; verify old JWT token cannot re-access protected routes (Redis denylist active)
+15. **Rate limiting** — Attempt `/auth/reset-password` 11+ times in 15 minutes; verify rate limit response (429) after 10 requests
 
 ## Optional (if configured)
 
@@ -34,8 +43,33 @@ Use after a production deploy. Record pass/fail and who ran it.
 
 ## Automated smoke
 
+From repo root:
 ```bash
+# Run E2E tests against production (uses E2E_API_URL, E2E_USER_EMAIL, E2E_USER_PASSWORD)
 npm run test:e2e
 ```
 
-*Last updated: 2026-05-13*
+From frontend/ directory:
+```bash
+# Frontend unit tests and integration tests
+npm run test:run
+```
+
+From api/ directory:
+```bash
+# Backend tests (if applicable)
+npm test
+```
+
+*Last updated: 2026-05-18*
+
+## Deployment checklist
+
+- [ ] Root `docker-compose.yml` configured and tested
+- [ ] api/docker-entrypoint.sh auto-runs migrations (verified in container logs)
+- [ ] api/.dockerignore excludes `.env` (verified Docker layer inspection)
+- [ ] Non-root `USER node` in api/Dockerfile (verified `docker compose exec api id`)
+- [ ] JWT algorithm pinned to HS256 in api/config/env.ts (verified source code)
+- [ ] Password reset tokens stored as SHA-256 hashes (verified DB schema and login code)
+- [ ] Rate limiting active on `/auth/reset-password` (verified config in api/src/routes)
+- [ ] Redis denylist for JWT revocation operational (verified with logout test flow)

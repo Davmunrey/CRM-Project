@@ -1,10 +1,10 @@
 # Google Gmail & Calendar: OAuth operator setup and restricted-scope verification
 
-> **Implementation note (2026-05-13):** Gmail and Calendar OAuth are now fully self-hosted via **velo-api** (`/gmail/*`, `/calendar/*`). Supabase Edge Functions are no longer used for token exchange or refresh. The Google Cloud console setup steps below remain valid. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` in `velo-api/.env` — not in Supabase Edge Function secrets.
+> **Implementation note (2026-05-18):** Gmail and Calendar OAuth are fully self-hosted via **api/** routes (`/gmail/*`, `/calendar/*`). The routes are in `api/src/routes/gmail.ts` and `api/src/routes/calendar.ts`. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` in `api/.env`.
 
 This document is the **single repo source** for: (1) **how to obtain Google OAuth credentials** (Client ID + Client Secret — not a simple “API key”) and configure the Cloud project; (2) **redirect URI** requirements for this SPA; (3) **Google’s restricted-scope verification** for production. End users connect from **Settings → Integrations** (`/settings/integrations`) after **email/password** sign-in.
 
-**Code references:** OAuth scope **bundles** (Gmail first, Calendar incremental) in [`supabase/functions/_shared/google-scopes.ts`](../supabase/functions/_shared/google-scopes.ts); start URL from [`supabase/functions/google-oauth-start`](../supabase/functions/google-oauth-start) (body `bundle`: `primary` \| `calendar`); token exchange [`gmail-oauth-exchange`](../supabase/functions/gmail-oauth-exchange) merges scopes and keeps an existing refresh token when Google does not return a new one; refresh [`gmail-refresh-token`](../supabase/functions/gmail-refresh-token). Long-lived refresh tokens stay **server-side** (encrypted with `TOKEN_ENCRYPTION_KEY`).
+**Code references:** OAuth scope bundles and token management are handled by the self-hosted routes: `api/src/routes/gmail.ts` handles OAuth start, token exchange, and refresh; `api/src/routes/calendar.ts` manages Calendar-specific OAuth. Long-lived refresh tokens stay **server-side** (encrypted with `TOKEN_ENCRYPTION_KEY`).
 
 **Incremental UX:** Users connect **Gmail** first (primary bundle). **Calendar** is a second OAuth step that requests only Calendar scopes with `include_granted_scopes=true` so Google can show the shorter “Velo already has some access” style screen. **Branding** (logo, privacy policy, terms) is configured only in **Google Cloud Console** on the OAuth consent screen, not in application code.
 
@@ -41,54 +41,46 @@ Open [OAuth consent screen](https://console.cloud.google.com/apis/credentials/co
 - **Authorized JavaScript origins:** the **origin** only (no path), e.g. `http://localhost:5173`, `https://app.yourdomain.com`. Match the port your Vite dev server uses (see root [`README.md`](../README.md) / `vite.config.ts`).
 - **Authorized redirect URIs:** must match **exactly** the callback this app uses: `{origin}/auth/gmail/callback` (see [`getGmailRedirectUri()`](../src/services/gmailService.ts)). Register **every** environment (local, preview, production).
 
-### 4. Supabase Edge Function secrets
+### 4. Backend environment variables
 
-In the **same** Supabase project as `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (Dashboard → **Edge Functions** → **Secrets**, or `supabase secrets set`):
+Set these variables in `api/.env` for the self-hosted Gmail and Calendar OAuth routes:
 
-| Secret | Description |
-|--------|--------------|
+| Variable | Description |
+|----------|--------------|
 | `GOOGLE_CLIENT_ID` | Web client ID from Google |
 | `GOOGLE_CLIENT_SECRET` | Web client secret |
 | `TOKEN_ENCRYPTION_KEY` | **64 hex characters** (32 bytes). Generate: `openssl rand -hex 32` |
-| `GOOGLE_OAUTH_REDIRECT_URIS` | Comma-separated list of **every** allowed redirect URL (each full `https://…/auth/gmail/callback`), **or** a single `GOOGLE_OAUTH_REDIRECT_URI` if only one origin exists |
-| `EDGE_CORS_ORIGINS` | Comma-separated **exact** browser origins (`scheme://host:port`) allowed to call Google/Gmail Edge functions and other CORS-aware surfaces. When set, a disallowed `Origin` receives **403** `cors_origin_not_allowed`. When unset, `Access-Control-Allow-Origin: *`. **Configured 2026-04-29:** `https://velo-crm-taupe.vercel.app`, `https://velo-crm-davmunreys-projects.vercel.app`, `https://velo-crm-davmunrey-davmunreys-projects.vercel.app`, `https://velo-crm-two.vercel.app`, `http://localhost:5173`, `http://localhost:4173`. GitHub secret updated to prevent CI overwrite. Documented in [`.env.example`](../.env.example) and [`master-security-compliance.md`](./master-security-compliance.md#supabase-external-hardening-checklist). |
-| `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` | **Added 2026-04-29.** CSV of regex patterns for allowed `original_origin` values during preview-OAuth redirect flow. Example: `^https://velo-crm-[a-z0-9-]+-davmunreys-projects\.vercel\.app$,^https://velo-crm-taupe\.vercel\.app$`. Validated by `google-oauth-start` before storing `original_origin` in `google_oauth_states`. |
-
-`SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` are provided to Edge at runtime.
+| `GOOGLE_REDIRECT_URI` | OAuth redirect URI: `{api_origin}/auth/gmail/callback` (e.g. `http://localhost:3000/auth/gmail/callback` for local dev, `https://api.yourdomain.com/auth/gmail/callback` for production) |
 
 ### 5. Database
 
-Apply migrations (includes `gmail_tokens`, `google_oauth_states`, `google_oauth_states.bundle`, and **`google_oauth_states.original_origin`** added by migration `20260429100000_google_oauth_states_original_origin.sql` for the preview-redirect flow):
+Apply migrations in `api/migrations/` that include tables for Gmail token storage and related data. Run database migrations via your deployment process.
 
-```bash
-supabase db push
-# or: supabase migration up
-```
+### 6. API server startup
 
-### 6. Deploy Edge Functions (Google + Gmail)
+The backend (Fastify 5) runs at `http://localhost:3000` (or your configured port) and serves the Gmail and Calendar OAuth routes at:
+- `/auth/gmail/callback` — OAuth callback handler
+- `/auth/gmail/refresh` — Token refresh endpoint
+- `/integrations/gmail/*` — Gmail integration endpoints
+- `/integrations/calendar/*` — Calendar integration endpoints
 
-From the linked project:
-
-```bash
-npm run supabase:deploy:google
-```
-
-This deploys `google-oauth-start`, `google-integration-status`, `gmail-oauth-exchange`, `gmail-refresh-token`, `gmail-disconnect`, and **`google-oauth-state-origin`** (added 2026-04-29 for the preview-redirect flow). The GitHub workflow [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml) includes these and now runs automatically on `master` pushes (plus manual trigger), with a preflight secret gate and post-deploy smoke check (`npm run supabase:smoke:google-edge`). See also [`supabase/README.md`](../supabase/README.md).
+Ensure `api/.env` is configured and the server is running before testing OAuth from the frontend.
 
 ### 7. Smoke test (operator)
 
-1. `npm run dev` with valid `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
-2. Sign in with email + password; open `/settings/integrations`.
-3. **Connect Google** (Gmail / primary bundle) → first-time flow uses `prompt=consent` and `access_type=offline` → **Connected** with the same email as the CRM user (enforced in `gmail-oauth-exchange`).
-4. **Enable Calendar** → second popup requests only Calendar scopes (incremental); approve → Calendar card shows **Active**.
-5. Disconnect Google → both Gmail and Calendar access are cleared in Velo until the user connects again.
+1. Start the backend: `cd api && npm run dev` (or your configured startup).
+2. Start the frontend: `cd frontend && npm run dev`.
+3. Sign in with email + password; open `/settings/integrations`.
+4. **Connect Google** (Gmail) → OAuth popup opens and redirects to Google → approved → returns to callback → **Connected** with the same email as the CRM user.
+5. **Enable Calendar** → second popup requests Calendar scopes (incremental); approve → Calendar card shows **Active**.
+6. Disconnect Google → both Gmail and Calendar access are cleared in Velo until the user connects again.
 
 ### Troubleshooting (operator)
 
-- **“Failed to send a request to the Edge Function”** (in-app): the browser could not call `…/functions/v1/google-oauth-start`. Usually the function is **not deployed** to this project — run `npm run supabase:deploy:google` and confirm Edge **secrets** above. Check function logs in the Supabase dashboard.
-- **Redirect URI mismatch:** the value sent in the OAuth request must appear both in **Google Cloud** redirect URIs and in `GOOGLE_OAUTH_REDIRECT_URIS` (or `GOOGLE_OAUTH_REDIRECT_URI`).
-- **`TOKEN_ENCRYPTION_KEY` errors:** must be exactly 64 hex chars; rotating it invalidates existing encrypted refresh tokens (users reconnect).
-- **No `refresh_token`:** the **first** Gmail connection must use `access_type=offline` and `prompt=consent` (handled for the `primary` bundle when there is no stored refresh token). Reconnects use `prompt=select_account`. Calendar incremental grants often omit a new refresh token — `gmail-oauth-exchange` keeps the existing encrypted refresh when that happens.
+- **OAuth flow fails or callback does not execute:** Check that `api/.env` has valid `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI`. The backend routes log detailed errors to `stdout`.
+- **Redirect URI mismatch:** the value in `api/.env` `GOOGLE_REDIRECT_URI` must match exactly the **Authorized redirect URIs** in Google Cloud Console.
+- **`TOKEN_ENCRYPTION_KEY` errors:** must be exactly 64 hex chars; rotating it invalidates existing encrypted refresh tokens (users must reconnect).
+- **No `refresh_token`:** the **first** Gmail connection must use `access_type=offline` and `prompt=consent`. Reconnects use `prompt=select_account`. Calendar incremental grants often omit a new refresh token; the backend keeps the existing encrypted refresh when that happens.
 - **Popup blocked:** the UI falls back to full-page navigation to the same Google URL.
 
 ### Verification status (product / ops track)
@@ -96,8 +88,8 @@ This deploys `google-oauth-start`, `google-integration-status`, `gmail-oauth-exc
 | Field | Value |
 |-------|--------|
 | **Console submission** | Owned on the Google Cloud + legal side — not automatable from this repo. |
-| **Repo readiness** | Redirect URI matrix + channel alignment below; keep **Authorized redirect URIs** in sync with every deployed origin. |
-| **Last doc review** | 2026-04-29 — `EDGE_CORS_ORIGINS` and `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` configured; `google-oauth-state-origin` function deployed; `original_origin` column migration applied. Cross-check [`project-state.md`](./project-state.md) (Gaps) when Google submission state changes. |
+| **Backend readiness** | Redirect URI in `api/.env` must match Google Cloud Console exactly; keep **Authorized redirect URIs** in sync with every deployed origin. |
+| **Last doc review** | 2026-05-18 — Monorepo structure finalized with self-hosted API routes. Backend environment variables configured. Cross-check [`project-state.md`](./project-state.md) (Gaps) when Google submission state changes. |
 
 ### Checklist (Google Cloud Console — verification)
 
@@ -109,17 +101,17 @@ This deploys `google-oauth-start`, `google-integration-status`, `gmail-oauth-exc
 6. **Supabase Auth redirect URIs** — Add production and staging callback URLs exactly as Supabase Auth requires (separate from Gmail’s `/auth/gmail/callback` — that is for Google’s OAuth client, not Supabase Auth’s).
 7. **Submit for verification** — After deploy, use the production URL in the submission where possible.
 
-## Gmail OAuth redirect URIs (this app’s **Google** OAuth client, not Supabase Auth)
+## Gmail OAuth redirect URIs (backend callback)
 
-The CRM uses redirect URI `${window.location.origin}/auth/gmail/callback` ([`getGmailRedirectUri()`](../src/services/gmailService.ts)). **Google Cloud Console → your OAuth Web client → Authorized redirect URIs** must list every origin you use.
+The OAuth callback is handled by the backend at `{api_origin}/auth/gmail/callback`. **Google Cloud Console → your OAuth Web client → Authorized redirect URIs** must list every origin you use.
 
-| Surface | Typical origin | Example redirect URI to register |
-|--------|----------------|-----------------------------------|
-| Local dev | `http://localhost:5173` (or Vite’s port) | `http://localhost:5173/auth/gmail/callback` — add each port you use |
-| Preview / staging | Static host preview URL | `https://<your-preview-host>/auth/gmail/callback` |
-| Production | Your HTTPS domain | `https://<your-domain>/auth/gmail/callback` |
+| Surface | Typical API origin | Example redirect URI to register |
+|--------|-------------------|-----------------------------------|
+| Local dev | `http://localhost:3000` (or your configured port) | `http://localhost:3000/auth/gmail/callback` — add each port you use |
+| Staging | Your staging API domain | `https://<api-staging>.yourdomain.com/auth/gmail/callback` |
+| Production | Your HTTPS API domain | `https://<api.yourdomain.com>/auth/gmail/callback` |
 
-**Channel alignment:** set `VITE_APP_CHANNEL` per environment as in [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) so staging previews do not point at production Supabase or production-only Google settings by mistake.
+**Frontend origins:** Set the frontend’s API base URL in its environment (e.g. `VITE_API_URL`). The frontend redirects the user to Google’s OAuth consent, which then redirects to the backend callback.
 
 **Track:** keep verification status and dates in [`project-state.md`](./project-state.md) (Gaps table) while Google processes the application.
 
@@ -144,23 +136,20 @@ Use this section as the **single “what is still to do”** list for Google int
 
 | # | Task | Why |
 |---|------|-----|
-| A1 | **OAuth consent screen → Scopes:** add the **full union** of scopes the app may request over time (primary Gmail bundle **and** Calendar bundle). | Incremental OAuth requests a subset per step, but Google still requires every possible scope to be **declared** on the consent screen. Code reference for the union: `allProductScopesJoined()` in [`supabase/functions/_shared/google-scopes.ts`](../supabase/functions/_shared/google-scopes.ts). |
+| A1 | **OAuth consent screen → Scopes:** add the **full union** of scopes the app may request over time (Gmail + Calendar). | Google requires every possible scope to be **declared** on the consent screen even if requested incrementally. Check `api/src/routes/gmail.ts` for the exact scopes used. |
 | A2 | **Branding:** app name, logo, support email, **privacy policy URL**, **terms** (if you show them), authorized domains. | Required for verification and user trust; not implemented in application code. |
 | A3 | **Test users** (while app is in *Testing*). | Only listed users can complete OAuth until the app is published / verified. |
 | A4 | **Submit for restricted-scope verification** (Gmail + Calendar sensitive scopes) when you need **non–test-user** access at scale. | Often multi-week; track status in [`.planning/STATE.md`](../.planning/STATE.md) Notes and the [Gaps table](./project-state.md#gaps-not-fully-owned-by-a-single-master-today) in `project-state.md`. |
-| A5 | **Authorized redirect URIs** for **every** SPA origin (local ports, preview, production): `{origin}/auth/gmail/callback`. | Must match `getGmailRedirectUri()` and Edge secret `GOOGLE_OAUTH_REDIRECT_URIS` / `GOOGLE_OAUTH_REDIRECT_URI`. |
-| A6 | **Authorized JavaScript origins** for the same origins (scheme + host + port only). | Web client OAuth requirement for browser-based flows. |
+| A5 | **Authorized redirect URIs:** `{api_origin}/auth/gmail/callback` for backend (e.g. `http://localhost:3000/auth/gmail/callback` for local dev). | Must match `GOOGLE_REDIRECT_URI` in `api/.env`. Register every environment (local, staging, production). |
+| A6 | **Authorized JavaScript origins:** the **origin** of the **frontend** (e.g. `http://localhost:5173`, `https://app.yourdomain.com`). | Web client OAuth requirement for the browser to call Google's authorization endpoint. |
 
-### B. Supabase (operator — per environment)
+### B. Backend (api/) — per environment
 
 | # | Task | Why |
 |---|------|-----|
-| B1 | Edge secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TOKEN_ENCRYPTION_KEY` (64 hex), redirect URI list. | Without these, `google-oauth-start` / `gmail-oauth-exchange` fail at runtime. |
-| B1a | ✅ **Done 2026-04-29:** `EDGE_CORS_ORIGINS` set with all production aliases + localhost. `GOOGLE_OAUTH_ORIGIN_ALLOWLIST` set with Vercel preview URL patterns. GitHub secret updated to match. | Fixes CORS 403 errors from preview deployments and enforces origin allowlist for preview OAuth flow. |
-| B2 | After **schema** changes: `supabase db push` (or CI migration) on **each** linked project (staging vs production). | Example: `google_oauth_states.bundle` must exist before new OAuth starts. |
-| B2a | ✅ **Done 2026-04-29:** Migration `20260429100000_google_oauth_states_original_origin.sql` applied — adds `original_origin` column to `google_oauth_states`. | Required for preview-domain OAuth redirect flow. |
-| B3 | After **function** changes: `npm run supabase:deploy:google` (or your deploy workflow). | Browser calls `…/functions/v1/google-oauth-start`; stale deploys cause “Failed to send a request to the Edge Function”. |
-| B3a | ✅ **Done 2026-04-29:** `google-oauth-state-origin` Edge Function deployed. | New function for preview-OAuth redirect flow — returns `original_origin` for a given state token. |
+| B1 | **Environment variables:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TOKEN_ENCRYPTION_KEY` (64 hex), `GOOGLE_REDIRECT_URI`. | Without these, OAuth routes fail at runtime. Set in `api/.env` and ensure they match Google Cloud Console values. |
+| B2 | After **schema** changes: Apply migrations in `api/migrations/`. | Example: changes to token storage tables must be applied before the backend processes OAuth tokens. |
+| B3 | **API server deployment:** Ensure `api/` is running and routes are accessible at the configured `GOOGLE_REDIRECT_URI` origin. | Frontend OAuth callback needs a reachable backend endpoint. Local dev: `http://localhost:3000`; production: your API domain. |
 
 ### C. Product / engineering (repo — beyond “connect” UI)
 
@@ -177,32 +166,14 @@ These are **not** finished just because Settings → Integrations shows “Conne
 | # | Task | Notes |
 |---|------|--------|
 | D1 | Record **smoke** outcome: primary connect → Enable Calendar → disconnect, per [§7 smoke test](#operator-setup-google-oauth) above. | Paste or link evidence in release ticket or [`.planning/STATE.md`](../.planning/STATE.md). |
-| D2 | Update **“Last doc review”** in the [Verification status](#verification-status-product--ops-track) table when Google submission state changes. | Keeps `project-state.md` and this file aligned. |
+| D2 | Update **”Last doc review”** in the [Verification status](#verification-status-product--ops-track) table when Google submission state changes. | Keeps `project-state.md` and this file aligned. |
 
 ---
 
 *Operational detail only; not legal advice. Keep privacy policy and in-product disclosures aligned with actual data processing.*
 
-*Last updated (git): **2026-04-29***
+*Last updated (git): **2026-05-18***
 
-## OAuth on Vercel preview deployments
+## TOKEN_ENCRYPTION_KEY rotation
 
-Google OAuth requires pre-registered `redirect_uri` values. Vercel preview URLs are dynamic and cannot be pre-registered. The solution is a **production-domain redirect**:
-
-1. All deployments send `redirect_uri = VITE_GMAIL_REDIRECT_URI` (production) and `original_origin = window.location.origin` to `google-oauth-start`.
-2. Edge function stores `original_origin` in `google_oauth_states` (validated against `GOOGLE_OAUTH_ORIGIN_ALLOWLIST`).
-3. Google redirects to the production callback.
-4. `GmailCallback.tsx` on prod calls `google-oauth-state-origin?state=<state>` to get `original_origin`.
-5. If `original_origin !== prod`, it redirects to `${original_origin}/auth/gmail/callback?code=...&state=...`.
-6. The preview's callback runs `gmail-oauth-exchange` — the user's session lives there.
-
-### `GOOGLE_OAUTH_ORIGIN_ALLOWLIST`
-
-CSV of regex patterns for allowed origins:
-```
-^https://velo-crm-[a-z0-9-]+-davmunreys-projects\.vercel\.app$,^https://your-prod-domain\.com$
-```
-
-### `TOKEN_ENCRYPTION_KEY` rotation
-
-⚠️ Rotating this key invalidates all AES-256-GCM encrypted refresh tokens. All users must reconnect their Google account. Plan a maintenance window and notify users before rotating.
+⚠️ Rotating this key invalidates all AES-256-GCM encrypted refresh tokens. All users must reconnect their Google account. Plan a maintenance window and notify users before rotating. Update `api/.env` and restart the backend.

@@ -26,6 +26,16 @@
 
 
 <a id="cross-doc-checklist-closure-plan"></a>
+## Monorepo structure (as of 2026-05-18)
+
+- **frontend/** — React 18 + TypeScript + Vite SPA (npm runs from this directory)
+- **api/** — Fastify 5 + Node.js 22 + PostgreSQL 16 + Redis + Socket.io backend
+- **root docker-compose.yml** — Orchestrates frontend and api services together
+- CI/CD workflows now specify working directory and trigger on path changes:
+  - `ci.yml` → runs in `frontend/` directory
+  - `build-production.yml` → triggers on `frontend/**` changes only
+  - `build-api.yml` → triggers on `api/**` changes only
+
 ## Cross-doc checklist closure plan
 
 Use this operational plan to close unchecked items across `docs/**/*.md`, `.planning/**/*.md`, and other markdown files without creating false positives.
@@ -97,7 +107,7 @@ Use this checklist before shipping a "sell-ready" baseline release.
 
 - Status: Active
 - Owner: Product/QA
-- Last updated: 2026-05-15
+- Last updated: 2026-05-18
 - Canonical: Yes
 
 ## Scope and Planning
@@ -157,8 +167,9 @@ Non-negotiable merge/release gates:
 
 When enabling **required status checks** on the default branch (`master`):
 
-- Require all jobs from **`.github/workflows/ci.yml`** (or the equivalent Gitea workflow): **ui:lint**, **i18n:lint**, **ESLint (full)**, **Type check**, **Run tests**, **Vite build (CI)**, plus **Dependency audit (critical+)**.
-- Optional: add **`build-production.yml`** / deploy workflow as an additional check only if that pipeline is always green on `master`.
+- **Required:** All jobs from **`.gitea/workflows/ci.yml`** or **`.github/workflows/ci.yml`**: **ui:lint**, **i18n:lint**, **ESLint (full)**, **Type check**, **Run tests (frontend)**, **Vite build (CI)**, plus **Dependency audit (critical+)**.
+- **Optional:** Add **`build-api.yml`** (API tests) and **`build-production.yml`** (frontend deploy) as additional checks if those pipelines are expected to be green on `master`.
+- **Working directory:** ci.yml runs in `frontend/` directory with `frontend/package-lock.json` cache.
 - Document the policy owner in [`master-security-compliance` — Gitea](./master-security-compliance.md#gitea-operations).
 
 ## Security and compliance baseline (Apr 2026)
@@ -170,6 +181,8 @@ Cross-check before any **external** customer rollout (evidence lives in linked d
 - [x] Auth store does not restore stale or demo credentials on rehydrate (`src/store/authStore.ts`).
 - [x] Email send state matches provider outcome (`failed` + audit path where applicable).
 - [x] CI includes critical-level `npm audit` (`.gitea/workflows/ci.yml`, `.github/workflows/ci.yml`).
+- [ ] **JWT and auth hardening (new 2026-05-18):** Verify JWT_SECRET min 32 chars, algorithm pinned to HS256, password reset tokens SHA-256 hashed, bcrypt login constant-time, `/auth/reset-password` rate-limited (10 req/15 min), impersonation audit logged before token issue, Redis denylist for JWT revocation (see [`master-security-compliance` — External hardening checklist § 1](./master-security-compliance.md#supabase-external-hardening-checklist)).
+- [ ] **Docker non-root (new 2026-05-18):** api/Dockerfile uses `USER node`, api/.dockerignore excludes `.env`, docker-entrypoint.sh auto-runs migrations (see [`master-security-compliance` — External hardening checklist § 5](./master-security-compliance.md#supabase-external-hardening-checklist)).
 - [ ] **Per deployment:** External hardening checklist signed, SPF/DKIM/DMARC evidence, branch protection in Gitea (see [`master-security-compliance` — hardening checklist](./master-security-compliance.md#supabase-external-hardening-checklist), [`master-email-operations` — deliverability](./master-email-operations.md#email-deliverability-resend), [`master-security-compliance` — Gitea](./master-security-compliance.md#gitea-operations)).
 
 ---
@@ -405,30 +418,33 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 
 ## 1) Pre-Go-Live (T-7 to T-1 days)
 
-- [ ] **Environment Variables — Frontend**
-  - [ ] `VITE_API_URL` points to production velo-api (`/api` for Docker nginx; full URL for external hosting)
+- [ ] **Environment Variables — Frontend (from frontend/.env.production)**
+  - [ ] `VITE_API_URL` points to production velo-api (`/api` for Docker; full URL for external hosting)
   - [ ] `VITE_APP_CHANNEL` (`production` on prod; `staging` on preview/UAT)
   - [ ] `VITE_GMAIL_CLIENT_ID` (if Gmail integration enabled)
-- [ ] **Environment Variables — velo-api**
-  - [ ] `JWT_SECRET` min 32 chars (`openssl rand -hex 32`)
+- [ ] **Environment Variables — velo-api (from api/.env.production)**
+  - [ ] `JWT_SECRET` min 32 chars (`openssl rand -hex 32`); algorithm pinned to HS256
+  - [ ] `TOKEN_ENCRYPTION_KEY` (64 hex chars for AES-256-GCM)
   - [ ] `DATABASE_URL` points to production PostgreSQL
-  - [ ] `CORS_ORIGIN` matches frontend production origin
-  - [ ] `REDIS_URL` (for BullMQ/Socket.io)
-  - [ ] `LEAD_MAINTENANCE_SECRET`
-- [ ] **Environment Variables — Supabase Edge Functions** (if deployed)
-  - [ ] `SUPABASE_FUNCTIONS_URL` + `SUPABASE_ANON_KEY`
-  - [ ] Google OAuth secrets set in Edge
+  - [ ] `CORS_ORIGIN` matches frontend production origin (parsed as array; no raw string)
+  - [ ] `REDIS_URL` (for BullMQ/Socket.io/JWT denylist)
+  - [ ] `LEAD_MAINTENANCE_SECRET` for system-mode auth
 - [ ] **Database**
-  - [ ] Latest migrations applied (`npm run db:migrate`)
-  - [ ] Seed applied (`npm run db:seed`)
+  - [ ] Latest migrations applied (api/docker-entrypoint.sh auto-runs on container start)
+  - [ ] Seed applied (`npm run db:seed` in api/ or via migration)
   - [ ] Tenant isolation smoke test completed
   - [ ] `lead_score_maintenance_runs` table visible per tenant
-- [ ] **Edge Functions**
-  - [ ] `lead-score-maintenance` deployed
-  - [ ] `track-open` deployed
-  - [ ] `track-click` deployed
-  - [ ] `promote-lead` deployed
-  - [ ] `create-org` deployed (or RPC path validated)
+  - [ ] `password_reset_tokens` table has SHA-256 hash values (not plaintext)
+- [ ] **Docker and Deployment**
+  - [ ] Root docker-compose.yml orchestrates frontend (port 3000) and api (port 3001) services
+  - [ ] api/Dockerfile runs as `USER node` (non-root)
+  - [ ] api/.dockerignore excludes `.env` (prevents layer leakage)
+  - [ ] JWT_SECRET and TOKEN_ENCRYPTION_KEY set via Compose `:?` guards (fail-fast if unset)
+- [ ] **Authentication and Security**
+  - [ ] Password reset endpoint (`/auth/reset-password`) rate-limited to 10 req/15 min
+  - [ ] Login uses bcrypt cost 12 with constant-time comparison
+  - [ ] Impersonation audit log INSERT succeeds before token issued
+  - [ ] JWT denylist in Redis for logout and token refresh revocation
 - [ ] **Schedulers**
   - [ ] `maintenance:lead:all` scheduled every 30 min
   - [ ] `maintenance:lead:sla` scheduled every 30-60 min
@@ -440,22 +456,33 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 
 ## 2) Go-Live Day (T0)
 
-- [ ] Run manual baseline commands:
+- [ ] **API Container Health**
+  - [ ] `docker compose up -d` starts both frontend and api services
+  - [ ] `docker compose logs api` shows no startup errors
+  - [ ] api/docker-entrypoint.sh completed migrations successfully
+  - [ ] velo-api listens on port 3001 with health check passing
+- [ ] **Frontend SPA**
+  - [ ] `docker compose logs frontend` shows Vite build completed
+  - [ ] Frontend accessible at http://localhost:3000 (or production URL)
+  - [ ] Deep links work (nginx `try_files` configured correctly)
+- [ ] **Run manual baseline commands (from api/ directory):**
   - [ ] `npm run maintenance:lead:all`
   - [ ] `npm run maintenance:lead:health`
   - [ ] `npm run maintenance:lead:sla`
-- [ ] Validate Settings panel:
+- [ ] **Validate Settings panel:**
   - [ ] `Settings -> Lead Maintenance Ops` loads
-  - [ ] last successful run updates
-  - [ ] no unexpected error bursts
-- [ ] Validate auth/login:
-  - [ ] email/password
-  - [ ] at least one enabled SSO provider
-- [ ] Validate core flows:
-  - [ ] create organization
-  - [ ] add lead
-  - [ ] recompute lead score
-  - [ ] convert lead to contact/company/deal
+  - [ ] Last successful run updates
+  - [ ] No unexpected error bursts
+- [ ] **Validate auth/login:**
+  - [ ] Email/password register flow
+  - [ ] Email/password login flow
+  - [ ] Forgot password flow (token created, hash in DB)
+  - [ ] At least one enabled SSO provider (if configured)
+- [ ] **Validate core flows:**
+  - [ ] Create organization
+  - [ ] Add lead
+  - [ ] Recompute lead score
+  - [ ] Convert lead to contact/company/deal
 
 ## 3) Post-Go-Live (T+1 to T+7 days)
 

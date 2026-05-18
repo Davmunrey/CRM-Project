@@ -3,18 +3,20 @@
 **Defined:** 2026-03-31
 **Core Value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time — with lead scoring, reporting, and collaboration (no Anthropic/Claude LLM stack in product scope).
 
-## Current Snapshot (2026-05-15)
+## Current Snapshot (2026-05-18)
 
 - Execution source of truth: `.planning/STATE.md` and `.planning/ROADMAP.md`.
-- Phases 1–9 complete; Phase 10 (production deploy) pending operator action.
-- **Backend:** velo-api (Fastify 5 + PostgreSQL 16 + Redis). Supabase Auth removed. JWT `{ sub, org, role, jti }`.
-- Gmail fully self-hosted via velo-api `/gmail/*` — no Supabase Edge Function dependency.
+- Phases 1–10 complete (monorepo + infra hardening); Phase 11 (production deploy) pending operator action.
+- **Architecture:** Monorepo — frontend/ (React 18 + Vite) + api/ (Fastify 5 + PostgreSQL 16 + Redis) + docker-compose.yml + privateprompt-app.json.
+- **Backend:** velo-api (Fastify 5 + Node.js 22). JWT `{ sub, org, role, jti }` (HS256, no Supabase Auth).
+- Gmail fully self-hosted via velo-api `/gmail/*` (PKCE + AES-256-GCM refresh token storage) — no Supabase Edge Function dependency.
 - LinkedIn URL enrichment on contacts: migration 012, backend Zod schema, frontend form + detail display.
-- Security hardened: Redis JWT denylist per token, Socket.io JWT verification, AES-256-GCM for OAuth/SMTP/webhook secrets, auth rate limiting (10/15min), CSP headers.
+- Security hardened: Redis JWT denylist (jti tracking, revocation on logout), Socket.io JWT verification, AES-256-GCM encryption for secrets, auth rate limiting (10/15min), CSP headers, CORS guards.
 - All CRM delete operations use REST API (no Supabase bypass). Team invite de-duplicated.
 - Transactional emails (password reset, invitations) wired via nodemailer/Resend in velo-api.
 - i18n: 6 languages (`en`, `es`, `pt`, `fr`, `de`, `it`), 1603 keys each, parity verified.
-- Test suite: **218 passing, 1 skipped** (42 files). Build clean.
+- Test suite: **218 passing, 1 skipped** (42 files). Build clean. CI: 3 Gitea workflows.
+- Deployment: `docker-compose up` for local dev; Docker images for production; Private Prompt manifest available.
 
 ## v1 Requirements
 
@@ -169,20 +171,20 @@ Check **`DEPLOY-*`** only after the work exists on the **target** environment (n
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCHEMA-01–05 | Phase 1 | Complete |
-| AUTH-01–05 | Phase 2 | Complete |
-| AUTH-06–10 | Phase 3 | Complete |
-| SEC-01–06 | Phase 4 | Complete |
-| DATA-01–08 | Phase 5 | Complete |
-| REALTIME-01–04 | Phase 5 | Complete |
-| DATA-09–15 | Phase 6 | Complete |
-| USERS-01–03 | Phase 6 | Complete |
+| SCHEMA-01–05 | Phase 1 | ✅ Complete |
+| AUTH-01–05 | Phase 2 | ✅ Complete |
+| AUTH-06–10 | Phase 3 | ✅ Complete |
+| SEC-01–06 | Phase 4 | ✅ Complete |
+| DATA-01–08 | Phase 5 | ✅ Complete |
+| REALTIME-01–04 | Phase 5 | ✅ Complete |
+| DATA-09–15 | Phase 6 | ✅ Complete |
+| USERS-01–03 | Phase 6 | ✅ Complete |
 | AI-01, AI-03–AI-05 | — | **Cancelled** (no Anthropic/Claude stack) |
-| AI-02 | Post-v1 | Open |
-| GMAIL-01–06 | Phase 7 | Complete |
-| I18N-01–02 | Phase 8 | Complete |
-| TEST-01–05 | Phase 9 | Complete |
-| DEPLOY-01–05 | Phase 10 | Pending Deploy |
+| AI-02 | Phase 6 | ✅ Complete |
+| GMAIL-01–06 | Phase 7 | ✅ Complete |
+| I18N-01–02 | Phase 8 | ✅ Complete |
+| TEST-01–05 | Phase 9 | ✅ Complete |
+| DEPLOY-01–05 | Phase 11 | Pending Deploy |
 
 **Coverage:**
 - v1 requirements: 57 total
@@ -191,7 +193,7 @@ Check **`DEPLOY-*`** only after the work exists on the **target** environment (n
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-05-15 — Snapshot updated: Gmail fully self-hosted, LinkedIn enrichment shipped, security hardened (Redis JWT denylist, Socket.io JWT verification, rate limiting, AES-256-GCM secrets), all Supabase bypass deletes replaced. Prior 2026-05-13 — AI-02 marked done (lead score recompute on activity). Prior 2026-04-21 — product constraints and traceability aligned.*
+*Last updated: 2026-05-18 — Snapshot updated: Monorepo architecture documented, velo-api fully integrated (api/ subdirectory), Gmail fully self-hosted, LinkedIn enrichment complete, security hardened (Redis JWT denylist, Socket.io JWT verification, rate limiting, AES-256-GCM encryption), all Supabase bypass deletes replaced, Docker Compose deployment model documented. Phase 11 (production deploy) created for DEPLOY-01–05. Prior 2026-05-15 — Security audit (socket.io JWT, Redis denylist, AES-256-GCM). Prior 2026-05-13 — AI-02 marked complete (lead score recompute on activity).*
 ---
 
-*Last updated (git): **2026-05-15***
+*Last updated (git): **2026-05-18***

@@ -3,9 +3,10 @@
 ## Setup
 
 - Node 22+, npm 10+
+- `cd frontend`
 - `npm install`
 - Copy `.env.example` → `.env`, set `VITE_API_URL=http://localhost:3001`
-- Start `velo-api` with Postgres + Redis (see `../velo-api/README.md`)
+- Start `api/` with Postgres + Redis (see `../api/README.md`)
 - `npm run dev` → `http://localhost:5173`
 
 ## Quality gates (run before pushing)
@@ -28,12 +29,19 @@ Optional: `npm run build:analyze` — bundle stats in `dist/stats.html`.
 - Mirror in full catalogs: `es.ts`, `pt.ts`
 - `fr`, `de`, `it` spread `en` — pick up new keys until translated
 
-## Backend (velo-api)
+## Backend (api/)
 
-- Routes: `../velo-api/src/routes/`
-- DB schema + migrations: `../velo-api/migrations/`
+- Routes: `../api/src/routes/`
+- DB schema + migrations: `../api/migrations/`
 - New table → new migration file `00N_description.sql` (auto-applied by `npm run db:migrate`)
 - All routes require `Authorization: Bearer <token>` except `/auth/*` public endpoints and `GET /invitations/:token`
+
+## CI/CD
+
+Three workflows run on push/PR:
+- `ci.yml` — frontend tests (working-directory: frontend)
+- `build-production.yml` — builds frontend Docker image → `clovrlabs/velo-crm:latest`
+- `build-api.yml` — builds api Docker image → `clovrlabs/velo-api:latest`
 
 ## Docs
 
@@ -42,4 +50,4 @@ Optional: `npm run build:analyze` — bundle stats in `dist/stats.html`.
 
 ---
 
-*Last updated: 2026-05-15*
+*Last updated: 2026-05-18*

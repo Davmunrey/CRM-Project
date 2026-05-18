@@ -1,39 +1,30 @@
 # Public API — phase 1 (read-only)
 
-This document describes the Velo public REST surface after the API & capture hardening pass. The database migration `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` adds `organization_api_keys` (hashed secrets).
+This document describes the Velo public REST surface. The database migration `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` adds `organization_api_keys` (hashed secrets). This is a self-hosted REST API at `/public/v1/*`.
 
 ## Authentication
 
-- **API keys** are created by org admins via the `api-keys` Edge Function (`action`: `create` | `list` | `delete` | `revoke`), authenticated with the user JWT.
+- **API keys** are created by org admins in the UI (Settings → API keys), authenticated with the user JWT.
 - Format: `crm_live_<base64url>` (only shown once at creation).
 - Storage: **SHA-256 hex** of the full key; never store the plaintext key in Postgres.
-- `create` returns the full secret only once (`apiKey`) and a `warning`.
-- `list` always returns `200` with an array (`keys`), even when empty.
-- `delete` is idempotent and returns `200` with `deleted: true|false`.
-- Error payload contract for management functions: `{ error, code, status, request_id }`.
+- Authenticate requests with `Authorization: Bearer <api_key>` header.
+- Error payload contract: `{ error, code, status, request_id }`.
 
-## Read API (`crm-public-api`)
+## Read API endpoints
 
-- **No JWT** — verify_jwt = false; authenticate with `Authorization: Bearer <api_key>`.
-- **GET** `.../functions/v1/crm-public-api?collection=<deals|contacts|companies|activities>&limit=<1–100>`
+Base URL: `{api_origin}/public/v1`
+
+- **GET** `/public/v1/<collection>?limit=<1–100>` where `<collection>` is `deals`, `contacts`, `companies`, or `activities`.
 - Response: `{ "data": [...], "meta": { "collection", "limit" }, "request_id": "<uuid>" }`
 - Rows are filtered by the key’s `organization_id`. Successful requests update `last_used_at` on the key row.
-- Error payload includes `request_id` so support can map UI errors to Edge logs.
-
-### v1 path form (preferred)
-
-The function also supports a versioned path form:
-
-- **GET** `.../functions/v1/crm-public-api/v1/<collection>?limit=<1–100>`
-
-The query-style `collection=...` form remains supported for compatibility during migration.
+- Error payload includes `request_id` so support can map API errors to backend logs.
 
 ## Operational troubleshooting
 
-- `401` + `code: unauthorized`: expired JWT for management endpoints, missing Bearer key for `crm-public-api`, or revoked/deleted API key.
-- `403` + `code: forbidden`: authenticated user is not privileged in the target organization.
-- `400` + `code: validation_error`: missing `organizationId`, `name`, or other required fields.
-- Use `request_id` from the response when checking Supabase Edge Function logs.
+- `401` + `code: unauthorized`: missing `Authorization: Bearer <api_key>` header, or revoked/deleted API key.
+- `403` + `code: forbidden`: API key's organization does not have access to the requested collection.
+- `400` + `code: validation_error`: invalid `limit`, invalid collection name, or malformed request.
+- Use `request_id` from the response when checking backend logs.
 
 ## Idempotency and behavior notes
 
@@ -42,12 +33,17 @@ The query-style `collection=...` form remains supported for compatibility during
 
 ## Operational notes
 
-- Deploy Edge Functions after linking the project: see `supabase/README.md`.
-- Revoked keys (`revoked_at` set) are rejected with 401.
+- API keys are managed in the CRM UI; revoked keys (`revoked_at` set) are rejected with 401.
+- Base URL depends on your deployment: `http://localhost:3000/public/v1` for local dev, `https://api.yourdomain.com/public/v1` for production.
 
-## Automated regression (E2E)
+## Example request
 
-- See [`deployment-spa-and-env.md` — E2E integrations smoke](./deployment-spa-and-env.md#e2e-integrations-smoke) for env vars, CI secrets, and `npm run test:e2e:integrations:local`.
+```bash
+curl -X GET "http://localhost:3000/public/v1/deals?limit=10" \
+  -H "Authorization: Bearer crm_live_..." \
+  -H "Content-Type: application/json"
+```
+
 ---
 
-*Last updated (git): **2026-05-15***
+*Last updated (git): **2026-05-18***

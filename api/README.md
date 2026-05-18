@@ -1,6 +1,6 @@
-# velo-api
+# api/
 
-Fastify REST API for Velo CRM — self-hosted B2B CRM backend.
+Fastify REST API for Velo CRM — self-hosted B2B CRM backend. This is the `api/` subdirectory of the **velo-crm monorepo** (see parent [`../README.md`](../README.md) for monorepo structure).
 
 | Layer | Tech |
 |-------|------|
@@ -29,6 +29,7 @@ brew services start redis
 psql postgres -c "CREATE USER velo WITH PASSWORD 'velo_dev_pass';"
 psql postgres -c "CREATE DATABASE velo OWNER velo;"
 
+cd api
 cp .env.example .env          # copy and fill in secrets
 # JWT_SECRET:           openssl rand -hex 32
 # TOKEN_ENCRYPTION_KEY: openssl rand -hex 32
@@ -49,23 +50,26 @@ Password: Admin1234!
 ### With Docker (Postgres + Redis only)
 
 ```bash
+cd ..
 docker-compose up postgres redis -d
 ```
 
 ### Full Docker Stack
 
-Runs Postgres, Redis, API, and nginx (serving velo-crm frontend) together.
+Runs Postgres, Redis, API, and nginx (serving frontend) together. Migrations run automatically via `docker-entrypoint.sh`.
 
 ```bash
-# Build frontend first
-cd ../velo-crm
-VITE_API_URL=/api npm run build
-
-cd ../velo-api
-cp .env.example .env
+# From repo root
+cp api/.env.example api/.env   # configure JWT_SECRET, TOKEN_ENCRYPTION_KEY, etc.
 docker-compose up -d
+
 # Frontend: http://localhost  (nginx proxies /api/* → API)
+# API: http://localhost:3001
+# Postgres: port 5432 (internal only)
+# Redis: port 6379 (internal only)
 ```
+
+See the root [`docker-compose.yml`](../docker-compose.yml) and [`privateprompt-app.json`](../privateprompt-app.json) for full-stack deployment.
 
 ---
 
@@ -552,36 +556,34 @@ The frontend (`api.ts`) automatically clears the stored token and redirects to `
 ```bash
 brew services start postgresql@16 redis
 
-cd velo-api
+cd api
 cp .env.example .env          # fill JWT_SECRET, TOKEN_ENCRYPTION_KEY
 npm install
 npm run db:migrate
 npm run db:seed
 npm run dev                   # http://localhost:3001
 
-cd ../velo-crm
+cd ../frontend
 npm install
 npm run dev                   # http://localhost:5173
 ```
 
 ### Option B — Docker Compose (recommended for staging/production)
 
-```bash
-# 1. Build the frontend (sets API base URL for nginx proxy)
-cd velo-crm
-VITE_API_URL=/api npm run build
+From repo root:
 
-# 2. Start full stack
-cd ../velo-api
-cp .env.example .env          # set JWT_SECRET, TOKEN_ENCRYPTION_KEY, CORS_ORIGIN
+```bash
+cp api/.env.example api/.env   # set JWT_SECRET, TOKEN_ENCRYPTION_KEY, CORS_ORIGIN
 docker-compose up -d
 
 # Services:
 #   postgres  → internal DB (port 5432 not exposed)
 #   redis     → internal cache
 #   api       → Fastify on port 3001
-#   nginx     → serves frontend + proxies /api/* to API (port 80)
+#   web       → nginx + frontend (port 80)
 ```
+
+Migrations run automatically on API container startup via `docker-entrypoint.sh`.
 
 ### Option C — systemd (Linux VPS)
 
@@ -613,11 +615,13 @@ sudo systemctl enable --now velo-api
 - [ ] `TOKEN_ENCRYPTION_KEY` — exactly 32 bytes hex (`openssl rand -hex 32`)
 - [ ] `CORS_ORIGIN` — set to your frontend domain (no trailing slash)
 - [ ] `APP_URL` — set to your frontend domain (used in password reset emails)
+- [ ] `VELO_API_URL` — set on the frontend/nginx if not using localhost (runtime proxy target)
 - [ ] Database: enable connection pooling (PgBouncer) for > 50 concurrent users
 - [ ] Redis: enable persistence (`appendonly yes`) to survive restarts
 - [ ] Set up SSL termination (nginx / Caddy) — do not expose port 3001 directly
 - [ ] Configure `GOOGLE_CALENDAR_WEBHOOK_URL` if using Calendar push notifications
 - [ ] Rate limit at nginx level in addition to application rate limiting
+- [ ] Review `docker-entrypoint.sh` to confirm migrations run automatically
 
 ---
 
@@ -669,3 +673,7 @@ If a migration partially applied, manually drop the incomplete table and re-run.
 - The webhook URL must match `https://hooks.slack.com/services/...` exactly.
 - Verify the webhook is still active in the Slack app settings (Apps → Incoming Webhooks).
 - If the channel was deleted or the workspace plan changed, the webhook may have been revoked.
+
+---
+
+*Last updated: 2026-05-18*

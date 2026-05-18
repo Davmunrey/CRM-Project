@@ -2,8 +2,8 @@
 
 **Status:** Active  
 **Owner:** Engineering  
-**Last updated:** 2026-05-15  
-**Canonical:** Yes (with code in `src/features/sequences-flow/` and `src/pages/Sequences.tsx`)
+**Last updated:** 2026-05-18  
+**Canonical:** Yes (with code in `frontend/src/features/sequences-flow/` and `frontend/src/pages/Sequences.tsx`)
 
 ## Overview
 
@@ -59,12 +59,12 @@ Automatic step advancement is **not** implemented in the app runtime. A schedule
 2. Walk `flow_definition` from `current_node_id` (or entry), respecting waits and recorded `ab_variant`.
 3. Queue email sends / create tasks and append `sequence_step_events`.
 
-**Edge Function (not implemented):** `supabase/functions/sequence-advance/index.ts` returns **HTTP 501** with JSON `{ ok: false, error: 'not_implemented', ... }` until the worker is built. Schedulers must not treat 501 as success. Deploy with `supabase functions deploy sequence-advance` and attach to **pg_cron** or an external scheduler when ready.
+**Backend route (not implemented):** `api/src/routes/sequences.ts` (or dedicated route) should handle scheduling and worker logic. A scheduled job (pg_cron, external cron, or cloud function) will call this endpoint to advance enrolled contacts through their sequences.
 
 ## Related code
 
-- UI: `src/pages/Sequences.tsx`, `src/features/sequences-flow/SequenceFlowStudio.tsx`
-- Converters: `src/features/sequences-flow/sequenceFlowConverters.ts`
-- Store: `src/store/sequencesStore.ts`
-- Migration: `supabase/migrations/20260422120000_sequences_flow_and_events.sql`
-- Unit tests: `tests/sequenceFlowConverters.test.ts`
+- UI: `frontend/src/pages/Sequences.tsx`, `frontend/src/features/sequences-flow/SequenceFlowStudio.tsx`
+- Converters: `frontend/src/features/sequences-flow/sequenceFlowConverters.ts`
+- Store: `frontend/src/store/sequencesStore.ts`
+- Migration: `api/migrations/20260422120000_sequences_flow_and_events.sql`
+- Unit tests: `frontend/tests/sequenceFlowConverters.test.ts`

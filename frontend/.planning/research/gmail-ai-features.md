@@ -5,7 +5,18 @@
 **Scope:** Gmail OAuth2 PKCE, secure token storage, thread-to-CRM linking, Anthropic Claude AI features, Supabase Edge Function proxy, XSS prevention
 **Confidence:** HIGH (based on official API documentation knowledge; web tools unavailable in this session)
 
-> **Archive / drift notice (2026-04-21):** This note was written against a March 2026 snapshot. The product has since **removed** the client AI stack (`aiService.ts`, `aiStore.ts`, `components/ai/*`). Gmail has moved to **Auth Code + PKCE** with server-side refresh tokens. Use [`docs/project-state.md`](../../docs/project-state.md), [`docs/google-gmail-oauth-verification.md`](../../docs/google-gmail-oauth-verification.md), and [`.planning/CODEBASE.md` — Codebase structure](../CODEBASE.md#codebase-structure) as the live map; treat the “Current AI Implementation” section below as **historical research**, not current source layout.
+> **Archive / drift notice (2026-05-18):** This note is a March 2026 research document. The product has since:
+> - **Removed** the client AI stack (`aiService.ts`, `aiStore.ts`, `components/ai/*`)
+> - **Migrated Gmail** from Supabase Edge Functions to velo-api `/gmail/*` routes (fully self-hosted, PKCE + AES-256-GCM refresh token storage)
+> - **Completed monorepo restructure** (frontend/ + api/ at root)
+>
+> **Current sources of truth:**
+> - Gmail OAuth implementation: `api/src/routes/gmail.ts` (velo-api)
+> - Frontend Gmail integration: `frontend/src/services/gmailService.ts` + `frontend/src/store/emailStore.ts`
+> - Monorepo structure: `api/migrations/003-gmail_tokens.sql` (token schema)
+> - [`docs/project-state.md`](../../docs/project-state.md), [`docs/google-gmail-oauth-verification.md`](../../docs/google-gmail-oauth-verification.md), [`.planning/CODEBASE.md`](../CODEBASE.md)
+>
+> Treat sections below about **Supabase Edge Functions** as **historical archive**, not current architecture. Sections about **Gmail PKCE**, **token storage**, **thread linking**, and **XSS prevention** remain valid research.
 
 ---
 
@@ -1020,4 +1031,4 @@ bundle, remove `dangerouslyAllowBrowser: true` and remove the direct SDK instant
 | Google OAuth verification timeline | MEDIUM | 4-6 weeks is historical average; current timeline may vary |
 ---
 
-*Last updated (git): **2026-05-15** — archive notice remains; Gmail OAuth implementation has fully moved to velo-api (no Supabase Edge Functions); body remains March 2026 research (historical archive).*
+*Last updated (git): **2026-05-18** — Archive notice updated: Gmail OAuth now fully in velo-api (api/src/routes/gmail.ts), monorepo structure documented, Supabase Edge Function sections marked as historical. Body remains March 2026 research (reference value for PKCE flow, token storage, thread linking, XSS patterns).*
