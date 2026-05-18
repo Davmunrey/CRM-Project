@@ -1,4 +1,6 @@
-name: Build & publish API image
+# name: Build & publish API image
+# DISABLED: API is now bundled inside the web container (see build-production.yml)
+# See: frontend/Dockerfile (Stage 2: Build API)
 
 on:
   push:
