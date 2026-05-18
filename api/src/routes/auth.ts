@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, createHash } from 'node:crypto'
 import { db } from '../db/client.js'
 import { env } from '../config/env.js'
 import { sendEmail } from '../services/email.js'
@@ -46,10 +46,10 @@ export async function authRoutes(app: FastifyInstance) {
       LIMIT 1
     `
     const user = users[0]
-    if (!user || !user.isActive) return reply.code(401).send({ error: 'Invalid credentials' })
-
-    const valid = await bcrypt.compare(password, user.passwordHash as string)
-    if (!valid) return reply.code(401).send({ error: 'Invalid credentials' })
+    // Always run bcrypt to prevent timing-based user enumeration
+    const hashToCheck = (user?.passwordHash as string | undefined) ?? '$2a$12$invalidhashpadding000000000000000000000000000000000000000'
+    const valid = await bcrypt.compare(password, hashToCheck)
+    if (!user || !user.isActive || !valid) return reply.code(401).send({ error: 'Invalid credentials' })
 
     const token = app.jwt.sign(
       { sub: user.id, org: user.organizationId, role: user.role, jti: randomBytes(16).toString('hex') },
@@ -152,14 +152,15 @@ export async function authRoutes(app: FastifyInstance) {
 
     const users = await db`SELECT id FROM users WHERE email = ${body.data.email} AND is_active = true LIMIT 1`
     if (users.length > 0) {
-      const token = randomBytes(32).toString('hex')
+      const rawToken = randomBytes(32).toString('hex')
+      const tokenHash = createHash('sha256').update(rawToken).digest('hex')
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString() // 1 hour
       await db`
         INSERT INTO password_reset_tokens (user_id, token, expires_at, created_at)
-        VALUES (${users[0]!.id}, ${token}, ${expiresAt}, now())
+        VALUES (${users[0]!.id}, ${tokenHash}, ${expiresAt}, now())
         ON CONFLICT (user_id) DO UPDATE SET token = EXCLUDED.token, expires_at = EXCLUDED.expires_at, created_at = now()
       `
-      const resetLink = `${env.APP_URL}/reset-password?token=${token}`
+      const resetLink = `${env.APP_URL}/reset-password?token=${rawToken}`
       await sendEmail({
         to: body.data.email,
         subject: 'Reset your Velo password',
@@ -172,16 +173,17 @@ export async function authRoutes(app: FastifyInstance) {
   })
 
   // POST /auth/reset-password
-  app.post('/reset-password', async (req, reply) => {
+  app.post('/reset-password', { config: { rateLimit: AUTH_RATE_LIMIT } }, async (req, reply) => {
     const body = z.object({
       token: z.string().min(1),
       password: z.string().min(8),
     }).safeParse(req.body)
     if (!body.success) return reply.code(400).send({ error: 'Invalid request' })
 
+    const tokenHash = createHash('sha256').update(body.data.token).digest('hex')
     const rows = await db`
       SELECT user_id, expires_at FROM password_reset_tokens
-      WHERE token = ${body.data.token}
+      WHERE token = ${tokenHash}
       LIMIT 1
     `
     if (rows.length === 0) return reply.code(400).send({ error: 'Invalid or expired token' })

@@ -232,11 +232,11 @@ export async function adminRoutes(app: FastifyInstance) {
       { expiresIn: '1h' },
     )
 
-    // Log the impersonation for audit purposes
+    // Log the impersonation for audit purposes — must succeed before issuing token
     await db`
       INSERT INTO impersonation_logs (super_admin_id, target_org_id, target_user_id)
       VALUES (${req.user.sub}, ${id}, ${owner.id})
-    `.catch(() => undefined)
+    `
 
     return reply.send({ token, expiresIn: '1h' })
   })

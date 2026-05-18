@@ -9,7 +9,7 @@ const schema = z.object({
 
   // Auth — min 64 chars (256-bit key for HMAC-SHA256)
   JWT_SECRET: z.string().min(64),
-  JWT_EXPIRES_IN: z.string().default('7d'),
+  JWT_EXPIRES_IN: z.string().regex(/^\d+[smhdw]$/).default('7d'),
   REFRESH_TOKEN_EXPIRES_DAYS: z.coerce.number().default(30),
 
   // CORS — use comma-separated URLs in production; '*' is rejected in production

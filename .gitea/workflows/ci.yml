@@ -9,6 +9,9 @@ on:
 jobs:
   ci:
     runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,6 +21,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci
@@ -49,21 +53,23 @@ jobs:
           BUNDLE_MAX_GZIP_KB: '250'
 
       - name: Install Playwright (Chromium, API smoke only)
-        if: ${{ secrets.E2E_SUPABASE_URL != '' && secrets.E2E_SUPABASE_ANON_KEY != '' && secrets.E2E_USER_EMAIL != '' && secrets.E2E_USER_PASSWORD != '' && secrets.E2E_ORGANIZATION_ID != '' }}
+        if: ${{ secrets.E2E_API_URL != '' && secrets.E2E_USER_EMAIL != '' && secrets.E2E_USER_PASSWORD != '' }}
         run: npx playwright install --with-deps chromium
 
       - name: Run integrations API & capture smoke
-        if: ${{ secrets.E2E_SUPABASE_URL != '' && secrets.E2E_SUPABASE_ANON_KEY != '' && secrets.E2E_USER_EMAIL != '' && secrets.E2E_USER_PASSWORD != '' && secrets.E2E_ORGANIZATION_ID != '' }}
+        if: ${{ secrets.E2E_API_URL != '' && secrets.E2E_USER_EMAIL != '' && secrets.E2E_USER_PASSWORD != '' }}
         env:
-          E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
-          E2E_SUPABASE_ANON_KEY: ${{ secrets.E2E_SUPABASE_ANON_KEY }}
+          E2E_API_URL: ${{ secrets.E2E_API_URL }}
           E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
           E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
-          E2E_ORGANIZATION_ID: ${{ secrets.E2E_ORGANIZATION_ID }}
         run: npm run test:e2e:integrations
 
   security:
     runs-on: self-hosted
+    needs: ci
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -73,6 +79,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         run: npm ci

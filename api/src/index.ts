@@ -65,9 +65,12 @@ await app.register(helmet, {
   crossOriginEmbedderPolicy: false,
 })
 
-if (env.NODE_ENV === 'production' && env.CORS_ORIGIN === '*') {
-  console.error('[velo-api] CORS_ORIGIN=* is not allowed in production. Set it to your frontend URL.')
-  process.exit(1)
+if (env.NODE_ENV === 'production') {
+  const origins = env.CORS_ORIGIN.split(',').map((s) => s.trim())
+  if (origins.some((o) => o === '*')) {
+    console.error('[velo-api] CORS_ORIGIN cannot contain "*" in production. Set it to your frontend URL.')
+    process.exit(1)
+  }
 }
 
 const corsOrigins = env.CORS_ORIGIN.includes(',')
@@ -81,6 +84,8 @@ await app.register(cors, {
 
 await app.register(jwt, {
   secret: env.JWT_SECRET,
+  sign: { algorithm: 'HS256' },
+  verify: { algorithms: ['HS256'] },
 })
 
 await app.register(rateLimit, {
@@ -135,7 +140,7 @@ await app.register(stripeWebhookRoute)
 
 // Realtime via Socket.io
 const io = new Server(app.server as http.Server, {
-  cors: { origin: env.CORS_ORIGIN, credentials: true },
+  cors: { origin: corsOrigins, credentials: true },
 })
 registerRealtimeHandlers(io)
 

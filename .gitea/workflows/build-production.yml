@@ -3,6 +3,8 @@ name: Build & publish Docker image
 on:
   push:
     branches: [master]
+    paths:
+      - 'frontend/**'
   workflow_dispatch:
 
 env:
