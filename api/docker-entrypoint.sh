@@ -13,14 +13,9 @@ if [ -z "${DATABASE_URL}" ]; then
   echo "[velo-api] DATABASE_URL built from parts: ${DB_USER}:@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 fi
 
-# ---- Validate DATABASE_URL -------------------------------------------------
-if [ -z "${DATABASE_URL}" ] || [ "${DATABASE_URL}" = "postgres://velo:@postgres:5432/velo" ]; then
-  echo "ERROR: DATABASE_URL is not configured and POSTGRES_PASSWORD is missing."
-  echo "       Please set DATABASE_URL, e.g.:"
-  echo "         postgres://velo:<your-postgres-password>@postgres:5432/velo"
-  echo "       Or set POSTGRES_PASSWORD to match the postgres service password."
-  exit 1
-fi
+# ---- Validate database connectivity ----------------------------------------
+echo "[velo-api] Verifying database connection..."
+node --import tsx/esm scripts/boot-check.ts || exit 1
 
 # ---- Apply migrations ------------------------------------------------------
 echo "[velo-api] Running database migrations..."
