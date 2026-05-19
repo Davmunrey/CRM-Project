@@ -55,7 +55,7 @@
         "RESEND_API_KEY": { "secret": true, "generate": false, "label": "Resend API key for transactional email (optional)" },
         "EMAIL_FROM": { "secret": false, "generate": false, "label": "From address for transactional emails", "default": "noreply@velo.app" },
         "ANTHROPIC_API_KEY": { "secret": true, "generate": false, "label": "Anthropic API key for AI features — AI assistant, email drafting (optional)" },
-        "VELO_API_URL": { "secret": false, "generate": false, "label": "Public URL of the velo-api service (used by nginx to proxy /api/* — no trailing slash)", "default": "https://velo-api.apps.privateprompt.tech" }
+        "VELO_API_URL": { "secret": true,  "generate": false, "label": "Public URL of the velo-api service (used by nginx to proxy /api/* — no trailing slash)", "default": "https://velo-api.apps.privateprompt.tech" }
       },
       "healthcheck": {
         "test": ["CMD", "wget", "-qO-", "http://localhost:80/"],
