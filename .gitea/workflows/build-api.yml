@@ -9,7 +9,6 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: gitea.apps.privateprompt.tech
   IMAGE: gitea.apps.privateprompt.tech/clovrlabs/n0crm-api
 
 jobs:
@@ -20,23 +19,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Log in to Gitea registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Log in to registry
+        run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login gitea.apps.privateprompt.tech -u "${{ secrets.REGISTRY_USER }}" --password-stdin
 
       - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: api
-          push: true
-          tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:sha-${{ github.sha }}
-          cache-from: type=registry,ref=${{ env.IMAGE }}:buildcache
-          cache-to:   type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max
+        run: |
+          docker buildx build \
+            --push \
+            --tag ${{ env.IMAGE }}:latest \
+            --tag ${{ env.IMAGE }}:sha-${{ github.sha }} \
+            --cache-from type=registry,ref=${{ env.IMAGE }}:buildcache \
+            --cache-to   type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max \
+            api
