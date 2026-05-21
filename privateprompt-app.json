@@ -89,9 +89,9 @@
         "JWT_SECRET":        { "secret": true,  "generate": true,  "label": "JWT Secret" },
         "TOKEN_ENCRYPTION_KEY": { "secret": true, "generate": true, "label": "Encryption Key" },
         "EMAIL_FROM":        { "secret": false, "generate": false, "label": "Email From", "default": "noreply@n0crm.com" },
-        "RESEND_API_KEY":    { "secret": true,  "generate": false, "label": "Resend API key (optional)", "default": "" },
-        "ANTHROPIC_API_KEY": { "secret": true,  "generate": false, "label": "Anthropic API key for AI features (optional)", "default": "" },
-        "N0CRM_API_URL":     { "secret": false, "generate": false, "label": "Internal API URL used by nginx to proxy /api/* — change only if api service runs on a different host.", "default": "http://api:3001" }
+        "RESEND_API_KEY":    { "secret": true,  "generate": false, "label": "Resend API Key", "default": "" },
+        "ANTHROPIC_API_KEY": { "secret": true,  "generate": false, "label": "Anthropic API Key", "default": "" },
+        "N0CRM_API_URL":     { "secret": false, "generate": false, "label": "Internal API URL", "default": "http://api:3001" }
       },
       "healthcheck": {
         "test": ["CMD", "wget", "-qO-", "http://localhost:80/"],
