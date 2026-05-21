@@ -23,7 +23,9 @@ jobs:
         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login gitea.apps.privateprompt.tech -u "${{ secrets.REGISTRY_USER }}" --password-stdin
 
       - name: Set up buildx builder
-        run: docker buildx create --use --name n0crm-builder --driver docker-container || docker buildx use n0crm-builder
+        run: |
+          docker buildx inspect default >/dev/null 2>&1 || docker buildx create --use --name default --driver docker
+          docker buildx use default
 
       - name: Build and push
         run: |
@@ -31,10 +33,8 @@ jobs:
             --push \
             --tag ${{ env.IMAGE }}:latest \
             --tag ${{ env.IMAGE }}:sha-${{ github.sha }} \
-            --cache-from type=registry,ref=${{ env.IMAGE }}:buildcache \
-            --cache-to   type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max \
-            api
-
-      - name: Remove buildx builder
-        if: always()
-        run: docker buildx rm n0crm-builder || true
+            --cache-from type=local,src=/tmp/buildx-cache-api \
+            --cache-to   type=local,dest=/tmp/buildx-cache-api-new,mode=max \
+            --file api/Dockerfile \
+            .
+          mv /tmp/buildx-cache-api-new /tmp/buildx-cache-api 2>/dev/null || true
