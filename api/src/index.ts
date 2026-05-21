@@ -78,9 +78,17 @@ if (env.NODE_ENV === 'production') {
   }
 }
 
-const corsOrigins = env.CORS_ORIGIN.includes(',')
-  ? env.CORS_ORIGIN.split(',').map((s) => s.trim())
-  : env.CORS_ORIGIN
+const corsOrigins: string | string[] | boolean =
+  !env.CORS_ORIGIN
+    ? (() => {
+        if (env.NODE_ENV === 'production') {
+          console.warn('[n0crm-api] CORS_ORIGIN is not set — allowing all origins. Set it to your frontend URL for security.')
+        }
+        return true
+      })()
+    : env.CORS_ORIGIN.includes(',')
+      ? env.CORS_ORIGIN.split(',').map((s) => s.trim())
+      : env.CORS_ORIGIN
 
 await app.register(cors, {
   origin: corsOrigins,
