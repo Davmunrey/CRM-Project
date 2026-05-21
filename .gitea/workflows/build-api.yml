@@ -33,8 +33,5 @@ jobs:
             --push \
             --tag ${{ env.IMAGE }}:latest \
             --tag ${{ env.IMAGE }}:sha-${{ github.sha }} \
-            --cache-from type=local,src=/tmp/buildx-cache-api \
-            --cache-to   type=local,dest=/tmp/buildx-cache-api-new,mode=max \
             --file api/Dockerfile \
             .
-          mv /tmp/buildx-cache-api-new /tmp/buildx-cache-api 2>/dev/null || true

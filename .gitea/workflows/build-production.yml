@@ -34,9 +34,6 @@ jobs:
             --push \
             --tag ${{ env.IMAGE }}:latest \
             --tag ${{ env.IMAGE }}:sha-${{ github.sha }} \
-            --cache-from type=local,src=/tmp/buildx-cache-frontend \
-            --cache-to   type=local,dest=/tmp/buildx-cache-frontend-new,mode=max \
             --build-arg VITE_APP_CHANNEL=production \
             --file frontend/Dockerfile \
             .
-          mv /tmp/buildx-cache-frontend-new /tmp/buildx-cache-frontend 2>/dev/null || true
