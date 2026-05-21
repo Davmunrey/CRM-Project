@@ -469,9 +469,15 @@ function normalizeRole(raw: string | undefined): UserRole {
 export function initSupabaseAuth(): (() => void) | undefined {
   const store = useAuthStore.getState()
 
-  // Fast path: if persisted session is clearly expired, skip the network call
+  // Fast path: no persisted session → user never logged in, no cookie to restore
   const session = store.session
-  if (session && session.expiresAt <= Date.now()) {
+  if (!session) {
+    store.setIsLoadingAuth(false)
+    return
+  }
+
+  // Fast path: session clearly expired → skip network call
+  if (session.expiresAt <= Date.now()) {
     store.setCurrentUser(null)
     store.setIsLoadingAuth(false)
     return
