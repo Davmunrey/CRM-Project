@@ -1,20 +1,20 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
-COPY package*.json ./
+COPY api/package*.json ./
 RUN npm ci --prefer-offline
-COPY . .
+COPY api/. .
 RUN npm run build
 
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN apk add --no-cache postgresql16-client gzip
-COPY package*.json ./
+COPY api/package*.json ./
 RUN npm ci --omit=dev --prefer-offline
 COPY --from=builder /app/dist ./dist
-COPY migrations ./migrations
-COPY scripts ./scripts
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY api/migrations ./migrations
+COPY api/scripts ./scripts
+COPY api/docker-entrypoint.sh /docker-entrypoint.sh
 RUN mkdir -p /backups && chmod +x /docker-entrypoint.sh && chown -R node:node /app /backups
 USER node
 EXPOSE 3001
