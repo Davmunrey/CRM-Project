@@ -1,6 +1,6 @@
-# Velo — product documentation
+# n0CRM — product documentation
 
-**Canonical product and engineering narrative** for Velo: nine consolidated **`master-*.md`** documents plus a **project bridge** that ties this folder to `.planning/`.
+**Canonical product and engineering narrative** for n0CRM: nine consolidated **`master-*.md`** documents plus a **project bridge** that ties this folder to `.planning/`.
 
 ## Start here
 
@@ -14,7 +14,7 @@
 | **Google** OAuth (Client ID/Secret, Supabase Edge, deploy) + Gmail **restricted-scope** verification + **pending checklist** | Setup: [`google-gmail-oauth-verification.md#operator-setup-google-oauth`](./google-gmail-oauth-verification.md#operator-setup-google-oauth) · Pending: [`#outstanding-google-integration`](./google-gmail-oauth-verification.md#outstanding-google-integration) |
 | Run **production smoke** after deploy | [`smoke-checklist-production.md`](./smoke-checklist-production.md) |
 | Own **roadmap / backlog** (30–60–90, GTM matrix) | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
-| Compare **Pipedrive vs Velo**, webhooks parity, group priorities | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) |
+| Compare **Pipedrive vs n0CRM**, webhooks parity, group priorities | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) |
 | Need **what shipped** (chronological handoff) | [`master-implementation-history.md`](./master-implementation-history.md) |
 
 Verify consolidated `docs/` layout (no legacy split sources; masters present; **only allowlisted** `docs/*.md`): `npm run docs:verify-consolidation`. Normalize phase snapshot headers: `npm run docs:fix-phase-headers`.
@@ -34,7 +34,7 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 | Public REST API (phase 1, read) | [`public-api-phase1.md`](./public-api-phase1.md) | Bearer `crm_live_…` keys, `crm-public-api` collection query |
 | Public lead capture | [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md) | `lct_…` tokens, honeypot, duplicate handling |
 | Roadmap 30/60/90 + execution backlog | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Horizon roadmap · **PRO** execution backlog (legacy section IDs, not the old product name) |
-| Competitive / integration parity (Pipedrive, webhooks, API) | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) | Benchmark tables · Webhooks v1 spec · Top gaps · Executive summary |
+| Competitive / integration parity (Pipedrive, webhooks, API) | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) | Benchmark tables · Webhooks v1 spec · Top gaps · Executive summary (n0CRM vs Pipedrive) |
 | Manager `/manager` KPI definitions (MQL/SQL, aging, first-touch) | [`master-implementation-history.md` §23 + data contract](./master-implementation-history.md#manager-dashboard-data-contract) | Section 23 narrative; [subsection](./master-implementation-history.md#manager-dashboard-data-contract) for tables, i18n keys, tests |
 
 ---

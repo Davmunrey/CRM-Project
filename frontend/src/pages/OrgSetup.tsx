@@ -9,14 +9,14 @@ import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { AuthLayout } from '../components/auth/AuthLayout'
-import { api, setToken } from '../lib/api'
+import { api } from '../lib/api'
 import { trackUxAction } from '../lib/uxMetrics'
 
 interface OrgCreateResponse {
   id: string
   name: string
   slug: string
-  token: string
+  expiresAt: number
 }
 
 export function OrgSetup() {
@@ -68,9 +68,7 @@ export function OrgSetup() {
 
     try {
       const res = await api.post<OrgCreateResponse>('/orgs', { name: orgName.trim(), slug: slug.trim() })
-
-      // Store new JWT — now contains org claim
-      setToken(res.token)
+      // Server sets the updated cookie (JWT now contains org claim) — nothing to store client-side
 
       // Save billing/legal info to settings (client-side branding store)
       updateBranding({

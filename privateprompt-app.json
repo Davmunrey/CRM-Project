@@ -1,30 +1,31 @@
 {
-  "name": "Velo CRM",
-  "slug": "velo-crm",
-  "description": "Outbound-native CRM for high-velocity sales teams — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, and reports. Nginx SPA frontend proxying /api/* to the Velo API service (velo-api). Deploy alongside velo-api.",
+  "name": "n0CRM",
+  "slug": "n0crm",
+  "description": "Outbound-native CRM — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, and reports. Your infrastructure, your data, zero lock-in. Includes API (Fastify + PostgreSQL + Redis) and frontend (nginx SPA) in a single deployment.",
   "badge": "Internal",
   "icon": {
-    "letter": "V",
-    "bg": "bg-blue-500/20",
-    "color": "text-blue-400"
+    "letter": "n",
+    "bg": "bg-indigo-500/20",
+    "color": "text-indigo-400"
   },
-  "open_btn_class": "bg-blue-500/20 hover:bg-blue-500/30 text-blue-400",
+  "open_btn_class": "bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400",
   "access_level": "public",
   "entrypoint": "web",
-  "memory_mb": 896,
-  "cpu": 1.5,
+  "memory_mb": 1408,
+  "cpu": 3.25,
   "services": {
     "postgres": {
       "image": "postgres:16-alpine",
       "memory_mb": 256,
       "cpu": 0.5,
+      "volume": "n0crm-postgres-data",
       "env": {
-        "POSTGRES_DB": { "secret": false, "generate": false, "label": "Database name", "default": "velo" },
-        "POSTGRES_USER": { "secret": false, "generate": false, "label": "Database user", "default": "velo" },
-        "POSTGRES_PASSWORD": { "secret": true, "generate": false, "label": "Database password", "default": "velo_db_2026_secure" }
+        "POSTGRES_DB":       { "secret": false, "generate": false, "label": "Database name",     "default": "n0crm" },
+        "POSTGRES_USER":     { "secret": false, "generate": false, "label": "Database user",     "default": "n0crm" },
+        "POSTGRES_PASSWORD": { "secret": true,  "generate": true,  "label": "Database password" }
       },
       "healthcheck": {
-        "test": ["CMD-SHELL", "pg_isready -U velo"],
+        "test": ["CMD-SHELL", "pg_isready -U n0crm"],
         "interval": "5s",
         "timeout": "5s",
         "retries": 10,
@@ -43,19 +44,54 @@
         "start_period": "5s"
       }
     },
-    "web": {
-      "image": "gitea.apps.privateprompt.tech/clovrlabs/velo-crm:latest",
-      "port": 80,
-      "memory_mb": 576,
-      "cpu": 1.0,
+    "api": {
+      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:latest",
+      "port": 3001,
+      "memory_mb": 256,
+      "cpu": 0.75,
+      "volumes": [
+        { "name": "n0crm-backups", "mount": "/backups" }
+      ],
       "env": {
-        "POSTGRES_PASSWORD": { "secret": true, "generate": false, "label": "PostgreSQL password (shared with postgres service)", "default": "velo_db_2026_secure" },
-        "JWT_SECRET": { "secret": true, "generate": true, "label": "JWT signing secret (32+ random bytes)" },
-        "TOKEN_ENCRYPTION_KEY": { "secret": true, "generate": true, "label": "32-byte hex key for encrypting OAuth tokens (openssl rand -hex 32)" },
-        "RESEND_API_KEY": { "secret": true, "generate": false, "label": "Resend API key for transactional email (optional)" },
-        "EMAIL_FROM": { "secret": false, "generate": false, "label": "From address for transactional emails", "default": "noreply@velo.app" },
-        "ANTHROPIC_API_KEY": { "secret": true, "generate": false, "label": "Anthropic API key for AI features — AI assistant, email drafting (optional)" },
-        "VELO_API_URL": { "secret": true,  "generate": false, "label": "Public URL of the velo-api service (used by nginx to proxy /api/* — no trailing slash)", "default": "https://velo-api.apps.privateprompt.tech" }
+        "POSTGRES_PASSWORD":      { "secret": true,  "generate": true,  "label": "PostgreSQL password (auto-shared with postgres service)" },
+        "JWT_SECRET":             { "secret": true,  "generate": true,  "label": "JWT signing secret — min 64 chars (auto-generated)" },
+        "TOKEN_ENCRYPTION_KEY":   { "secret": true,  "generate": true,  "label": "32-byte hex key for encrypting OAuth tokens (auto-generated)" },
+        "CORS_ORIGIN":            { "secret": false, "generate": false, "label": "CORS origin — public URL of the web frontend (no trailing slash)", "default": "" },
+        "EMAIL_FROM":             { "secret": false, "generate": false, "label": "From address for transactional emails", "default": "noreply@n0crm.com" },
+        "RESEND_API_KEY":         { "secret": true,  "generate": false, "label": "Resend API key for transactional email (optional)", "default": "" },
+        "SMTP_HOST":              { "secret": false, "generate": false, "label": "SMTP host for outbound email (optional)", "default": "" },
+        "SMTP_PORT":              { "secret": false, "generate": false, "label": "SMTP port (optional)", "default": "" },
+        "SMTP_USER":              { "secret": true,  "generate": false, "label": "SMTP username (optional)", "default": "" },
+        "SMTP_PASS":              { "secret": true,  "generate": false, "label": "SMTP password (optional)", "default": "" },
+        "GOOGLE_CLIENT_ID":       { "secret": true,  "generate": false, "label": "Google OAuth client ID — for Gmail + Calendar integration (optional)", "default": "" },
+        "GOOGLE_CLIENT_SECRET":   { "secret": true,  "generate": false, "label": "Google OAuth client secret (optional)", "default": "" },
+        "GOOGLE_REDIRECT_URI":    { "secret": false, "generate": false, "label": "Google OAuth redirect URI — must match your Google console setting (optional)", "default": "" },
+        "ANTHROPIC_API_KEY":      { "secret": true,  "generate": false, "label": "Anthropic API key for AI features — email drafting, AI assistant (optional)", "default": "" },
+        "DEBUG_TOKEN":            { "secret": true,  "generate": true,  "label": "Debug token (>=16 chars) — gates /_debug/* diagnostic routes. Leave empty to disable entirely." },
+        "BACKUP_INTERVAL_HOURS":  { "secret": false, "generate": false, "label": "Hours between pg_dump backups to /backups volume. 0 disables scheduling.", "default": "6" },
+        "BACKUP_KEEP":            { "secret": false, "generate": false, "label": "Number of scheduled backups to retain before rotating.", "default": "10" }
+      },
+      "healthcheck": {
+        "test": ["CMD", "wget", "-qO-", "http://localhost:3001/health"],
+        "interval": "15s",
+        "timeout": "5s",
+        "retries": 5,
+        "start_period": "60s"
+      }
+    },
+    "web": {
+      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm:latest",
+      "port": 80,
+      "memory_mb": 832,
+      "cpu": 1.75,
+      "env": {
+        "POSTGRES_PASSWORD": { "secret": true,  "generate": true,  "label": "PostgreSQL password (shared with postgres and api services)" },
+        "JWT_SECRET":        { "secret": true,  "generate": true,  "label": "JWT signing secret (shared with api service)" },
+        "TOKEN_ENCRYPTION_KEY": { "secret": true, "generate": true, "label": "32-byte hex encryption key (shared with api service)" },
+        "EMAIL_FROM":        { "secret": false, "generate": false, "label": "From address for transactional emails", "default": "noreply@n0crm.com" },
+        "RESEND_API_KEY":    { "secret": true,  "generate": false, "label": "Resend API key (optional)", "default": "" },
+        "ANTHROPIC_API_KEY": { "secret": true,  "generate": false, "label": "Anthropic API key for AI features (optional)", "default": "" },
+        "N0CRM_API_URL":     { "secret": false, "generate": false, "label": "Internal API URL used by nginx to proxy /api/* — change only if api service runs on a different host.", "default": "http://api:3001" }
       },
       "healthcheck": {
         "test": ["CMD", "wget", "-qO-", "http://localhost:80/"],
@@ -67,11 +103,10 @@
     }
   },
   "post_install": {
-    "description": "On first run the API runs all database migrations automatically, then the server starts. Register your organisation at /register. Required secrets: POSTGRES_PASSWORD (default velo_db_2026_secure), JWT_SECRET (auto-generated). Optional: RESEND_API_KEY, ANTHROPIC_API_KEY.",
+    "description": "On first run the API applies all database migrations automatically, then the server starts. Register your organisation at /register. Required secrets are auto-generated: POSTGRES_PASSWORD, JWT_SECRET, TOKEN_ENCRYPTION_KEY. Optional: RESEND_API_KEY, GOOGLE_CLIENT_ID/SECRET, ANTHROPIC_API_KEY.",
     "first_run_url": "/register"
   },
   "links": {
-    "repository": "https://gitea.apps.privateprompt.tech/clovrlabs/velo-crm",
-    "api": "https://gitea.apps.privateprompt.tech/clovrlabs/velo-api"
+    "repository": "https://gitea.apps.privateprompt.tech/clovrlabs/n0crm"
   }
 }

@@ -1,4 +1,4 @@
-# Velo CRM
+# n0CRM
 
 Internal B2B CRM — React 18 SPA backed by `api/` (Fastify + PostgreSQL). Part of the velo-crm monorepo.
 
@@ -25,7 +25,7 @@ Auth: HS256 JWT (`sub/org/role/jti`). Every request carries `Authorization: Bear
 
 Data: all Zustand stores are API-backed (optimistic UI + rollback). No Supabase PostgREST — direct Fastify routes scope every query by `organization_id` from JWT.
 
-Realtime: Socket.io from the same `api/` process; frontend subscribes to `__veloDbChange(table)` events for contacts, deals, activities, notifications.
+Realtime: Socket.io from the same `api/` process; frontend subscribes to `__n0crmDbChange(table)` events for contacts, deals, activities, notifications.
 
 ---
 
@@ -74,7 +74,7 @@ brew services start postgresql@16 redis
 cd api
 npm run db:migrate && npm run db:seed
 npm run dev
-# admin@velo.local / Admin1234!
+# admin@n0crm.local / Admin1234!
 ```
 
 Or with Docker (Postgres + Redis only):
@@ -118,7 +118,7 @@ docker-compose up -d
 | Build | Vite |
 | Styling | Tailwind CSS 3 (dark theme) |
 | Routing | React Router v6 |
-| State | Zustand 5 — all stores backed by velo-api |
+| State | Zustand 5 — all stores backed by n0crm-api |
 | Forms | React Hook Form + Zod |
 | Charts | Recharts |
 | Drag & Drop | @hello-pangea/dnd |

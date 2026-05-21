@@ -1,10 +1,10 @@
-# Velo
+# n0CRM
 
 ## What This Is
 
-Velo is a full-featured B2B SaaS CRM for Sales teams, built to compete with HubSpot and Pipedrive. It covers the full sales lifecycle — contacts, companies, deals pipeline, activities, sequences, forecasting, rule-based lead scoring, and Gmail integration — with multi-tenant organization isolation so any business can sign up and use it independently.
+n0CRM is a full-featured B2B SaaS CRM for Sales teams, built to compete with HubSpot and Pipedrive. It covers the full sales lifecycle — contacts, companies, deals pipeline, activities, sequences, forecasting, rule-based lead scoring, and Gmail integration — with multi-tenant organization isolation so any business can sign up and use it independently.
 
-The product operates as a **monorepo**: React 18 SPA frontend (`frontend/`) + self-hosted Fastify REST API (`api/`) backed by PostgreSQL 16 and Redis. Auth is JWT-based (HS256, claims `{ sub, org, role, jti }`). All CRM data persisted in PostgreSQL; real-time via Socket.io. Gmail integration fully migrated to velo-api (no Supabase dependency). Deployable via `docker-compose up` from repo root or via Private Prompt. Next milestone: production deploy.
+The product operates as a **monorepo**: React 18 SPA frontend (`frontend/`) + self-hosted Fastify REST API (`api/`) backed by PostgreSQL 16 and Redis. Auth is JWT-based (HS256, claims `{ sub, org, role, jti }`). All CRM data persisted in PostgreSQL; real-time via Socket.io. Gmail integration fully migrated to n0crm-api (no Supabase dependency). Deployable via `docker-compose up` from repo root or via Private Prompt. Next milestone: production deploy.
 
 **Git:** GitHub: https://github.com/Davmunrey/velo-crm | Gitea: https://gitea.apps.privateprompt.tech/clovrlabs/velo-crm
 
@@ -47,9 +47,9 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 - [ ] Phase 10 production deployment and release checklist (DEPLOY-01–05)
 - [ ] Production environment validation (`VITE_API_URL`, `JWT_SECRET`, `RESEND_API_KEY` or SMTP, `REDIS_URL`)
-- [x] Gmail fully migrated to velo-api `/gmail/*` routes — no longer uses Supabase Edge Functions (2026-05-13)
+- [x] Gmail fully migrated to n0crm-api `/gmail/*` routes — no longer uses Supabase Edge Functions (2026-05-13)
 - [ ] End-to-end UAT: org bootstrap, team invitations, password reset email, quote export/email
-- [x] Transactional emails wired: password reset + invitation accept links via `sendEmail` (velo-api nodemailer)
+- [x] Transactional emails wired: password reset + invitation accept links via `sendEmail` (n0crm-api nodemailer)
 - [x] Org directory hydration: `fetchOrgUsers` populates `authStore.users` from `GET /users` on login/org-create/invite-accept
 
 ### Out of Scope
@@ -62,7 +62,7 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 ## Context
 
-**Current state (2026-05-18):** Monorepo complete (frontend/ + api/ in single repo). All CRM modules backed by velo-api (Fastify 5, Node.js 22, PostgreSQL 16) with 16 migrations. Auth is velo-api JWT (HS256, no Supabase Auth). Stores fetch from `VITE_API_URL` REST endpoints. Real-time via Socket.io. Gmail fully self-hosted via velo-api `/gmail/*` — no Supabase Edge Function dependency. LinkedIn URL enrichment on contacts (migration 012). Security hardened: Redis JWT denylist (jti tracking), Socket.io JWT verification, AES-256-GCM encryption for OAuth/SMTP/webhook secrets, auth rate limiting (10/15min), CSP headers. All delete operations use REST API (no Supabase bypass). Transactional emails (password reset, invitations) wired via nodemailer/Resend. Deployment: `docker-compose up` from repo root, or via Private Prompt using `privateprompt-app.json`.
+**Current state (2026-05-18):** Monorepo complete (frontend/ + api/ in single repo). All CRM modules backed by n0crm-api (Fastify 5, Node.js 22, PostgreSQL 16) with 16 migrations. Auth is n0crm-api JWT (HS256, no Supabase Auth). Stores fetch from `VITE_API_URL` REST endpoints. Real-time via Socket.io. Gmail fully self-hosted via n0crm-api `/gmail/*` — no Supabase Edge Function dependency. LinkedIn URL enrichment on contacts (migration 012). Security hardened: Redis JWT denylist (jti tracking), Socket.io JWT verification, AES-256-GCM encryption for OAuth/SMTP/webhook secrets, auth rate limiting (10/15min), CSP headers. All delete operations use REST API (no Supabase bypass). Transactional emails (password reset, invitations) wired via nodemailer/Resend. Deployment: `docker-compose up` from repo root, or via Private Prompt using `privateprompt-app.json`.
 
 **Known issues (current):**
 - Production deploy not yet executed (DEPLOY-01–05 operator tasks)
@@ -74,8 +74,8 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 
 ## Constraints
 
-- **Tech stack**: React 18 SPA + velo-api (Fastify 5 + PostgreSQL 16 + Redis) in monorepo; private static hosting (nginx/Caddy/CDN); Docker Compose for all-in-one deployment
-- **Auth**: velo-api JWT (HS256, `{ sub, org, role, jti }`) — no Supabase Auth
+- **Tech stack**: React 18 SPA + n0crm-api (Fastify 5 + PostgreSQL 16 + Redis) in monorepo; private static hosting (nginx/Caddy/CDN); Docker Compose for all-in-one deployment
+- **Auth**: n0crm-api JWT (HS256, `{ sub, org, role, jti }`) — no Supabase Auth
 - **Multi-tenancy**: API-layer filtering via `req.user.org` JWT claim on every query; no database-level RLS dependency
 - **Budget**: Self-hosted stack; Supabase free tier retained only for legacy Edge Functions (email tracking, webhooks, public API)
 - **Backwards compatibility**: localStorage no longer used for CRM data — all in PostgreSQL; `supabase` client is `null` at runtime
@@ -85,8 +85,8 @@ A sales team can sign up, invite their colleagues, and manage their entire pipel
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Monorepo (frontend/ + api/) | Single repo simplifies CI/CD, deployment, and cross-team coordination | Adopted 2026-05-18 |
-| velo-api (Fastify + PostgreSQL) for all backend | Full control over auth, schema, data layer, and realtime; no Supabase vendor lock-in | Adopted 2026-05 |
-| Gmail fully self-hosted in velo-api `/gmail/*` | Eliminates dependency on Supabase Edge Functions; JWT + PKCE in velo-api | Adopted 2026-05-13 |
+| n0crm-api (Fastify + PostgreSQL) for all backend | Full control over auth, schema, data layer, and realtime; no Supabase vendor lock-in | Adopted 2026-05 |
+| Gmail fully self-hosted in n0crm-api `/gmail/*` | Eliminates dependency on Supabase Edge Functions; JWT + PKCE in n0crm-api | Adopted 2026-05-13 |
 | Docker Compose for development + deployment | Orchestrates postgres + redis + api + frontend (nginx); portable across platforms | Adopted 2026-05-18 |
 | JWT org + jti claims for tenant isolation + revocation | O(1) tenant resolution; Redis JWT denylist for logout + refresh rotation | Adopted 2026-05 |
 | Socket.io realtime subscriptions | Synchronizes data across browser tabs and clients in real-time | Adopted 2026-04-07 |

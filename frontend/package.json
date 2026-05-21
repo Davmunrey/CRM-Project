@@ -1,8 +1,8 @@
 {
-  "name": "velo",
+  "name": "n0crm",
   "private": true,
   "version": "0.1.0",
-  "description": "Velo — outbound-native CRM for high-velocity sales teams",
+  "description": "n0CRM — outbound-native CRM. Your infrastructure, your data.",
   "type": "module",
   "scripts": {
     "dev": "vite",

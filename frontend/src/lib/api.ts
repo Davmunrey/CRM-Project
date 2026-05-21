@@ -1,53 +1,4 @@
-/**
- * Velo API client — replaces @supabase/supabase-js for data access.
- * JWT is stored in localStorage under TOKEN_KEY.
- * All requests attach Authorization: Bearer <token>.
- * 401 responses clear the token and redirect to /login.
- */
-
 const BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
-export const TOKEN_KEY = 'velo_token'
-
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
-}
-
-export function setToken(token: string): void {
-  localStorage.setItem(TOKEN_KEY, token)
-}
-
-export function clearToken(): void {
-  localStorage.removeItem(TOKEN_KEY)
-}
-
-/** Decode JWT payload without verifying signature (server verifies on each request). */
-export function decodeToken(token: string): Record<string, unknown> | null {
-  try {
-    const payload = token.split('.')[1]
-    if (!payload) return null
-    return JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as Record<string, unknown>
-  } catch {
-    return null
-  }
-}
-
-export function isTokenExpired(token: string): boolean {
-  const payload = decodeToken(token)
-  if (!payload) return true
-  const exp = payload['exp']
-  if (typeof exp !== 'number') return true
-  return exp * 1000 < Date.now()
-}
-
-function enforceTokenExpiry(): void {
-  const token = getToken()
-  if (token && isTokenExpired(token)) {
-    clearToken()
-    if (!window.location.pathname.startsWith('/login')) {
-      window.location.replace('/login')
-    }
-  }
-}
 
 async function request<T>(
   method: string,
@@ -55,21 +6,20 @@ async function request<T>(
   body?: unknown,
   signal?: AbortSignal,
 ): Promise<T> {
-  enforceTokenExpiry()
-  const token = getToken()
   const headers: Record<string, string> = {}
   if (body !== undefined) headers['Content-Type'] = 'application/json'
-  if (token) headers['Authorization'] = `Bearer ${token}`
 
+  // credentials: 'include' sends the HttpOnly auth_token cookie automatically.
+  // No manual Authorization header — the token never touches JS memory.
   const res = await fetch(`${BASE}${path}`, {
     method,
     headers,
+    credentials: 'include',
     body: body !== undefined ? JSON.stringify(body) : undefined,
     signal,
   })
 
   if (res.status === 401) {
-    clearToken()
     if (!window.location.pathname.startsWith('/login')) {
       window.location.replace('/login')
     }

@@ -59,7 +59,7 @@ Services: `postgres` (5432 internal), `redis` (6379 internal), `api` (3001 inter
 
 ## Private Prompt deployment
 
-A single `privateprompt-app.json` manifest at repo root deploys the full Velo CRM stack:
+A single `privateprompt-app.json` manifest at repo root deploys the full n0CRM stack:
 - Postgres 16 + Redis
 - `api/` service (Fastify, runs migrations on boot)
 - `frontend/` service (React SPA with nginx proxy)

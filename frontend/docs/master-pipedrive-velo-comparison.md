@@ -1,13 +1,13 @@
-# Pipedrive vs Velo — comparison and group-level priorities
+# Pipedrive vs n0CRM — comparison and group-level priorities
 
-This master document compares **Pipedrive** (the group’s reference CRM) with **Velo** (this repository), using **official Pipedrive documentation** as an integration benchmark, internal product docs as the Velo baseline, and stakeholder input (notably **outbound webhooks** and **high connectivity** to many downstream systems). It is written in **English** and follows repository doc conventions: narrative here; long “shipped” history in [`./master-implementation-history.md`](./master-implementation-history.md); forward execution order in [`./master-roadmap-backlog.md`](./master-roadmap-backlog.md).
+This master document compares **Pipedrive** (the group’s reference CRM) with **n0CRM** (this repository), using **official Pipedrive documentation** as an integration benchmark, internal product docs as the n0CRM baseline, and stakeholder input (notably **outbound webhooks** and **high connectivity** to many downstream systems). It is written in **English** and follows repository doc conventions: narrative here; long “shipped” history in [`./master-implementation-history.md`](./master-implementation-history.md); forward execution order in [`./master-roadmap-backlog.md`](./master-roadmap-backlog.md).
 
 ---
 
 ## Executive summary
 
 - **Pipedrive’s moat for integrators** is a mature **push model** (webhooks v2 with retries, meta payloads, visibility-aware delivery) alongside a **pull model** (documented REST API, marketplace). Teams that run ERP, billing, or RevOps stacks around the CRM depend on that contract.
-- **Velo** already ships a strong **in-app** sales stack (deals, contacts, companies, activities, Gmail inbox links, automations, sequences, reports, multi-tenant RLS, audit, products/quotes)—see [`../README.md`](../README.md) and [§ Velo capability map](#velo-capability-map).
+- **n0CRM** already ships a strong **in-app** sales stack (deals, contacts, companies, activities, Gmail inbox links, automations, sequences, reports, multi-tenant RLS, audit, products/quotes)—see [`../README.md`](../README.md) and [§ n0CRM capability map](#velo-capability-map).
 - The **largest structural gap** for “group-level” parity is **programmatic integration**: **no product outbound webhooks** today (see [`.planning/CODEBASE.md` — External integrations](../.planning/CODEBASE.md#external-integrations-audit)); the roadmap already tracks **API + Webhooks** and **Webhooks v1 (signed payloads, retries)** in [`./master-roadmap-backlog.md`](./master-roadmap-backlog.md).
 - **Recommended lift (three steps):** (1) **Integration fabric** — outbound webhooks with **multi-endpoint subscriptions**, **flexible auth (headers + signing)**, retries/DLQ; (2) **public REST + idempotency**; (3) **enterprise governance** (SSO/SCIM, field visibility, expanded audit) so integrations are controlled.
 
@@ -16,11 +16,11 @@ This master document compares **Pipedrive** (the group’s reference CRM) with *
 <a id="pipedrive-integration-contract"></a>
 ## Pipedrive integration contract (reference benchmark)
 
-Use this as **acceptance-criteria style benchmarks** for Velo design—not a copy of vendor terms. Sources: [Guide for Webhooks v2](https://pipedrive.readme.io/docs/guide-for-webhooks-v2), [Pipedrive API reference](https://developers.pipedrive.com/docs/api).
+Use this as **acceptance-criteria style benchmarks** for n0CRM design—not a copy of vendor terms. Sources: [Guide for Webhooks v2](https://pipedrive.readme.io/docs/guide-for-webhooks-v2), [Pipedrive API reference](https://developers.pipedrive.com/docs/api).
 
 ### Webhooks v2 (outbound from Pipedrive to subscriber URL)
 
-| Benchmark | Pipedrive behavior (summary) | Implication for Velo |
+| Benchmark | Pipedrive behavior (summary) | Implication for n0CRM |
 |-----------|------------------------------|-------------------------|
 | Subscription API | `POST /v1/webhooks` with `subscription_url`, `event_action`, `event_object`, optional `version` (default **2.0**) | Provide org-scoped CRUD for subscriptions; version field in payload |
 | URL rules | Public HTTPS URL; **no redirects**; Pipedrive API URLs disallowed as target | Validate URL; reject redirect chains |
@@ -35,23 +35,23 @@ Use this as **acceptance-criteria style benchmarks** for Velo design—not a cop
 
 ### REST API (pull)
 
-Pipedrive exposes broad CRUD and filtering via REST. Velo today is primarily **Supabase-backed app + RLS** without a **documented public REST** product surface for external integrators—treat **public API + keys/scopes** as Step 2 in [§ Three-step maturity ladder](#three-step-maturity-ladder).
+Pipedrive exposes broad CRUD and filtering via REST. n0CRM today is primarily **Supabase-backed app + RLS** without a **documented public REST** product surface for external integrators—treat **public API + keys/scopes** as Step 2 in [§ Three-step maturity ladder](#three-step-maturity-ladder).
 
 ---
 
 <a id="three-step-maturity-ladder"></a>
-## Three-step maturity ladder for Velo
+## Three-step maturity ladder for n0CRM
 
 1. **Step 1 — Integration fabric (P0):** Outbound **webhooks** with high **connectivity** (multiple subscriptions per org, HTTPS, custom headers, signed payloads, retries, delivery logs, admin UI). Minimal **inbound** endpoints only where already required (e.g. OAuth). Roadmap: [`./master-roadmap-backlog.md`](./master-roadmap-backlog.md) (API + Webhooks, replay/dead-letter).
 2. **Step 2 — API + reliability parity:** Stable **REST** for core entities, **idempotency**, documented limits, same reliability primitives as webhooks where async.
 3. **Step 3 — Enterprise motion:** **SSO/SCIM readiness**, **governance v2** (field-level visibility, retention automation), **expanded audit** for admin and integration actions—so webhooks and API keys are governable.
 
-See also [§ Velo webhooks — v1 scope](#webhooks-v1-scope).
+See also [§ n0CRM webhooks — v1 scope](#webhooks-v1-scope).
 
 ---
 
 <a id="webhooks-v1-scope"></a>
-## Velo webhooks — v1 scope and connectivity (“options+”)
+## n0CRM webhooks — v1 scope and connectivity (“options+”)
 
 ### Product intent
 
@@ -68,7 +68,7 @@ sequenceDiagram
   App->>DB: insert outbox row
   Note over W: Scheduled worker / cron
   W->>DB: claim pending
-  W->>Ext: POST signed payload (X-Velo-Signature)
+  W->>Ext: POST signed payload (X-n0CRM-Signature)
   Ext-->>W: 2xx / 4xx / 5xx / timeout
   W->>DB: update status or mark dead
 ```
@@ -83,7 +83,7 @@ sequenceDiagram
 | Events (initial set) | At minimum: **deal** created/updated/deleted; **contact** created/updated/deleted; **company** created/updated/deleted; **activity** created/updated/deleted. Use consistent `entity.action` naming (e.g. `deal.updated`). |
 | Filters | **Wildcard or multi-select** subscription filters (e.g. all deal events, or only `deal.deleted`) |
 | Payload | JSON with **`meta`** (`event_id`, `event`, `organization_id`, `timestamp`, `schema_version`, `delivery_attempt`, optional `actor_user_id`) + **`data`** (resource fields) + **`previous`** on update when feasible |
-| Signing | **HMAC-SHA256** (or documented equivalent) over canonical body; **secret per subscription**; header name documented (e.g. `X-Velo-Signature`) |
+| Signing | **HMAC-SHA256** (or documented equivalent) over canonical body; **secret per subscription**; header name documented (e.g. `X-n0CRM-Signature`) |
 | Transport | **HTTPS only**; optional **static custom headers** (e.g. `Authorization: Bearer …`, `X-Api-Key`) for downstream auth |
 | Reliability | **Retries with backoff** + **dead-letter** queue + **manual replay** from admin UI (align [`./master-roadmap-backlog.md`](./master-roadmap-backlog.md)) |
 | Admin | Settings (or dedicated) UI: create secret, rotate secret, test delivery, view last status / response code / latency |
@@ -132,11 +132,11 @@ When code ships, record architecture, migrations, and Edge Functions in [`./mast
 ---
 
 <a id="velo-capability-map"></a>
-## Velo — capability map
+## n0CRM — capability map
 
 Aligned to [`../README.md`](../README.md) feature table and [`.planning/CODEBASE.md` — Codebase structure](../.planning/CODEBASE.md#codebase-structure).
 
-| Domain | Velo coverage (summary) | Primary code / doc pointers |
+| Domain | n0CRM coverage (summary) | Primary code / doc pointers |
 |--------|----------------------------|----------------------------|
 | Deals / pipeline | Kanban + list, stages in settings, quotes, timeline view | `frontend/src/pages/Deals.tsx`, `frontend/src/store/dealsStore.ts` |
 | Contacts / companies | CRUD, detail pages, filters, export | `frontend/src/pages/Contacts.tsx`, `frontend/src/pages/Companies.tsx`, stores |
@@ -150,17 +150,17 @@ Aligned to [`../README.md`](../README.md) feature table and [`.planning/CODEBASE
 | Multi-tenancy | `organization_id`, RLS | `api/migrations/`, `docs/master-security-compliance.md` |
 | Audit | Org audit log | `frontend/src/store/auditStore.ts` |
 | Auth / roles | JWT HS256 (api/src/routes/auth.ts), permission gates | `frontend/src/store/authStore.ts`, `frontend/src/components/auth/PermissionGate.tsx` |
-| **Outbound webhooks** | **Shipped** (subscriptions, HMAC `X-Velo-Signature`, outbox, worker, Settings UI) — replay failed rows via settings | `api/migrations/20260420140000_webhooks_outbound.sql`, `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` |
+| **Outbound webhooks** | **Shipped** (subscriptions, HMAC `X-n0CRM-Signature`, outbox, worker, Settings UI) — replay failed rows via settings | `api/migrations/20260420140000_webhooks_outbound.sql`, `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` |
 | **Public REST API** | **Phase 1 (read-only) shipped** — org-scoped API keys + `/public/v1/*` routes; see `docs/public-api-phase1.md` | `api/src/routes/public/`, `./master-roadmap-backlog.md` |
 
 ---
 
 <a id="comparison-matrix"></a>
-## Comparison matrix (Pipedrive reference vs Velo)
+## Comparison matrix (Pipedrive reference vs n0CRM)
 
-**Legend:** **Parity** ≈ comparable depth · **Ahead in Velo** · **Critical gap** · **Nice-to-have**
+**Legend:** **Parity** ≈ comparable depth · **Ahead in n0CRM** · **Critical gap** · **Nice-to-have**
 
-| Area | Capability | Pipedrive (reference) | Velo today | Gap | Risk if missing | Effort |
+| Area | Capability | Pipedrive (reference) | n0CRM today | Gap | Risk if missing | Effort |
 |------|------------|------------------------|---------------|-----|-----------------|--------|
 | Pipeline | Visual Kanban, multiple pipelines | Strong | Kanban + configurable stages | **Parity** / partial on multi-pipeline depth | Medium | M |
 | Deals | Ownership, history, W/L | Strong | Full deal model + quotes | **Parity** | Low | S |
@@ -186,7 +186,7 @@ Scoring: **A** adoption / dependency, **R** revenue cycle, **I** integration rel
 
 | # | Gap | A | R | I | C | Score | Response |
 |---|-----|---|---|---|---|-------|----------|
-| 1 | **Outbound webhooks** (signed, retries, multi-subscription) | 5 | 4 | 5 | 5 | **19** | **Build in Velo** (Step 1) |
+| 1 | **Outbound webhooks** (signed, retries, multi-subscription) | 5 | 4 | 5 | 5 | **19** | **Build in n0CRM** (Step 1) |
 | 2 | **Public REST API** + keys/scopes | 4 | 4 | 5 | 4 | **17** | Build (Step 2) |
 | 3 | **Deep ERP/finance** connectors | 3 | 4 | 5 | 4 | **16** | Integration + webhooks |
 | 4 | **Idempotency + DLQ** story for async | 3 | 3 | 5 | 4 | **15** | Build with webhooks |
@@ -197,11 +197,11 @@ Scoring: **A** adoption / dependency, **R** revenue cycle, **I** integration rel
 | 9 | **Field-level visibility** | 2 | 2 | 3 | 4 | **11** | Governance v2 |
 | 10 | **Projects / post-sale** module | 3 | 3 | 2 | 2 | **10** | Scope decision |
 
-**Top 3 actions:** (1) Ship **webhooks v1** with connectivity options in [§ Velo webhooks — v1 scope](#webhooks-v1-scope). (2) Plan **public REST** surface and auth. (3) Run **group interviews** and fill [§ Pipedrive — group as-is](#pipedrive-group-as-is) to validate ERP/form priorities.
+**Top 3 actions:** (1) Ship **webhooks v1** with connectivity options in [§ n0CRM webhooks — v1 scope](#webhooks-v1-scope). (2) Plan **public REST** surface and auth. (3) Run **group interviews** and fill [§ Pipedrive — group as-is](#pipedrive-group-as-is) to validate ERP/form priorities.
 
 ---
 
-## Where Velo is already strong
+## Where n0CRM is already strong
 
 - **Tenant isolation and security narrative** — RLS, channel gates, compliance masters: [`./master-security-compliance.md`](./master-security-compliance.md).
 - **Operator-grade email** — deliverability, tracking, operations: [`./master-email-operations.md`](./master-email-operations.md).

@@ -1,5 +1,5 @@
-/** Commercial product identity (Velo). */
-export const APP_NAME = 'Velo'
+/** Commercial product identity (n0CRM). */
+export const APP_NAME = 'n0CRM'
 export const APP_TAGLINE = 'Outbound-native CRM'
 
 /**

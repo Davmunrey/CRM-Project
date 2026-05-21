@@ -1,22 +1,22 @@
-# Velo — Roadmap
+# n0CRM — Roadmap
 
 **Milestone:** v1.0 — Full SaaS Upgrade
 **Status:** Phase 10 Pending Deploy (Monorepo Complete)
 **Phases:** 10
 **Last updated:** 2026-05-18
-**Architecture note:** Monorepo: frontend/ (React 18 + Vite) + api/ (Fastify 5 + PostgreSQL 16 + Redis) + docker-compose.yml at root. Auth via velo-api JWT (HS256, claims `{ sub, org, role, jti }`). All data via velo-api REST. Supabase client is `null` at runtime. Gmail fully self-hosted via velo-api `/gmail/*`. CI: Gitea Actions (ci.yml, build-production.yml, build-api.yml).
+**Architecture note:** Monorepo: frontend/ (React 18 + Vite) + api/ (Fastify 5 + PostgreSQL 16 + Redis) + docker-compose.yml at root. Auth via n0crm-api JWT (HS256, claims `{ sub, org, role, jti }`). All data via n0crm-api REST. Supabase client is `null` at runtime. Gmail fully self-hosted via n0crm-api `/gmail/*`. CI: Gitea Actions (ci.yml, build-production.yml, build-api.yml).
 
 ---
 
 ## Phases
 
 - [x] **Phase 1: Schema & Multi-Tenancy** — Add `organization_id` + RLS to all tables; create organizations, members, invitations, and gmail_tokens tables (completed 2026-03-31)
-- [x] **Phase 2: velo-api Auth** — Replace Supabase Auth with velo-api JWT (HS256, signup, login, session, password reset, logout) (completed 2026-05-13)
+- [x] **Phase 2: n0crm-api Auth** — Replace Supabase Auth with n0crm-api JWT (HS256, signup, login, session, password reset, logout) (completed 2026-05-13)
 - [x] **Phase 3: Organization Onboarding** — First-login org creation, member invitations, roles, and org-scoped JWT claims (completed 2026-04-06)
 - [x] **Phase 4: Security Fixes** — Remove API keys from localStorage, fix XSS, remove dangerouslyAllowBrowser, add dev warning for missing env vars (completed 2026-04-07)
-- [x] **Phase 5: Core Data Stores + Real-Time** — Migrate contacts, companies, deals, activities, notifications to velo-api with Socket.io real-time (completed 2026-04-07)
+- [x] **Phase 5: Core Data Stores + Real-Time** — Migrate contacts, companies, deals, activities, notifications to n0crm-api with Socket.io real-time (completed 2026-04-07)
 - [x] **Phase 6: Secondary Stores & Real Users** — Migrate remaining stores; replace MOCK_USERS; remove AI features and Leaderboard; unify Lead=Contact (completed 2026-04-08)
-- [x] **Phase 7: Gmail Integration** — Auth Code + PKCE OAuth flow; velo-api `/gmail/*` routes for token exchange and refresh; inbox, send, and contact linking (completed 2026-05-13)
+- [x] **Phase 7: Gmail Integration** — Auth Code + PKCE OAuth flow; n0crm-api `/gmail/*` routes for token exchange and refresh; inbox, send, and contact linking (completed 2026-05-13)
 - [x] **Phase 8: i18n English** — English translation file and language switcher persistence (completed 2026-04-09)
 - [x] **Phase 9: Test Suite** — Vitest setup; unit tests for stores, Zod schemas, and **Gitea Actions** CI (`.gitea/workflows/ci.yml`, `build-production.yml`, `build-api.yml`) (completed 2026-04-10)
 - [x] **Phase 10: Monorepo + Infra Hardening** — Migrate api/ into monorepo; Docker Compose orchestration; JWT denylist (Redis), Socket.io JWT verification, AES-256-GCM encryption, rate limiting, CORS/CSP (completed 2026-05-18)
@@ -29,12 +29,12 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Schema & Multi-Tenancy | 5/5 | ✅ Complete | 2026-03-31 |
-| 2. velo-api Auth (was Supabase) | 5/5 | ✅ Complete | 2026-05-13 |
+| 2. n0crm-api Auth (was Supabase) | 5/5 | ✅ Complete | 2026-05-13 |
 | 3. Organization Onboarding | 4/4 | ✅ Complete | 2026-04-06 |
 | 4. Security Fixes | 4/4 | ✅ Complete | 2026-04-07 |
 | 5. Core Data Stores + Real-Time | 4/4 | ✅ Complete | 2026-04-07 |
 | 6. Secondary Stores & Real Users | 5/5 | ✅ Complete | 2026-04-08 |
-| 7. Gmail Integration (velo-api) | 5/5 | ✅ Complete | 2026-05-13 |
+| 7. Gmail Integration (n0crm-api) | 5/5 | ✅ Complete | 2026-05-13 |
 | 8. i18n English | 3/3 | ✅ Complete | 2026-04-09 |
 | 9. Test Suite | 6/6 | ✅ Complete | 2026-04-10 |
 | 10. Monorepo + Infra Hardening | 5/5 | ✅ Complete | 2026-05-18 |
@@ -65,24 +65,24 @@ SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, SCHEMA-05
 
 ### Done When
 
-- [x] velo-api scopes all queries by `organization_id` from JWT `org` claim — org A data never crosses to org B
+- [x] n0crm-api scopes all queries by `organization_id` from JWT `org` claim — org A data never crosses to org B
 - [x] JWT claim `org` is set after org creation and carried through all subsequent tokens
-- [x] `gmail_tokens` table exists with correct columns; access gated by `user_id` check in velo-api
-- [x] All 5 SCHEMA requirements verified against PostgreSQL schema in velo-api
-- [x] TypeScript types defined inline in velo-api (no Supabase CLI needed)
+- [x] `gmail_tokens` table exists with correct columns; access gated by `user_id` check in n0crm-api
+- [x] All 5 SCHEMA requirements verified against PostgreSQL schema in n0crm-api
+- [x] TypeScript types defined inline in n0crm-api (no Supabase CLI needed)
 
 ---
 
-## Phase 2: velo-api Auth (was Supabase Auth)
+## Phase 2: n0crm-api Auth (was Supabase Auth)
 
-**Goal:** Users can register, log in, reset their password, and have their session persist across page refreshes — via velo-api JWT (not Supabase Auth).
+**Goal:** Users can register, log in, reset their password, and have their session persist across page refreshes — via n0crm-api JWT (not Supabase Auth).
 **Dependencies:** Phase 1
 **Status:** Completed 2026-05-13
 
 ### Plans (completed)
 
-- [x] 2.1: Wire velo-api signup — `POST /auth/register` returns JWT; authStore sets token in localStorage
-- [x] 2.2: Wire velo-api login and session — `POST /auth/login` returns JWT; `GET /auth/me` on mount restores session from JWT
+- [x] 2.1: Wire n0crm-api signup — `POST /auth/register` returns JWT; authStore sets token in localStorage
+- [x] 2.2: Wire n0crm-api login and session — `POST /auth/login` returns JWT; `GET /auth/me` on mount restores session from JWT
 - [x] 2.3: Implement password reset flow — `POST /auth/forgot-password` → email link with token; `POST /auth/reset-password` with token + new password
 - [x] 2.4: Session persistence and race condition guard — `isLoadingAuth: true` initial state in authStore; prevents redirect until `GET /auth/me` completes
 - [x] 2.5: Implement logout — `POST /auth/logout` revokes JWT via Redis denylist; localStorage JWT cleared; no state restoration on Back
@@ -172,11 +172,11 @@ DATA-01, DATA-02, DATA-03, DATA-04, DATA-05, DATA-06, DATA-07, DATA-08, REALTIME
 
 ### Done When
 
-- [x] Realtime via Socket.io (`window.__veloDbChange(table)`); new contacts/deals broadcast to all connected tabs
-- [x] Refreshing after creating a deal shows the deal (persisted in PostgreSQL via velo-api, no localStorage)
+- [x] Realtime via Socket.io (`window.__n0crmDbChange(table)`); new contacts/deals broadcast to all connected tabs
+- [x] Refreshing after creating a deal shows the deal (persisted in PostgreSQL via n0crm-api, no localStorage)
 - [x] Network error during contact save sets `error` state in store; UI shows error message
-- [x] No `crm_contacts` key in localStorage; all data fetched from velo-api on mount
-- [x] All velo-api queries include `WHERE organization_id = $orgId` from JWT `org` claim; cross-org data access blocked
+- [x] No `crm_contacts` key in localStorage; all data fetched from n0crm-api on mount
+- [x] All n0crm-api queries include `WHERE organization_id = $orgId` from JWT `org` claim; cross-org data access blocked
 
 ---
 
@@ -202,22 +202,22 @@ DATA-09, DATA-10, DATA-11, DATA-12, DATA-13, DATA-14, DATA-15, USERS-01, USERS-0
 - [x] Sales goals persist across refreshes (stored in PostgreSQL via `POST /goals`; fetched on mount)
 - [x] Invited member appears in "Assigned to" dropdowns (authStore.users fetched from `GET /users` on mount)
 - [x] Leaderboard computes stats from real activities per org member
-- [x] No `crm_audit` in localStorage; audit log stored in PostgreSQL `audit_log` table via velo-api
+- [x] No `crm_audit` in localStorage; audit log stored in PostgreSQL `audit_log` table via n0crm-api
 - [x] Reports page uses real org members from authStore.users; no hardcoded mock users remain
 
 ---
 
-## Phase 7: Gmail Integration (velo-api, no Supabase)
+## Phase 7: Gmail Integration (n0crm-api, no Supabase)
 
-**Goal:** Users can connect Gmail via Auth Code + PKCE, and the CRM can read their inbox, send emails from contact/deal pages, and link incoming emails to contacts automatically — fully hosted in velo-api.
-**Dependencies:** Phase 5 (contacts via velo-api for email linking)
+**Goal:** Users can connect Gmail via Auth Code + PKCE, and the CRM can read their inbox, send emails from contact/deal pages, and link incoming emails to contacts automatically — fully hosted in n0crm-api.
+**Dependencies:** Phase 5 (contacts via n0crm-api for email linking)
 **Status:** Completed 2026-05-13
 
-**Plans:** 5/5 plans executed (all migrated to velo-api)
+**Plans:** 5/5 plans executed (all migrated to n0crm-api)
 
 Plans:
 - [x] 07-1-PLAN.md — PKCE OAuth initiation + GmailTokenContext + emailStore cleanup (Wave 1)
-- [x] 07-2-PLAN.md — gmail_tokens schema + `/gmail/oauth-exchange` + `/gmail/refresh` velo-api routes (was Edge Functions)
+- [x] 07-2-PLAN.md — gmail_tokens schema + `/gmail/oauth-exchange` + `/gmail/refresh` n0crm-api routes (was Edge Functions)
 - [x] 07-3-PLAN.md — GmailCallback page + App.tsx route + useDataInit silent refresh (Wave 2)
 - [x] 07-4-PLAN.md — Inbox wired to real Gmail threads + contact email matching chips (Wave 3)
 - [x] 07-5-PLAN.md — Send email from ContactDetail/Deals + activity logging on send (Wave 4)
@@ -229,7 +229,7 @@ GMAIL-01, GMAIL-02, GMAIL-03, GMAIL-04, GMAIL-05, GMAIL-06, SEC-05
 
 ### Done When
 
-- [x] Clicking "Connect Gmail" initiates OAuth flow via `POST /gmail/oauth-start` (PKCE, velo-api — no Supabase dependency)
+- [x] Clicking "Connect Gmail" initiates OAuth flow via `POST /gmail/oauth-start` (PKCE, n0crm-api — no Supabase dependency)
 - [x] After granting consent, callback exchanges code via `POST /gmail/oauth-exchange`; refresh token stored AES-256-GCM encrypted in `gmail_tokens` table
 - [x] Silently refreshes Gmail access token on app open via `POST /gmail/refresh` using stored refresh token
 - [x] `localStorage.getItem('crm_emails*')` contains no persisted Gmail access token field
@@ -292,17 +292,17 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 ## Phase 10: Monorepo + Infra Hardening (formerly Phase 10)
 
-**Goal:** Migrate velo-api into monorepo (frontend/ + api/ + docker-compose.yml at root); harden security (JWT denylist, Socket.io verification, encryption, rate limiting, CORS/CSP); confirm all services deployable as single Docker Compose unit.
+**Goal:** Migrate n0crm-api into monorepo (frontend/ + api/ + docker-compose.yml at root); harden security (JWT denylist, Socket.io verification, encryption, rate limiting, CORS/CSP); confirm all services deployable as single Docker Compose unit.
 **Dependencies:** Phase 9 (CI green)
 **Status:** Completed 2026-05-18
 
 ### Plans (completed)
 
-- [x] 10.1: Monorepo structure — move velo-api into `api/` subdirectory; update docker-compose.yml to orchestrate postgres + redis + api:3001 + web (nginx)
+- [x] 10.1: Monorepo structure — move n0crm-api into `api/` subdirectory; update docker-compose.yml to orchestrate postgres + redis + api:3001 + web (nginx)
 - [x] 10.2: Security audit — implement Socket.io JWT verification, Redis JWT denylist (jti tracking), AES-256-GCM encryption for secrets, auth rate limiting (10/15min), CSP headers
 - [x] 10.3: CI workflows — 3 Gitea Actions: `ci.yml` (frontend type + tests), `build-production.yml` (frontend Docker), `build-api.yml` (api Docker)
 - [x] 10.4: Deployment manifest — add `privateprompt-app.json` for Private Prompt deployment; document `docker-compose up` local development flow
-- [x] 10.5: Documentation — update `.planning/` and canonical docs to reflect monorepo, velo-api migrations, security hardening
+- [x] 10.5: Documentation — update `.planning/` and canonical docs to reflect monorepo, n0crm-api migrations, security hardening
 
 ### Requirements Covered
 
@@ -322,14 +322,14 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 ## Phase 11: Production deployment (new Phase 11)
 
-**Goal:** The built SPA (`dist/`) is served from a static host or CDN with correct client-side routing; velo-api deployed with PostgreSQL + Redis; production served on a custom domain over HTTPS.
+**Goal:** The built SPA (`dist/`) is served from a static host or CDN with correct client-side routing; n0crm-api deployed with PostgreSQL + Redis; production served on a custom domain over HTTPS.
 **Dependencies:** Phase 10 (monorepo + CI passing)
 
 ### Plans
 
 - 11.1: SPA catch-all routing — on **private** static hosting, configure nginx `try_files` or CDN so unknown paths serve `index.html`; verify React Router deep links on direct load. Monorepo `docker-compose.yml` includes nginx frontend service as reference.
-- 11.2: Connect the repository to **your** deploy pipeline and set build-time env vars — `VITE_API_URL` pointing to production velo-api; `VITE_APP_CHANNEL` (`production` vs `staging`); set velo-api env vars (`DATABASE_URL`, `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
-- 11.3: Verify **staging** deployments — build from a non-production branch; confirm the **staging** URL hits the staging velo-api instance; confirm data isolation (separate DB)
+- 11.2: Connect the repository to **your** deploy pipeline and set build-time env vars — `VITE_API_URL` pointing to production n0crm-api; `VITE_APP_CHANNEL` (`production` vs `staging`); set n0crm-api env vars (`DATABASE_URL`, `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
+- 11.3: Verify **staging** deployments — build from a non-production branch; confirm the **staging** URL hits the staging n0crm-api instance; confirm data isolation (separate DB)
 - 11.4: Production deploy — merge to `main`; confirm production URL serves the expected build; smoke test: signup, login, create contact, log activity
 - 11.5: Custom domain — add DNS records per your host; confirm HTTPS/TLS is valid
 
@@ -340,7 +340,7 @@ DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05
 ### Done When
 
 - [ ] Navigating directly to `/contacts` returns the Contacts page, not a 404
-- [ ] A **staging** build is reachable at its staging URL and hits staging velo-api (verified in DevTools network tab)
+- [ ] A **staging** build is reachable at its staging URL and hits staging n0crm-api (verified in DevTools network tab)
 - [ ] Merging to `main` (or your protected branch) triggers a **production** deployment on your infrastructure that completes successfully
 - [ ] The production custom domain serves the app over HTTPS with a valid TLS certificate
 - [ ] Smoke test: signup → create org → invite member → create contact → log activity → all persist across refresh
@@ -354,14 +354,14 @@ DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05
 
 ### Plans
 
-- 11.1: Wire Socket.io client in `realtimeSubscriptions.ts` — connect to velo-api Socket.io, map `db-change` events to `window.__veloDbChange(table)` bridge; existing TABLE_HANDLERS already complete
-- 11.2: Implement `flushUxMetricsToServer` — add `POST /ux-metrics-ingest` to velo-api; drain `crm_ux_metrics_v1` localStorage queue, batch POST, clear on success
+- 11.1: Wire Socket.io client in `realtimeSubscriptions.ts` — connect to n0crm-api Socket.io, map `db-change` events to `window.__n0crmDbChange(table)` bridge; existing TABLE_HANDLERS already complete
+- 11.2: Implement `flushUxMetricsToServer` — add `POST /ux-metrics-ingest` to n0crm-api; drain `crm_ux_metrics_v1` localStorage queue, batch POST, clear on success
 - 11.3: Wire `refreshTrackingMetrics` in emailStore — call `GET /email-tracking/metrics/:trackingId` (or equivalent) per tracked email; update open/click counts in store state
 
 ### Done When
 
 - [ ] Creating a contact in tab A causes tab B to refresh contact list without manual reload (Socket.io realtime)
-- [ ] UX events (button clicks, page views) stored in localStorage are flushed to velo-api on `flushUxMetricsToServer()` call
+- [ ] UX events (button clicks, page views) stored in localStorage are flushed to n0crm-api on `flushUxMetricsToServer()` call
 - [ ] Email tracking panel shows updated open/click counts after `refreshTrackingMetrics()` call
 
 ---
@@ -437,4 +437,4 @@ DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04, DEPLOY-05
 ---
 
 *Roadmap created: 2026-03-31*
-*Last updated: 2026-05-18 — Phase 2 renamed to velo-api Auth (from Supabase); Phase 7 updated to note velo-api migration (no Supabase Edge Functions); Phase 10 renamed to Monorepo + Infra Hardening (complete 2026-05-18); new Phase 11 created for Production deployment (operator tasks DEPLOY-01–05).*
+*Last updated: 2026-05-18 — Phase 2 renamed to n0crm-api Auth (from Supabase); Phase 7 updated to note n0crm-api migration (no Supabase Edge Functions); Phase 10 renamed to Monorepo + Infra Hardening (complete 2026-05-18); new Phase 11 created for Production deployment (operator tasks DEPLOY-01–05).*

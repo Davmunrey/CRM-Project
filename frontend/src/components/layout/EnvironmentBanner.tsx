@@ -2,7 +2,7 @@ import { appChannel } from '@/lib/envChannel'
 import { useTranslations } from '../../i18n'
 import { getToken, decodeToken, setToken, clearToken } from '../../lib/api'
 
-const SUPERADMIN_TOKEN_KEY = 'velo_superadmin_token'
+const SUPERADMIN_TOKEN_KEY = 'n0crm_superadmin_token'
 
 export function getImpersonationInfo(): { orgId: string | null; impersonatedBy: string | null } {
   const token = getToken()

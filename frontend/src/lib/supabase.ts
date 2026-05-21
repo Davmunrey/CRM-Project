@@ -8,7 +8,6 @@
  * At runtime the value is always null, so all guarded Supabase code is unreachable.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { getToken } from './api'
 
 export type DataRuntime = 'velo-api' | 'unconfigured'
 
@@ -19,7 +18,7 @@ export const dataRuntime: DataRuntime = 'velo-api'
 /** Always null — Supabase SDK removed. Guards that check `supabase &&` will skip Supabase paths. */
 export const supabase = null as unknown as SupabaseClient | null
 
-/** Back-compat alias — use `getToken()` from `./api` directly in new code. */
+/** Back-compat: session is now managed via HttpOnly cookie; always returns a non-null sentinel. */
 export function getSupabaseSession() {
-  return getToken() ? { access_token: getToken() } : null
+  return { access_token: 'cookie-auth' }
 }

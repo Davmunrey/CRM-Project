@@ -9,13 +9,13 @@ This file consolidates the prior `.planning/codebase/*.md` documents into a sing
 
 ### Pattern overview
 
-**Overall:** React 18 SPA (frontend/) + `velo-api` Fastify 5 backend (api/) in monorepo. PostgreSQL 16 + Redis. Zustand stores for client state. Auth via HS256 JWT (`{ sub, org, role, jti }`). Real-time via Socket.io. No Supabase runtime dependency — `supabase` client is `null` at runtime; all data goes through velo-api including Gmail OAuth.
+**Overall:** React 18 SPA (frontend/) + `n0crm-api` Fastify 5 backend (api/) in monorepo. PostgreSQL 16 + Redis. Zustand stores for client state. Auth via HS256 JWT (`{ sub, org, role, jti }`). Real-time via Socket.io. No Supabase runtime dependency — `supabase` client is `null` at runtime; all data goes through n0crm-api including Gmail OAuth.
 
 **Key characteristics:**
-- `velo-api` is the primary backend for auth, persistence, and realtime sync.
+- `n0crm-api` is the primary backend for auth, persistence, and realtime sync.
 - Zustand remains the app state layer; all mutations go through `src/lib/api.ts` (`VITE_API_URL`).
 - Route-level protection via `ProtectedRoute` + JWT `org`/`role` claims.
-- Gmail integration uses PKCE + velo-api `/gmail/*` routes for token exchange (fully self-hosted — no Supabase Edge Function dependency).
+- Gmail integration uses PKCE + n0crm-api `/gmail/*` routes for token exchange (fully self-hosted — no Supabase Edge Function dependency).
 
 ### Layers
 
@@ -30,34 +30,34 @@ This file consolidates the prior `.planning/codebase/*.md` documents into a sing
 
 **Stores (`src/store/*`):**
 - Domain-specific Zustand stores.
-- All CRUD via `src/lib/api.ts` REST calls to velo-api; optimistic updates where implemented.
+- All CRUD via `src/lib/api.ts` REST calls to n0crm-api; optimistic updates where implemented.
 - `supabase` is `null` — all `!supabase` / `supabase?.` guards fire; Supabase-dependent panels show info states.
-- Real-time: Socket.io events (api:3001) → `window.__veloDbChange(table)` global fires → stores refetch.
+- Real-time: Socket.io events (api:3001) → `window.__n0crmDbChange(table)` global fires → stores refetch.
 
 **Services (`src/services/*`):**
 - Stateless integration adapters (`googleIntegrationService`, `gmailTokenRefresh`, etc.).
-- All Gmail token operations now go through velo-api `/gmail/*` routes (no Supabase Edge Functions).
+- All Gmail token operations now go through n0crm-api `/gmail/*` routes (no Supabase Edge Functions).
 
 **Data/infra (`supabase/*`):**
 - Legacy Edge Functions (email tracking, webhooks, public API) — deprecated, not called from frontend.
-- SQL migrations: historical reference only; PostgreSQL schema now managed via `api/migrations/` in velo-api monorepo subdirectory.
+- SQL migrations: historical reference only; PostgreSQL schema now managed via `api/migrations/` in n0crm-api monorepo subdirectory.
 
 ### Core flows
 
 **Auth + org scope:**
 1. `POST /auth/login` → HS256 JWT with `{ sub, org, role }`.
 2. `GET /auth/me` on mount restores session.
-3. Every velo-api route scopes queries with `WHERE organization_id = ${req.user.org}`.
+3. Every n0crm-api route scopes queries with `WHERE organization_id = ${req.user.org}`.
 
 **CRM CRUD:**
 1. UI dispatches store action.
 2. Store optimistically updates local state.
-3. `api.post/patch/delete` persists to velo-api.
-4. Socket.io `__veloDbChange` broadcasts table changes to other connected clients.
+3. `api.post/patch/delete` persists to n0crm-api.
+4. Socket.io `__n0crmDbChange` broadcasts table changes to other connected clients.
 
 **Gmail:**
 1. User connects via Google OAuth popup (PKCE).
-2. Code exchange via `POST /gmail/oauth-exchange` (velo-api — no Supabase dependency). Refresh token stored AES-256-GCM encrypted in `gmail_tokens`.
+2. Code exchange via `POST /gmail/oauth-exchange` (n0crm-api — no Supabase dependency). Refresh token stored AES-256-GCM encrypted in `gmail_tokens`.
 3. Short-lived access tokens used client-side; inbox loads/syncs Gmail threads via `GET /gmail/threads`.
 4. Thread links pinned/unpinned and persisted in `gmail_thread_links` table.
 
@@ -205,7 +205,7 @@ velo-crm/
 
 - Outbox table: `webhook_outbox`
 - Worker: Edge `webhook-worker`
-- Signature header: **`X-Velo-Signature`** (HMAC-SHA256 hex of raw JSON body)
+- Signature header: **`X-n0CRM-Signature`** (HMAC-SHA256 hex of raw JSON body)
 - Terminal failure: **`dead`** (DLQ semantics) + replay tooling
 
 See `docs/master-pipedrive-velo-comparison.md` (product/parity) and `supabase/README.md` (operator runbook).

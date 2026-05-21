@@ -1,17 +1,16 @@
-# name: Build & publish API image
-# DISABLED: API is now bundled inside the web container (see build-production.yml)
-# See: frontend/Dockerfile (Stage 2: Build API)
+name: Build & publish API image
 
 on:
   push:
     branches: [master]
     paths:
       - 'api/**'
+      - '.gitea/workflows/build-api.yml'
   workflow_dispatch:
 
 env:
   REGISTRY: gitea.apps.privateprompt.tech
-  IMAGE: gitea.apps.privateprompt.tech/clovrlabs/velo-api
+  IMAGE: gitea.apps.privateprompt.tech/clovrlabs/n0crm-api
 
 jobs:
   build:

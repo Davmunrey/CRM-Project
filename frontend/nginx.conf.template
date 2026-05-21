@@ -6,7 +6,7 @@ server {
     index index.html;
 
     resolver ${NAMESERVER} valid=30s ipv6=off;
-    set $api "${VELO_API_URL}";
+    set $api "${N0CRM_API_URL}";
 
     # ── SPA routing ──────────────────────────────────────────────────────────
     location / {
@@ -31,7 +31,7 @@ server {
         proxy_read_timeout 3600s;
     }
 
-    # ── API proxy → velo-api service ─────────────────────────────────────────
+    # ── API proxy → n0crm-api service ────────────────────────────────────────
     location /api/ {
         rewrite ^/api/(.*) /$1 break;
         proxy_pass $api;

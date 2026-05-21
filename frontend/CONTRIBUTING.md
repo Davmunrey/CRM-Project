@@ -1,4 +1,4 @@
-# Velo CRM — Dev Guide
+# n0CRM — Dev Guide
 
 ## Setup
 
@@ -41,7 +41,7 @@ Optional: `npm run build:analyze` — bundle stats in `dist/stats.html`.
 Three workflows run on push/PR:
 - `ci.yml` — frontend tests (working-directory: frontend)
 - `build-production.yml` — builds frontend Docker image → `clovrlabs/velo-crm:latest`
-- `build-api.yml` — builds api Docker image → `clovrlabs/velo-api:latest`
+- `build-api.yml` — builds api Docker image → `clovrlabs/n0crm-api:latest`
 
 ## Docs
 

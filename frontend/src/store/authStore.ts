@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { AuthUser, Organization, Invitation, UserRole, Session } from '../types/auth'
-import { api, getToken, setToken, clearToken, decodeToken, isTokenExpired } from '../lib/api'
+import { api } from '../lib/api'
 import { devConsole } from '../lib/devConsole'
 import { useAuditStore } from './auditStore'
 import { toast } from './toastStore'
@@ -20,7 +20,6 @@ export interface OrgMemberIdentityRow {
 }
 
 interface LoginResponse {
-  token: string
   user: {
     id: string
     email: string
@@ -30,6 +29,7 @@ interface LoginResponse {
     organizationId: string | null
     orgSlug: string | null
   }
+  expiresAt: number  // unix ms — stored for client-side expiry check without reading the cookie
 }
 
 interface ApiMember {
@@ -219,14 +219,12 @@ export const useAuthStore = create<AuthState>()(
       login: async (email, password) => {
         try {
           const res = await api.post<LoginResponse>('/auth/login', { email, password })
-          setToken(res.token)
-
+          // Token is now in an HttpOnly cookie — not accessible from JS.
+          // Store only the user profile and expiry timestamp in Zustand.
           const now = new Date().toISOString()
-          const payload = decodeToken(res.token)
           const session: Session = {
             userId: res.user.id,
-            token: res.token,
-            expiresAt: typeof payload?.['exp'] === 'number' ? payload['exp'] * 1000 : Date.now() + 7 * 24 * 60 * 60 * 1000,
+            expiresAt: res.expiresAt,
             createdAt: now,
           }
 
@@ -263,11 +261,10 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          await api.post('/auth/logout')
+          await api.post('/auth/logout')  // server clears the HttpOnly cookie
         } catch {
           // ignore — clear local state regardless
         }
-        clearToken()
         set({
           currentUser: null,
           session: null,
@@ -283,14 +280,11 @@ export const useAuthStore = create<AuthState>()(
       register: async (data) => {
         try {
           const res = await api.post<LoginResponse>('/auth/register', data)
-          setToken(res.token)
-
+          // Token is in HttpOnly cookie — only store profile and expiry
           const now = new Date().toISOString()
-          const payload = decodeToken(res.token)
           const session: Session = {
             userId: res.user.id,
-            token: res.token,
-            expiresAt: typeof payload?.['exp'] === 'number' ? payload['exp'] * 1000 : Date.now() + 7 * 24 * 60 * 60 * 1000,
+            expiresAt: res.expiresAt,
             createdAt: now,
           }
 
@@ -446,13 +440,9 @@ export const useAuthStore = create<AuthState>()(
 
       isAuthenticated: () => {
         const { currentUser, session } = get()
-        if (!currentUser) return false
-        // Prefer localStorage JWT
-        const token = getToken()
-        if (token && !isTokenExpired(token)) return true
-        // Fall back to in-memory session (set by tests / SSR)
-        if (session && session.expiresAt > Date.now()) return true
-        return false
+        if (!currentUser || !session) return false
+        // expiresAt is persisted in Zustand; actual validation happens server-side via cookie
+        return session.expiresAt > Date.now()
       },
     }),
     {
@@ -475,18 +465,19 @@ function normalizeRole(raw: string | undefined): UserRole {
   return valid.includes(r as UserRole) ? (r as UserRole) : 'sales_rep'
 }
 
-/** Called from App.tsx — replaces initSupabaseAuth. Reads JWT from storage, restores session. */
+/** Called from App.tsx — verifies the HttpOnly cookie session by calling /auth/me. */
 export function initSupabaseAuth(): (() => void) | undefined {
-  const token = getToken()
+  const store = useAuthStore.getState()
 
-  if (!token || isTokenExpired(token)) {
-    clearToken()
-    useAuthStore.getState().setCurrentUser(null)
-    useAuthStore.getState().setIsLoadingAuth(false)
+  // Fast path: if persisted session is clearly expired, skip the network call
+  const session = store.session
+  if (session && session.expiresAt <= Date.now()) {
+    store.setCurrentUser(null)
+    store.setIsLoadingAuth(false)
     return
   }
 
-  // Token valid — restore session from persisted state; fetch fresh user profile
+  // Attempt session restoration — cookie is sent automatically via credentials: include
   api.get<{ user: { id: string; email: string; name: string; role: string; isSuperAdmin?: boolean; organizationId: string | null } }>('/auth/me')
     .then((res) => {
       const u = res.user
@@ -509,7 +500,8 @@ export function initSupabaseAuth(): (() => void) | undefined {
       }
     })
     .catch(() => {
-      clearToken()
+      // Cookie invalid/expired — 401 handler in api.ts redirects to /login
+      useAuthStore.getState().setCurrentUser(null)
     })
     .finally(() => {
       useAuthStore.getState().setIsLoadingAuth(false)

@@ -89,7 +89,7 @@ export interface Invitation {
 
 export interface Session {
   userId: string
-  token: string
+  token?: string  // not available when using HttpOnly cookie auth
   expiresAt: number
   createdAt: string
 }

@@ -1,4 +1,4 @@
-import type { Translations } from './types'
+﻿import type { Translations } from './types'
 import { en } from './en'
 
 export const de: Translations = {
@@ -242,7 +242,7 @@ export const de: Translations = {
     dropSubtitle: 'oder klicken zum Auswählen',
     dropHint: 'Unterstützt .csv-Dateien mit Komma- oder Semikolon-Trennzeichen',
     expectedFieldsFor: 'Erwartete Felder für',
-    mapColumns: 'Ordnen Sie CSV-Spalten den Velo-Feldern zu',
+    mapColumns: 'Ordnen Sie CSV-Spalten den n0CRM-Feldern zu',
     doNotMap: 'Nicht zuordnen',
     requiredFieldsWarning: 'Ordnen Sie alle Pflichtfelder (*) zu, um fortzufahren',
     back: 'Zurück',
@@ -288,7 +288,7 @@ export const de: Translations = {
     badge: 'CRM outbound-native · Self-hosted · Open stack',
     heroHeadline: 'Mehr Deals abschließen.',
     heroHeadlineAccent: 'Ohne von jemandem abhängig zu sein.',
-    heroSubtitle: 'Velo ist ein CRM für Outbound-Sales-Teams, die Geschwindigkeit, vollständige Datenkontrolle und ein zuverlässiges Tool benötigen, das nicht versagt, wenn es darauf ankommt.',
+    heroSubtitle: 'n0CRM ist ein CRM für Outbound-Sales-Teams, die Geschwindigkeit, vollständige Datenkontrolle und ein zuverlässiges Tool benötigen, das nicht versagt, wenn es darauf ankommt.',
     heroCta: 'Zum CRM',
     heroCtaSecondary: 'Konto erstellen',
     stat1Label: 'Sprachen',
@@ -298,7 +298,7 @@ export const de: Translations = {
     featuresTitle: 'Alles, was Ihr Team braucht',
     featuresSubtitle: 'Keine kostenpflichtigen Module. Keine künstlichen Limits. Keine Überraschungen.',
     f1Title: 'Einheitlicher Posteingang',
-    f1Desc: 'Native Gmail-Synchronisation. E-Mails lesen, beantworten und verfolgen – direkt in Velo, ohne Tab-Wechsel.',
+    f1Desc: 'Native Gmail-Synchronisation. E-Mails lesen, beantworten und verfolgen – direkt in n0CRM, ohne Tab-Wechsel.',
     f2Title: 'Automatische Sequenzen',
     f2Desc: 'Mehrstufige Cadences mit bedingter Logik. Das CRM schreitet nur voran, wenn der Lead antwortet.',
     f3Title: 'Pipeline & Forecast',
@@ -310,14 +310,14 @@ export const de: Translations = {
     f6Title: 'Eigener SMTP',
     f6Desc: 'Nutzen Sie Ihren eigenen SMTP-Server oder Resend. Ihre Domain, Ihre Reputation, maximale Zustellbarkeit.',
     f7Title: 'Webhooks & Öffentliche API',
-    f7Desc: 'Verbinden Sie Velo mit Ihrem Stack: Zapier, Make oder direkt über die dokumentierte REST-API mit org-spezifischen API-Schlüsseln.',
+    f7Desc: 'Verbinden Sie n0CRM mit Ihrem Stack: Zapier, Make oder direkt über die dokumentierte REST-API mit org-spezifischen API-Schlüsseln.',
     f8Title: 'Enterprise-Sicherheit',
     f8Desc: 'RLS pro Organisation, vollständiges Audit-Log, obligatorische 2FA und Datenexport auf Knopfdruck.',
     f9Title: 'Mehrsprachig',
     f9Desc: 'Oberfläche verfügbar auf Englisch, Spanisch, Portugiesisch, Französisch, Deutsch und Italienisch. Weitere folgen.',
     selfHostTitle: 'Ihre Infra. Ihre Daten.',
     selfHostTitleAccent: 'Immer.',
-    selfHostSubtitle: 'Velo ist für den Betrieb auf Ihrem eigenen Server konzipiert. Docker Compose, eigenes Postgres und eine Fastify-API, die jeden BaaS ersetzt. Kein Lock-in, keine Überraschungsrechnungen.',
+    selfHostSubtitle: 'n0CRM ist für den Betrieb auf Ihrem eigenen Server konzipiert. Docker Compose, eigenes Postgres und eine Fastify-API, die jeden BaaS ersetzt. Kein Lock-in, keine Überraschungsrechnungen.',
     selfHostItem1: 'Postgres + Fastify API — ohne Supabase',
     selfHostItem2: 'Nginx für das Frontend — ohne Vercel',
     selfHostItem3: 'Socket.io für Echtzeit',
@@ -327,7 +327,7 @@ export const de: Translations = {
     codeSuccess: '✓ Postgres, API und Frontend gestartet',
     ctaTitle: 'Bereit, mehr Deals abzuschließen',
     ctaSubtitle: 'Betreten Sie Ihren Workspace oder erstellen Sie ein neues Konto. Keine Kreditkarte. Keine 45-minütigen Demos.',
-    ctaButton: 'Zu Velo',
+    ctaButton: 'Zu n0CRM',
     footerTagline: 'CRM outbound-native · Self-hosted',
   },
 }

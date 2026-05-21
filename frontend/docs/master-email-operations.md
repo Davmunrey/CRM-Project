@@ -8,7 +8,7 @@
 
 - [Email deliverability (Resend)](#email-deliverability-resend)
 - [BYO‑SMTP outbound (per organization)](#byo-smtp-outbound)
-- [Transactional auth emails (velo-api)](#transactional-auth-emails)
+- [Transactional auth emails (n0crm-api)](#transactional-auth-emails)
 - [In-app outbound and Gmail](#in-app-outbound-and-gmail)
 - [Email mailbox privacy runbook](#email-mailbox-privacy-runbook)
 - [Email release checklist](#email-release-checklist)
@@ -18,9 +18,9 @@
 
 
 <a id="transactional-auth-emails"></a>
-## Transactional auth emails (velo-api)
+## Transactional auth emails (n0crm-api)
 
-Auth is handled by velo-api (Fastify 5 + Node.js 22 in `api/` directory). Supabase Auth is no longer used for login/registration.
+Auth is handled by n0crm-api (Fastify 5 + Node.js 22 in `api/` directory). Supabase Auth is no longer used for login/registration.
 
 ### Current state
 
@@ -31,7 +31,7 @@ Auth is handled by velo-api (Fastify 5 + Node.js 22 in `api/` directory). Supaba
 
 ### Operator checklist
 
-- [x] Wire Resend (or SMTP) into velo-api `POST /auth/forgot-password` to send the reset link. (done 2026-05-13)
+- [x] Wire Resend (or SMTP) into n0crm-api `POST /auth/forgot-password` to send the reset link. (done 2026-05-13)
 - [x] Password reset tokens stored as SHA-256 hashes in DB (not plaintext). (done 2026-05-18)
 - [x] Rate limit on `/auth/reset-password`: 10 requests per 15 minutes per IP. (done 2026-05-18)
 - [ ] HTML template for password reset email with branded design.
@@ -74,7 +74,7 @@ References: [Resend: email authentication for developers](https://resend.com/blo
 
 ## 3. Content and reputation
 
-- [x] Send both **text** and **html** where possible (Velo sends `body` + `htmlBody` when provided).
+- [x] Send both **text** and **html** where possible (n0CRM sends `body` + `htmlBody` when provided).
 - [ ] Bounce and complaint handling process defined (who monitors Resend dashboard).
 - [ ] Warm-up plan for new dedicated IPs (if applicable — Resend shared infra is typical).
 
@@ -116,7 +116,7 @@ CRM-specific outbound and inbox behavior (complements the Resend DNS checklist a
 - **SPF, DKIM, DMARC** on the domain you send from (Google Workspace for Gmail OAuth users, or your DNS when using Resend or another ESP).
 - **Reputation:** avoid sudden high volume from a single mailbox; use the **communication_jobs** queue with spacing for bulk sends.
 - **Marketing:** only queue contacts with `marketing_opt_in`; provide a real unsubscribe URL before adding `List-Unsubscribe` headers (future hardening).
-- **Auth email security:** reset token TTL is 1 hour and single-use (enforced in velo-api `/auth/reset-password` handler); password change uses bcrypt constant-time comparison.
+- **Auth email security:** reset token TTL is 1 hour and single-use (enforced in n0crm-api `/auth/reset-password` handler); password change uses bcrypt constant-time comparison.
 
 ### Limits
 
@@ -128,7 +128,7 @@ CRM-specific outbound and inbox behavior (complements the Resend DNS checklist a
 <a id="byo-smtp-outbound"></a>
 ## BYO‑SMTP outbound (per organization)
 
-Velo can route outbound mail through an organization's own SMTP server in addition to Gmail OAuth and Resend. Use this when a customer must send "from" a verified corporate domain managed outside Resend (e.g., Microsoft 365, Google Workspace SMTP relay, AWS SES SMTP, Postmark SMTP, dedicated Postfix).
+n0CRM can route outbound mail through an organization's own SMTP server in addition to Gmail OAuth and Resend. Use this when a customer must send "from" a verified corporate domain managed outside Resend (e.g., Microsoft 365, Google Workspace SMTP relay, AWS SES SMTP, Postmark SMTP, dedicated Postfix).
 
 ### Selection
 
@@ -175,7 +175,7 @@ Hitting **Send test** dispatches a small "SMTP test" message to a recipient of t
 <a id="email-mailbox-privacy-runbook"></a>
 ## Email mailbox privacy runbook
 
-This runbook helps support and operations teams validate and troubleshoot per-user mailbox privacy in Velo.
+This runbook helps support and operations teams validate and troubleshoot per-user mailbox privacy in n0CRM.
 
 ## Document Control
 

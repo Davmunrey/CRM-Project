@@ -5,12 +5,12 @@ Use after a production deploy. Record pass/fail and who ran it.
 ## Preconditions
 
 - [ ] Both frontend and api running (via `docker compose up -d` from repo root, or equivalent deployment)
-- [ ] `VITE_API_URL` points to the production `velo-api` instance (or `/api` for Docker nginx proxy)
+- [ ] `VITE_API_URL` points to the production `n0crm-api` instance (or `/api` for Docker nginx proxy)
 - [ ] SPA deep links work (nginx `try_files` or equivalent — see [`deployment-spa-and-env.md`](./deployment-spa-and-env.md))
-- [ ] `velo-api` running and healthy; api/docker-entrypoint.sh auto-ran migrations on container start
+- [ ] `n0crm-api` running and healthy; api/docker-entrypoint.sh auto-ran migrations on container start
 - [ ] Database seeded (if needed; migrations idempotent)
 - [ ] JWT_SECRET set (min 32 chars), CORS_ORIGIN parsed and validated, Redis available for JWT denylist
-- [ ] E2E test environment variables configured: `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` (velo-api endpoints, not Supabase)
+- [ ] E2E test environment variables configured: `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` (n0crm-api endpoints, not Supabase)
 
 ## Auth flows
 
@@ -26,7 +26,7 @@ Use after a production deploy. Record pass/fail and who ran it.
 
 8. **Create contact** — Create contact; reload; record visible
 9. **Log activity** — Attach activity to contact; navigate away and back; still visible
-10. **Team directory** — Open Settings → Team; member list loads (fetched from velo-api `/orgs/me/members`)
+10. **Team directory** — Open Settings → Team; member list loads (fetched from n0crm-api `/orgs/me/members`)
 11. **Kanban** — Move deal across stages; refresh; stage preserved
 12. **Notifications** — Mark-all-read; badge clears
 
@@ -39,7 +39,7 @@ Use after a production deploy. Record pass/fail and who ran it.
 ## Optional (if configured)
 
 - **Gmail** — Connect Gmail; threads load in Inbox; disconnect clears token
-- **AI features** — Chat widget responds if `ANTHROPIC_API_KEY` set in velo-api
+- **AI features** — Chat widget responds if `ANTHROPIC_API_KEY` set in n0crm-api
 
 ## Automated smoke
 

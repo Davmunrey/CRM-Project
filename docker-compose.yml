@@ -3,15 +3,15 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: velo
-      POSTGRES_USER: velo
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-velo_dev_pass}
+      POSTGRES_DB: n0crm
+      POSTGRES_USER: n0crm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n0crm_dev_pass}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U velo"]
+      test: ["CMD-SHELL", "pg_isready -U n0crm"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -30,10 +30,12 @@ services:
       retries: 5
 
   migrate:
-    image: gitea.apps.privateprompt.tech/clovrlabs/velo-api:latest
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     working_dir: /app
     environment:
-      DATABASE_URL: postgres://velo:${POSTGRES_PASSWORD:-velo_dev_pass}@postgres:5432/velo
+      DATABASE_URL: postgres://n0crm:${POSTGRES_PASSWORD:-n0crm_dev_pass}@postgres:5432/n0crm
     command: sh -c "npm run db:migrate && npm run db:seed"
     depends_on:
       postgres:
@@ -52,11 +54,11 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgres://velo:${POSTGRES_PASSWORD:-velo_dev_pass}@postgres:5432/velo
+      DATABASE_URL: postgres://n0crm:${POSTGRES_PASSWORD:-n0crm_dev_pass}@postgres:5432/n0crm
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
-      EMAIL_FROM: ${EMAIL_FROM:-noreply@velo.app}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@n0crm.com}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-}
@@ -82,7 +84,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      VELO_API_URL: http://api:3001
+      N0CRM_API_URL: http://api:3001
     depends_on:
       api:
         condition: service_healthy

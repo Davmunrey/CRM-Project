@@ -1,4 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" aria-label="Velo">
-  <path d="M 10 10 L 32 54 L 54 10 L 42 10 L 32 36 L 22 10 Z" fill="currentColor"/>
-  <circle cx="50" cy="14" r="5" fill="#FF6B57"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 72" aria-label="n0crm">
+  <!-- Mono theme: currentColor wordmark + coral cursor + coral accent line -->
+  <text x="0" y="52"
+    font-family="'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif"
+    font-weight="700" font-size="56" letter-spacing="-1.7"
+    fill="currentColor">n0crm</text>
+  <text x="217" y="52"
+    font-family="'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif"
+    font-weight="700" font-size="56"
+    fill="#E8523A">_</text>
+  <!-- Coral accent line -->
+  <rect x="0" y="61" width="230" height="4" rx="2" fill="#E8523A"/>
 </svg>

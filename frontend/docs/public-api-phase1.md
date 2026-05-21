@@ -1,6 +1,6 @@
 # Public API — phase 1 (read-only)
 
-This document describes the Velo public REST surface. The database migration `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` adds `organization_api_keys` (hashed secrets). This is a self-hosted REST API at `/public/v1/*`.
+This document describes the n0CRM public REST surface. The database migration `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` adds `organization_api_keys` (hashed secrets). This is a self-hosted REST API at `/public/v1/*`.
 
 ## Authentication
 

@@ -11,7 +11,7 @@ on:
 
 env:
   REGISTRY: gitea.apps.privateprompt.tech
-  IMAGE: gitea.apps.privateprompt.tech/clovrlabs/velo-crm
+  IMAGE: gitea.apps.privateprompt.tech/clovrlabs/n0crm
 
 jobs:
   build:

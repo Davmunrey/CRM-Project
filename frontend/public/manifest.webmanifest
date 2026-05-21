@@ -1,17 +1,17 @@
 {
-  "name": "Velo",
-  "short_name": "Velo",
-  "description": "Velo is the outbound-native CRM. Move faster from lead to won deal.",
+  "name": "n0CRM",
+  "short_name": "n0CRM",
+  "description": "Your infrastructure. Your data. Your CRM.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#06070F",
-  "theme_color": "#4F46E5",
+  "background_color": "#0D0D20",
+  "theme_color": "#4338CA",
   "icons": [
     {
       "src": "/brand/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }

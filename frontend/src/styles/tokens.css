@@ -6,24 +6,25 @@
  */
 
 :root {
-  /* Velo brand primitives (hex; for docs, exports, and non-Tailwind surfaces) */
-  --velo-50: #eef0ff;
-  --velo-100: #e0e3ff;
-  --velo-200: #c7ccfe;
-  --velo-300: #a5a8fc;
-  --velo-400: #8b84ff;
-  --velo-500: #6366f1;
-  --velo-600: #4f46e5;
-  --velo-700: #4338ca;
-  --velo-800: #3730a3;
-  --velo-900: #1e1b4b;
+  /* n0CRM brand primitives (hex; for docs, exports, and non-Tailwind surfaces) */
+  --brand-50: #eef0ff;
+  --brand-100: #e0e3ff;
+  --brand-200: #c7ccfe;
+  --brand-300: #a5a8fc;
+  --brand-400: #8b84ff;
+  --brand-500: #6366f1;
+  --brand-600: #4f46e5;
+  --brand-700: #4338ca;
+  --brand-800: #3730a3;
+  --brand-900: #1e1b4b;
   --accent: #ff6b57;
   --accent-dark: #e85340;
-  --brand-primary: var(--velo-600);
-  --brand-ink: var(--velo-900);
+  --brand-primary: var(--brand-600);
+  --brand-ink: var(--brand-900);
 
-  --font-sans: 'Satoshi', system-ui, sans-serif;
-  --font-display: 'General Sans', system-ui, sans-serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
   /* ── Primitives (dark default) - accent scale; 500/600 overridden at runtime by branding --accent-rgb */
   --color-accent-50: 238 242 255;

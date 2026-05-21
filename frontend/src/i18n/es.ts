@@ -1,4 +1,4 @@
-import type { Translations } from './types'
+﻿import type { Translations } from './types'
 import { workflowLibraryEs } from './workflowLibrary/es'
 
 export const es: Translations = {
@@ -45,8 +45,8 @@ export const es: Translations = {
   },
 
   brand: {
-    productName: 'Velo',
-    defaultAppName: 'Velo',
+    productName: 'n0CRM',
+    defaultAppName: 'n0CRM',
     productTagline: 'CRM de outbound para equipos de ventas a alto ritmo',
   },
 
@@ -625,7 +625,7 @@ export const es: Translations = {
     emailLastError: 'Último error',
     smtpTitle: 'SMTP saliente (tu propio servidor)',
     smtpBlurb:
-      'Configura tu propio servidor SMTP (Office 365, SendGrid, Mailgun, Postmark, personalizado) para enviar correo saliente. La contraseña se guarda cifrada (AES‑256‑GCM) y en el servidor y la usa la Velo API para todos los correos salientes.',
+      'Configura tu propio servidor SMTP (Office 365, SendGrid, Mailgun, Postmark, personalizado) para enviar correo saliente. La contraseña se guarda cifrada (AES‑256‑GCM) y en el servidor y la usa la n0CRM API para todos los correos salientes.',
     smtpHost: 'Host SMTP',
     smtpHostPlaceholder: 'smtp.ejemplo.com',
     smtpPort: 'Puerto',
@@ -637,7 +637,7 @@ export const es: Translations = {
     smtpFromAddress: 'Remitente (From)',
     smtpFromAddressPlaceholder: 'ventas@tudominio.com',
     smtpFromName: 'Nombre del remitente (opcional)',
-    smtpFromNamePlaceholder: 'Velo Ventas',
+    smtpFromNamePlaceholder: 'n0CRM Ventas',
     smtpReplyTo: 'Reply-To (opcional)',
     smtpReplyToPlaceholder: 'respuestas@tudominio.com',
     smtpSecurity: 'Seguridad de conexión',
@@ -665,9 +665,9 @@ export const es: Translations = {
     smtpToastMissingFields: 'Host, usuario, contraseña y dirección de remitente son obligatorios',
     smtpToastSaveFailed: 'No se pudo guardar la configuración SMTP',
     smtpProviderActiveHint:
-      'Velo está enviando correo saliente a través de este servidor SMTP (VITE_EMAIL_PROVIDER=smtp).',
+      'n0CRM está enviando correo saliente a través de este servidor SMTP (VITE_EMAIL_PROVIDER=smtp).',
     smtpProviderInactiveHint:
-      'Estas credenciales están guardadas, pero Velo está usando otro proveedor. Configura VITE_EMAIL_PROVIDER=smtp para cambiar.',
+      'Estas credenciales están guardadas, pero n0CRM está usando otro proveedor. Configura VITE_EMAIL_PROVIDER=smtp para cambiar.',
     emailSignatures: 'Firmas de correo',
     signatureName: 'Nombre de firma',
     signatureHtml: 'Firma',
@@ -720,14 +720,14 @@ export const es: Translations = {
     tabIntegrations: 'API y captación',
     integrationsPageTitle: 'Integraciones',
     integrationsPageSubtitle:
-      'Conecta Google para sincronizar Gmail y Calendar con Velo. Inicias sesión en Velo con correo y contraseña; esto solo vincula tu cuenta de Google para correo y calendario.',
+      'Conecta Google para sincronizar Gmail y Calendar con n0CRM. Inicias sesión en n0CRM con correo y contraseña; esto solo vincula tu cuenta de Google para correo y calendario.',
     googleCardTitle: 'Cuenta de Google',
     googleCardBlurb:
-      'Vincula Gmail para sincronizar el buzón. Inicias sesión en Velo con correo y contraseña; esto solo conecta Google después de entrar.',
+      'Vincula Gmail para sincronizar el buzón. Inicias sesión en n0CRM con correo y contraseña; esto solo conecta Google después de entrar.',
     googleCardFeatures: 'Gmail (lectura, envío, etiquetas)',
     googleGmailStatus: 'Gmail',
     googleCalendarCardTitle: 'Google Calendar',
-    googleCalendarCardBlurb: 'Sincroniza reuniones y crea eventos desde Velo.',
+    googleCalendarCardBlurb: 'Sincroniza reuniones y crea eventos desde n0CRM.',
     googleCalendarCardBlurbLocked: 'Primero conecta tu cuenta de Google arriba; luego añade Calendar en un segundo paso breve.',
     googleCalendarConnect: 'Activar Calendar',
     googleCalendarOpening: 'Abriendo Google…',
@@ -737,7 +737,7 @@ export const es: Translations = {
     googleOpening: 'Abriendo Google…',
     googleConnected: 'Conectado',
     googleDisconnect: 'Desconectar',
-    googleDisconnectConfirm: '¿Desconectar Google? Velo dejará de usar tu Gmail y Calendar hasta que vuelvas a conectar.',
+    googleDisconnectConfirm: '¿Desconectar Google? n0CRM dejará de usar tu Gmail y Calendar hasta que vuelvas a conectar.',
     googlePermissionsHeading: 'Permisos concedidos',
     googlePermGmailRead: 'Leer tus mensajes e hilos de Gmail',
     googlePermGmailSend: 'Enviar correo en tu nombre',
@@ -769,11 +769,11 @@ export const es: Translations = {
     activationFunnelHint: 'Tip: ataca primero la etapa con menor conversion para quitar friccion donde mas duele.',
     webhooksTitle: 'Webhooks',
     webhooksIntro:
-      'Avísale a tus sistemas cuando cambie algo en Velo (negocios, contactos, empresas o actividades). Con una URL HTTPS y un secreto basta; los filtros son opcionales.',
+      'Avísale a tus sistemas cuando cambie algo en n0CRM (negocios, contactos, empresas o actividades). Con una URL HTTPS y un secreto basta; los filtros son opcionales.',
     webhooksTagline: 'Sin prisa: puedes guardar el endpoint, probarlo y activarlo cuando te venga bien.',
     webhooksRequiresSupabase: 'Los webhooks están completamente soportados. Crea un endpoint abajo y usa el botón de prueba para verificar la entrega.',
     webhooksCronHint:
-      'Procesa la cola con un job programado: POST /webhooks/process-queue de la Velo API con la cabecera x-webhook-worker-secret igual a WEBHOOK_WORKER_SECRET (ver velo-api README).',
+      'Procesa la cola con un job programado: POST /webhooks/process-queue de la n0CRM API con la cabecera x-webhook-worker-secret igual a WEBHOOK_WORKER_SECRET (ver n0crm-api README).',
     webhooksCronHintTitle: 'Cola de entregas (ops / self-hosting)',
     webhooksCreateSection: 'Añadir un endpoint',
     webhooksName: 'Nombre',
@@ -781,11 +781,11 @@ export const es: Translations = {
     webhooksSigningSecret: 'Secreto de firma (mín. 16 caracteres)',
     webhooksSigningSecretHelpToggle: '¿Para qué es el secreto de firma?',
     webhooksSigningSecretHelpP1:
-      'Es una contraseña compartida entre Velo y tu servidor. No la enviamos en la URL del webhook: solo tu backend debe guardarla (por ejemplo en una variable de entorno).',
+      'Es una contraseña compartida entre n0CRM y tu servidor. No la enviamos en la URL del webhook: solo tu backend debe guardarla (por ejemplo en una variable de entorno).',
     webhooksSigningSecretHelpP2:
-      'Sirve para demostrar que el POST lo enviamos nosotros y que el JSON no se ha manipulado en camino: firmamos el cuerpo en bruto con HMAC-SHA-256 y enviamos el resultado en la cabecera X-Velo-Signature.',
+      'Sirve para demostrar que el POST lo enviamos nosotros y que el JSON no se ha manipulado en camino: firmamos el cuerpo en bruto con HMAC-SHA-256 y enviamos el resultado en la cabecera X-N0CRM-Signature.',
     webhooksSigningSecretHelpP3:
-      'En tu receptor, lee el body exactamente como llega, calcula el mismo HMAC con tu copia del secreto y compáralo con X-Velo-Signature (mejor comparación en tiempo constante). Si rotas el secreto aquí, actualiza la config en tu servidor.',
+      'En tu receptor, lee el body exactamente como llega, calcula el mismo HMAC con tu copia del secreto y compáralo con X-N0CRM-Signature (mejor comparación en tiempo constante). Si rotas el secreto aquí, actualiza la config en tu servidor.',
     webhooksEventFilters: 'Filtros de eventos',
     webhooksEventFiltersHint: 'Patrones separados por comas, p. ej. *, deal.*, deal.deleted',
     webhooksCustomHeadersJson: 'Cabeceras personalizadas (objeto JSON)',
@@ -800,7 +800,7 @@ export const es: Translations = {
     webhooksRetryLoad: 'Reintentar',
     webhooksListTitle: 'Tus endpoints',
     webhooksListEmpty: 'Todavía no hay nada aquí, sin problema.',
-    webhooksListEmptyHint: 'Cuando añadas una URL, enviaremos allí JSON firmado cuando pase algo en Velo.',
+    webhooksListEmptyHint: 'Cuando añadas una URL, enviaremos allí JSON firmado cuando pase algo en n0CRM.',
     webhooksEnabled: 'Activo',
     webhooksLastStatus: 'Último estado HTTP',
     webhooksTest: 'Probar',
@@ -831,7 +831,7 @@ export const es: Translations = {
       'Crea claves API de solo lectura para integraciones y tokens opacos para formularios públicos. Los secretos solo se muestran una vez; guárdalos en un lugar seguro.',
     integrationsPublicApiTitle: 'API REST pública (lectura)',
     integrationsPublicApiHint:
-      'Lee datos de Velo con una API key del proyecto. Soporta colecciones: deals, contacts, companies y activities.',
+      'Lee datos de n0CRM con una API key del proyecto. Soporta colecciones: deals, contacts, companies y activities.',
     integrationsEndpointLabel: 'Ejemplo de petición',
     integrationsPublicApiAuthHint:
       'Usa Authorization: Bearer crm_live_… y revisa docs/public-api-phase1.md para ejemplos completos.',
@@ -928,7 +928,7 @@ export const es: Translations = {
     thisYear: 'Este año',
     emailTrackingTitle: 'Engagement de email saliente (servidor)',
     emailTrackingSubtitle:
-      'Aperturas y clics registrados cuando el destinatario carga el pixel o sigue un enlace reescrito. Las rutas de Velo API `/email-tracking/open` y `/email-tracking/click` registran eventos en `email_tracking_events`.',
+      'Aperturas y clics registrados cuando el destinatario carga el pixel o sigue un enlace reescrito. Las rutas de n0CRM API `/email-tracking/open` y `/email-tracking/click` registran eventos en `email_tracking_events`.',
     emailTrackingServerBadge: 'Basado en servidor',
     emailTrackingUnconfiguredBadge: 'Sin conexión',
     emailTrackingOpens: 'Aperturas',
@@ -937,9 +937,9 @@ export const es: Translations = {
       'Privacidad del buzón: solo ves eventos de correos que tú enviaste (RLS). Aún no hay vista agregada para toda la organización.',
     emailTrackingEmpty: 'Sin aperturas ni clics registrados en el servidor en este periodo para tus envíos.',
     emailTrackingLoadError: 'No se pudieron cargar las métricas de tracking de email.',
-    emailTrackingNotConfigured: 'Las métricas de tracking están disponibles una vez que se envíen emails a través de Velo.',
+    emailTrackingNotConfigured: 'Las métricas de tracking están disponibles una vez que se envíen emails a través de n0CRM.',
     emailTrackingReliabilityNote:
-      'Nota de producto: aperturas/clics dependen de eventos en servidor registrados por velo-api. Cargas parciales o solo cliente pueden infra-reportar. Tratar como orientativo hasta validar la ingesta completa.',
+      'Nota de producto: aperturas/clics dependen de eventos en servidor registrados por n0crm-api. Cargas parciales o solo cliente pueden infra-reportar. Tratar como orientativo hasta validar la ingesta completa.',
   },
   csvImport: {
     title: 'Importar CSV',
@@ -951,7 +951,7 @@ export const es: Translations = {
     dropSubtitle: 'o haz clic para seleccionar',
     dropHint: 'Soporta archivos .csv con separador de coma o punto y coma',
     expectedFieldsFor: 'Campos esperados para',
-    mapColumns: 'Mapea las columnas de tu CSV a los campos de Velo',
+    mapColumns: 'Mapea las columnas de tu CSV a los campos de n0CRM',
     doNotMap: 'No mapear',
     requiredFieldsWarning: 'Mapea todos los campos obligatorios (*) para continuar',
     back: 'Atrás',
@@ -1373,18 +1373,18 @@ export const es: Translations = {
     appliedToThreads: 'Aplicado a {n} hilo(s)',
     appliedToMessages: 'Aplicado a {n} mensaje(s)',
     followUpCreated: 'Tarea de seguimiento creada',
-    noEntityToPin: 'No hay registro de Velo para fijar en este hilo',
+    noEntityToPin: 'No hay registro de n0CRM para fijar en este hilo',
     pinnedLinkRemoved: 'Enlace fijado eliminado',
     manualLinkSaved: 'Enlace manual guardado',
     downloadAttachmentError: 'No se pudo descargar el adjunto',
     attachments: 'Adjuntos',
-    crmSentInThread: 'Correos enviados desde Velo en este hilo',
+    crmSentInThread: 'Correos enviados desde n0CRM en este hilo',
     scheduled: 'Programado',
     unknownSender: 'Remitente desconocido',
     clicks: 'Clics',
     searchPlaceholder: 'Buscar en el buzón...',
     searchOperatorsHint:
-      'Búsqueda híbrida: Gmail ejecuta from:/to:/subject:/is:unread/has:attachment. Los tokens is:tracked, is:opened, is:clicked e in:mine (propietario del hilo) filtran en cliente tras la sync. El tracking usa correos rastreados por Velo vinculados al hilo.',
+      'Búsqueda híbrida: Gmail ejecuta from:/to:/subject:/is:unread/has:attachment. Los tokens is:tracked, is:opened, is:clicked e in:mine (propietario del hilo) filtran en cliente tras la sync. El tracking usa correos rastreados por n0CRM vinculados al hilo.',
     loadMore: 'Cargar más',
     disconnectError: 'No se pudo desconectar Gmail',
     mailboxScopePrivate: 'Buzón privado',
@@ -1549,15 +1549,15 @@ export const es: Translations = {
   errors: {
     supabaseNotConfigured: 'El servidor API no está configurado',
     supabaseNotConfiguredDetail:
-      'El servidor API no está disponible. Define VITE_API_URL en tu entorno y asegúrate de que velo-api está en ejecución.',
+      'El servidor API no está disponible. Define VITE_API_URL en tu entorno y asegúrate de que n0crm-api está en ejecución.',
     generic: 'Ocurrió un error',
     gmailConnectionError: 'Error al conectar Gmail',
     googleIntegrationStartFailed: 'No se pudo iniciar la conexión con Google. Comprueba la configuración en el servidor.',
     googleEdgeFunctionUnreachable:
-      'No se puede contactar con el servicio de conexión a Google. Asegúrate de que velo-api está en marcha y que GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET están configurados en el entorno del servidor. Revisa los logs de velo-api para más detalles.',
+      'No se puede contactar con el servicio de conexión a Google. Asegúrate de que n0crm-api está en marcha y que GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET están configurados en el entorno del servidor. Revisa los logs de n0crm-api para más detalles.',
     googleOAuthAccessDenied: 'Se canceló la autorización de Google.',
     googleOAuthStateInvalid: 'La sesión de conexión expiró. Inténtalo de nuevo.',
-    googleOAuthEmailMismatch: 'Usa la misma cuenta de Google que tu correo de Velo.',
+    googleOAuthEmailMismatch: 'Usa la misma cuenta de Google que tu correo de n0CRM.',
     gmailMissingScopeSend: 'Falta el permiso de envío de Gmail. Vuelve a conectar tu cuenta y acepta todos los permisos solicitados.',
     gmailMissingScopeRead: 'Falta el permiso de lectura de Gmail. Vuelve a conectar tu cuenta y acepta todos los permisos solicitados.',
     gmailScheduledFailedAfterRetries: 'Un email programado falló después de varios intentos y ha sido cancelado.',
@@ -1653,7 +1653,7 @@ export const es: Translations = {
     activityOverdueMessage: 'La llamada programada con Laura Sanchez esta vencida',
     goalAchievedTitle: 'Objetivo logrado: Actividades mensuales',
     goalAchievedMessage: 'Has completado tu objetivo de 50 actividades este mes',
-    welcomeTitle: 'Bienvenido a Velo',
+    welcomeTitle: 'Bienvenido a n0CRM',
     welcomeMessage: 'Tu cuenta ha sido configurada. Explora las funcionalidades del sistema.',
     triggeredBySystem: 'Sistema',
   },
@@ -1710,7 +1710,7 @@ export const es: Translations = {
       'Los destinatarios siempre ven este buzón como dirección. El nombre del remitente solo cambia la etiqueta visible.',
     composerInsertField: 'Insertar campo',
     composerTemplatesToolbar: 'Plantillas',
-    crmLinkTitle: 'Enlazar a Velo',
+    crmLinkTitle: 'Enlazar a n0CRM',
     crmLinkHint: 'Asocia este correo a un contacto, negocio o empresa para el seguimiento.',
     formatBold: 'Negrita',
     formatItalic: 'Cursiva',
@@ -1839,7 +1839,7 @@ export const es: Translations = {
     badge: 'CRM outbound-native · Self-hosted · Open stack',
     heroHeadline: 'Cierra más deals.',
     heroHeadlineAccent: 'Sin depender de nadie.',
-    heroSubtitle: 'Velo es un CRM construido para equipos de ventas outbound que necesitan velocidad, control total sobre sus datos y una herramienta que no les falle cuando más importa.',
+    heroSubtitle: 'n0CRM es un CRM construido para equipos de ventas outbound que necesitan velocidad, control total sobre sus datos y una herramienta que no les falle cuando más importa.',
     heroCta: 'Entrar al CRM',
     heroCtaSecondary: 'Crear cuenta',
     stat1Label: 'idiomas',
@@ -1849,7 +1849,7 @@ export const es: Translations = {
     featuresTitle: 'Todo lo que tu equipo necesita',
     featuresSubtitle: 'Sin módulos de pago extra. Sin límites artificiales. Sin sorpresas.',
     f1Title: 'Unified Inbox',
-    f1Desc: 'Gmail sync nativo. Lee, responde y rastrea emails directamente desde Velo sin cambiar de pestaña.',
+    f1Desc: 'Gmail sync nativo. Lee, responde y rastrea emails directamente desde n0CRM sin cambiar de pestaña.',
     f2Title: 'Sequences automáticas',
     f2Desc: 'Cadencias multi-paso con lógica condicional. El CRM avanza solo cuando el lead responde.',
     f3Title: 'Pipeline & Forecast',
@@ -1861,14 +1861,14 @@ export const es: Translations = {
     f6Title: 'SMTP propio',
     f6Desc: 'Trae tu propio servidor SMTP o usa Resend. Dominio propio, reputación propia, máxima entregabilidad.',
     f7Title: 'Webhooks & API pública',
-    f7Desc: 'Conecta Velo a tu stack: Zapier, Make, o directo vía API REST documentada con API keys por org.',
+    f7Desc: 'Conecta n0CRM a tu stack: Zapier, Make, o directo vía API REST documentada con API keys por org.',
     f8Title: 'Seguridad enterprise',
     f8Desc: 'RLS por organización, audit log completo, 2FA obligatorio y exportación de datos en un clic.',
     f9Title: 'Multilingüe',
     f9Desc: 'Interfaz disponible en inglés, español, portugués, francés, alemán e italiano. Más en camino.',
     selfHostTitle: 'Tu infra. Tus datos.',
     selfHostTitleAccent: 'Siempre.',
-    selfHostSubtitle: 'Velo está diseñado para correrse en tu propio servidor. Docker Compose, Postgres propio y un API Fastify que reemplaza cualquier BaaS. Sin lock-in, sin facturas sorpresa.',
+    selfHostSubtitle: 'n0CRM está diseñado para correrse en tu propio servidor. Docker Compose, Postgres propio y un API Fastify que reemplaza cualquier BaaS. Sin lock-in, sin facturas sorpresa.',
     selfHostItem1: 'Postgres + Fastify API — sin Supabase',
     selfHostItem2: 'Nginx para el frontend — sin Vercel',
     selfHostItem3: 'Socket.io para realtime',
@@ -1878,7 +1878,7 @@ export const es: Translations = {
     codeSuccess: '✓ Postgres, API y frontend levantados',
     ctaTitle: 'Listo para cerrar más deals',
     ctaSubtitle: 'Entra a tu workspace o crea una cuenta nueva. Sin tarjeta. Sin demos de 45 minutos.',
-    ctaButton: 'Entrar a Velo',
+    ctaButton: 'Entrar a n0CRM',
     footerTagline: 'CRM outbound-native · Self-hosted',
   },
 }

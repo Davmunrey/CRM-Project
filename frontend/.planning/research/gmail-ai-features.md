@@ -1,17 +1,17 @@
 # Gmail OAuth2 + AI Features Research
 
-**Project:** Velo
+**Project:** n0CRM
 **Researched:** 2026-03-31
 **Scope:** Gmail OAuth2 PKCE, secure token storage, thread-to-CRM linking, Anthropic Claude AI features, Supabase Edge Function proxy, XSS prevention
 **Confidence:** HIGH (based on official API documentation knowledge; web tools unavailable in this session)
 
 > **Archive / drift notice (2026-05-18):** This note is a March 2026 research document. The product has since:
 > - **Removed** the client AI stack (`aiService.ts`, `aiStore.ts`, `components/ai/*`)
-> - **Migrated Gmail** from Supabase Edge Functions to velo-api `/gmail/*` routes (fully self-hosted, PKCE + AES-256-GCM refresh token storage)
+> - **Migrated Gmail** from Supabase Edge Functions to n0crm-api `/gmail/*` routes (fully self-hosted, PKCE + AES-256-GCM refresh token storage)
 > - **Completed monorepo restructure** (frontend/ + api/ at root)
 >
 > **Current sources of truth:**
-> - Gmail OAuth implementation: `api/src/routes/gmail.ts` (velo-api)
+> - Gmail OAuth implementation: `api/src/routes/gmail.ts` (n0crm-api)
 > - Frontend Gmail integration: `frontend/src/services/gmailService.ts` + `frontend/src/store/emailStore.ts`
 > - Monorepo structure: `api/migrations/003-gmail_tokens.sql` (token schema)
 > - [`docs/project-state.md`](../../docs/project-state.md), [`docs/google-gmail-oauth-verification.md`](../../docs/google-gmail-oauth-verification.md), [`.planning/CODEBASE.md`](../CODEBASE.md)
@@ -1031,4 +1031,4 @@ bundle, remove `dangerouslyAllowBrowser: true` and remove the direct SDK instant
 | Google OAuth verification timeline | MEDIUM | 4-6 weeks is historical average; current timeline may vary |
 ---
 
-*Last updated (git): **2026-05-18** — Archive notice updated: Gmail OAuth now fully in velo-api (api/src/routes/gmail.ts), monorepo structure documented, Supabase Edge Function sections marked as historical. Body remains March 2026 research (reference value for PKCE flow, token storage, thread linking, XSS patterns).*
+*Last updated (git): **2026-05-18** — Archive notice updated: Gmail OAuth now fully in n0crm-api (api/src/routes/gmail.ts), monorepo structure documented, Supabase Edge Function sections marked as historical. Body remains March 2026 research (reference value for PKCE flow, token storage, thread linking, XSS patterns).*

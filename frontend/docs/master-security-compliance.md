@@ -1,6 +1,6 @@
 # Security & Compliance (master)
 
-> Consolidated **2026-04-15**; auth migrated from Supabase to velo-api JWT **2026-05-13**; Edge/public-surface hardening narrative **2026-04-22** (rate limits, CORS allowlist env, webhook SSRF guards — see [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist)). Single reference for auth/SSO contracts, hardening matrix, sell-ready evidence index, external hardening checklist, SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
+> Consolidated **2026-04-15**; auth migrated from Supabase to n0crm-api JWT **2026-05-13**; Edge/public-surface hardening narrative **2026-04-22** (rate limits, CORS allowlist env, webhook SSRF guards — see [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist)). Single reference for auth/SSO contracts, hardening matrix, sell-ready evidence index, external hardening checklist, SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
 
 **Replaces:** auth-sso-backend-handoff, hardening-matrix, sell-ready-security-evidence-index, external-hardening-checklist, compliance-mapping, dsar-playbook, gitea-operations.
 
@@ -36,7 +36,7 @@
 <a id="auth-sso-backend-handoff"></a>
 ## Auth / SSO backend handoff
 
-Auth is **email/password via velo-api** (Fastify backend in `api/` directory). JWT HS256 with `sub/org/role/jti` claims and algorithm pinned to prevent alg:none attacks. SSO (Google/Azure/Apple/SAML) is roadmap — the frontend has feature-flag toggles wired but backend routes are not yet implemented.
+Auth is **email/password via n0crm-api** (Fastify backend in `api/` directory). JWT HS256 with `sub/org/role/jti` claims and algorithm pinned to prevent alg:none attacks. SSO (Google/Azure/Apple/SAML) is roadmap — the frontend has feature-flag toggles wired but backend routes are not yet implemented.
 
 ## Document Control
 
@@ -45,7 +45,7 @@ Auth is **email/password via velo-api** (Fastify backend in `api/` directory). J
 - Last updated: 2026-05-18 (monorepo restructure, JWT HS256 algorithm pinning, SHA-256 reset tokens, constant-time bcrypt login, rate-limited password reset, non-root Docker, CORS hardening, impersonation log enforcement)
 - Canonical: Yes
 
-## velo-api auth endpoints
+## n0crm-api auth endpoints
 
 | Endpoint | Auth | Description |
 |----------|------|-------------|
@@ -65,7 +65,7 @@ JWT payload: `{ sub: userId, org: organizationId | null, role: UserRole, jti: ra
 
 ## SSO — future work
 
-Frontend env toggles exist for when SSO is added to velo-api:
+Frontend env toggles exist for when SSO is added to n0crm-api:
 
 - `VITE_AUTH_GOOGLE_ENABLED=true|false`
 - `VITE_AUTH_AZURE_ENABLED=true|false`
@@ -168,7 +168,7 @@ This index ties **internal documentation**, **code controls**, and **external ch
 
 ## ASVS (informal)
 
-- **V2 Authentication** — velo-api JWT (bcrypt cost 12, per-token `jti` denylist, rate-limited auth routes): [#auth-sso-backend-handoff](#auth-sso-backend-handoff); `tests/auth/*`
+- **V2 Authentication** — n0crm-api JWT (bcrypt cost 12, per-token `jti` denylist, rate-limited auth routes): [#auth-sso-backend-handoff](#auth-sso-backend-handoff); `tests/auth/*`
 - **V4 Access control** — RLS + app gates: [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist); `src/utils/permissions.ts`
 - **V9 Communications** — TLS to APIs + outbound mail controls: external CDN/infra; `supabase/functions/resend-send-email/index.ts`; [`master-email-operations`](./master-email-operations.md#email-deliverability-resend)
 - **V7 Error handling / logging** — `audit_log`, maintenance telemetry, failed send audit: [`master-lead-management`](./master-lead-management.md#lead-maintenance-runbook); [#hardening-matrix](#hardening-matrix); `src/store/emailStore.ts`
@@ -189,13 +189,13 @@ Use this checklist when validating a **production** deployment. Record evidence 
 
 **Doc hub:** [`README`](./README.md) (status snapshot and full index).
 
-## 1. Authentication and sessions (velo-api)
+## 1. Authentication and sessions (n0crm-api)
 
 - [ ] `JWT_SECRET` is at least 64 chars / 32 random bytes (`openssl rand -hex 32`); min length enforced at startup in `api/config/env.ts`; rotate on compromise.
 - [ ] JWT algorithm pinned to HS256 (no `alg: none` attacks possible); verified in `config/env.ts` validation.
 - [ ] JWT expiry (`JWT_EXPIRES_IN`) aligned with product risk (default 7d).
 - [ ] JWT includes `jti` (JWT ID) claim for per-token revocation; denylist in Redis with TTL.
-- [ ] `CORS_ORIGIN` on velo-api parsed into origins array and validated (not raw string match); split values checked for `*` in CORS production guard.
+- [ ] `CORS_ORIGIN` on n0crm-api parsed into origins array and validated (not raw string match); split values checked for `*` in CORS production guard.
 - [ ] `POST /auth/forgot-password` always returns 200 (email enumeration prevention — already implemented).
 - [ ] `password_reset_tokens` stored as SHA-256 hashes (not plaintext); TTL is 1 hour (migration `002` — already applied).
 - [ ] `/auth/reset-password` rate-limited: 10 requests per 15 minutes per IP.
@@ -238,14 +238,14 @@ Use this checklist when validating a **production** deployment. Record evidence 
 
 ## 6. Observability
 
-- [ ] velo-api structured logs reviewed on a schedule (stdout → your log aggregator).
+- [ ] n0crm-api structured logs reviewed on a schedule (stdout → your log aggregator).
 - [ ] Supabase Edge Function logs reviewed for Gmail, webhook, and public-API errors.
 - [ ] Alerts for auth anomalies, function error rate, and database CPU/storage.
 
 ## CI/CD and Secrets
 
 - [ ] CI workflows specify working directory: `ci.yml` uses `frontend/`, `build-api.yml` uses `api/`.
-- [ ] E2E secrets use velo-api endpoints (not Supabase): `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
+- [ ] E2E secrets use n0crm-api endpoints (not Supabase): `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
 - [ ] `build-production.yml` triggers only on `frontend/**` changes.
 - [ ] `build-api.yml` triggers on `api/**` changes.
 - [ ] No secrets committed; all environment variables set in CI/CD platform.
@@ -263,7 +263,7 @@ Use this checklist when validating a **production** deployment. Record evidence 
 <a id="compliance-mapping"></a>
 ## Compliance mapping (SOC2 / GDPR-lite)
 
-This document maps current Velo controls to common enterprise compliance expectations.
+This document maps current n0CRM controls to common enterprise compliance expectations.
 It is a pragmatic engineering mapping (not legal advice and not a formal certification artifact).
 
 ## Document Control
@@ -277,8 +277,8 @@ It is a pragmatic engineering mapping (not legal advice and not a formal certifi
 
 ## Scope
 
-- Application: Velo
-- Backend: velo-api (Fastify, PostgreSQL, JWT auth) + Supabase (Edge Functions, RLS for Edge-served data)
+- Application: n0CRM
+- Backend: n0crm-api (Fastify, PostgreSQL, JWT auth) + Supabase (Edge Functions, RLS for Edge-served data)
 - Operational controls: lead maintenance telemetry/SLA, runbooks, handoff checklists
 
 ## Control Mapping Table
@@ -326,7 +326,7 @@ Do not maintain a second list of the same links. Use **[Sell-ready security evid
 <a id="dsar-playbook"></a>
 ## DSAR playbook
 
-Engineering-oriented procedure for handling **data subject access requests** in a Velo deployment backed by **Supabase (Auth + Postgres + RLS)**. This is not legal advice; align intake, timelines, and legal review with your organization’s privacy counsel and jurisdiction.
+Engineering-oriented procedure for handling **data subject access requests** in a n0CRM deployment backed by **Supabase (Auth + Postgres + RLS)**. This is not legal advice; align intake, timelines, and legal review with your organization’s privacy counsel and jurisdiction.
 
 **Doc hub:** [`README`](./README.md).
 
@@ -365,7 +365,7 @@ Always resolve the subject’s **`organization_id`** and enforce **tenant isolat
    - Document before/after hashes or row versions in the ticket.
 4. **Delete path (erasure)**  
    - Follow a defined order respecting FKs (child tables first).  
-   - For **Auth user removal**, delete from `users` table via velo-api admin or direct DB access; confirm org membership rows and CRM ownership reassignment policy.
+   - For **Auth user removal**, delete from `users` table via n0crm-api admin or direct DB access; confirm org membership rows and CRM ownership reassignment policy.
 5. **Evidence**  
    - Attach query text (redacted), execution timestamp, operator, and sample row counts.  
    - Store evidence in your ticket system; avoid copying full exports into chat logs.
@@ -435,7 +435,7 @@ If you add deployment or Supabase integration jobs later, define secrets in Gite
 Use SSH remote:
 
 ```bash
-git remote set-url origin git@gitea.apps.privateprompt.tech:david/velo.git
+git remote set-url origin git@gitea.apps.privateprompt.tech:clovrlabs/velo-crm.git
 ```
 
 And in `~/.ssh/config`, set:

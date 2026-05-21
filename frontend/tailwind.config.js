@@ -19,8 +19,9 @@ export default {
         '2xl': '1536px',
       },
       fontFamily: {
-        sans: ['"Satoshi"', 'system-ui', 'sans-serif'],
-        display: ['"General Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
       colors: {
         surface: {
@@ -64,8 +65,8 @@ export default {
           800: '#3730a3',
           900: '#1e1b4b',
         },
-        /** Velo palette (alias of brand scale; use for new utilities e.g. bg-velo-600) */
-        velo: {
+        /** n0CRM palette (alias of brand scale) */
+        n0: {
           50: '#eef0ff',
           100: '#e0e3ff',
           200: '#c7ccfe',

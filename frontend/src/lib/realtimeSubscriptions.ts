@@ -14,7 +14,6 @@ import { useLeadsStore } from '../store/leadsStore'
 import { useAuditStore } from '../store/auditStore'
 import { useAuthStore } from '../store/authStore'
 import { usePipelinesStore } from '../store/pipelinesStore'
-import { getToken } from './api'
 
 type TableHandler = () => void
 
@@ -60,24 +59,24 @@ export function initRealtimeSubscriptions(): () => void {
     throttledByTable.set(table, timer)
   }
 
-  // Bridge for velo-api Socket.io events
-  ;(window as unknown as Record<string, unknown>).__veloDbChange = scheduleFetch
+  // Bridge for n0crm-api Socket.io events
+  ;(window as unknown as Record<string, unknown>).__n0crmDbChange = scheduleFetch
 
-  // Connect Socket.io to velo-api
+  // Connect Socket.io to n0crm-api
   const authState = useAuthStore.getState()
-  const token = getToken()
   const orgId = authState.organizationId
   const userId = authState.currentUser?.id
 
   let socket: Socket | null = null
 
-  if (token && orgId && userId) {
+  if (orgId && userId) {
     const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
     // Strip path prefix so socket connects to the server root
     const serverUrl = apiBase.startsWith('http') ? new URL(apiBase).origin : window.location.origin
 
     socket = io(serverUrl, {
-      auth: { token, orgId, userId },
+      // withCredentials sends the HttpOnly auth_token cookie in the WS handshake
+      withCredentials: true,
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
       reconnectionDelay: 2000,
@@ -95,7 +94,7 @@ export function initRealtimeSubscriptions(): () => void {
   return () => {
     throttledByTable.forEach((timer) => window.clearTimeout(timer))
     throttledByTable.clear()
-    delete (window as unknown as Record<string, unknown>).__veloDbChange
+    delete (window as unknown as Record<string, unknown>).__n0crmDbChange
     socket?.disconnect()
   }
 }

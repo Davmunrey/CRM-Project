@@ -335,7 +335,7 @@ Escalate to backend team when:
 <a id="data-retention-runbook"></a>
 ## Data retention runbook
 
-Defines **how long** categories of data are kept and **how to enforce** reduction or deletion in a Velo + Supabase deployment. Tune periods to your legal, contractual, and insurance requirements. Not legal advice.
+Defines **how long** categories of data are kept and **how to enforce** reduction or deletion in a n0CRM + Supabase deployment. Tune periods to your legal, contractual, and insurance requirements. Not legal advice.
 
 **Doc hub:** [`README`](./README.md).
 

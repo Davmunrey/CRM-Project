@@ -20,7 +20,7 @@ Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part
 | Date | Section | Summary |
 |------|---------|---------|
 | 2026-03-31 | [Part A — §1–12](#implementation-history-sections-01-12) | Foundation: platform through operational notes (tenancy, auth, tracking, leads, i18n, SSO, tests). |
-| 2026-05-18 | [§30](#implementation-history-section-30) | **Monorepo restructure:** velo-api merged into api/ subdirectory; frontend moved to frontend/; root docker-compose.yml; auth hardening (JWT HS256 pinning, SHA-256 reset tokens, bcrypt constant-time, rate-limit on reset, non-root Docker, CORS hardening, impersonation audit). |
+| 2026-05-18 | [§30](#implementation-history-section-30) | **Monorepo restructure:** n0crm-api merged into api/ subdirectory; frontend moved to frontend/; root docker-compose.yml; auth hardening (JWT HS256 pinning, SHA-256 reset tokens, bcrypt constant-time, rate-limit on reset, non-root Docker, CORS hardening, impersonation audit). |
 | 2026-04-10 | [§13](#implementation-history-section-13) | Current status snapshot — multi-tenant CRM baseline. |
 | 2026-04-10 | [§14](#implementation-history-section-14) | Lead maintenance observability, ops dashboard, SLAs, and runbooks. |
 | 2026-04-10 | [§15](#implementation-history-section-15) | Email privacy hardening (per-user mailbox, RLS, tracking ownership). |
@@ -566,7 +566,7 @@ Narrative layout and tokens: [`master-design-ui.md`](./master-design-ui.md#main-
 
 ### 35-page frontend audit
 
-Audited all 35 frontend pages against velo-api routes. Result: 95%+ alignment. Critical issues found and fixed:
+Audited all 35 frontend pages against n0crm-api routes. Result: 95%+ alignment. Critical issues found and fixed:
 
 - **Supabase bypass deletes:** `contactsStore` and `companiesStore` used `sbDelete`/`sbBulkDelete` (direct Supabase PostgREST) instead of the REST API, bypassing auth and the audit log. Fixed: replaced with `api.delete('/contacts/:id')` and `api.delete('/companies/:id')`.
 - **Double team invite:** `authStore.createInvitation()` called `api.post('/orgs/me/invite', ...)` AND `TeamManagement.tsx`'s `handleInvite` called the same endpoint — result was two DB rows per invite. Fixed: removed the API call from `createInvitation`, keeping only local state update; `handleInvite` remains the sole API caller.
@@ -574,9 +574,9 @@ Audited all 35 frontend pages against velo-api routes. Result: 95%+ alignment. C
 
 ### LinkedIn enrichment (end-to-end)
 
-- **Migration 012** (`velo-api/migrations/012_contacts_linkedin_url.sql`): `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS linkedin_url text`
-- **velo-api `contacts.ts`:** `linkedinUrl` added to Zod schema; included in `GET` list SELECT, `POST` INSERT, and `PATCH` updates (maps to `linkedin_url` column)
-- **velo-crm `types/index.ts`:** `Contact.linkedinUrl?: string`
+- **Migration 012** (`n0crm-api/migrations/012_contacts_linkedin_url.sql`): `ALTER TABLE contacts ADD COLUMN IF NOT EXISTS linkedin_url text`
+- **n0crm-api `contacts.ts`:** `linkedinUrl` added to Zod schema; included in `GET` list SELECT, `POST` INSERT, and `PATCH` updates (maps to `linkedin_url` column)
+- **n0crm `types/index.ts`:** `Contact.linkedinUrl?: string`
 - **`src/lib/schemas/contact.ts`:** `linkedinUrl: z.string().url().optional().or(z.literal(''))`
 - **`ContactForm.tsx`:** LinkedIn URL input field with type=url, placeholder, and error display
 - **`ContactDetail.tsx`:** LinkedIn link with `<Linkedin>` icon from lucide-react; strips `https://linkedin.com/in/` prefix for display
@@ -585,10 +585,10 @@ Audited all 35 frontend pages against velo-api routes. Result: 95%+ alignment. C
 ### Documentation sweep
 
 All `.md` files in both repos updated to reflect 2026-05-15 state. Key updates:
-- Gmail no longer blocked — fully self-hosted via velo-api
+- Gmail no longer blocked — fully self-hosted via n0crm-api
 - JWT payload now includes `jti` claim
 - Security hardening noted throughout (Redis denylist, Socket.io JWT, AES-256-GCM, rate limiting)
-- LinkedIn enrichment referenced in README modules table, velo-api route docs, and planning docs
+- LinkedIn enrichment referenced in README modules table, n0crm-api route docs, and planning docs
 - CODEBASE.md Gmail flow updated to remove "blocked" note
 - STATE.md, PROJECT.md, REQUIREMENTS.md all updated with current status
 
@@ -597,7 +597,7 @@ All `.md` files in both repos updated to reflect 2026-05-15 state. Key updates:
 
 ### Repository structure consolidation
 
-- **velo-api merged into api/ subdirectory:** Previously a separate repository (`velo-api`), the Fastify backend is now at `api/` in the same monorepo as `frontend/`.
+- **n0crm-api merged into api/ subdirectory:** Previously a separate repository (`n0crm-api`), the Fastify backend is now at `api/` in the same monorepo as `frontend/`.
 - **Frontend moved to frontend/ subdirectory:** React 18 + TypeScript + Vite SPA now at `frontend/` (was at root).
 - **Root docker-compose.yml:** Single orchestration file replaces separate compose configurations; services: frontend (port 3000), api (port 3001), postgres, redis.
 - **CI/CD working directories:** 
@@ -631,6 +631,6 @@ All `.md` files in both repos updated to reflect 2026-05-15 state. Key updates:
 
 - Monorepo structure: [README](../README.md)
 - CI/CD workflows: `.gitea/workflows/` (or `.github/workflows/`)
-- Backend routes and auth contracts: `api/docs/` or `api/README.md` (velo-api)
+- Backend routes and auth contracts: `api/docs/` or `api/README.md` (n0crm-api)
 - Frontend environment and channel setup: `frontend/docs/deployment-spa-and-env.md`
 - Security baseline: [`master-security-compliance.md` — Hardening matrix](./master-security-compliance.md#hardening-matrix)

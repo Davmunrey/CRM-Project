@@ -6,7 +6,7 @@ This document is the **single repo source** for: (1) **how to obtain Google OAut
 
 **Code references:** OAuth scope bundles and token management are handled by the self-hosted routes: `api/src/routes/gmail.ts` handles OAuth start, token exchange, and refresh; `api/src/routes/calendar.ts` manages Calendar-specific OAuth. Long-lived refresh tokens stay **server-side** (encrypted with `TOKEN_ENCRYPTION_KEY`).
 
-**Incremental UX:** Users connect **Gmail** first (primary bundle). **Calendar** is a second OAuth step that requests only Calendar scopes with `include_granted_scopes=true` so Google can show the shorter “Velo already has some access” style screen. **Branding** (logo, privacy policy, terms) is configured only in **Google Cloud Console** on the OAuth consent screen, not in application code.
+**Incremental UX:** Users connect **Gmail** first (primary bundle). **Calendar** is a second OAuth step that requests only Calendar scopes with `include_granted_scopes=true` so Google can show the shorter “n0CRM already has some access” style screen. **Branding** (logo, privacy policy, terms) is configured only in **Google Cloud Console** on the OAuth consent screen, not in application code.
 
 ---
 
@@ -16,7 +16,7 @@ This document is the **single repo source** for: (1) **how to obtain Google OAut
 
 ### What you need from Google (OAuth 2.0 “Web client”, not a generic API key)
 
-Velo does **not** use a Google “API key” for this flow. You create an **OAuth 2.0 Client ID** of type **Web application** in [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials** → **Create credentials** → **OAuth client ID**. You will get:
+n0CRM does **not** use a Google “API key” for this flow. You create an **OAuth 2.0 Client ID** of type **Web application** in [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials** → **Create credentials** → **OAuth client ID**. You will get:
 
 | Field | Where it goes |
 |--------|----------------|
@@ -73,7 +73,7 @@ Ensure `api/.env` is configured and the server is running before testing OAuth f
 3. Sign in with email + password; open `/settings/integrations`.
 4. **Connect Google** (Gmail) → OAuth popup opens and redirects to Google → approved → returns to callback → **Connected** with the same email as the CRM user.
 5. **Enable Calendar** → second popup requests Calendar scopes (incremental); approve → Calendar card shows **Active**.
-6. Disconnect Google → both Gmail and Calendar access are cleared in Velo until the user connects again.
+6. Disconnect Google → both Gmail and Calendar access are cleared in n0CRM until the user connects again.
 
 ### Troubleshooting (operator)
 

@@ -1,4 +1,4 @@
-# Requirements: Velo
+# Requirements: n0CRM
 
 **Defined:** 2026-03-31
 **Core Value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time — with lead scoring, reporting, and collaboration (no Anthropic/Claude LLM stack in product scope).
@@ -8,12 +8,12 @@
 - Execution source of truth: `.planning/STATE.md` and `.planning/ROADMAP.md`.
 - Phases 1–10 complete (monorepo + infra hardening); Phase 11 (production deploy) pending operator action.
 - **Architecture:** Monorepo — frontend/ (React 18 + Vite) + api/ (Fastify 5 + PostgreSQL 16 + Redis) + docker-compose.yml + privateprompt-app.json.
-- **Backend:** velo-api (Fastify 5 + Node.js 22). JWT `{ sub, org, role, jti }` (HS256, no Supabase Auth).
-- Gmail fully self-hosted via velo-api `/gmail/*` (PKCE + AES-256-GCM refresh token storage) — no Supabase Edge Function dependency.
+- **Backend:** n0crm-api (Fastify 5 + Node.js 22). JWT `{ sub, org, role, jti }` (HS256, no Supabase Auth).
+- Gmail fully self-hosted via n0crm-api `/gmail/*` (PKCE + AES-256-GCM refresh token storage) — no Supabase Edge Function dependency.
 - LinkedIn URL enrichment on contacts: migration 012, backend Zod schema, frontend form + detail display.
 - Security hardened: Redis JWT denylist (jti tracking, revocation on logout), Socket.io JWT verification, AES-256-GCM encryption for secrets, auth rate limiting (10/15min), CSP headers, CORS guards.
 - All CRM delete operations use REST API (no Supabase bypass). Team invite de-duplicated.
-- Transactional emails (password reset, invitations) wired via nodemailer/Resend in velo-api.
+- Transactional emails (password reset, invitations) wired via nodemailer/Resend in n0crm-api.
 - i18n: 6 languages (`en`, `es`, `pt`, `fr`, `de`, `it`), 1603 keys each, parity verified.
 - Test suite: **218 passing, 1 skipped** (42 files). Build clean. CI: 3 Gitea workflows.
 - Deployment: `docker-compose up` for local dev; Docker images for production; Private Prompt manifest available.
@@ -22,13 +22,13 @@
 
 ### Authentication & Organizations
 
-- [x] **AUTH-01**: User can sign up with email and password via velo-api JWT auth
+- [x] **AUTH-01**: User can sign up with email and password via n0crm-api JWT auth
 - [x] **AUTH-02**: User receives email verification after signup
 - [x] **AUTH-03**: User can reset password via email link
 - [x] **AUTH-04**: User session persists across browser refresh (onAuthStateChange + `isLoadingAuth: true` initial state to prevent race condition redirect)
 - [x] **AUTH-05**: User can log out and session is fully cleared
 - [x] **AUTH-06**: New user creates an organization on first login (org name, slug)
-- [x] **AUTH-07**: User can invite team members by email (velo-api `POST /orgs/me/invite`; invitation token stored in DB)
+- [x] **AUTH-07**: User can invite team members by email (n0crm-api `POST /orgs/me/invite`; invitation token stored in DB)
 - [x] **AUTH-08**: Invited user receives email and can accept invitation to join organization
 - [x] **AUTH-09**: User has a role within organization (owner, admin, member)
 - [x] **AUTH-10**: All CRM data is scoped to organization via RLS — no cross-tenant data leakage
@@ -36,35 +36,35 @@
 ### Schema & Multi-Tenancy
 
 - [x] **SCHEMA-01**: All core tables (contacts, companies, deals, activities, notifications, goals, sequences, automations, templates, products) have `organization_id uuid NOT NULL` column
-- [x] **SCHEMA-02**: velo-api scopes all queries with `WHERE organization_id = ${req.user.org}` from JWT `org` claim (API-layer isolation, not DB-level RLS)
-- [x] **SCHEMA-03**: velo-api issues JWT with `org` claim immediately after org creation or invitation accept — no DB trigger needed
+- [x] **SCHEMA-02**: n0crm-api scopes all queries with `WHERE organization_id = ${req.user.org}` from JWT `org` claim (API-layer isolation, not DB-level RLS)
+- [x] **SCHEMA-03**: n0crm-api issues JWT with `org` claim immediately after org creation or invitation accept — no DB trigger needed
 - [x] **SCHEMA-04**: `organizations` and `organization_members` tables created with correct FK structure
 - [x] **SCHEMA-05**: `gmail_tokens` table created to store refresh tokens server-side (never in browser)
 
 ### Data Migration — Core Stores
 
-- [x] **DATA-01**: `contactsStore` migrated from Zustand `persist` to async velo-api calls (create, read, update, delete)
-- [x] **DATA-02**: `companiesStore` migrated to velo-api
-- [x] **DATA-03**: `dealsStore` migrated to velo-api
-- [x] **DATA-04**: `activitiesStore` migrated to velo-api
-- [x] **DATA-05**: `notificationsStore` migrated to velo-api
+- [x] **DATA-01**: `contactsStore` migrated from Zustand `persist` to async n0crm-api calls (create, read, update, delete)
+- [x] **DATA-02**: `companiesStore` migrated to n0crm-api
+- [x] **DATA-03**: `dealsStore` migrated to n0crm-api
+- [x] **DATA-04**: `activitiesStore` migrated to n0crm-api
+- [x] **DATA-05**: `notificationsStore` migrated to n0crm-api
 - [x] **DATA-06**: Seed data `onRehydrateStorage` hooks removed from all migrated stores
 - [x] **DATA-07**: Loading states (`isLoading`, `error`) added to all migrated stores
 - [x] **DATA-08**: Optimistic updates implemented with rollback on API error
 
 ### Data Migration — Secondary Stores
 
-- [x] **DATA-09**: `goalsStore` migrated to velo-api
-- [x] **DATA-10**: `sequencesStore` migrated to velo-api
-- [x] **DATA-11**: `automationsStore` migrated to velo-api
-- [x] **DATA-12**: `templateStore` migrated to velo-api
-- [x] **DATA-13**: `productsStore` migrated to velo-api
-- [x] **DATA-14**: `auditStore` migrated to velo-api
-- [x] **DATA-15**: `customFieldsStore` migrated to velo-api
+- [x] **DATA-09**: `goalsStore` migrated to n0crm-api
+- [x] **DATA-10**: `sequencesStore` migrated to n0crm-api
+- [x] **DATA-11**: `automationsStore` migrated to n0crm-api
+- [x] **DATA-12**: `templateStore` migrated to n0crm-api
+- [x] **DATA-13**: `productsStore` migrated to n0crm-api
+- [x] **DATA-14**: `auditStore` migrated to n0crm-api
+- [x] **DATA-15**: `customFieldsStore` migrated to n0crm-api
 
 ### Real-Time Sync
 
-- [x] **REALTIME-01**: Contacts: Socket.io `__veloDbChange('contacts')` broadcasts to all connected org clients
+- [x] **REALTIME-01**: Contacts: Socket.io `__n0crmDbChange('contacts')` broadcasts to all connected org clients
 - [x] **REALTIME-02**: Deals: Socket.io broadcast on create/update/delete
 - [x] **REALTIME-03**: Activities: Socket.io broadcast on create/update/delete
 - [x] **REALTIME-04**: Notifications: Socket.io broadcast on create
@@ -77,7 +77,7 @@
 
 ### Security Fixes
 
-- [x] **SEC-01**: `authStore` weak djb2 hash replaced by velo-api bcrypt auth — passwords never stored locally
+- [x] **SEC-01**: `authStore` weak djb2 hash replaced by n0crm-api bcrypt auth — passwords never stored locally
 - [x] **SEC-02**: Third-party LLM API keys are not stored in the browser; sensitive credentials belong only in Edge Function env (if a future non-browser LLM integration is approved)
 - [x] **SEC-03**: `dangerouslySetInnerHTML` in `AIAgent.tsx` replaced with `react-markdown` + `rehype-sanitize`
 - [x] **SEC-04**: Direct browser LLM SDKs and legacy client AI modules were removed (`aiService.ts`, `aiStore.ts`, `components/ai/*`). Any future assistive model, if approved, must use Edge-only proxies with secrets in function env — **not** Anthropic/Claude (see **AI Features** below).
@@ -119,14 +119,14 @@
 ### Deployment
 
 - [ ] **DEPLOY-01**: Static SPA hosting configured so all client routes resolve to `index.html` on cold load (**primary:** nginx `try_files`, Caddy `file_server` + `try_files`, or CDN/bucket rules on **private** infrastructure). Optional: checked-in `vercel.json` or Netlify `_redirects` for reference only — **not** the required production platform.
-- [ ] **DEPLOY-02**: Production and preview/staging environments define `VITE_APP_CHANNEL` (`production` \| `staging`) and `VITE_API_URL` pointing to the correct velo-api instance (secrets never committed); `JWT_SECRET` and `CORS_ORIGIN` set on velo-api.
-- [ ] **DEPLOY-03**: Staging builds set `VITE_APP_CHANNEL=staging` and point `VITE_API_URL` at a staging velo-api instance; production uses `VITE_APP_CHANNEL=production` and production-only API. Add every **staging and production origin** to `CORS_ORIGIN` on the API and to `EDGE_CORS_ORIGINS` for Supabase Edge Functions.
+- [ ] **DEPLOY-02**: Production and preview/staging environments define `VITE_APP_CHANNEL` (`production` \| `staging`) and `VITE_API_URL` pointing to the correct n0crm-api instance (secrets never committed); `JWT_SECRET` and `CORS_ORIGIN` set on n0crm-api.
+- [ ] **DEPLOY-03**: Staging builds set `VITE_APP_CHANNEL=staging` and point `VITE_API_URL` at a staging n0crm-api instance; production uses `VITE_APP_CHANNEL=production` and production-only API. Add every **staging and production origin** to `CORS_ORIGIN` on the API and to `EDGE_CORS_ORIGINS` for Supabase Edge Functions.
 - [ ] **DEPLOY-04**: Production deployment on merge to `main` (or your protected release branch) with a recorded smoke pass
 - [ ] **DEPLOY-05**: Custom domain + HTTPS (DNS + TLS per your hosting provider)
 
 #### Recording DEPLOY completion (human-owned evidence)
 
-Check **`DEPLOY-*`** only after the work exists on the **target** environment (not when templates or docs are updated alone). Capture evidence in one of: this file (short dated bullet under Traceability), [`.planning/STATE.md`](./STATE.md) Notes, or [`docs/master-release-qa.md`](../docs/master-release-qa.md) — include **deploy URL**, **`VITE_APP_CHANNEL`**, **velo-api URL** (staging vs prod), **smoke outcome** ([`docs/smoke-checklist-production.md`](../docs/smoke-checklist-production.md)), and **commit SHA or tag**.
+Check **`DEPLOY-*`** only after the work exists on the **target** environment (not when templates or docs are updated alone). Capture evidence in one of: this file (short dated bullet under Traceability), [`.planning/STATE.md`](./STATE.md) Notes, or [`docs/master-release-qa.md`](../docs/master-release-qa.md) — include **deploy URL**, **`VITE_APP_CHANNEL`**, **n0crm-api URL** (staging vs prod), **smoke outcome** ([`docs/smoke-checklist-production.md`](../docs/smoke-checklist-production.md)), and **commit SHA or tag**.
 
 **Agent / doc-only prep (2026-04-16):** [`docs/smoke-checklist-production.md`](../docs/smoke-checklist-production.md) extended with manager + onboarding steps so Phase 10 evidence has explicit gates when a human runs production smoke — **does not** check `DEPLOY-*` by itself.
 
@@ -193,7 +193,7 @@ Check **`DEPLOY-*`** only after the work exists on the **target** environment (n
 
 ---
 *Requirements defined: 2026-03-31*
-*Last updated: 2026-05-18 — Snapshot updated: Monorepo architecture documented, velo-api fully integrated (api/ subdirectory), Gmail fully self-hosted, LinkedIn enrichment complete, security hardened (Redis JWT denylist, Socket.io JWT verification, rate limiting, AES-256-GCM encryption), all Supabase bypass deletes replaced, Docker Compose deployment model documented. Phase 11 (production deploy) created for DEPLOY-01–05. Prior 2026-05-15 — Security audit (socket.io JWT, Redis denylist, AES-256-GCM). Prior 2026-05-13 — AI-02 marked complete (lead score recompute on activity).*
+*Last updated: 2026-05-18 — Snapshot updated: Monorepo architecture documented, n0crm-api fully integrated (api/ subdirectory), Gmail fully self-hosted, LinkedIn enrichment complete, security hardened (Redis JWT denylist, Socket.io JWT verification, rate limiting, AES-256-GCM encryption), all Supabase bypass deletes replaced, Docker Compose deployment model documented. Phase 11 (production deploy) created for DEPLOY-01–05. Prior 2026-05-15 — Security audit (socket.io JWT, Redis denylist, AES-256-GCM). Prior 2026-05-13 — AI-02 marked complete (lead score recompute on activity).*
 ---
 
 *Last updated (git): **2026-05-18***

@@ -419,10 +419,10 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 ## 1) Pre-Go-Live (T-7 to T-1 days)
 
 - [ ] **Environment Variables — Frontend (from frontend/.env.production)**
-  - [ ] `VITE_API_URL` points to production velo-api (`/api` for Docker; full URL for external hosting)
+  - [ ] `VITE_API_URL` points to production n0crm-api (`/api` for Docker; full URL for external hosting)
   - [ ] `VITE_APP_CHANNEL` (`production` on prod; `staging` on preview/UAT)
   - [ ] `VITE_GMAIL_CLIENT_ID` (if Gmail integration enabled)
-- [ ] **Environment Variables — velo-api (from api/.env.production)**
+- [ ] **Environment Variables — n0crm-api (from api/.env.production)**
   - [ ] `JWT_SECRET` min 32 chars (`openssl rand -hex 32`); algorithm pinned to HS256
   - [ ] `TOKEN_ENCRYPTION_KEY` (64 hex chars for AES-256-GCM)
   - [ ] `DATABASE_URL` points to production PostgreSQL
@@ -460,7 +460,7 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
   - [ ] `docker compose up -d` starts both frontend and api services
   - [ ] `docker compose logs api` shows no startup errors
   - [ ] api/docker-entrypoint.sh completed migrations successfully
-  - [ ] velo-api listens on port 3001 with health check passing
+  - [ ] n0crm-api listens on port 3001 with health check passing
 - [ ] **Frontend SPA**
   - [ ] `docker compose logs frontend` shows Vite build completed
   - [ ] Frontend accessible at http://localhost:3000 (or production URL)
@@ -491,7 +491,7 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
   - [ ] telemetry run status mostly `success`
   - [ ] error messages triaged within SLA
 - [ ] Capacity checks:
-  - [ ] velo-api rate limits acceptable (PostgreSQL + Redis load under expected traffic)
+  - [ ] n0crm-api rate limits acceptable (PostgreSQL + Redis load under expected traffic)
   - [ ] SMTP/email provider health stable
   - [ ] edge function latency acceptable
 - [ ] Product checks:
