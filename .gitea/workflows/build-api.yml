@@ -22,6 +22,9 @@ jobs:
       - name: Log in to registry
         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login gitea.apps.privateprompt.tech -u "${{ secrets.REGISTRY_USER }}" --password-stdin
 
+      - name: Set up buildx builder
+        run: docker buildx create --use --name n0crm-builder --driver docker-container || docker buildx use n0crm-builder
+
       - name: Build and push
         run: |
           docker buildx build \
@@ -31,3 +34,7 @@ jobs:
             --cache-from type=registry,ref=${{ env.IMAGE }}:buildcache \
             --cache-to   type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max \
             api
+
+      - name: Remove buildx builder
+        if: always()
+        run: docker buildx rm n0crm-builder || true
