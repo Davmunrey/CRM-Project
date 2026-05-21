@@ -45,7 +45,7 @@
       }
     },
     "api": {
-      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm:api",
+      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:latest",
       "port": 3001,
       "memory_mb": 256,
       "cpu": 0.75,
@@ -80,7 +80,7 @@
       }
     },
     "web": {
-      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm:web",
+      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:web",
       "port": 80,
       "memory_mb": 832,
       "cpu": 1.75,

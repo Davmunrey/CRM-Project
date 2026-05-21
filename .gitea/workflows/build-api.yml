@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE: gitea.apps.privateprompt.tech/clovrlabs/n0crm:api
+  IMAGE: gitea.apps.privateprompt.tech/clovrlabs/n0crm-api
 
 jobs:
   build:
@@ -31,7 +31,6 @@ jobs:
         run: |
           docker buildx build \
             --push \
-            --tag ${{ env.IMAGE }} \
-            --tag ${{ env.IMAGE }}-${{ github.sha }} \
+            --tag ${{ env.IMAGE }}:latest \
             --file api/Dockerfile \
             .
