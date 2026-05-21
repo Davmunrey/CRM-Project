@@ -55,6 +55,7 @@ export interface AuthUser {
   organizationId?: string
   isActive: boolean
   isSuperAdmin?: boolean
+  impersonatedBy?: string
   lastLoginAt?: string
   createdAt: string
   updatedAt: string

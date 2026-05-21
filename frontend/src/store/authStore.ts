@@ -478,7 +478,7 @@ export function initSupabaseAuth(): (() => void) | undefined {
   }
 
   // Attempt session restoration — cookie is sent automatically via credentials: include
-  api.get<{ user: { id: string; email: string; name: string; role: string; isSuperAdmin?: boolean; organizationId: string | null } }>('/auth/me')
+  api.get<{ user: { id: string; email: string; name: string; role: string; isSuperAdmin?: boolean; impersonatedBy?: string; organizationId: string | null } }>('/auth/me')
     .then((res) => {
       const u = res.user
       const now = new Date().toISOString()
@@ -488,6 +488,7 @@ export function initSupabaseAuth(): (() => void) | undefined {
         name: u.name,
         role: normalizeRole(u.role),
         isSuperAdmin: u.isSuperAdmin === true,
+        impersonatedBy: u.impersonatedBy,
         jobTitle: '',
         organizationId: u.organizationId ?? undefined,
         isActive: true,

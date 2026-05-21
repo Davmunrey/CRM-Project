@@ -1,44 +1,25 @@
 import { appChannel } from '@/lib/envChannel'
 import { useTranslations } from '../../i18n'
-import { getToken, decodeToken, setToken, clearToken } from '../../lib/api'
+import { useAuthStore } from '../../store/authStore'
+import { api } from '../../lib/api'
 
-const SUPERADMIN_TOKEN_KEY = 'n0crm_superadmin_token'
-
-export function getImpersonationInfo(): { orgId: string | null; impersonatedBy: string | null } {
-  const token = getToken()
-  if (!token) return { orgId: null, impersonatedBy: null }
-  const payload = decodeToken(token)
-  const impersonatedBy = payload?.['impersonated_by']
-  return {
-    orgId: (payload?.['org'] as string | null) ?? null,
-    impersonatedBy: typeof impersonatedBy === 'string' ? impersonatedBy : null,
-  }
-}
-
-export function enterImpersonation(token: string): void {
-  const original = getToken()
-  if (original) sessionStorage.setItem(SUPERADMIN_TOKEN_KEY, original)
-  setToken(token)
+export async function enterImpersonation(orgId: string): Promise<void> {
+  await api.post(`/admin/orgs/${orgId}/impersonate`)
   window.location.href = '/'
 }
 
-export function exitImpersonation(): void {
-  const original = sessionStorage.getItem(SUPERADMIN_TOKEN_KEY)
-  sessionStorage.removeItem(SUPERADMIN_TOKEN_KEY)
-  if (original) {
-    setToken(original)
-  } else {
-    clearToken()
-  }
+export async function exitImpersonation(): Promise<void> {
+  await api.post('/admin/impersonate/exit')
   window.location.href = '/admin'
 }
 
 export function EnvironmentBanner() {
   const t = useTranslations()
-  const { impersonatedBy } = getImpersonationInfo()
+  const currentUser = useAuthStore((s) => s.currentUser)
+  const impersonatedBy = currentUser?.impersonatedBy ?? null
+  const orgId = currentUser?.organizationId ?? null
 
   if (impersonatedBy) {
-    const orgId = getImpersonationInfo().orgId
     return (
       <div
         role="status"
@@ -49,7 +30,7 @@ export function EnvironmentBanner() {
         </span>
         <button
           type="button"
-          onClick={exitImpersonation}
+          onClick={() => void exitImpersonation()}
           className="px-3 py-1 rounded-lg bg-accent-500/20 hover:bg-accent-500/30 transition-colors text-accent-300 font-semibold"
         >
           Salir → volver al admin

@@ -144,6 +144,7 @@ export async function authRoutes(app: FastifyInstance) {
     `
     const user = rows[0]
     if (!user || !user.isActive) return reply.code(401).send({ error: 'User not found or inactive' })
+    const impersonatedBy = (req.user as Record<string, unknown>)['impersonated_by']
     return reply.send({
       user: {
         id: user.id,
@@ -154,6 +155,7 @@ export async function authRoutes(app: FastifyInstance) {
         organizationId: user.organizationId ?? null,
         orgName: user.orgName ?? null,
         orgSlug: user.orgSlug ?? null,
+        impersonatedBy: typeof impersonatedBy === 'string' ? impersonatedBy : undefined,
       },
     })
   })

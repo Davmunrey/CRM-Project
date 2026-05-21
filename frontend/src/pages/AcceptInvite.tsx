@@ -7,7 +7,7 @@ import { useAuthStore } from '../store/authStore'
 import type { UserRole } from '../types/auth'
 import { Button } from '../components/ui/Button'
 import { AuthLayout } from '../components/auth/AuthLayout'
-import { api, setToken } from '../lib/api'
+import { api } from '../lib/api'
 
 interface InvitationDetails {
   id: string
@@ -19,9 +19,9 @@ interface InvitationDetails {
 }
 
 interface AcceptResponse {
-  token: string
   organizationId: string
   role: string
+  expiresAt: number
 }
 
 type PageState = 'loading' | 'ready' | 'joining' | 'success' | 'error'
@@ -69,7 +69,7 @@ export function AcceptInvite() {
     setPageState('joining')
     try {
       const res = await api.post<AcceptResponse>(`/invitations/${encodeURIComponent(token)}/accept`, {})
-      setToken(res.token)
+      // Cookie is set by server — just update local auth state
 
       const cur = useAuthStore.getState().currentUser
       if (cur) {

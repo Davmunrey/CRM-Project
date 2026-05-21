@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { randomBytes } from 'node:crypto'
 import { db } from '../db/client.js'
 import { env } from '../config/env.js'
+import { setAuthCookie, setRestoreCookie, getRestoreCookie, clearRestoreCookie, COOKIE_NAME } from '../services/cookieAuth.js'
 
 async function isSuperAdmin(req: { user: { sub: string } }): Promise<boolean> {
   const rows = await db`SELECT is_super_admin FROM users WHERE id = ${req.user.sub} LIMIT 1`
@@ -238,7 +239,24 @@ export async function adminRoutes(app: FastifyInstance) {
       VALUES (${req.user.sub}, ${id}, ${owner.id})
     `
 
-    return reply.send({ token, expiresIn: '1h' })
+    // Save the original session for restore, then swap to impersonation token
+    const originalToken = (req.cookies as Record<string, string | undefined>)[COOKIE_NAME]
+    if (originalToken) setRestoreCookie(reply, originalToken)
+    setAuthCookie(reply, token, 3600)
+    return reply.send({ started: true, expiresIn: '1h' })
+  })
+
+  // ── POST /admin/impersonate/exit ────────────────────────────────────────────
+  app.post('/impersonate/exit', async (req, reply) => {
+    const restoreToken = getRestoreCookie(req)
+    clearRestoreCookie(reply)
+    if (restoreToken) {
+      setAuthCookie(reply, restoreToken, 86400)
+      return reply.send({ restored: true })
+    }
+    // No restore token — clear session and force re-login
+    reply.clearCookie(COOKIE_NAME, { path: '/' })
+    return reply.send({ restored: false })
   })
 
   // ── GET /admin/users ────────────────────────────────────────────────────────

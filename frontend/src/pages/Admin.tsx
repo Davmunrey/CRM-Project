@@ -200,10 +200,10 @@ function OrgDetailModal({ orgId, onClose, onRefresh }: { orgId: string; onClose:
   }, [org])
 
   const handleImpersonate = async () => {
+    if (!orgId) return
     setImpersonating(true)
     try {
-      const res = await api.post<{ token: string; expiresIn: string }>(`/admin/orgs/${orgId}/impersonate`)
-      enterImpersonation(res.token) // swaps token + redirects to /
+      await enterImpersonation(orgId) // sets cookie server-side + redirects to /
     } catch {
       toast.error('Impersonation failed')
       setImpersonating(false)
