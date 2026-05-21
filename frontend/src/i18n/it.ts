@@ -1,5 +1,6 @@
 ﻿import type { Translations } from './types'
 import { en } from './en'
+import { workflowLibraryIt } from './workflowLibrary/it'
 
 export const it: Translations = {
   ...en,
@@ -147,7 +148,7 @@ export const it: Translations = {
     orgNameLabel: "Nome dell'organizzazione",
     orgNamePlaceholder: 'Team vendite Acme',
     slugLabel: 'Slug (identificatore univoco)',
-    slugPrefix: 'velo.app/',
+    slugPrefix: 'n0crm.com/',
     slugPlaceholder: 'acme-sales',
     slugHint: 'Solo lettere minuscole, numeri e trattini',
     legalCompanyName: 'Ragione sociale',
@@ -330,4 +331,5 @@ export const it: Translations = {
     ctaButton: 'Entra in n0CRM',
     footerTagline: 'CRM outbound-native · Self-hosted',
   },
+  workflowLibrary: workflowLibraryIt,
 }

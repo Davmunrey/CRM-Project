@@ -14,10 +14,10 @@ import {
   Webhook,
 } from 'lucide-react'
 import { Logo } from '../components/brand/Logo'
-import { en } from '../i18n/en'
+import { useTranslations } from '../i18n'
 
 export function Landing() {
-  const t = en
+  const t = useTranslations()
 
   const FEATURES = [
     { icon: Inbox,    title: t.landing.f1Title, description: t.landing.f1Desc },
@@ -77,14 +77,14 @@ export function Landing() {
 
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-4 py-1.5 text-xs font-medium text-brand-300 mb-8">
+        <div className="inline-flex items-center gap-2 rounded-full border border-accent-500/30 bg-accent-500/10 px-4 py-1.5 text-xs font-medium text-accent-300 mb-8">
           <Zap className="w-3.5 h-3.5" />
           {t.landing.badge}
         </div>
 
         <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-fg mb-6 leading-tight">
           {t.landing.heroHeadline}{' '}
-          <span className="bg-gradient-to-r from-brand-400 to-brandAccent bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-accent-400 to-accentAccent bg-clip-text text-transparent">
             {t.landing.heroHeadlineAccent}
           </span>
         </h1>
@@ -96,7 +96,7 @@ export function Landing() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Link
             to="/login"
-            className="flex items-center gap-2 rounded-full bg-brand-600 hover:bg-brand-500 px-7 py-3.5 text-base font-semibold text-fg shadow-lg shadow-brand-900/40 hover:shadow-brand-800/50 transition-all duration-200 hover:scale-[1.02]"
+            className="flex items-center gap-2 rounded-full bg-accent-600 hover:bg-accent-500 px-7 py-3.5 text-base font-semibold text-fg shadow-lg shadow-accent-900/40 hover:shadow-accent-800/50 transition-all duration-200 hover:scale-[1.02]"
           >
             {t.landing.heroCta}
             <ArrowRight className="w-5 h-5" />
@@ -139,8 +139,8 @@ export function Landing() {
               key={title}
               className="bg-surface-0 hover:bg-surface-1/80 p-7 transition-colors duration-200 group"
             >
-              <div className="w-10 h-10 rounded-xl bg-brand-600/15 flex items-center justify-center mb-4 group-hover:bg-brand-600/25 transition-colors duration-200">
-                <Icon className="w-5 h-5 text-brand-400" />
+              <div className="w-10 h-10 rounded-xl bg-accent-600/15 flex items-center justify-center mb-4 group-hover:bg-accent-600/25 transition-colors duration-200">
+                <Icon className="w-5 h-5 text-accent-400" />
               </div>
               <h3 className="font-semibold text-fg mb-2">{title}</h3>
               <p className="text-sm text-fg/50 leading-relaxed">{description}</p>
@@ -151,14 +151,14 @@ export function Landing() {
 
       {/* Self-host block */}
       <section id="stack" className="max-w-6xl mx-auto px-6 py-12 pb-24">
-        <div className="rounded-2xl border border-brand-500/20 bg-gradient-to-br from-brand-900/30 via-surface-0/40 to-surface-0/20 p-10 sm:p-14 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-500/10 via-transparent to-transparent pointer-events-none" />
+        <div className="rounded-2xl border border-accent-500/20 bg-gradient-to-br from-accent-900/30 via-surface-0/40 to-surface-0/20 p-10 sm:p-14 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent-500/10 via-transparent to-transparent pointer-events-none" />
 
           <div className="relative grid lg:grid-cols-2 gap-10 items-center">
             <div>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-fg mb-4">
                 {t.landing.selfHostTitle}{' '}
-                <span className="text-brand-400">{t.landing.selfHostTitleAccent}</span>
+                <span className="text-accent-400">{t.landing.selfHostTitleAccent}</span>
               </h2>
               <p className="text-fg/60 leading-relaxed mb-6">
                 {t.landing.selfHostSubtitle}
@@ -167,7 +167,7 @@ export function Landing() {
               <ul className="space-y-3">
                 {SELF_HOST_ITEMS.map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-fg/70">
-                    <CheckCircle className="w-4 h-4 text-brand-400 shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-accent-400 shrink-0" />
                     {item}
                   </li>
                 ))}
@@ -176,9 +176,9 @@ export function Landing() {
 
             <div className="font-mono text-sm bg-surface-0/60 rounded-xl border border-fg/8 p-6 text-left">
               <p className="text-fg/30 mb-3">{t.landing.codeComment1}</p>
-              <p><span className="text-brand-400">$</span> <span className="text-fg/80">git clone n0crm</span></p>
-              <p><span className="text-brand-400">$</span> <span className="text-fg/80">cp .env.example .env</span></p>
-              <p><span className="text-brand-400">$</span> <span className="text-fg/80">docker compose up -d</span></p>
+              <p><span className="text-accent-400">$</span> <span className="text-fg/80">git clone n0crm</span></p>
+              <p><span className="text-accent-400">$</span> <span className="text-fg/80">cp .env.example .env</span></p>
+              <p><span className="text-accent-400">$</span> <span className="text-fg/80">docker compose up -d</span></p>
               <p className="mt-3 text-fg/30">{t.landing.codeComment2}</p>
               <p className="text-success mt-1">{t.landing.codeSuccess}</p>
             </div>
@@ -197,7 +197,7 @@ export function Landing() {
           </p>
           <Link
             to="/login"
-            className="inline-flex items-center gap-2 rounded-full bg-brand-600 hover:bg-brand-500 px-8 py-4 text-base font-semibold text-fg shadow-xl shadow-brand-900/50 hover:shadow-brand-800/60 transition-all duration-200 hover:scale-[1.02]"
+            className="inline-flex items-center gap-2 rounded-full bg-accent-600 hover:bg-accent-500 px-8 py-4 text-base font-semibold text-fg shadow-xl shadow-accent-900/50 hover:shadow-accent-800/60 transition-all duration-200 hover:scale-[1.02]"
           >
             {t.landing.ctaButton}
             <ArrowRight className="w-5 h-5" />
