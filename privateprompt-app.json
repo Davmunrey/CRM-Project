@@ -56,20 +56,7 @@
         "POSTGRES_PASSWORD":      { "secret": true,  "generate": false, "label": "DB Password (shared with postgres)" },
         "JWT_SECRET":             { "secret": true,  "generate": true,  "label": "JWT Secret" },
         "TOKEN_ENCRYPTION_KEY":   { "secret": true,  "generate": true,  "label": "Encryption Key" },
-        "CORS_ORIGIN":            { "secret": false, "generate": false, "label": "Frontend URL (CORS)", "default": "" },
-        "EMAIL_FROM":             { "secret": false, "generate": false, "label": "Email From Address", "default": "noreply@n0crm.com" },
-        "RESEND_API_KEY":         { "secret": true,  "generate": false, "label": "Resend API Key (optional)" },
-        "SMTP_HOST":              { "secret": false, "generate": false, "label": "SMTP Host (optional)" },
-        "SMTP_PORT":              { "secret": false, "generate": false, "label": "SMTP Port (optional)" },
-        "SMTP_USER":              { "secret": true,  "generate": false, "label": "SMTP User (optional)" },
-        "SMTP_PASS":              { "secret": true,  "generate": false, "label": "SMTP Password (optional)" },
-        "GOOGLE_CLIENT_ID":       { "secret": true,  "generate": false, "label": "Google Client ID (optional)" },
-        "GOOGLE_CLIENT_SECRET":   { "secret": true,  "generate": false, "label": "Google Client Secret (optional)" },
-        "GOOGLE_REDIRECT_URI":    { "secret": false, "generate": false, "label": "Google Redirect URI (optional)" },
-        "ANTHROPIC_API_KEY":      { "secret": true,  "generate": false, "label": "Anthropic API Key (optional)" },
-        "DEBUG_TOKEN":            { "secret": true,  "generate": true,  "label": "Debug Token" },
-        "BACKUP_INTERVAL_HOURS":  { "secret": false, "generate": false, "label": "Backup Interval (hours)", "default": "6" },
-        "BACKUP_KEEP":            { "secret": false, "generate": false, "label": "Backup Retention Count", "default": "10" }
+        "DEBUG_TOKEN":            { "secret": true,  "generate": true,  "label": "Debug Token" }
       },
       "healthcheck": {
         "test": ["CMD", "wget", "-qO-", "http://localhost:3001/health"],
