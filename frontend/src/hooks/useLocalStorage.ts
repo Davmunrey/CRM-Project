@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-/** Client-side mirror only; app data sync uses Zustand stores and Supabase when configured. */
+/** Client-side mirror only; app data sync uses Zustand stores and the n0CRM API. */
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {

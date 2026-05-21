@@ -8,7 +8,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = DEFAULT_ROLE_PERMISSION
 
 /**
  * Canonical role values accepted by the permission system.
- * The 'owner' string emitted by some Supabase flows is normalized to 'admin'
+ * The 'owner' string is normalized to 'admin'
  * in authStore.normalizeRole() before reaching this map.
  */
 export const VALID_ROLES: readonly UserRole[] = ['admin', 'manager', 'sales_rep', 'viewer'] as const

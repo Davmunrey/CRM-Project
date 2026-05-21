@@ -6,7 +6,7 @@ import { api } from '../lib/api'
 import { getErrorMessage } from '../lib/supabaseHelpers'
 import { toast } from './toastStore'
 
-export function mapContactFromSupabaseRow(row: Record<string, unknown>): Contact {
+export function mapContactFromRow(row: Record<string, unknown>): Contact {
   return {
     id: row.id as string,
     firstName: (row.firstName ?? row.first_name ?? '') as string,
@@ -75,7 +75,7 @@ export const useContactsStore = create<ContactsState>()(
       try {
         const res = await api.get<{ data: Contact[] } | Contact[]>('/contacts')
         const rows = (res && !Array.isArray(res) && 'data' in res) ? res.data : (res as Contact[] ?? [])
-        set({ contacts: rows.map((r) => mapContactFromSupabaseRow(r as unknown as Record<string, unknown>)), isLoading: false })
+        set({ contacts: rows.map((r) => mapContactFromRow(r as unknown as Record<string, unknown>)), isLoading: false })
       } catch (e: unknown) {
         set({ error: getErrorMessage(e), isLoading: false })
       }
@@ -90,7 +90,7 @@ export const useContactsStore = create<ContactsState>()(
 
       api.post<Contact>('/contacts', contactData).then(
         (real) => {
-          set((s) => ({ contacts: s.contacts.map((c) => c.id === tempId ? mapContactFromSupabaseRow(real as unknown as Record<string, unknown>) : c) }))
+          set((s) => ({ contacts: s.contacts.map((c) => c.id === tempId ? mapContactFromRow(real as unknown as Record<string, unknown>) : c) }))
         },
         (err: unknown) => {
           const message = getErrorMessage(err)

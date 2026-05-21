@@ -1,6 +1,6 @@
 import { useEffect, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { initSupabaseAuth, useAuthStore } from './store/authStore'
+import { initAuth, useAuthStore } from './store/authStore'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/layout/ErrorBoundary'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
@@ -244,7 +244,7 @@ function AppRoutes() {
 
 export default function App() {
   useEffect(() => {
-    const cleanup = initSupabaseAuth()
+    const cleanup = initAuth()
     return cleanup
   }, [])
 

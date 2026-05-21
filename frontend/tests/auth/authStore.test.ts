@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { useAuthStore, initSupabaseAuth } from '../../src/store/authStore'
+import { useAuthStore, initAuth } from '../../src/store/authStore'
 
 const { mockApiPost, mockApiGet } = vi.hoisted(() => ({
   mockApiPost: vi.fn(),
@@ -39,7 +39,6 @@ describe('authStore — JWT auth', () => {
       currentUser: null,
       session: null,
       organization: null,
-      supabaseSession: null,
       isLoadingAuth: true,
       organizationId: null,
       tenantResolutionStatus: 'idle',
@@ -130,13 +129,13 @@ describe('authStore — JWT auth', () => {
     })
   })
 
-  describe('initSupabaseAuth', () => {
+  describe('initAuth', () => {
     afterEach(() => {
       vi.restoreAllMocks()
     })
 
     it('AUTH-04: sets isLoadingAuth to false when no token', () => {
-      initSupabaseAuth()
+      initAuth()
       expect(useAuthStore.getState().isLoadingAuth).toBe(false)
     })
   })

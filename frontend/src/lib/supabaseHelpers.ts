@@ -1,6 +1,6 @@
 /**
- * Helpers formerly wrapping the Supabase client.
- * Now wraps the Velo API client. Kept for backward compat during migration.
+ * Helpers wrapping the n0CRM API client.
+ * Kept for backward compat during migration.
  */
 import { api } from './api'
 import { useAuthStore } from '../store/authStore'
@@ -29,7 +29,7 @@ export async function sbBulkDelete(table: string, ids: string[]): Promise<void> 
   await Promise.all(ids.map((id) => api.delete(`/${table}/${id}`)))
 }
 
-export function runSupabaseWrite(
+export function runApiWrite(
   context: string,
   operation: PromiseLike<unknown>,
   onError?: (message: string) => void,

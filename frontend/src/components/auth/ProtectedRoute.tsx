@@ -21,8 +21,8 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
   const workspaceHostMismatch = useAuthStore((s) => s.workspaceHostMismatch)
   const logout = useAuthStore((s) => s.logout)
 
-  // AUTH-04: Do NOT redirect until Supabase has fired the first auth event.
-  // isLoadingAuth starts as true and is set to false inside onAuthStateChange.
+  // AUTH-04: Do NOT redirect until the session check against /auth/me completes.
+  // isLoadingAuth starts as true and is set to false after the /auth/me response.
   // Without this guard, an authenticated user sees a flash of /login on cold load.
   if (isLoadingAuth) {
     return null

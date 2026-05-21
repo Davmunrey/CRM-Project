@@ -17,7 +17,7 @@ vi.mock('../../src/lib/supabase', () => ({
 
 vi.mock('../../src/lib/supabaseHelpers', () => ({
   getOrgId: vi.fn(),
-  runSupabaseWrite: vi.fn(),
+  runApiWrite: vi.fn(),
 }))
 
 vi.mock('../../src/store/authStore', () => ({

@@ -466,7 +466,7 @@ function normalizeRole(raw: string | undefined): UserRole {
 }
 
 /** Called from App.tsx — verifies the HttpOnly cookie session by calling /auth/me. */
-export function initSupabaseAuth(): (() => void) | undefined {
+export function initAuth(): (() => void) | undefined {
   const store = useAuthStore.getState()
 
   // Fast path: no persisted session → user never logged in, no cookie to restore
