@@ -61,19 +61,27 @@ export async function analyticsRoutes(app: FastifyInstance) {
     const { from, to } = query.data
     const orgId = req.user.org
 
-    const fromFrag = from ? db`AND created_at >= ${from}` : db``
-    const toFrag = to ? db`AND created_at <= ${to}` : db``
+    const fromFrag = from ? db`AND d.created_at >= ${from}` : db``
+    const toFrag = to ? db`AND d.created_at <= ${to}` : db``
 
+    // probability lives in pipelines.stages JSONB — look it up per deal
     const rows = await db`
       SELECT
-        stage,
+        d.stage,
         COUNT(*)::int AS count,
-        COALESCE(SUM(value), 0) AS value,
-        COALESCE(SUM(value * probability / 100.0), 0) AS weighted
-      FROM deals
-      WHERE organization_id = ${orgId} ${fromFrag} ${toFrag}
-      GROUP BY stage
-      ORDER BY stage
+        COALESCE(SUM(d.value), 0) AS value,
+        COALESCE(SUM(d.value * COALESCE(
+          (SELECT (elem->>'probability')::numeric / 100.0
+           FROM pipelines pl
+           JOIN LATERAL jsonb_array_elements(pl.stages) elem ON TRUE
+           WHERE pl.id = d.pipeline_id AND elem->>'name' = d.stage
+           LIMIT 1),
+          0.5
+        )), 0) AS weighted
+      FROM deals d
+      WHERE d.organization_id = ${orgId} ${fromFrag} ${toFrag}
+      GROUP BY d.stage
+      ORDER BY d.stage
     `
 
     return reply.send({
@@ -81,7 +89,7 @@ export async function analyticsRoutes(app: FastifyInstance) {
         stage: r.stage as string,
         count: Number(r.count),
         value: Number(r.value),
-        weighted: Number(r.weighted),
+        weighted: Number(r.weighted ?? 0),
       })),
     })
   })
@@ -185,8 +193,8 @@ export async function analyticsRoutes(app: FastifyInstance) {
     const { from, to } = query.data
     const orgId = req.user.org
 
-    const fromFrag = from ? db`AND d.created_at >= ${from}` : db``
-    const toFrag = to ? db`AND d.created_at <= ${to}` : db``
+    const fromFrag = from ? db`AND created_at >= ${from}` : db``
+    const toFrag = to ? db`AND created_at <= ${to}` : db``
 
     const rows = await db`
       WITH filtered_deals AS (
@@ -251,15 +259,22 @@ export async function analyticsRoutes(app: FastifyInstance) {
       ),
       pipeline AS (
         SELECT
-          DATE_TRUNC('month', expected_close_date) AS month_start,
-          SUM(value * probability / 100.0) AS weighted,
+          DATE_TRUNC('month', d.expected_close_date) AS month_start,
+          SUM(d.value * COALESCE(
+            (SELECT (elem->>'probability')::numeric / 100.0
+             FROM pipelines pl
+             JOIN LATERAL jsonb_array_elements(pl.stages) elem ON TRUE
+             WHERE pl.id = d.pipeline_id AND elem->>'name' = d.stage
+             LIMIT 1),
+            0.5
+          )) AS weighted,
           COUNT(*)::int AS deal_count
-        FROM deals
-        WHERE organization_id = ${orgId}
-          AND stage NOT IN ('closed_won','closed_lost')
-          AND expected_close_date >= DATE_TRUNC('month', NOW() + INTERVAL '1 month')
-          AND expected_close_date < DATE_TRUNC('month', NOW() + (${months + 1} || ' months')::INTERVAL)
-        GROUP BY DATE_TRUNC('month', expected_close_date)
+        FROM deals d
+        WHERE d.organization_id = ${orgId}
+          AND d.stage NOT IN ('closed_won','closed_lost')
+          AND d.expected_close_date >= DATE_TRUNC('month', NOW() + INTERVAL '1 month')
+          AND d.expected_close_date < DATE_TRUNC('month', NOW() + (${months + 1} || ' months')::INTERVAL)
+        GROUP BY DATE_TRUNC('month', d.expected_close_date)
       )
       SELECT
         TO_CHAR(m.month_start, 'YYYY-MM') AS month,

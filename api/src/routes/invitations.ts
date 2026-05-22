@@ -56,12 +56,12 @@ export async function invitationsRoutes(app: FastifyInstance) {
     const inv = rows[0]!
 
     const acceptLink = `${env.APP_URL}/accept-invite?token=${inv.token}`
-    await sendEmail({
+    sendEmail({
       to: inv.email as string,
       subject: 'You have been invited to join n0CRM',
       html: `<p>You've been invited to join as <strong>${inv.role}</strong>. Accept your invitation:</p><p><a href="${acceptLink}">${acceptLink}</a></p><p>This link expires in 7 days.</p>`,
       text: `Accept your n0CRM invitation: ${acceptLink}`,
-    })
+    }).catch((err) => console.error('[email] invite delivery failed:', err))
 
     return reply.code(201).send({
       id: inv.id,

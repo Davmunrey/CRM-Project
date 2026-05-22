@@ -214,12 +214,12 @@ export async function orgsRoutes(app: FastifyInstance) {
     `
 
     const acceptLink = `${env.APP_URL}/accept-invite?token=${invite!.token}`
-    await sendEmail({
+    sendEmail({
       to: invite!.email as string,
       subject: 'You have been invited to join n0CRM',
       html: `<p>You've been invited to join as <strong>${invite!.role}</strong>. Accept your invitation:</p><p><a href="${acceptLink}">${acceptLink}</a></p><p>This link expires in 7 days.</p>`,
       text: `Accept your n0CRM invitation: ${acceptLink}`,
-    })
+    }).catch((err) => console.error('[email] invite delivery failed:', err))
 
     return reply.code(201).send(invite)
   })
