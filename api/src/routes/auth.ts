@@ -31,6 +31,11 @@ const registerBody = z.object({
 })
 
 export async function authRoutes(app: FastifyInstance) {
+  app.addHook('onSend', async (_req, reply) => {
+    reply.header('Cache-Control', 'no-store')
+    reply.header('Pragma', 'no-cache')
+  })
+
   // POST /auth/login
   app.post('/login', { config: { rateLimit: AUTH_RATE_LIMIT } }, async (req, reply) => {
     const body = loginBody.safeParse(req.body)

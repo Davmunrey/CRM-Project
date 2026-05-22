@@ -150,12 +150,17 @@ export async function invitationsRoutes(app: FastifyInstance) {
     }
 
     // Verify logged-in user email matches invitation
-    const userRows = await db`SELECT id, email FROM users WHERE id = ${req.user.sub} LIMIT 1`
+    const userRows = await db`SELECT id, email, organization_id FROM users WHERE id = ${req.user.sub} LIMIT 1`
     if (userRows.length === 0) return reply.code(401).send({ error: 'Unauthorized' })
 
     const user = userRows[0]!
     if ((user.email as string).toLowerCase() !== (inv.email as string).toLowerCase()) {
       return reply.code(403).send({ error: 'This invitation is for a different email address' })
+    }
+
+    // Prevent reassigning users who already belong to a different org
+    if (user.organizationId !== null && user.organizationId !== inv.organizationId) {
+      return reply.code(409).send({ error: 'You already belong to an organization' })
     }
 
     // Assign user to org

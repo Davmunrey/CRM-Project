@@ -85,7 +85,7 @@ export async function gmailRoutes(app: FastifyInstance) {
     }
     const body = z.object({
       redirect_uri: z.string().url(),
-      code_challenge: z.string().optional(),
+      code_challenge: z.string(),
       state: z.string().optional(),
       bundle: z.enum(['primary', 'calendar', 'contacts']).default('primary'),
     }).safeParse(req.body)
@@ -103,11 +103,9 @@ export async function gmailRoutes(app: FastifyInstance) {
       access_type: 'offline',
       prompt: 'consent',
       state,
+      code_challenge: body.data.code_challenge,
+      code_challenge_method: 'S256',
     })
-    if (body.data.code_challenge) {
-      params.set('code_challenge', body.data.code_challenge)
-      params.set('code_challenge_method', 'S256')
-    }
 
     return reply.send({ url: `${GOOGLE_AUTH_URL}?${params.toString()}` })
   })
@@ -120,9 +118,9 @@ export async function gmailRoutes(app: FastifyInstance) {
     const body = z.object({
       code: z.string(),
       redirect_uri: z.string().url(),
-      code_verifier: z.string().optional(),
+      code_verifier: z.string(),
     }).safeParse(req.body)
-    if (!body.success) return reply.code(400).send({ error: 'code and redirect_uri are required' })
+    if (!body.success) return reply.code(400).send({ error: 'code, redirect_uri and code_verifier are required' })
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })
 
     const params: Record<string, string> = {

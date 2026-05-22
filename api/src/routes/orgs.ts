@@ -184,6 +184,10 @@ export async function orgsRoutes(app: FastifyInstance) {
   // POST /orgs/me/invite — send invitation
   app.post('/me/invite', { onRequest: [app.authenticate] }, async (req, reply) => {
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })
+    const { role: requesterRole } = req.user
+    if (requesterRole !== 'admin' && requesterRole !== 'owner' && requesterRole !== 'manager') {
+      return reply.code(403).send({ error: 'Insufficient permissions' })
+    }
 
     const body = z.object({
       email: z.string().email(),

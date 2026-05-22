@@ -28,10 +28,15 @@ export function isBlockedIp(addr: string): boolean {
   return false
 }
 
-export async function assertPublicHost(hostname: string): Promise<void> {
+/**
+ * Resolves hostname to a validated public IP and returns it.
+ * Callers MUST use the returned IP for the actual connection to eliminate
+ * the DNS rebinding TOCTOU window between validation and connection.
+ */
+export async function resolvePublicIp(hostname: string): Promise<string> {
   if (isIP(hostname) !== 0) {
     if (isBlockedIp(hostname)) throw new Error('Host must resolve to a public address')
-    return
+    return hostname
   }
   if (/^[\d.]+$/.test(hostname) && hostname.split('.').length !== 4) {
     throw new Error('Host must resolve to a public address')
@@ -46,4 +51,10 @@ export async function assertPublicHost(hostname: string): Promise<void> {
   for (const { address } of results) {
     if (isBlockedIp(address)) throw new Error('Host must resolve to a public address')
   }
+  return results[0]!.address
+}
+
+/** @deprecated Use resolvePublicIp() to pin the validated IP and avoid TOCTOU. */
+export async function assertPublicHost(hostname: string): Promise<void> {
+  await resolvePublicIp(hostname)
 }

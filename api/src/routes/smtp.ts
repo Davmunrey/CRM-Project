@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { db } from '../db/client.js'
 import { encryptToken, decryptToken } from '../services/tokenCipher.js'
-import { assertPublicHost } from '../services/ssrfGuard.js'
+import { resolvePublicIp } from '../services/ssrfGuard.js'
 import nodemailer from 'nodemailer'
 
 const settingsBody = z.object({
@@ -40,7 +40,7 @@ export async function smtpRoutes(app: FastifyInstance) {
     const d = body.data
 
     try {
-      await assertPublicHost(d.host)
+      await resolvePublicIp(d.host)
     } catch (err) {
       return reply.code(400).send({ error: err instanceof Error ? err.message : 'Invalid SMTP host' })
     }
@@ -94,11 +94,12 @@ export async function smtpRoutes(app: FastifyInstance) {
     let host = d.host, port = d.port, username = d.username, password = d.password
     let fromAddress = d.fromAddress, fromName = d.fromName
     let secure: 'starttls' | 'ssl' | 'none' = d.secure ?? 'starttls'
+    let resolvedSmtpIp: string | undefined
 
-    // Validate inline host if provided directly
+    // Validate inline host if provided directly and pin to the resolved IP
     if (d.host) {
       try {
-        await assertPublicHost(d.host)
+        resolvedSmtpIp = await resolvePublicIp(d.host)
       } catch (err) {
         return reply.code(400).send({ error: err instanceof Error ? err.message : 'Invalid SMTP host' })
       }
@@ -109,7 +110,16 @@ export async function smtpRoutes(app: FastifyInstance) {
       const rows = await db`SELECT * FROM org_smtp_settings WHERE organization_id = ${orgId} LIMIT 1`
       if (rows.length === 0) return reply.code(400).send({ error: 'No SMTP configuration saved' })
       const saved = rows[0]!
-      host = host ?? (saved.host as string)
+      const savedHost = saved.host as string
+      // Resolve and validate the saved host to pin IP and prevent TOCTOU
+      if (!resolvedSmtpIp) {
+        try {
+          resolvedSmtpIp = await resolvePublicIp(savedHost)
+        } catch (err) {
+          return reply.code(400).send({ error: err instanceof Error ? err.message : 'Invalid SMTP host' })
+        }
+      }
+      host = host ?? savedHost
       port = port ?? (saved.port as number)
       username = username ?? (saved.username as string)
       fromAddress = fromAddress ?? (saved.fromAddress as string)
@@ -120,8 +130,9 @@ export async function smtpRoutes(app: FastifyInstance) {
       }
     }
 
+    // Use the pinned IP as the nodemailer host to prevent DNS rebinding TOCTOU
     const transporter = nodemailer.createTransport({
-      host,
+      host: resolvedSmtpIp ?? host,
       port: port ?? 587,
       secure: secure === 'ssl',
       requireTLS: secure === 'starttls',

@@ -1,14 +1,52 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import crypto from 'node:crypto'
+import http from 'node:http'
+import https from 'node:https'
 import { db } from '../db/client.js'
 import { encryptToken, decryptToken } from '../services/tokenCipher.js'
-import { assertPublicHost } from '../services/ssrfGuard.js'
+import { resolvePublicIp } from '../services/ssrfGuard.js'
 
-async function assertPublicWebhookUrl(rawUrl: string): Promise<void> {
+/** Resolves and validates the webhook URL, returning the pinned IP and parsed URL. */
+async function resolveWebhookUrl(rawUrl: string): Promise<{ parsed: URL; resolvedIp: string }> {
   let parsed: URL
   try { parsed = new URL(rawUrl) } catch { throw new Error('Invalid URL') }
-  await assertPublicHost(parsed.hostname)
+  const resolvedIp = await resolvePublicIp(parsed.hostname)
+  return { parsed, resolvedIp }
+}
+
+/** Makes an HTTP/HTTPS POST using the pre-resolved IP to eliminate DNS rebinding TOCTOU. */
+async function pinnedFetch(
+  parsed: URL,
+  resolvedIp: string,
+  headers: Record<string, string>,
+  body: string,
+): Promise<{ status: number; ok: boolean }> {
+  const isHttps = parsed.protocol === 'https:'
+  const port = parsed.port ? parseInt(parsed.port, 10) : (isHttps ? 443 : 80)
+  const requestModule = isHttps ? https : http
+
+  return new Promise((resolve, reject) => {
+    const req = requestModule.request(
+      {
+        hostname: resolvedIp,
+        port,
+        path: parsed.pathname + parsed.search,
+        method: 'POST',
+        headers: { ...headers, Host: parsed.hostname },
+        ...(isHttps ? { servername: parsed.hostname } : {}),
+        timeout: 10_000,
+      },
+      (res) => {
+        res.resume()
+        resolve({ status: res.statusCode ?? 0, ok: (res.statusCode ?? 0) >= 200 && (res.statusCode ?? 0) < 300 })
+      },
+    )
+    req.on('timeout', () => { req.destroy(new Error('Request timeout')) })
+    req.on('error', reject)
+    req.write(body)
+    req.end()
+  })
 }
 
 // Block headers that could be used for SSRF or bypass downstream auth
@@ -53,7 +91,7 @@ export async function webhookSubscriptionsRoutes(app: FastifyInstance) {
     if (!body.success) return reply.code(400).send({ error: 'Invalid request', details: body.error.flatten() })
 
     try {
-      await assertPublicWebhookUrl(body.data.target_url)
+      await resolveWebhookUrl(body.data.target_url)
     } catch (err) {
       return reply.code(400).send({ error: err instanceof Error ? err.message : 'Invalid target URL' })
     }
@@ -136,8 +174,9 @@ export async function webhookSubscriptionsRoutes(app: FastifyInstance) {
 
     const sub = rows[0]!
 
+    let resolvedWebhook: { parsed: URL; resolvedIp: string }
     try {
-      await assertPublicWebhookUrl(sub.targetUrl as string)
+      resolvedWebhook = await resolveWebhookUrl(sub.targetUrl as string)
     } catch (err) {
       return reply.code(400).send({ error: err instanceof Error ? err.message : 'Invalid target URL' })
     }
@@ -164,12 +203,7 @@ export async function webhookSubscriptionsRoutes(app: FastifyInstance) {
     if (customHeaders) Object.assign(headers, customHeaders)
 
     try {
-      const res = await fetch(sub.targetUrl as string, {
-        method: 'POST',
-        headers,
-        body: testPayload,
-        signal: AbortSignal.timeout(10_000),
-      })
+      const res = await pinnedFetch(resolvedWebhook.parsed, resolvedWebhook.resolvedIp, headers, testPayload)
       await db`
         UPDATE webhook_subscriptions
         SET last_delivery_at = now(), last_http_status = ${res.status},
