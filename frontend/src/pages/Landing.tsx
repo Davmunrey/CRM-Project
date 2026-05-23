@@ -67,7 +67,7 @@ export function Landing() {
 
           <Link
             to="/login"
-            className="flex items-center gap-2 rounded-full bg-brand-600 hover:bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white shadow-brand-sm transition-all duration-200"
+            className="flex items-center gap-2 rounded-full bg-accent-700 hover:bg-accent-600 px-5 py-2.5 text-sm font-semibold text-fg shadow-brand-sm transition-all duration-200"
           >
             {t.landing.navLogin}
             <ArrowRight className="w-4 h-4" />
@@ -77,16 +77,16 @@ export function Landing() {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-brand-500/5 via-brand-500/[0.02] to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-accent-100/30 via-accent-100/10 to-transparent pointer-events-none" />
         <div className="max-w-6xl mx-auto px-6 pt-24 pb-20 text-center relative">
-          <div className="inline-flex items-center gap-2 rounded-full border border-brand-500/20 bg-brand-500/8 px-4 py-1.5 text-xs font-medium text-brand-600 mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-accent-200 bg-accent-100/60 px-4 py-1.5 text-xs font-medium text-accent-700 mb-8">
             <Zap className="w-3.5 h-3.5" />
             {t.landing.badge}
           </div>
 
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-fg mb-6 leading-tight">
             {t.landing.heroHeadline}{' '}
-            <span className="bg-gradient-to-r from-brand-600 to-brand-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-accent-700 to-accent-500 bg-clip-text text-transparent">
               {t.landing.heroHeadlineAccent}
             </span>
           </h1>
@@ -98,14 +98,14 @@ export function Landing() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/login"
-              className="flex items-center gap-2 rounded-full bg-brand-600 hover:bg-brand-500 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-brand-600/30 hover:shadow-brand-500/40 transition-all duration-200 hover:scale-[1.02]"
+              className="flex items-center gap-2 rounded-full bg-accent-700 hover:bg-accent-600 px-8 py-4 text-base font-semibold text-fg shadow-lg shadow-accent-900/20 hover:shadow-accent-800/30 transition-all duration-200 hover:scale-[1.02]"
             >
               {t.landing.heroCta}
               <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               to="/register"
-              className="flex items-center gap-2 rounded-full border border-fg/15 hover:border-brand-500/40 bg-white hover:bg-brand-500/5 px-8 py-4 text-base font-medium text-fg/80 hover:text-fg transition-all duration-200"
+              className="flex items-center gap-2 rounded-full border border-fg/15 hover:border-accent-300 bg-surface-1 hover:bg-accent-50 px-8 py-4 text-base font-medium text-fg/80 hover:text-fg transition-all duration-200"
             >
               {t.landing.heroCtaSecondary}
             </Link>
@@ -114,11 +114,11 @@ export function Landing() {
       </section>
 
       {/* Stats strip */}
-      <section className="border-y border-fg/5 bg-gradient-to-r from-brand-500/5 via-surface-1 to-brand-500/5">
+      <section className="border-y border-fg/5 bg-accent-50/60">
         <div className="max-w-4xl mx-auto px-6 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
           {STATS.map(({ value, label }) => (
             <div key={label}>
-              <p className="text-3xl font-bold font-display text-brand-600 mb-1">{value}</p>
+              <p className="text-3xl font-bold font-display text-accent-700 mb-1">{value}</p>
               <p className="text-sm text-fg/50">{label}</p>
             </div>
           ))}
@@ -140,10 +140,10 @@ export function Landing() {
           {FEATURES.map(({ icon: Icon, title, description }) => (
             <div
               key={title}
-              className="rounded-2xl border border-fg/5 bg-surface-0 hover:border-brand-500/20 hover:shadow-lg hover:shadow-brand-500/5 p-7 transition-all duration-200 group"
+              className="rounded-2xl border border-fg/5 bg-surface-0 hover:border-accent-200 hover:shadow-lg hover:shadow-accent-100/50 p-7 transition-all duration-200 group"
             >
-              <div className="w-11 h-11 rounded-xl bg-brand-500/10 flex items-center justify-center mb-4 group-hover:bg-brand-500/20 group-hover:scale-110 transition-all duration-200">
-                <Icon className="w-5 h-5 text-brand-600" />
+              <div className="w-11 h-11 rounded-xl bg-accent-100/60 flex items-center justify-center mb-4 group-hover:bg-accent-200/60 group-hover:scale-110 transition-all duration-200">
+                <Icon className="w-5 h-5 text-accent-700" />
               </div>
               <h3 className="font-semibold text-fg mb-2">{title}</h3>
               <p className="text-sm text-fg/50 leading-relaxed">{description}</p>
@@ -154,14 +154,14 @@ export function Landing() {
 
       {/* Self-host block */}
       <section id="stack" className="max-w-6xl mx-auto px-6 py-12 pb-24">
-        <div className="rounded-2xl border border-brand-500/20 bg-gradient-to-br from-brand-900/5 via-brand-500/5 to-surface-0/20 p-10 sm:p-14 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-500/10 via-transparent to-transparent pointer-events-none" />
+        <div className="rounded-2xl border border-accent-200 bg-gradient-to-br from-accent-100/30 via-accent-50/40 to-surface-0/20 p-10 sm:p-14 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent-200/40 via-transparent to-transparent pointer-events-none" />
 
           <div className="relative grid lg:grid-cols-2 gap-10 items-center">
             <div>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-fg mb-4">
                 {t.landing.selfHostTitle}{' '}
-                <span className="text-brand-600">{t.landing.selfHostTitleAccent}</span>
+                <span className="text-accent-700">{t.landing.selfHostTitleAccent}</span>
               </h2>
               <p className="text-fg/60 leading-relaxed mb-6">
                 {t.landing.selfHostSubtitle}
@@ -170,18 +170,18 @@ export function Landing() {
               <ul className="space-y-3">
                 {SELF_HOST_ITEMS.map((item) => (
                   <li key={item} className="flex items-center gap-3 text-sm text-fg/70">
-                    <CheckCircle className="w-4 h-4 text-brand-600 shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-accent-600 shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="font-mono text-sm bg-surface-0/80 backdrop-blur-sm rounded-xl border border-fg/8 p-6 text-left shadow-lg">
+            <div className="font-mono text-sm bg-surface-1/80 backdrop-blur-sm rounded-xl border border-fg/8 p-6 text-left shadow-lg">
               <p className="text-fg/30 mb-3">{t.landing.codeComment1}</p>
-              <p><span className="text-brand-600">$</span> <span className="text-fg/80">git clone n0crm</span></p>
-              <p><span className="text-brand-600">$</span> <span className="text-fg/80">cp .env.example .env</span></p>
-              <p><span className="text-brand-600">$</span> <span className="text-fg/80">docker compose up -d</span></p>
+              <p><span className="text-accent-600">$</span> <span className="text-fg/80">git clone n0crm</span></p>
+              <p><span className="text-accent-600">$</span> <span className="text-fg/80">cp .env.example .env</span></p>
+              <p><span className="text-accent-600">$</span> <span className="text-fg/80">docker compose up -d</span></p>
               <p className="mt-3 text-fg/30">{t.landing.codeComment2}</p>
               <p className="text-success mt-1">{t.landing.codeSuccess}</p>
             </div>
@@ -191,7 +191,7 @@ export function Landing() {
 
       {/* Bottom CTA */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-500/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-accent-100/30 to-transparent pointer-events-none" />
         <div className="max-w-2xl mx-auto px-6 py-20 text-center relative">
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-fg mb-4">
             {t.landing.ctaTitle}
@@ -201,7 +201,7 @@ export function Landing() {
           </p>
           <Link
             to="/login"
-            className="inline-flex items-center gap-2 rounded-full bg-brand-600 hover:bg-brand-500 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-brand-600/30 hover:shadow-brand-500/40 transition-all duration-200 hover:scale-[1.02]"
+            className="inline-flex items-center gap-2 rounded-full bg-accent-700 hover:bg-accent-600 px-8 py-4 text-base font-semibold text-fg shadow-xl shadow-accent-900/20 hover:shadow-accent-800/30 transition-all duration-200 hover:scale-[1.02]"
           >
             {t.landing.ctaButton}
             <ArrowRight className="w-5 h-5" />
