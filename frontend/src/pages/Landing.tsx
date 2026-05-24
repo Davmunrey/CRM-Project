@@ -13,32 +13,8 @@ import {
   Bot,
   Webhook,
 } from 'lucide-react'
+import { Logo } from '../components/brand/Logo'
 import { useTranslations } from '../i18n'
-
-// ─── Logo helpers (image-based, no font dependency) ──────────────────────────
-
-function NavIcon({ size = 32 }: { size?: number }) {
-  return (
-    <img
-      src="/brand/icon.svg"
-      alt="n0CRM"
-      width={size}
-      height={size}
-      style={{ borderRadius: size * 0.22, display: 'block' }}
-    />
-  )
-}
-
-function NavWordmark({ height = 22 }: { height?: number }) {
-  return (
-    <img
-      src="/brand/logo-dark.svg"
-      alt="n0crm"
-      height={height}
-      style={{ display: 'block' }}
-    />
-  )
-}
 
 // ─── Shared: browser chrome wrapper ─────────────────────────────────────────
 
@@ -583,8 +559,13 @@ export function Landing() {
       >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <NavIcon size={32} />
-            <NavWordmark height={22} />
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', boxShadow: '0 0 16px rgba(79,70,229,0.4)' }}
+            >
+              <Logo variant="icon" theme="onAccent" size={18} />
+            </div>
+            <Logo variant="wordmark" theme="dark" size={20} />
           </div>
 
           <nav className="hidden md:flex items-center gap-6 text-sm" style={{ color: 'rgba(241,245,249,0.5)' }}>
@@ -859,7 +840,12 @@ export function Landing() {
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', background: '#06070f' }}>
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <NavIcon size={24} />
+            <div
+              className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+              style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+            >
+              <Logo variant="icon" theme="onAccent" size={13} />
+            </div>
             <span className="text-sm font-semibold" style={{ color: 'rgba(241,245,249,0.4)' }}>n0CRM</span>
           </div>
           <p className="text-xs" style={{ color: 'rgba(241,245,249,0.2)' }}>
