@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
+
+  <!-- "n" — path-based, no font dependency -->
+  <!-- left stem -->
+  <rect x="13" y="28" width="8" height="42" rx="2" fill="white"/>
+  <!-- arch (top bar) -->
+  <rect x="13" y="28" width="30" height="8" rx="2" fill="white"/>
+  <!-- right stem -->
+  <rect x="35" y="28" width="8" height="42" rx="2" fill="white"/>
+
+  <!-- "0" — circle ring with cutout -->
+  <path d="M52 50 C52 37 56 28 67 28 C78 28 82 37 82 50 C82 63 78 72 67 72 C56 72 52 63 52 50Z" fill="white"/>
+  <path d="M59 50 C59 40 62 35 67 35 C72 35 75 40 75 50 C75 60 72 65 67 65 C62 65 59 60 59 50Z" fill="url(#bg)"/>
+
+  <!-- coral cursor underscore -->
+  <rect x="85" y="62" width="6" height="8" rx="1.5" fill="#E8523A"/>
+</svg>

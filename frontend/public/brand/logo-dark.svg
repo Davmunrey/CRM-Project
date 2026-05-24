@@ -1,13 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 72" aria-label="n0crm">
-  <!-- Dark theme: white wordmark + coral cursor + coral accent line -->
-  <text x="0" y="52"
-    font-family="'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif"
-    font-weight="700" font-size="56" letter-spacing="-1.7"
-    fill="#FFFFFF">n0crm</text>
-  <text x="217" y="52"
-    font-family="'DM Sans', ui-sans-serif, system-ui, -apple-system, sans-serif"
-    font-weight="700" font-size="56"
-    fill="#E8523A">_</text>
-  <!-- Coral accent line -->
-  <rect x="0" y="61" width="230" height="4" rx="2" fill="#E8523A"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 56" aria-label="n0crm">
+  <defs>
+    <style>
+      .wm { font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Helvetica Neue', Arial, sans-serif; font-weight: 700; font-size: 52px; letter-spacing: -1.6px; }
+    </style>
+  </defs>
+  <!-- wordmark white -->
+  <text class="wm" x="0" y="46" fill="#FFFFFF">n0crm</text>
+  <!-- coral cursor -->
+  <text class="wm" x="228" y="46" fill="#E8523A">_</text>
+  <!-- coral accent line -->
+  <rect x="0" y="52" width="240" height="3.5" rx="2" fill="#E8523A"/>
 </svg>
