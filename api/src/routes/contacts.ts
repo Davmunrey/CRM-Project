@@ -44,11 +44,15 @@ export async function contactsRoutes(app: FastifyInstance) {
       OR email ILIKE ${'%' + search + '%'}
     )` : db``
 
+    // COUNT(*) OVER() is computed in the same query plan as the page fetch —
+    // one round-trip instead of two. When the result set is empty the window
+    // function returns no rows, so we default to 0.
     const rows = await db`
       SELECT id, email, first_name, last_name, phone, job_title,
              company_id, lead_score, status, type, source,
              tags, notes, assigned_to, last_contacted_at, linked_deals,
-             linkedin_url, created_at, updated_at
+             linkedin_url, created_at, updated_at,
+             COUNT(*) OVER() AS total_count
       FROM contacts
       WHERE organization_id = ${orgId}
         ${type ? db`AND type = ${type}` : db``}
@@ -57,14 +61,11 @@ export async function contactsRoutes(app: FastifyInstance) {
       LIMIT ${limit} OFFSET ${offset}
     `
 
-    const countRows = await db`
-      SELECT COUNT(*) AS count FROM contacts
-      WHERE organization_id = ${orgId}
-        ${type ? db`AND type = ${type}` : db``}
-        ${searchFragment}
-    `
+    const total = Number(rows[0]?.['total_count'] ?? 0)
+    // Strip the internal pagination column before sending to the client
+    const data = rows.map(({ total_count, ...rest }) => rest)
 
-    return reply.send({ data: rows, total: Number(countRows[0]?.['count'] ?? 0), limit, offset })
+    return reply.send({ data, total, limit, offset })
   })
 
   app.get('/:id', async (req, reply) => {

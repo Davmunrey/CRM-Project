@@ -1,3 +1,13 @@
+# ── Rate-limiting zone (http context) ────────────────────────────────────────
+# 10 MB shared zone; allows 20 requests/s per client IP before bursting.
+limit_req_zone $binary_remote_addr zone=api:10m rate=20r/s;
+
+# ── Upstream with keepalive (http context) ───────────────────────────────────
+upstream n0crm_api {
+    server ${N0CRM_API_URL_HOST_PORT};
+    keepalive 64;
+}
+
 server {
     listen 80;
     server_name _;
@@ -15,13 +25,12 @@ server {
 
     # ── Socket.io (WebSocket upgrade) ────────────────────────────────────────
     location /api/socket.io/ {
+        limit_req zone=api burst=40 nodelay;
         rewrite ^/api/(.*) /$1 break;
         proxy_pass $api;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
-        # Send the upstream's own hostname so the ingress routes to the API,
-        # and enable SNI so the upstream TLS terminator picks the right cert.
         proxy_set_header Host ${API_HOST};
         proxy_ssl_server_name on;
         proxy_ssl_name ${API_HOST};
@@ -33,9 +42,11 @@ server {
 
     # ── API proxy → n0crm-api service ────────────────────────────────────────
     location /api/ {
+        limit_req zone=api burst=40 nodelay;
         rewrite ^/api/(.*) /$1 break;
         proxy_pass $api;
         proxy_http_version 1.1;
+        proxy_set_header Connection "";
         proxy_set_header Host ${API_HOST};
         proxy_ssl_server_name on;
         proxy_ssl_name ${API_HOST};
@@ -58,9 +69,27 @@ server {
 
     # ── Compression ───────────────────────────────────────────────────────────
     gzip on;
-    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/javascript
+        application/x-javascript
+        application/json
+        application/xml
+        application/xml+rss
+        application/atom+xml
+        application/rss+xml
+        image/svg+xml
+        font/woff
+        font/woff2
+        application/font-woff
+        application/font-woff2;
     gzip_min_length 1024;
     gzip_vary on;
+    gzip_comp_level 5;
+    gzip_proxied any;
 
     # ── Static asset caching ──────────────────────────────────────────────────
     location ~* \.(?:js|css|woff2?|svg|png|ico|webp)$ {

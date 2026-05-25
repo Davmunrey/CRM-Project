@@ -1,4 +1,6 @@
 import { createVerifier } from 'fast-jwt'
+import { Redis } from 'ioredis'
+import { createAdapter } from '@socket.io/redis-adapter'
 import type { Server, Socket } from 'socket.io'
 import { env } from '../config/env.js'
 import { COOKIE_NAME } from './cookieAuth.js'
@@ -29,7 +31,67 @@ function extractCookieToken(cookieHeader: string): string | undefined {
   return undefined
 }
 
-export function registerRealtimeHandlers(io: Server) {
+// ---------------------------------------------------------------------------
+// Redis adapter setup
+// Two dedicated ioredis clients are required for the pub/sub adapter pattern:
+// one for publishing, one for subscribing. These are separate from the main
+// application redis client to avoid interfering with subscriptions.
+// ---------------------------------------------------------------------------
+async function setupRedisAdapter(io: Server): Promise<void> {
+  const pubClient = new Redis(env.REDIS_URL, {
+    maxRetriesPerRequest: 3,
+    enableReadyCheck: true,
+    lazyConnect: true,
+  })
+  const subClient = new Redis(env.REDIS_URL, {
+    maxRetriesPerRequest: 3,
+    enableReadyCheck: true,
+    lazyConnect: true,
+  })
+
+  pubClient.on('error', (err: Error) => {
+    console.error('[realtime:redis-pub] error:', err.message)
+  })
+  subClient.on('error', (err: Error) => {
+    console.error('[realtime:redis-sub] error:', err.message)
+  })
+
+  try {
+    await Promise.all([pubClient.connect(), subClient.connect()])
+    io.adapter(createAdapter(pubClient, subClient))
+    console.info('[realtime] Redis adapter connected — Socket.io is horizontally scalable')
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error(`[realtime] Redis adapter unavailable (${msg}). Falling back to in-memory adapter — multi-node broadcasts will NOT work.`)
+    // Do not throw: single-node operation continues normally.
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Debounce map for db:change broadcasts
+// Key: `${orgId}:${table}` — value: the pending setTimeout handle.
+// If the same (orgId, table) fires within DEBOUNCE_MS, only one emission
+// is sent at the trailing edge of the burst.
+// ---------------------------------------------------------------------------
+const DEBOUNCE_MS = 100
+const debounceMap = new Map<string, ReturnType<typeof setTimeout>>()
+
+export function broadcastDbChange(io: Server, orgId: string, table: string): void {
+  const key = `${orgId}:${table}`
+  const existing = debounceMap.get(key)
+  if (existing !== undefined) {
+    clearTimeout(existing)
+  }
+  const handle = setTimeout(() => {
+    debounceMap.delete(key)
+    io.to(`org:${orgId}`).emit('db:change', { table })
+  }, DEBOUNCE_MS)
+  debounceMap.set(key, handle)
+}
+
+export async function registerRealtimeHandlers(io: Server): Promise<void> {
+  await setupRedisAdapter(io)
+
   io.use(async (socket, next) => {
     // Primary: read JWT from HttpOnly cookie (browser clients)
     const cookieHeader = socket.handshake.headers.cookie ?? ''

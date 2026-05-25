@@ -12,8 +12,10 @@ const schema = z.object({
   JWT_EXPIRES_IN: z.string().regex(/^\d+[smhdw]$/).default('7d'),
   REFRESH_TOKEN_EXPIRES_DAYS: z.coerce.number().default(30),
 
-  // CORS — use comma-separated URLs in production; '*' is rejected in production
-  CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  // CORS — use comma-separated URLs in production; '*' is rejected in production.
+  // Intentionally no .default() here so we can detect when it was NOT explicitly
+  // provided and emit a startup warning. See index.ts CORS_ORIGIN guard.
+  CORS_ORIGIN: z.string().optional(),
 
   // Frontend base URL — used in transactional email links
   APP_URL: z.string().url().default('http://localhost:5173'),
@@ -26,7 +28,7 @@ const schema = z.object({
   SMTP_PASS: z.string().optional(),
   EMAIL_FROM: z.string().email().default('noreply@n0crm.com'),
 
-  // Redis (BullMQ)
+  // Redis (BullMQ + rate limiting + Socket.io adapter)
   REDIS_URL: z.string().url().default('redis://localhost:6379'),
 
   // Google OAuth
@@ -52,6 +54,10 @@ const schema = z.object({
   // /_debug/health, /_debug/users, /_debug/migrations and /_debug/sql
   // become available, gated by the X-Debug-Token header. Unset to disable.
   DEBUG_TOKEN: z.string().min(16).optional(),
+
+  // Internal operational key — gates POST /internal/* routes (e.g. sequence runner trigger).
+  // Set to a random secret (>=16 chars). When unset, all /internal/* calls return 503.
+  INTERNAL_KEY: z.string().min(16).optional(),
 })
 
 const stripped = Object.fromEntries(

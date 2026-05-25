@@ -16,6 +16,7 @@ FROM nginx:1.27-alpine AS runner
 RUN apk add --no-cache gettext
 
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY frontend/nginx-main.conf /etc/nginx/nginx.conf
 COPY frontend/nginx.conf.template /etc/nginx/conf.d/default.conf.template
 COPY frontend/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh

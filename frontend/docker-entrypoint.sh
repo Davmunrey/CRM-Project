@@ -19,7 +19,11 @@ if [ -z "${API_HOST}" ]; then
 fi
 export API_HOST
 
-envsubst '${N0CRM_API_URL} ${API_HOST} ${NAMESERVER}' \
+# Derive host:port for the upstream keepalive block (strip scheme, keep port if present)
+N0CRM_API_URL_HOST_PORT=$(echo "${N0CRM_API_URL}" | sed -E 's|^https?://||; s|/.*$||')
+export N0CRM_API_URL_HOST_PORT
+
+envsubst '${N0CRM_API_URL} ${N0CRM_API_URL_HOST_PORT} ${API_HOST} ${NAMESERVER}' \
   < /etc/nginx/conf.d/default.conf.template \
   > /etc/nginx/conf.d/default.conf
 
