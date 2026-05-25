@@ -320,8 +320,8 @@ The field is returned as `linkedin_url` in all `GET /contacts` and `GET /contact
 
 Migrations in `migrations/` — pure PostgreSQL, applied in filename order.
 
-| File | Tables created |
-|------|---------------|
+| File | Description |
+|------|-------------|
 | `001_schema.sql` | users, organizations, contacts, companies, deals, pipelines, activities, notifications, automations, sequences, templates, goals, products, leads, custom_fields, audit_log, ... |
 | `002_password_reset_tokens.sql` | `password_reset_tokens` |
 | `003_gmail_webhooks_tracking.sql` | `gmail_tokens`, `webhook_subscriptions`, `email_tracking_*` |
@@ -334,6 +334,7 @@ Migrations in `migrations/` — pure PostgreSQL, applied in filename order.
 | `010_webhooks.sql` | `webhooks`, `webhook_events` |
 | `011_activity_linkedin_type.sql` | Adds `linkedin` to `activities_type_check` constraint |
 | `012_contacts_linkedin_url.sql` | Adds `linkedin_url text` column to `contacts` |
+| `002_indexes_and_perf.sql` | pg_trgm trigram indexes (full-text search), 40+ B-tree indexes on FK hot paths, composite list-query indexes, RLS on 21 tables, `set_current_org()` SECURITY DEFINER function |
 
 ```bash
 npm run db:migrate   # apply all pending migrations (idempotent)
@@ -346,10 +347,11 @@ npm run db:seed      # seed default org + admin
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DATABASE_URL` | ✓ | — | PostgreSQL connection string |
+| `DATABASE_URL` | ✓ | — | PostgreSQL connection string (should point to PgBouncer at `pgbouncer:6432` in production) |
 | `JWT_SECRET` | ✓ | — | Min 64 chars — `openssl rand -hex 32` |
 | `TOKEN_ENCRYPTION_KEY` | ✓* | — | 32-byte hex — AES-256-GCM key for OAuth tokens, SMTP passwords, webhook secrets. Required to use Gmail/Calendar/SMTP features. |
-| `REDIS_URL` | | `redis://localhost:6379` | BullMQ + Socket.io + JWT denylist |
+| `INTERNAL_KEY` | ✓ (prod) | — | Min 16 chars — protects `/internal/*` routes (e.g. `/internal/sequences/run`) |
+| `REDIS_URL` | | `redis://localhost:6379` | BullMQ + Socket.io Redis adapter + JWT denylist |
 | `PORT` | | `3001` | HTTP listen port |
 | `CORS_ORIGIN` | | `http://localhost:5173` | Allowed browser origin(s) — comma-separated in production |
 | `JWT_EXPIRES_IN` | | `7d` | Token lifetime |
@@ -362,6 +364,7 @@ npm run db:seed      # seed default org + admin
 | `GOOGLE_REDIRECT_URI` | | — | Must match Google Cloud console (e.g. `http://localhost:5173/auth/gmail/callback`) |
 | `GOOGLE_CALENDAR_WEBHOOK_URL` | | — | Public HTTPS base URL for Google push notifications (production only) |
 | `ANTHROPIC_API_KEY` | | — | Optional — AI features |
+| `GRAFANA_PASSWORD` | | `admin` | Grafana admin password for Docker Compose stack |
 
 ---
 
@@ -381,13 +384,15 @@ npm test             # vitest
 ## Security Notes
 
 - All PATCH/DELETE routes verify `organization_id` ownership before mutation.
+- **Row-Level Security (RLS)** enabled on 21 tables — enforced at database layer via `set_current_org()` function. API must call this per-request to set the GUC before executing queries.
 - JWTs are denied at request time via Redis denylist (logout + token rotation).
 - OAuth refresh tokens and SMTP passwords are encrypted AES-256-GCM at rest.
 - Webhook secrets are encrypted at rest; HMAC-SHA256 signatures are verified with `timingSafeEqual`.
 - API keys are stored as SHA-256 hashes — raw value never stored.
 - Public inbound webhook requires HMAC signature when a secret is registered.
-- Rate limiting on auth routes: 10 req / 15 min.
+- **Rate limiting:** 10 req/15 min on auth routes (per IP), 500 req/min per organization (Redis-backed), 20 req/min per IP on auth routes — prevents brute force and abuse.
 - Slack webhook URLs are encrypted AES-256-GCM at rest in `organizations.settings`.
+- `/metrics` endpoint accessible only from localhost — protects sensitive monitoring data.
 
 ---
 
@@ -525,11 +530,12 @@ All errors return a JSON body with an `error` key. Status codes:
 |------|---------|
 | 400 | Invalid request body — check `details` field for Zod validation errors |
 | 401 | Missing or expired JWT — clear token and redirect to `/login` |
-| 403 | No organization claim on JWT, or insufficient role |
+| 403 | No organization claim on JWT, or insufficient role; `/metrics` from non-localhost IPs returns 403 |
 | 404 | Record not found, or doesn't belong to your org |
-| 429 | Rate limit exceeded (10 req/15 min on auth routes, 200 req/min elsewhere) |
+| 429 | Rate limit exceeded (10 req/15 min on auth routes; 500 req/min per org globally; 20 req/min per IP on auth routes) |
 | 500 | Server error — check API logs |
 | 502 | External service error (Slack, Gmail, SMTP) |
+| 503 | Health check failed (database or Redis unavailable) |
 
 ### Validation errors (400)
 
@@ -573,14 +579,30 @@ npm run dev                   # http://localhost:5173
 From repo root:
 
 ```bash
-cp api/.env.example api/.env   # set JWT_SECRET, TOKEN_ENCRYPTION_KEY, CORS_ORIGIN
+cp api/.env.example api/.env   # set JWT_SECRET, TOKEN_ENCRYPTION_KEY, CORS_ORIGIN, INTERNAL_KEY, GRAFANA_PASSWORD
 docker-compose up -d
 
-# Services:
-#   postgres  → internal DB (port 5432 not exposed)
-#   redis     → internal cache
-#   api       → Fastify on port 3001
-#   web       → nginx + frontend (port 80)
+# Core services:
+#   postgres       → PostgreSQL 16 (internal, port 5432)
+#   pgbouncer      → Connection pool (port 6432, API connects here)
+#   redis          → BullMQ + Socket.io adapter (port 6379)
+#   api            → Fastify (port 3001)
+#   web            → nginx + frontend (port 80)
+#
+# Monitoring & Infrastructure:
+#   prometheus     → Metrics scraper (port 9090)
+#   grafana        → Dashboard (port 3002)
+#   postgres-exporter → PostgreSQL metrics
+#   node-exporter  → Host metrics
+#   backup         → Automated pg_dump (every 6h, 7-day retention)
+#
+# Optional seed (separate profile):
+#   seed           → One-time data population
+```
+
+To apply seed data after initial setup:
+```bash
+docker-compose --profile seed up seed
 ```
 
 Migrations run automatically on API container startup via `docker-entrypoint.sh`.
@@ -613,15 +635,94 @@ sudo systemctl enable --now n0crm-api
 
 - [ ] `JWT_SECRET` — at least 64 chars (`openssl rand -hex 32`)
 - [ ] `TOKEN_ENCRYPTION_KEY` — exactly 32 bytes hex (`openssl rand -hex 32`)
+- [ ] `INTERNAL_KEY` — min 16 chars for `/internal/*` routes (sequences/run, etc.)
 - [ ] `CORS_ORIGIN` — set to your frontend domain (no trailing slash)
 - [ ] `APP_URL` — set to your frontend domain (used in password reset emails)
 - [ ] `N0CRM_API_URL` — set on the frontend/nginx if not using localhost (runtime proxy target)
-- [ ] Database: enable connection pooling (PgBouncer) for > 50 concurrent users
-- [ ] Redis: enable persistence (`appendonly yes`) to survive restarts
+- [ ] **PgBouncer configured** in `infra/pgbouncer/` — generate MD5-hashed `userlist.txt` before first deploy; API connects via `pgbouncer:6432` not directly to postgres
+- [ ] Redis: enable persistence (`appendonly yes`) to survive restarts; Socket.io Redis adapter requires Redis for multi-node deployments
 - [ ] Set up SSL termination (nginx / Caddy) — do not expose port 3001 directly
 - [ ] Configure `GOOGLE_CALENDAR_WEBHOOK_URL` if using Calendar push notifications
-- [ ] Rate limit at nginx level in addition to application rate limiting
+- [ ] Run `npm install` in `api/` after pulling — new packages added: `@socket.io/redis-adapter`, `prom-client`
 - [ ] Review `docker-entrypoint.sh` to confirm migrations run automatically
+- [ ] Prometheus running and scraping `/metrics` endpoint on port 9090
+- [ ] Grafana up on port 3002 with Prometheus auto-provisioned as datasource
+
+---
+
+## Internal Routes
+
+Protected by `x-internal-key` header (must match `INTERNAL_KEY` env var).
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/internal/sequences/run` | Manually trigger sequence runner (for testing). Returns `{ processed: number, errors: number }`. |
+
+**Example:**
+```bash
+curl -X POST http://localhost:3001/internal/sequences/run \
+  -H "x-internal-key: $INTERNAL_KEY" \
+  -H "Content-Type: application/json"
+```
+
+---
+
+## Monitoring
+
+The API exports Prometheus metrics and health checks to support observability at scale.
+
+### Health Check
+
+**Endpoint:** `GET /health` (public, no auth required)
+
+Returns:
+```json
+{
+  "status": "ok|degraded|down",
+  "timestamp": "2026-05-25T10:00:00Z",
+  "db": "ok|down",
+  "redis": "ok|down",
+  "uptime": 12345.67
+}
+```
+
+Returns 503 Service Unavailable if either database or Redis is down.
+
+### Metrics
+
+**Endpoint:** `GET /metrics` (Prometheus format, restricted to localhost by default)
+
+**Access control:**
+- Requests from `localhost` or `127.0.0.1`: returns 200 with metrics
+- Requests from external IPs: returns 403 Forbidden
+- Set `METRICS_ALLOWED_IPS=*` in `.env` to allow all IPs (not recommended in production)
+
+**Metrics exposed:**
+- `n0crm_http_requests_total` — Total HTTP requests by method/route/status
+- `n0crm_http_request_duration_seconds` — Request latency histogram
+- `n0crm_db_query_duration_seconds` — Database query latency
+- `n0crm_active_websocket_connections` — Real-time connections currently open
+- `nodejs_*` — Node.js process metrics (memory, CPU, GC)
+
+### Prometheus Configuration
+
+In Docker Compose, Prometheus scrapes:
+- `http://api:3001/metrics` (application metrics) — every 15s
+- `http://postgres-exporter:9187/metrics` (PostgreSQL metrics) — every 15s
+- `http://node-exporter:9100/metrics` (host metrics) — every 15s
+
+See `infra/prometheus/prometheus.yml` for configuration.
+
+### Grafana Dashboard
+
+Access Grafana at `http://localhost:3002` (default credentials: `admin` / `$GRAFANA_PASSWORD`).
+
+Prometheus is auto-provisioned as the default datasource. Build dashboards to visualize:
+- API response times
+- Database query performance
+- WebSocket connection count
+- PostgreSQL replication lag (if applicable)
+- Memory/CPU utilization
 
 ---
 
@@ -651,7 +752,7 @@ API keys are hashed in Node.js with SHA-256 before storage. Do **not** enable pg
 
 - Ensure the frontend `VITE_API_URL` matches the API origin (including port).
 - CORS: `CORS_ORIGIN` must match the browser origin exactly (no trailing slash).
-- Redis must be running for Socket.io adapter.
+- **Redis must be running** — Socket.io Redis adapter is required for multi-node deployments. If Redis is down, Socket.io connections will fail. Check `REDIS_URL` in `.env` and verify `docker compose ps redis` shows `healthy`.
 
 ### Google OAuth callback fails
 
@@ -676,4 +777,4 @@ If a migration partially applied, manually drop the incomplete table and re-run.
 
 ---
 
-*Last updated: 2026-05-18*
+*Last updated: 2026-05-25*

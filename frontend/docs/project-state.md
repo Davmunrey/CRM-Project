@@ -132,8 +132,43 @@ The app ships **EN** (source), **ES**, and **PT** with full catalogs. **FR, DE, 
 
 ---
 
-*Last updated: 2026-05-18 — Monorepo consolidation. Migrated from separate `velo-crm` and `n0crm-api` repos into single monorepo structure: `frontend/` and `api/` subdirectories with root `docker-compose.yml` and `privateprompt-app.json`. All path references, deployment docs, and architecture descriptions updated to reflect monorepo topology. Gmail + Calendar OAuth fully routed through `api/` self-hosted routes. PostgreSQL migrations auto-applied via `docker-entrypoint.sh` on container startup. Socket.io realtime, JWT denylist, and webhook subscriptions fully operational.*
+## Production hardening (2026-05-25)
+
+Major infrastructure and database layer hardening for 500-tenant scale:
+
+### Infrastructure
+- **PgBouncer**: Transaction pool mode, 25 server connections, 500 max clients. API connects via `pgbouncer:6432` (not directly to postgres).
+- **Prometheus + Grafana**: Scrapes API metrics (`/metrics`), postgres-exporter, and node-exporter every 15s. Auto-provisioned Prometheus datasource in Grafana.
+- **Backup automation**: `pg_dump` every 6h with gzip compression; 7-day retention in `./backups/`.
+- **Health checks**: All Docker services (30s interval, 10s timeout, 3 retries).
+- **Resource limits**: CPU and memory limits on all services (postgres 2g/2cpu, api 1g/1cpu, redis 512m, etc.).
+
+### Database layer
+- **RLS**: Row-level security enabled on 21 tables with `set_current_org()` SECURITY DEFINER function.
+- **Indexes**: 40+ indexes added (pg_trgm trigram indexes for full-text search, B-tree indexes on FK hot paths like `(organization_id, assigned_to)`, composite list-query indexes on `(organization_id, created_at DESC)`).
+- **Seed profile**: Separate Docker Compose profile for initial data population (run with `--profile seed`).
+
+### API improvements
+- **Socket.io Redis adapter**: Multi-node WebSocket support without in-memory state leakage.
+- **Per-tenant rate limiting**: 500 req/min per org (Redis-backed), 20 req/min per IP on auth routes.
+- **Internal routes**: `POST /internal/sequences/run` protected by `x-internal-key` header for manual sequence runner triggers.
+- **Sequence runner worker**: Auto-starts on API boot, polls every 60s, processes up to 50 enrollments per tick, sends emails via org SMTP, handles errors per-enrollment.
+- **Metrics endpoint**: `GET /metrics` (Prometheus format), restricted to localhost by default.
+- **Health endpoint**: `GET /health` returns `{ status, db, redis, uptime }`.
+
+### New environment variables
+- `INTERNAL_KEY` (min 16 chars) — protects internal routes.
+- `GRAFANA_PASSWORD` — Grafana admin password (default: `admin`).
+- `DATABASE_URL` updated to use PgBouncer: `postgres://user:pass@pgbouncer:6432/db`.
+
+### Dependencies added
+- `@socket.io/redis-adapter: ^8.3.0`
+- `prom-client: ^15.1.3`
 
 ---
 
-*Last updated (git): **2026-05-18***
+*Last updated: 2026-05-25 — Production hardening complete. Monorepo consolidation (2026-05-18) now paired with infrastructure and database hardening for 500-tenant deployments. Migrations auto-applied via `docker-entrypoint.sh`. RLS, Socket.io Redis adapter, Prometheus/Grafana, backup automation, and per-tenant rate limiting fully operational.*
+
+---
+
+*Last updated (git): **2026-05-25***

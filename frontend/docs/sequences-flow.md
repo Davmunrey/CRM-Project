@@ -2,8 +2,8 @@
 
 **Status:** Active  
 **Owner:** Engineering  
-**Last updated:** 2026-05-18  
-**Canonical:** Yes (with code in `frontend/src/features/sequences-flow/` and `frontend/src/pages/Sequences.tsx`)
+**Last updated:** 2026-05-25  
+**Canonical:** Yes (with code in `frontend/src/features/sequences-flow/`, `frontend/src/pages/Sequences.tsx`, and `api/src/workers/sequenceRunner.ts`)
 
 ## Overview
 
@@ -51,15 +51,77 @@ All new UI strings live under `t.sequences.*` and nested `t.sequences.flow.*`. S
 
 Run `npm run i18n:lint` after changing keys.
 
-## Execution worker (planned)
+## Sequence runner worker
 
-Automatic step advancement is **not** implemented in the app runtime. A scheduled job should:
+The **sequence runner** is a background job that automatically advances enrolled contacts through their email sequences. It runs continuously in the API process and polls every 60 seconds.
 
-1. Load active enrollments with `next_step_at` due.
-2. Walk `flow_definition` from `current_node_id` (or entry), respecting waits and recorded `ab_variant`.
-3. Queue email sends / create tasks and append `sequence_step_events`.
+### How it works
 
-**Backend route (not implemented):** `api/src/routes/sequences.ts` (or dedicated route) should handle scheduling and worker logic. A scheduled job (pg_cron, external cron, or cloud function) will call this endpoint to advance enrolled contacts through their sequences.
+1. **Polling**: Every 60 seconds, the runner queries for enrollments with `next_step_at <= now()` (up to 50 per tick)
+2. **Step execution**: For each enrollment:
+   - Resolves the current node from `flow_definition` using `current_node_id`
+   - If it is an **email** step: sends email via organization SMTP settings
+   - If it is a **wait** step: calculates next execution time, skips to next step
+   - If it is an **A/B split**: uses stored `ab_variant` to branch correctly
+3. **Error handling**: Per-enrollment errors are logged (no cascade failure); enrollment moves to error state; runner continues with next enrollment
+4. **Advancement**: On success, enrollments advance to the next step; `next_step_at` is recalculated based on step type (email sends immediately, wait steps use configured duration)
+
+### Starting the runner
+
+The sequence runner **starts automatically** on API boot. Check logs for:
+```
+[startup] Sequence runner started — polling every 60s
+```
+
+### Manual trigger (for testing)
+
+You can manually trigger the runner outside of the poll cycle:
+
+```bash
+curl -X POST http://localhost:3001/internal/sequences/run \
+  -H "x-internal-key: $INTERNAL_KEY" \
+  -H "Content-Type: application/json"
+```
+
+Response:
+```json
+{
+  "processed": 12,
+  "errors": 1
+}
+```
+
+### Monitoring
+
+The runner exports metrics to Prometheus:
+
+- `n0crm_sequence_enrollments_processed_total` — Total enrollments advanced (counter)
+- `n0crm_sequence_runner_ticks_total` — Total runner ticks (counter)
+- `n0crm_sequence_runner_tick_duration_seconds` — Tick duration histogram (for performance tracking)
+- `n0crm_sequence_step_send_failures_total` — Email send failures (counter)
+
+View these in Grafana or query Prometheus directly:
+```
+rate(n0crm_sequence_enrollments_processed_total[1m])  # enrollments per minute
+```
+
+### Implementation details
+
+- **Code:** `api/src/workers/sequenceRunner.ts`
+- **Exports:** `startSequenceRunner()` and `stopSequenceRunner()` functions
+- **Integrations:**
+  - Reads from `sequence_enrollments` and `email_sequences` tables
+  - Uses org-scoped SMTP config from `org_smtp_settings`
+  - Appends to `sequence_step_events` (append-only audit trail)
+  - Respects RLS policies (queries filtered by `organization_id`)
+
+### Troubleshooting
+
+**Runner not advancing enrollments:**
+1. Check API logs for errors: `[sequence-runner] ERROR ...`
+2. Verify `SMTP_HOST` and org SMTP settings are configured
+3. Test with `POST /internal/sequences/run` — if manual trigger fails, check permissions and INTERNAL_KEY
+4. Ensure `sequence_enrollments.next_step_at` is in the past for test enrollments
 
 ## Related code
 

@@ -42,7 +42,7 @@ Auth is **email/password via n0crm-api** (Fastify backend in `api/` directory). 
 
 - Status: Active
 - Owner: Backend/Auth
-- Last updated: 2026-05-18 (monorepo restructure, JWT HS256 algorithm pinning, SHA-256 reset tokens, constant-time bcrypt login, rate-limited password reset, non-root Docker, CORS hardening, impersonation log enforcement)
+- Last updated: 2026-05-25 (production hardening: PgBouncer, RLS on 21 tables, 40+ indexes, per-tenant rate limiting, Socket.io Redis adapter, Prometheus/Grafana monitoring, backup automation)
 - Canonical: Yes
 
 ## n0crm-api auth endpoints
@@ -82,13 +82,13 @@ These toggles only affect visible login options and are all currently `false`.
 
 This matrix tracks production hardening posture across security, reliability, operations, and governance.
 
-**Snapshot (2026-05-18):** Monorepo restructure complete. Auth hardening now includes JWT HS256 algorithm pinning, SHA-256 password reset tokens, constant-time bcrypt login validation, rate-limiting on `/auth/reset-password` (10 req/15 min), and impersonation log enforcement (audit INSERT before token issue). Docker non-root USER enforcement, CORS parsed origins validation, and api/.dockerignore prevent .env layer leakage. P0 email-abuse and auth fail-closed work is reflected in code and [#sell-ready security evidence index](#sell-ready-security-evidence-index). Matrix rows below stay open until **external** sign-offs (RLS review, DR drill calendar, secret rotation log) are attached as evidence.
+**Snapshot (2026-05-25):** Production hardening for 500 tenants completed. Database layer: RLS enabled on 21 tables with `set_current_org()` SECURITY DEFINER function enforcing `organization_id` at SQL execution. 40+ indexes (pg_trgm trigram indexes for full-text search, B-tree indexes on FK hot paths, composite list-query indexes). Infrastructure: PgBouncer in transaction mode (25 server connections, 500 max clients), Prometheus scraping `/metrics` every 15s, Grafana auto-provisioned with Prometheus datasource. Rate limiting: per-org 500 req/min (Redis-backed), per-IP 20 req/min on auth routes. Socket.io Redis adapter enables multi-node WebSocket scaling. Backup automation: pg_dump every 6h with 7-day retention. Health checks on all services (30s interval, 10s timeout, 3 retries). Matrix rows below stay open until **external** sign-offs (RLS review, DR drill calendar, secret rotation log) are attached as evidence.
 
 ## Document Control
 
 - Status: Active
 - Owner: Security/Ops/Backend
-- Last updated: 2026-05-18
+- Last updated: 2026-05-25
 - Canonical: Yes
 
 ## Scoring Legend
@@ -101,7 +101,7 @@ This matrix tracks production hardening posture across security, reliability, op
 
 | Domain | Risk | Impact | Likelihood | Current Control | Remaining Gap | Priority | Owner | ETA |
 |---|---|---|---|---|---|---|---|---|
-| Multi-tenancy | Cross-tenant data leakage | Critical | Low | `organization_id` model + RLS + claim helpers (`get_org_id`, `get_user_role`) | Periodic tenant-isolation regression in CI | P0 | Backend | 1 sprint |
+| Multi-tenancy | Cross-tenant data leakage | Critical | Low | `organization_id` model + RLS on 21 tables + `set_current_org()` function + claim helpers (`get_org_id`, `get_user_role`) | Periodic tenant-isolation regression in CI; production RLS validation drill | P0 | Backend | 1 sprint |
 | Auth/SSO | Provider misconfiguration blocks sign-in | High | Medium | JWT HS256 pinned, password reset tokens SHA-256 hashed, bcrypt login constant-time, rate-limit on `/auth/reset-password`, impersonation audit logged | SCIM lifecycle and IdP drift monitoring | P1 | Backend/Auth | 2 sprints |
 | Auth/SSO | User enumeration via timing | High | Low | Bcrypt cost 12 with constant-time comparison on login; password reset always returns 200 (no user leakage) | Validate timing across all login paths in staging | P1 | Backend/Auth | 1 sprint |
 | Auth/SSO | Password reset token exposure | High | Low | SHA-256 hash in DB (not plaintext); 1-hour TTL; single-use | Rotate reset token secret on compromise | P1 | Backend/Auth | Ongoing |
@@ -113,6 +113,11 @@ This matrix tracks production hardening posture across security, reliability, op
 | Secrets Management | Secret leakage in job environments | Critical | Low | Secret-based system mode (`LEAD_MAINTENANCE_SECRET`) | Secret rotation policy + expiry calendar | P0 | Ops/Security | 1 sprint |
 | Release Safety | Unverified deploy introduces regression | High | Medium | Build + lint checks used on each iteration | Pre-deploy smoke suite and release gate document | P1 | Engineering | 1 sprint |
 | Governance | Limited audit completeness for enterprise asks | Medium | Medium | Audit log + maintenance telemetry + DSAR/retention runbooks + compliance mapping | Field-level security model + **tenant** retention automation + logged DR drills | P2 | Product/Backend | 3 sprints |
+| Database Layer | Performance degradation at 500+ tenants | High | Medium | PgBouncer (transaction mode, 25 server conn, 500 max clients) + 40+ indexes (pg_trgm, B-tree FK paths, composite list queries) + RLS on 21 tables | Load test at target tenant count; monitor PgBouncer pool utilization | P1 | Backend/DBA | 1 sprint |
+| Infrastructure | Lack of observability for multi-node deployments | High | Medium | Prometheus + Grafana + postgres-exporter + node-exporter (15s scrape interval); health checks on all services (30s, 3 retries) | Custom dashboards for SLA thresholds; automated alerting on query latency spike | P1 | Ops | 1 sprint |
+| Data Protection | Unplanned downtime risk (database failure) | High | Low | Automated backup (pg_dump every 6h, gzip, 7-day retention in `./backups/`) | Restore drill calendar + documented RTO/RPO SLAs; offsite backup replication | P1 | Ops/DBA | 2 sprints |
+| Scaling | Multi-node WebSocket state leakage | High | Low | Socket.io Redis adapter (no in-memory store); broadcasts to org-scoped rooms only | Load test multi-node Socket.io failover; verify room isolation under chaos | P1 | Backend | 1 sprint |
+| Rate Limiting | Global limit insufficient for per-tenant fairness | High | Medium | Per-org rate limit (500 req/min via Redis) + per-IP auth limit (20 req/min); Nginx layer in production | Verify per-org isolation under synthetic load; audit token replay risk | P1 | Backend/Ops | 1 sprint |
 
 ## Immediate Actions (Next 7 Days)
 

@@ -20,10 +20,13 @@ Internal tooling. Not open source.
 | i18n | en / es / pt / fr / de / it |
 | API | Fastify 5 + Node.js 22 |
 | Database | PostgreSQL 16 via postgres.js |
+| Connection pooling | PgBouncer (transaction mode, 25 server connections) |
 | Cache / Queue | Redis 7 + BullMQ (ioredis) |
-| Realtime | Socket.io 4 (org-scoped rooms) |
+| Realtime | Socket.io 4 (org-scoped rooms, Redis adapter for multi-node) |
 | Auth | JWT HS256 — jti denylist in Redis |
 | Encryption | AES-256-GCM (field-level) |
+| Monitoring | Prometheus + Grafana + postgres-exporter + node-exporter |
+| Backup | Automated pg_dump (every 6h, 7-day retention) |
 | Payments | Stripe |
 | Email | Nodemailer (SMTP) |
 | Validation | Zod (API + frontend) |
@@ -36,17 +39,26 @@ Internal tooling. Not open source.
 Browser (React SPA)
   │
   ├── REST API   ──→  Fastify 5  (Node 22)
-  │                     ├─ /auth /contacts /deals /companies /activities
-  │                     ├─ /leads /sequences /automations /products
-  │                     ├─ /reports /forecast /inbox /calendar
-  │                     ├─ /custom-fields /goals /audit /webhooks
-  │                     └─ /admin  /public-api
+  │   │                 ├─ /auth /contacts /deals /companies /activities
+  │   │                 ├─ /leads /sequences /automations /products
+  │   │                 ├─ /reports /forecast /inbox /calendar
+  │   │                 ├─ /custom-fields /goals /audit /webhooks
+  │   │                 ├─ /health /metrics /internal/*
+  │   │                 └─ /admin  /public-api
+  │   │
+  │   ├── Realtime   ──→  Socket.io 4 (Redis-backed adapter)
+  │   │                     └─ __n0crmDbChange(table) — org-scoped rooms, JWT-verified
+  │   │
+  │   └── Background ──→  BullMQ on Redis
+  │                         └─ email sends, sequence scheduling, enrichment jobs, sequence runner
   │
-  ├── Realtime   ──→  Socket.io 4
-  │                     └─ __n0crmDbChange(table) — org-scoped rooms, JWT-verified
+  ├── PgBouncer ──→ PostgreSQL 16
+  │                 └─ Transaction pool mode (25 server connections, 500 max clients)
   │
-  └── Background ──→  BullMQ on Redis
-                        └─ email sends, sequence scheduling, enrichment jobs
+  └── Monitoring
+      ├── Prometheus (scrapes /metrics every 15s, also postgres-exporter, node-exporter)
+      ├── Grafana (port 3002, auto-provisioned Prometheus datasource)
+      └── Backup service (pg_dump every 6h, gzip, 7-day retention)
 ```
 
 **Auth flow:** `POST /auth/login` → HS256 JWT (`sub / org / role / jti`) in `localStorage`. Every request carries `Authorization: Bearer <token>`. On 401: clear token, redirect `/login`. Logout revokes `jti` in Redis.
@@ -159,18 +171,24 @@ Spin up everything with a single command:
 export JWT_SECRET=<min-32-char-secret>
 export TOKEN_ENCRYPTION_KEY=<32-char-aes-key>
 export POSTGRES_PASSWORD=<db-password>
+export INTERNAL_KEY=<min-16-char-internal-secret>
+export GRAFANA_PASSWORD=<grafana-admin-password>
 
 docker-compose up -d
+docker-compose --profile seed up seed  # Optional: separate seed profile
 ```
 
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost |
 | API | http://localhost:3001 |
-| PostgreSQL | localhost:5432 (bound to 127.0.0.1) |
-| Redis | localhost:6379 (bound to 127.0.0.1) |
+| PgBouncer | localhost:6432 (API connects here, not directly to postgres) |
+| PostgreSQL | localhost:5432 (internal, via PgBouncer) |
+| Redis | localhost:6379 (internal) |
+| Prometheus | http://localhost:9090 |
+| Grafana | http://localhost:3002 (admin / GRAFANA_PASSWORD) |
 
-The API container auto-runs all pending migrations on boot via `docker-entrypoint.sh`. No separate migration step needed.
+The API container auto-runs all pending migrations on boot via `docker-entrypoint.sh`. Seed is now a separate profile: run with `--profile seed` to apply initial data.
 
 ---
 
@@ -197,15 +215,17 @@ CI pipelines (`.gitea/workflows/`) build and push both images automatically on e
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | yes | `postgres://user:pass@host:5432/db` |
+| `DATABASE_URL` | yes | `postgres://user:pass@pgbouncer:6432/db` (connect via PgBouncer, not directly to postgres) |
 | `REDIS_URL` | yes | `redis://localhost:6379` |
 | `JWT_SECRET` | yes | HS256 signing secret (min 32 chars) |
 | `TOKEN_ENCRYPTION_KEY` | yes | AES-256-GCM key (exactly 32 chars) |
 | `CORS_ORIGIN` | yes | Comma-separated allowed origins |
+| `INTERNAL_KEY` | yes (prod) | Min 16 chars — protects `/internal/*` routes (sequences/run, etc.) |
 | `JWT_EXPIRES_IN` | no | Token TTL — default `7d` |
-| `SMTP_HOST/PORT/USER/PASS` | no | Outbound email |
+| `SMTP_HOST/PORT/USER/PASS` | no | Outbound email per org (tenant-scoped) |
 | `STRIPE_SECRET_KEY` | no | Stripe integration |
 | `GOOGLE_CLIENT_ID/SECRET` | no | Gmail + Calendar OAuth |
+| `GRAFANA_PASSWORD` | no | Grafana admin password (default: `admin` if unset) |
 
 ### Frontend (`frontend/.env`)
 
@@ -269,22 +289,22 @@ Available events: `contact.*`, `company.*`, `deal.*`, `activity.*`, `lead.*`.
 
 ---
 
-## Security
-
 | Concern | Implementation |
 |---------|---------------|
 | Authentication | JWT HS256, algorithm pinned at sign + verify |
 | Session revocation | `jti` denylist in Redis on logout |
 | Password hashing | bcrypt rounds 12, constant-time comparison |
 | Password reset tokens | SHA-256 hashed before DB storage |
-| Rate limiting | Auth routes: 10 req / 15 min |
+| Rate limiting | Auth routes: 10 req / 15 min; per-org: 500 req/min (Redis-backed); internal routes: protected by `x-internal-key` |
 | Field encryption | AES-256-GCM for sensitive values |
+| Row-level security | RLS enabled on 21 tables, org isolation enforced via `set_current_org()` function |
 | Transport | HTTPS enforced in production (nginx) |
-| Containers | Non-root `node` user, `.dockerignore` excludes .env |
-| Secrets | `JWT_SECRET` and `TOKEN_ENCRYPTION_KEY` enforced as required in compose |
-| DB isolation | Every query scoped to `organization_id` from JWT |
+| Containers | Non-root `node` user, `.dockerignore` excludes .env, resource limits on all services |
+| Secrets | `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `INTERNAL_KEY` enforced as required |
+| DB isolation | Every query scoped to `organization_id` from JWT; RLS double-enforces at DB layer |
 | Impersonation | Full audit log entry required — failure blocks token issuance |
 | CORS | Strict origin allowlist, wildcards blocked in production |
+| Connection pooling | PgBouncer in transaction mode; API pool reduced to 10 (outer multiplexer) |
 
 ---
 
@@ -342,4 +362,4 @@ Translation catalogs: `frontend/src/i18n/`.
 
 ---
 
-*Internal tool — Clovr Labs — Last updated: 2026-05-18*
+*Internal tool — Clovr Labs — Last updated: 2026-05-25*
