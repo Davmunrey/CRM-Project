@@ -17,9 +17,12 @@ jobs:
 
     steps:
       - name: Checkout
+        env:
+          GIT_TOKEN: ${{ github.token }}
         run: |
+          rm -rf .git
           git init
-          git remote add origin "https://oauth2:${GITHUB_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
+          git remote add origin "https://oauth2:${GIT_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
           git fetch --depth=1 origin "${GITHUB_SHA}"
           git checkout FETCH_HEAD
 

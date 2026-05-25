@@ -13,10 +13,16 @@ jobs:
       run:
         working-directory: frontend
     steps:
+      # working-directory override: checkout must run from workspace root,
+      # not from frontend/ (which doesn't exist yet).
       - name: Checkout
+        working-directory: ${{ github.workspace }}
+        env:
+          GIT_TOKEN: ${{ github.token }}
         run: |
+          rm -rf .git
           git init
-          git remote add origin "https://oauth2:${GITHUB_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
+          git remote add origin "https://oauth2:${GIT_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
           git fetch --depth=1 origin "${GITHUB_SHA}"
           git checkout FETCH_HEAD
 
@@ -79,9 +85,13 @@ jobs:
         working-directory: frontend
     steps:
       - name: Checkout
+        working-directory: ${{ github.workspace }}
+        env:
+          GIT_TOKEN: ${{ github.token }}
         run: |
+          rm -rf .git
           git init
-          git remote add origin "https://oauth2:${GITHUB_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
+          git remote add origin "https://oauth2:${GIT_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
           git fetch --depth=1 origin "${GITHUB_SHA}"
           git checkout FETCH_HEAD
 
