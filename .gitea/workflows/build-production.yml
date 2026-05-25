@@ -18,7 +18,11 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        run: |
+          git init
+          git remote add origin "https://oauth2:${GITHUB_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout FETCH_HEAD
 
       - name: Log in to registry
         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login gitea.apps.privateprompt.tech -u "${{ secrets.REGISTRY_USER }}" --password-stdin

@@ -14,14 +14,21 @@ jobs:
         working-directory: frontend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        run: |
+          git init
+          git remote add origin "https://oauth2:${GITHUB_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout FETCH_HEAD
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+      - name: Setup Node 22
+        run: |
+          export NVM_DIR="${HOME}/.nvm"
+          if [ -s "${NVM_DIR}/nvm.sh" ]; then
+            . "${NVM_DIR}/nvm.sh"
+            nvm use 22 2>/dev/null || nvm install 22
+          fi
+          node --version
+          npm --version
 
       - name: Install dependencies
         run: npm ci
@@ -72,14 +79,20 @@ jobs:
         working-directory: frontend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        run: |
+          git init
+          git remote add origin "https://oauth2:${GITHUB_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout FETCH_HEAD
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+      - name: Setup Node 22
+        run: |
+          export NVM_DIR="${HOME}/.nvm"
+          if [ -s "${NVM_DIR}/nvm.sh" ]; then
+            . "${NVM_DIR}/nvm.sh"
+            nvm use 22 2>/dev/null || nvm install 22
+          fi
+          node --version
 
       - name: Install dependencies
         run: npm ci
