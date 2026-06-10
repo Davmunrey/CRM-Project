@@ -25,6 +25,8 @@ import { EmailComposer } from '../../components/email/EmailComposer'
 import { useAuthStore } from '../../store/authStore'
 import { usePipelinesStore } from '../../store/pipelinesStore'
 import { CustomFieldsForm } from '../../components/shared/CustomFieldRenderer'
+import { AiInsight } from '../../components/ai/AiInsight'
+import { useAiStore } from '../../store/aiStore'
 import { DealFilters } from './DealFilters'
 import { DealKanban } from './DealKanban'
 import { DealListView } from './DealListView'
@@ -328,6 +330,12 @@ export function DealsPage() {
                   {t.common.edit}
                 </Button>
               </PermissionGate>
+              <AiInsight
+                label={t.ai.nextBestAction}
+                loadingLabel={t.ai.analyzing}
+                resultTitle={t.ai.nextBestActionTitle}
+                run={() => useAiStore.getState().nextBestAction({ dealId: selectedDeal.id })}
+              />
               <PermissionGate permission="deals:delete">
                 <Button size="sm" variant="ghost" leftIcon={<Trash2 size={14} />}
                   className="text-danger hover:text-danger ml-auto"

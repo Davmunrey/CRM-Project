@@ -5,6 +5,16 @@ import { encryptToken, decryptToken } from '../services/tokenCipher.js'
 
 const SLACK_URL_RE = /^https:\/\/hooks\.slack\.com\/services\//
 
+/**
+ * Re-assert the Slack host allow-list at SEND time (not just save time), so a
+ * webhook URL written through any other settings path can never be used to make
+ * the server fetch an internal/arbitrary host (SSRF). The host is a fixed
+ * external constant, so an allow-list check is sufficient here.
+ */
+export function isAllowedSlackUrl(url: string): boolean {
+  return SLACK_URL_RE.test(url)
+}
+
 export async function slackRoutes(app: FastifyInstance) {
   const auth = { onRequest: [app.authenticate] }
 
@@ -48,6 +58,7 @@ export async function slackRoutes(app: FastifyInstance) {
     } catch {
       webhookUrl = settings.slackWebhookUrl as string
     }
+    if (!isAllowedSlackUrl(webhookUrl)) return reply.code(400).send({ error: 'Invalid Slack webhook URL' })
 
     try {
       const res = await fetch(webhookUrl, {
@@ -90,6 +101,7 @@ export async function sendSlackNotification(orgId: string, payload: Record<strin
     } catch {
       webhookUrl = settings.slackWebhookUrl as string
     }
+    if (!isAllowedSlackUrl(webhookUrl)) return
 
     await fetch(webhookUrl, {
       method: 'POST',

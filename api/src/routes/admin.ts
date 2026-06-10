@@ -15,6 +15,12 @@ export async function adminRoutes(app: FastifyInstance) {
 
   // ── Super-admin guard hook ──────────────────────────────────────────────────
   app.addHook('preHandler', async (req, reply) => {
+    // The impersonation-exit route is authorized by the impersonation token itself
+    // (it carries `impersonated_by`), so a super-admin currently operating AS the
+    // impersonated user — who is not themselves a super-admin — can still end the
+    // session. Every other admin route requires a genuine super-admin token.
+    const impersonatedBy = (req.user as { impersonated_by?: string }).impersonated_by
+    if (impersonatedBy && (req.routeOptions?.url ?? '').endsWith('/impersonate/exit')) return
     const ok = await isSuperAdmin(req as unknown as { user: { sub: string } })
     if (!ok) return reply.code(403).send({ error: 'Super admin access required' })
   })
@@ -248,6 +254,17 @@ export async function adminRoutes(app: FastifyInstance) {
 
   // ── POST /admin/impersonate/exit ────────────────────────────────────────────
   app.post('/impersonate/exit', async (req, reply) => {
+    // Only act on a genuine impersonation session (token carries impersonated_by).
+    const impersonatedBy = (req.user as { impersonated_by?: string }).impersonated_by
+    if (impersonatedBy) {
+      // Close the open audit row so impersonation sessions aren't left open-ended.
+      await db`
+        UPDATE impersonation_logs SET ended_at = now()
+        WHERE super_admin_id = ${impersonatedBy}
+          AND target_user_id = ${req.user.sub}
+          AND ended_at IS NULL
+      `
+    }
     const restoreToken = getRestoreCookie(req)
     clearRestoreCookie(reply)
     if (restoreToken) {

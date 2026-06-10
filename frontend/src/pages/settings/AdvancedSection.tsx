@@ -32,14 +32,14 @@ export function AdvancedSection({ formatAgo }: AdvancedSectionProps) {
   }
 
   useEffect(() => {
-    loadMaintenanceRuns()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void loadMaintenanceRuns()
   }, [])
 
   const lastSuccessRun = maintenanceRuns.find((run) => run.status === 'success')
   const lastSuccessAt = lastSuccessRun?.finished_at ?? lastSuccessRun?.started_at
   const staleSlaHours = 8
   const staleSlaMs = staleSlaHours * 60 * 60 * 1000
+  // eslint-disable-next-line react-hooks/purity -- display-only SLA-breach badge; one-render staleness is harmless
   const isSlaBreached = !lastSuccessAt || Date.now() - new Date(lastSuccessAt).getTime() > staleSlaMs
   const recentErrors = maintenanceRuns.filter((run) => run.status === 'error').slice(0, 3)
   const visibleMaintenanceRuns = maintenanceStatusFilter === 'all'

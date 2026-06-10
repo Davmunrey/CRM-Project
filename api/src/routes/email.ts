@@ -33,8 +33,13 @@ function toAddresses(v: string | string[] | undefined): string | undefined {
 export async function emailRoutes(app: FastifyInstance) {
   app.addHook('onRequest', app.authenticate)
 
-  // POST /email/send — sends via per-org SMTP (if configured) → global SMTP/Resend fallback
-  app.post('/send', async (req, reply) => {
+  // POST /email/send — sends via per-org SMTP (if configured) → global SMTP/Resend fallback.
+  // Per-org send cap (org-keyed via the global keyGenerator) limits blast radius
+  // of a compromised account / abuse of the org's outbound mail credentials.
+  app.post('/send', { config: { rateLimit: { max: 60, timeWindow: '1 minute' } } }, async (req, reply) => {
+    // Viewers are read-only and must not be able to send mail through org credentials.
+    if (req.user.role === 'viewer') return reply.code(403).send({ error: 'Insufficient permissions' })
+
     const body = sendSchema.safeParse(req.body)
     if (!body.success) return reply.code(400).send({ error: 'Invalid request', details: body.error.flatten() })
 
@@ -81,7 +86,10 @@ export async function emailRoutes(app: FastifyInstance) {
         subject: data.subject,
         html: data.htmlBody ?? data.html ?? `<p>${(data.body ?? data.text ?? '').replace(/\n/g, '<br/>')}</p>`,
         text: data.body ?? data.text,
-        from: data.from,
+        // Force From to the org's verified SMTP address (or the global EMAIL_FROM
+        // default inside sendEmail when unset). The caller-supplied `data.from` is
+        // intentionally ignored to prevent sender spoofing through org credentials.
+        from: smtpConfig?.fromAddress,
         replyTo: toAddresses(data.replyTo),
         attachments: data.attachments as Parameters<typeof sendEmail>[0]['attachments'],
       }, smtpConfig)

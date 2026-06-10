@@ -11,6 +11,19 @@ function getStripe(): Stripe | null {
 
 // ── Plan limits enforcement ───────────────────────────────────────────────────
 
+// Free-tier caps applied to orgs with NO active subscription when billing is in
+// use (Stripe configured). Prevents a churned/canceled org from silently keeping
+// unlimited capacity. Self-hosted deployments (no Stripe) remain uncapped.
+const FREE_TIER_LIMITS: Record<'contacts' | 'deals' | 'users', number> = {
+  contacts: 1000,
+  deals: 500,
+  users: 3,
+}
+
+function tableForResource(resource: 'contacts' | 'deals' | 'users'): 'contacts' | 'deals' | 'users' {
+  return resource
+}
+
 export async function checkPlanLimit(
   orgId: string,
   resource: 'contacts' | 'deals' | 'users',
@@ -24,7 +37,14 @@ export async function checkPlanLimit(
   `
 
   if (!sub || sub.status === 'canceled' || sub.status === 'expired') {
-    return { allowed: true, limit: 0, current: 0 }
+    // Self-hosted / billing not configured → no caps (unlimited).
+    if (!env.STRIPE_SECRET_KEY) return { allowed: true, limit: 0, current: 0 }
+    // Billing IS configured but this org has no active subscription → downgrade to
+    // free-tier caps rather than leaving a churned org unlimited.
+    const limit = FREE_TIER_LIMITS[resource]
+    const [c] = await db`SELECT COUNT(*) AS n FROM ${db(tableForResource(resource))} WHERE organization_id = ${orgId}`
+    const cur = Number(c?.n ?? 0)
+    return { allowed: cur < limit, limit, current: cur }
   }
 
   const limitKey = resource === 'contacts' ? 'maxContacts'
@@ -34,11 +54,7 @@ export async function checkPlanLimit(
   const limit = Number(sub[limitKey] ?? 0)
   if (limit === 0) return { allowed: true, limit: 0, current: 0 }
 
-  const table = resource === 'contacts' ? 'contacts'
-    : resource === 'deals' ? 'deals'
-    : 'users'
-
-  const [count] = await db`SELECT COUNT(*) AS n FROM ${db(table)} WHERE organization_id = ${orgId}`
+  const [count] = await db`SELECT COUNT(*) AS n FROM ${db(tableForResource(resource))} WHERE organization_id = ${orgId}`
   const current = Number(count?.n ?? 0)
 
   return { allowed: current < limit, limit, current }

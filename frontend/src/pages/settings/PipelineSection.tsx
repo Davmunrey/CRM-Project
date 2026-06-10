@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Plus, Trash2, SlidersHorizontal } from 'lucide-react'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import type { DropResult } from '@hello-pangea/dnd'
@@ -18,10 +18,13 @@ export function PipelineSection() {
   const t = useTranslations()
   const { settings, reorderStages, addPipelineStage, updateLeadSlaHours } = useSettingsStore()
   const [pipelineDraft, setPipelineDraft] = useState<PipelineStage[]>(settings.pipelineStages)
-
-  useEffect(() => {
+  // Reset the local draft when the stored stages change. Adjust-state-during-render
+  // (React's documented pattern) instead of a setState-in-effect cascade.
+  const [syncedStages, setSyncedStages] = useState(settings.pipelineStages)
+  if (settings.pipelineStages !== syncedStages) {
+    setSyncedStages(settings.pipelineStages)
     setPipelineDraft(settings.pipelineStages)
-  }, [settings.pipelineStages])
+  }
 
   const handlePipelineStageChange = (stageId: string, patch: Partial<PipelineStage>) => {
     setPipelineDraft((prev) => prev.map((stage) => (stage.id === stageId ? { ...stage, ...patch } : stage)))

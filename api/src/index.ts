@@ -47,6 +47,7 @@ import { distributionListsRoutes } from './routes/distributionLists.js'
 import { userPreferencesRoutes } from './routes/userPreferences.js'
 import { billingRoutes, stripeWebhookRoute } from './routes/billing.js'
 import { internalRoutes } from './routes/internal.js'
+import { aiRoutes } from './routes/ai.js'
 import { authMiddleware } from './middleware/auth.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
 import { registerRealtimeHandlers, broadcastDbChange } from './services/realtime.js'
@@ -62,6 +63,10 @@ const app = Fastify({
     ? { transport: { target: 'pino-pretty', options: { colorize: true } } }
     : true,
   serverFactory: (handler) => http.createServer(handler),
+  // Trust exactly TRUST_PROXY rightmost X-Forwarded-For hops so req.ip resolves
+  // to the genuine client IP and cannot be spoofed by injecting extra leftmost
+  // XFF entries (which nginx appends to, never strips). See config/env.ts.
+  trustProxy: env.TRUST_PROXY,
 })
 
 // @fastify/cookie must be registered before @fastify/jwt when using cookie extraction
@@ -147,10 +152,10 @@ await app.register(rateLimit, {
     if (orgId) {
       return `rate:org:${orgId}`
     }
-    // Fall back to IP for unauthenticated callers.
-    const forwarded = req.headers['x-forwarded-for']
-    const ip = Array.isArray(forwarded) ? forwarded[0] : (forwarded?.split(',')[0]?.trim() ?? req.ip)
-    return `rate:ip:${ip ?? 'unknown'}`
+    // Unauthenticated callers: key on req.ip, which Fastify resolves from the
+    // trusted XFF suffix (trustProxy=TRUST_PROXY) — NOT the attacker-controlled
+    // leftmost X-Forwarded-For value.
+    return `rate:ip:${req.ip ?? 'unknown'}`
   },
   errorResponseBuilder(_req, context) {
     return {
@@ -188,9 +193,8 @@ await app.register(authRoutes, {
     max: 20,
     timeWindow: '1 minute',
     keyGenerator(req: import('fastify').FastifyRequest) {
-      const forwarded = req.headers['x-forwarded-for']
-      const ip = Array.isArray(forwarded) ? forwarded[0] : (forwarded?.split(',')[0]?.trim() ?? req.ip)
-      return `rate:ip:auth:${ip ?? 'unknown'}`
+      // req.ip is the trustProxy-resolved client IP, not the raw leftmost XFF.
+      return `rate:ip:auth:${req.ip ?? 'unknown'}`
     },
   },
 })
@@ -235,6 +239,7 @@ await app.register(userPreferencesRoutes, { prefix: '/preferences' })
 await app.register(billingRoutes, { prefix: '/billing' })
 await app.register(stripeWebhookRoute)
 await app.register(internalRoutes, { prefix: '/internal' })
+await app.register(aiRoutes, { prefix: '/ai' })
 
 // ---------------------------------------------------------------------------
 // Task 5: Prometheus /metrics endpoint
@@ -244,20 +249,22 @@ await app.register(internalRoutes, { prefix: '/internal' })
 // ---------------------------------------------------------------------------
 const LOOPBACK_PREFIXES = ['127.', '::1', '::ffff:127.']
 
-function isInternalRequest(req: { ip: string; headers: Record<string, string | string[] | undefined> }): boolean {
-  const forwarded = req.headers['x-forwarded-for']
-  if (forwarded) {
-    // If a load balancer sets X-Forwarded-For, the leftmost IP is the original client.
-    // We only allow this endpoint when the original client is also internal.
-    const clientIp = Array.isArray(forwarded) ? (forwarded[0] ?? '') : (forwarded.split(',')[0]?.trim() ?? '')
-    return LOOPBACK_PREFIXES.some((p) => clientIp.startsWith(p))
-  }
-  // Direct connection — check the socket remote address.
-  return LOOPBACK_PREFIXES.some((p) => req.ip.startsWith(p))
+// Use the raw TCP peer (req.socket.remoteAddress), NOT req.ip. With trustProxy
+// enabled, req.ip is XFF-derived and could be spoofed to 127.0.0.1; the socket
+// peer cannot be forged, so the loopback gate stays sound regardless of proxy
+// config. Cross-container scrapers use the x-internal-key path instead.
+function isLoopbackRequest(req: { socket: { remoteAddress?: string | undefined } }): boolean {
+  const peer = req.socket.remoteAddress ?? ''
+  return LOOPBACK_PREFIXES.some((p) => peer.startsWith(p))
 }
 
 app.get('/metrics', { config: { rateLimit: false } }, async (req, reply) => {
-  if (!isInternalRequest(req as Parameters<typeof isInternalRequest>[0])) {
+  // Allow loopback (same-host curl / healthcheck) OR a caller presenting the
+  // shared INTERNAL_KEY (so cross-container scrapers like Prometheus have a
+  // non-spoofable way in without relying on network IPs).
+  const internalKey = req.headers['x-internal-key']
+  const keyOk = Boolean(env.INTERNAL_KEY) && internalKey === env.INTERNAL_KEY
+  if (!keyOk && !isLoopbackRequest(req)) {
     return reply.code(403).send({ error: 'Forbidden' })
   }
   const output = await metricsRegistry.metrics()

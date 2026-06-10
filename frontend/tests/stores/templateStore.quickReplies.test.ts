@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../src/lib/supabase', () => ({
-  isSupabaseConfigured: false,
-  isBootstrapFatalError: false,
-  supabase: null,
-}))
 
 describe('templateStore quick replies', () => {
   beforeEach(() => {

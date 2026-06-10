@@ -73,13 +73,14 @@ export function useDataInit() {
     }
     window.addEventListener('online', handleBackOnline)
 
-    window.setTimeout(() => {
+    const initialMaintenance = window.setTimeout(() => {
       runServerMaintenance()
     }, 15000)
     return () => {
       cleanup()
       window.clearInterval(maintenanceInterval)
       window.clearInterval(dealsSyncInterval)
+      window.clearTimeout(initialMaintenance)
       window.removeEventListener('online', handleBackOnline)
       didInit.current = false
     }

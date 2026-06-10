@@ -12,11 +12,6 @@ vi.mock('../../src/lib/api', async (importOriginal) => {
   return { ...actual, api: { ...actual.api, post: mockApiPost } }
 })
 
-vi.mock('../../src/lib/supabase', () => ({
-  isBootstrapFatalError: false,
-  supabase: null,
-  isSupabaseConfigured: true,
-}))
 
 function renderForgotPassword() {
   return render(<TestRouter><ForgotPassword /></TestRouter>)

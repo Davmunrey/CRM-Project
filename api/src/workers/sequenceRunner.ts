@@ -166,6 +166,22 @@ export async function runSequenceCycle(): Promise<void> {
 async function processEnrollment(enrollment: Enrollment): Promise<void> {
   // Wrap each enrollment in a transaction so a failure rolls back cleanly.
   await db.begin(async (tx) => {
+    // Claim this enrollment for the lifetime of the transaction. FOR UPDATE SKIP
+    // LOCKED makes a concurrent runner (overlapping tick / multi-node / the
+    // /internal trigger) skip a row another worker already holds instead of
+    // double-sending the same step. The current_step guard rejects a row that
+    // advanced between the outer SELECT and this lock.
+    const claimed = await tx`
+      SELECT id FROM sequence_enrollments
+      WHERE id = ${enrollment.id}
+        AND status = 'active'
+        AND current_step = ${enrollment.currentStep}
+        AND next_step_at IS NOT NULL
+        AND next_step_at <= NOW()
+      FOR UPDATE SKIP LOCKED
+    `
+    if (claimed.length === 0) return
+
     // Re-fetch the sequence inside the transaction to get a consistent view.
     const seqRows = await tx<Sequence[]>`
       SELECT id, steps FROM email_sequences WHERE id = ${enrollment.sequenceId} LIMIT 1

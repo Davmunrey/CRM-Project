@@ -7,6 +7,8 @@ import { Link } from 'react-router-dom'
 import { useTranslations } from '../../i18n'
 import { Select } from '../../components/ui/Select'
 import { Button } from '../../components/ui/Button'
+import { AiInsight } from '../../components/ai/AiInsight'
+import { useAiStore } from '../../store/aiStore'
 import { PanelEmpty } from '../../components/shared/PanelEmpty'
 import { buildReplySubject, type ThreadMatch } from '../../features/inbox'
 import { formatDateTime, formatRelativeDate } from '../../utils/formatters'
@@ -112,6 +114,15 @@ export function ThreadView({
     </div>
   )
 
+  // Plain-text rendering of the thread for the AI summarize/draft actions.
+  const htmlToText = (html: string): string =>
+    typeof DOMParser === 'undefined'
+      ? html
+      : (new DOMParser().parseFromString(html, 'text/html').body.textContent ?? '')
+  const aiThreadMessages = (): string[] =>
+    thread.messages.map((m) => `From: ${m.from}\n${(htmlToText(m.body) || m.snippet).trim()}`)
+  const aiThreadText = (): string => aiThreadMessages().join('\n\n---\n\n').slice(0, 18000)
+
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden bg-gradient-to-b from-surface-1/50 to-surface-1/20">
       <header className="flex-shrink-0 border-b border-fg/8 bg-surface-1/60">
@@ -140,6 +151,21 @@ export function ThreadView({
           <Button variant="danger" size="xs" leftIcon={<Trash2 size={14} aria-hidden />} onClick={() => onThreadAction(thread, 'trash')}>
             {t.inbox.trash}
           </Button>
+          <AiInsight
+            size="xs"
+            label={t.ai.summarize}
+            loadingLabel={t.ai.summarizing}
+            resultTitle={t.ai.summaryTitle}
+            run={() => useAiStore.getState().summarizeThread(aiThreadMessages())}
+          />
+          <AiInsight
+            size="xs"
+            icon={<Reply size={14} aria-hidden />}
+            label={t.ai.draft}
+            loadingLabel={t.ai.drafting}
+            resultTitle={t.ai.draftTitle}
+            run={() => useAiStore.getState().draftReply(aiThreadText())}
+          />
         </div>
         <div className="px-3 pb-3 flex flex-wrap items-center gap-2">
           {match?.contact && (

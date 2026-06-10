@@ -18,6 +18,10 @@ import { PageHeader } from '../components/ui/PageHeader'
 import { StatCard } from '../components/ui/StatCard'
 import type { ActivityType } from '../types'
 
+// Stage order for the forecast chart. Module-level constant so it is stable and
+// not a reactive dependency of the forecast useMemo.
+const ACTIVE_STAGES = ['lead', 'qualified', 'proposal', 'negotiation'] as const
+
 // ─── API response types ───────────────────────────────────────────────────────
 
 interface AnalyticsSummary {
@@ -140,10 +144,8 @@ export function Reports() {
 
   // ── Chart data derived from API results ───────────────────────────────────
 
-  const activeStages = ['lead', 'qualified', 'proposal', 'negotiation']
-
   const forecastData = useMemo(() =>
-    activeStages.map((stage) => {
+    ACTIVE_STAGES.map((stage) => {
       const s = dealsByStage.find((d) => d.stage === stage)
       return {
         name: t.deals.stageLabels[stage as keyof typeof t.deals.stageLabels] ?? stage,

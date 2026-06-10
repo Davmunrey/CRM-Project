@@ -9,7 +9,6 @@
   ],
   "project": ["src/**/*.ts", "src/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx", "e2e/**/*.ts"],
   "ignore": [
-    "supabase/functions/**",
     "src/hooks/useLocalStorage.ts",
     "src/hooks/useSearch.ts",
     "src/store/attachmentsStore.ts",

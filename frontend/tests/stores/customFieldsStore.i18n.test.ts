@@ -2,11 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useCustomFieldsStore } from '../../src/store/customFieldsStore'
 import { useI18nStore } from '../../src/i18n'
 
-vi.mock('../../src/lib/supabase', () => ({
-  supabase: null,
-  isSupabaseConfigured: false,
-  isBootstrapFatalError: false,
-}))
 
 describe('customFieldsStore i18n', () => {
   beforeEach(() => {

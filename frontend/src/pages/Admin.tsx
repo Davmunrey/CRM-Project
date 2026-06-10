@@ -522,18 +522,25 @@ export function Admin() {
       .finally(() => setLogsLoading(false))
   }, [])
 
+  // Match the shared API client's base (lib/api.ts): default to '/api' (the
+  // reverse-proxy path) when VITE_API_URL is unset — NOT '' which 404s.
+  const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
+
   const handleExportOrgs = () => {
     const params = new URLSearchParams()
     if (orgSearch) params.set('search', orgSearch)
     if (orgPlanFilter) params.set('plan', orgPlanFilter)
-    window.open(`${import.meta.env.VITE_API_URL ?? ''}/admin/orgs/export?${params}`, '_blank')
+    window.open(`${apiBase}/admin/orgs/export?${params}`, '_blank')
   }
 
   const handleExportUsers = () => {
-    window.open(`${import.meta.env.VITE_API_URL ?? ''}/admin/users/export`, '_blank')
+    window.open(`${apiBase}/admin/users/export`, '_blank')
   }
 
   useEffect(() => {
+    // Data-fetch on tab change. The store fetchers set loading/result state; this
+    // is the standard data-fetching effect, not a render-sync cascade.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional data fetch on tab switch
     if (tab === 'overview') fetchStats()
     if (tab === 'orgs') fetchOrgs(0)
     if (tab === 'users') fetchUsers(0)

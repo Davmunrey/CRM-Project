@@ -56,7 +56,12 @@
         "POSTGRES_PASSWORD":      { "secret": true,  "generate": false, "label": "DB Password (shared with postgres)" },
         "JWT_SECRET":             { "secret": true,  "generate": true,  "label": "JWT Secret" },
         "TOKEN_ENCRYPTION_KEY":   { "secret": true,  "generate": true,  "label": "Encryption Key" },
-        "DEBUG_TOKEN":            { "secret": true,  "generate": true,  "label": "Debug Token" }
+        "DEBUG_TOKEN":            { "secret": true,  "generate": true,  "label": "Debug Token" },
+        "GEMINI_API_KEY":         { "secret": true,  "generate": false, "label": "Google Gemini API Key (free — enables AI assistant)", "default": "" },
+        "OPENAI_API_KEY":         { "secret": true,  "generate": false, "label": "OpenAI API Key (optional AI provider)", "default": "" },
+        "ANTHROPIC_API_KEY":      { "secret": true,  "generate": false, "label": "Anthropic API Key (optional AI provider)", "default": "" },
+        "AI_DEFAULT_PROVIDER":    { "secret": false, "generate": false, "label": "Default AI provider", "default": "gemini" },
+        "TRUST_PROXY":            { "secret": false, "generate": false, "label": "Trusted proxy hops (platform edge + nginx = 2)", "default": "2" }
       },
       "healthcheck": {
         "test": ["CMD", "wget", "-qO-", "http://localhost:3001/health"],

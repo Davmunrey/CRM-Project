@@ -121,8 +121,10 @@ export const useDealsStore = create<DealsState>()(
           set((s) => ({ deals: s.deals.map((d) => d.id === id ? mapDeal(real as unknown as Record<string, unknown>) : d) }))
         },
         (err: unknown) => {
+          // Roll back the optimistic deal so no phantom row with a temp id
+          // (which would 404 on later patch/move/delete) lingers in the board.
           const message = getErrorMessage(err)
-          set({ error: message })
+          set((s) => ({ deals: s.deals.filter((d) => d.id !== id), error: message }))
           toast.error(`${message}. ${getTranslations().dealSync.dealSavedRetrySuffix}`)
         },
       )

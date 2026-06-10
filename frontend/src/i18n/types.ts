@@ -1962,4 +1962,33 @@ export interface Translations {
     ctaButton: string
     footerTagline: string
   }
+  ai: {
+    assistantTitle: string
+    assistantPlaceholder: string
+    send: string
+    thinking: string
+    newChat: string
+    allowActions: string
+    allowActionsHint: string
+    notConfigured: string
+    notConfiguredHint: string
+    emptyState: string
+    usedTools: string
+    poweredBy: string
+    maxStepsNote: string
+    openAssistant: string
+    close: string
+    copy: string
+    copied: string
+    useDraft: string
+    summarize: string
+    summarizing: string
+    summaryTitle: string
+    draft: string
+    drafting: string
+    draftTitle: string
+    nextBestAction: string
+    analyzing: string
+    nextBestActionTitle: string
+  }
 }

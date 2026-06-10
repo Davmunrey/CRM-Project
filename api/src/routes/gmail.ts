@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { db } from '../db/client.js'
 import { env } from '../config/env.js'
 import { encryptToken, decryptToken } from '../services/tokenCipher.js'
+import { storeOAuthState, consumeOAuthState } from '../db/redis.js'
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const GOOGLE_REVOKE_URL = 'https://oauth2.googleapis.com/revoke'
@@ -93,6 +94,14 @@ export async function gmailRoutes(app: FastifyInstance) {
 
     // Always generate a state nonce if client didn't provide one
     const state = body.data.state ?? randomBytes(16).toString('hex')
+    // Bind the state to the user who started the flow so oauth-exchange can reject
+    // a CSRF/token-injection attempt (an attacker's state maps to the attacker,
+    // not the victim). Best-effort: a Redis hiccup must not block starting OAuth.
+    try {
+      await storeOAuthState(state, req.user.sub)
+    } catch (err) {
+      req.log.warn({ err: String(err) }, '[gmail] failed to persist oauth state')
+    }
     const scopes = scopesForBundle(body.data.bundle)
 
     const params = new URLSearchParams({
@@ -119,9 +128,24 @@ export async function gmailRoutes(app: FastifyInstance) {
       code: z.string(),
       redirect_uri: z.string().url(),
       code_verifier: z.string(),
+      state: z.string().optional(),
     }).safeParse(req.body)
     if (!body.success) return reply.code(400).send({ error: 'code, redirect_uri and code_verifier are required' })
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })
+
+    // CSRF / token-injection guard: if the client returns a state nonce, it must
+    // have been issued to THIS user at oauth-start. A mismatch means the code was
+    // minted under a different identity (login-CSRF) — reject before storing tokens.
+    if (body.data.state) {
+      try {
+        const owner = await consumeOAuthState(body.data.state)
+        if (owner && owner !== req.user.sub) {
+          return reply.code(403).send({ error: 'OAuth state mismatch' })
+        }
+      } catch (err) {
+        req.log.warn({ err: String(err) }, '[gmail] oauth state check failed')
+      }
+    }
 
     const params: Record<string, string> = {
       client_id: env.GOOGLE_CLIENT_ID,

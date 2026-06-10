@@ -93,8 +93,10 @@ export const useContactsStore = create<ContactsState>()(
           set((s) => ({ contacts: s.contacts.map((c) => c.id === tempId ? mapContactFromRow(real as unknown as Record<string, unknown>) : c) }))
         },
         (err: unknown) => {
+          // Roll back the optimistic insert so no phantom row with a temp id
+          // (which would 404 on later edit/delete) lingers in the list.
           const message = getErrorMessage(err)
-          set({ error: message })
+          set((s) => ({ contacts: s.contacts.filter((c) => c.id !== tempId), error: message }))
           toast.error(message)
         },
       )

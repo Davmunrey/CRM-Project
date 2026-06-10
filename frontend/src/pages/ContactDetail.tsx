@@ -14,6 +14,8 @@ import { Avatar } from '../components/ui/Avatar'
 import { Badge, type BadgeVariant } from '../components/ui/Badge'
 import { Button } from '../components/ui/Button'
 import { SlideOver } from '../components/ui/Modal'
+import { AiInsight } from '../components/ai/AiInsight'
+import { useAiStore } from '../store/aiStore'
 import { ContactForm } from '../components/contacts/ContactForm'
 import { ContactStatusBadge } from '../components/contacts/ContactStatusBadge'
 import { ActivityItem } from '../components/activities/ActivityItem'
@@ -205,7 +207,13 @@ export function ContactDetail() {
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
+                <AiInsight
+                  label={t.ai.nextBestAction}
+                  loadingLabel={t.ai.analyzing}
+                  resultTitle={t.ai.nextBestActionTitle}
+                  run={() => useAiStore.getState().nextBestAction({ contactId: displayContact.id })}
+                />
                 <PermissionGate permission="contacts:update">
                   <Button variant="secondary" size="sm" leftIcon={<Edit2 size={14} />} onClick={() => setIsEditOpen(true)}>
                     {t.common.edit}

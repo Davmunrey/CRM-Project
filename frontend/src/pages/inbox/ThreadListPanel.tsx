@@ -134,6 +134,10 @@ export function ThreadListPanel({
   const { inboxViews } = useViewsStore()
 
   const threadListScrollRef = useRef<HTMLDivElement>(null)
+  // TanStack Virtual returns non-memoizable functions by design; the React
+  // Compiler correctly skips memoizing this hook. Safe here — its output is
+  // consumed locally, not passed into other memoized components.
+  // eslint-disable-next-line react-hooks/incompatible-library -- TanStack Virtual is intentionally not compiler-memoizable
   const inboxThreadVirtualizer = useVirtualizer({
     count: folder === 'inbox' ? inboxThreadsVisible.length : 0,
     getScrollElement: () => threadListScrollRef.current,

@@ -13,11 +13,6 @@ vi.mock('../../src/lib/api', () => ({
   TOKEN_KEY: 'velo_token',
 }))
 
-vi.mock('../../src/lib/supabase', () => ({
-  isSupabaseConfigured: false,
-  isBootstrapFatalError: false,
-  supabase: null,
-}))
 
 vi.mock('../../src/store/authStore', () => ({
   useAuthStore: {

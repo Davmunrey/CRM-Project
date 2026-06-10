@@ -123,10 +123,19 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      # AI / agentic features — Gemini is the free default; any one key enables it.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_DEFAULT_PROVIDER: ${AI_DEFAULT_PROVIDER:-gemini}
+      # Trusted proxy hops for client-IP resolution (nginx only = 1).
+      TRUST_PROXY: ${TRUST_PROXY:-1}
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:?TOKEN_ENCRYPTION_KEY must be set}
     ports:
-      - "3001:3001"
+      # Bind to loopback only — nginx reaches the API over the compose network
+      # (api:3001). This prevents external clients from bypassing nginx (and its
+      # rate-limit zone) by hitting the API port directly on the host.
+      - "127.0.0.1:3001:3001"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3001/health || exit 1"]
       interval: 30s

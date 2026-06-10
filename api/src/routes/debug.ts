@@ -107,7 +107,17 @@ export async function debugRoutes(app: FastifyInstance): Promise<void> {
     }
     req.log.warn({ sql: sql.slice(0, 200), allowWrites }, '[debug] /_debug/sql executing')
     try {
-      const rows = await db.unsafe(sql)
+      if (allowWrites) {
+        const rows = await db.unsafe(sql)
+        return { rowCount: Array.isArray(rows) ? rows.length : 0, rows }
+      }
+      // Enforce read-only at the DB level rather than trusting the keyword
+      // blacklist above (which CTE writes / functions / comments can bypass).
+      // Any write inside a READ ONLY transaction is rejected by Postgres.
+      const rows = await db.begin(async (tx) => {
+        await tx.unsafe('SET TRANSACTION READ ONLY')
+        return tx.unsafe(sql)
+      })
       return { rowCount: Array.isArray(rows) ? rows.length : 0, rows }
     } catch (err) {
       return reply.code(400).send({ error: 'Query failed', detail: String(err) })

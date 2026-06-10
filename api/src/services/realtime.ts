@@ -5,6 +5,7 @@ import type { Server, Socket } from 'socket.io'
 import { env } from '../config/env.js'
 import { COOKIE_NAME } from './cookieAuth.js'
 import { isTokenDenied, getUserTokensValidAfter } from '../db/redis.js'
+import { db } from '../db/client.js'
 
 interface JwtPayload {
   sub: string
@@ -124,6 +125,21 @@ export async function registerRealtimeHandlers(io: Server): Promise<void> {
 
     const orgId = payload.org
     if (!orgId) return next(new Error('No organization'))
+
+    // Verify the user still exists, is active, and still belongs to the claimed
+    // org — mirrors the HTTP auth middleware. Without this, a deactivated or
+    // org-removed user keeps receiving org db:change / presence events until
+    // their JWT expires (up to 7 days).
+    try {
+      const rows = await db`
+        SELECT 1 FROM users
+        WHERE id = ${payload.sub} AND organization_id = ${orgId} AND is_active = true
+        LIMIT 1
+      `
+      if (rows.length === 0) return next(new Error('Unauthorized'))
+    } catch {
+      return next(new Error('Unauthorized'))
+    }
 
     socket.data['orgId'] = orgId
     socket.data['userId'] = payload.sub

@@ -38,3 +38,22 @@ export async function getUserTokensValidAfter(userId: string): Promise<number | 
   const val = await redis.get(`${VALID_AFTER_PREFIX}${userId}`)
   return val !== null ? parseInt(val, 10) : null
 }
+
+const OAUTH_STATE_PREFIX = 'oauth:gmail:state:'
+
+/** Bind a Gmail OAuth `state` nonce to the user who started the flow (10-min TTL). */
+export async function storeOAuthState(state: string, userId: string): Promise<void> {
+  await redis.set(`${OAUTH_STATE_PREFIX}${state}`, userId, 'EX', 600)
+}
+
+/**
+ * Consume a Gmail OAuth `state` nonce. Returns the userId that started the flow,
+ * or null if the state is unknown/expired. One-time use (deleted on read) so a
+ * captured state cannot be replayed.
+ */
+export async function consumeOAuthState(state: string): Promise<string | null> {
+  const key = `${OAUTH_STATE_PREFIX}${state}`
+  const userId = await redis.get(key)
+  if (userId !== null) await redis.del(key)
+  return userId
+}

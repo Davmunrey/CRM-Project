@@ -16,11 +16,6 @@ vi.mock('../../src/services/gmailService', () => ({
   sendGmailEmail: vi.fn(),
 }))
 
-vi.mock('../../src/lib/supabase', () => ({
-  supabase: null,
-  isSupabaseConfigured: false,
-  isBootstrapFatalError: false,
-}))
 
 vi.mock('../../src/lib/supabaseHelpers', () => ({
   getOrgId: vi.fn(),

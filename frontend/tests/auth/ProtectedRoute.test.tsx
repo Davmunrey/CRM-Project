@@ -4,11 +4,6 @@ import { ProtectedRoute } from '../../src/components/auth/ProtectedRoute'
 import { useAuthStore } from '../../src/store/authStore'
 import { TestRouter } from '../utils/TestRouter'
 
-vi.mock('../../src/lib/supabase', () => ({
-  supabase: null,
-  isSupabaseConfigured: false,
-  isBootstrapFatalError: false,
-}))
 
 // Mock hasPermission to always return true (permission logic not under test here)
 vi.mock('../../src/utils/permissions', () => ({

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useTranslations } from '../../i18n'
@@ -10,10 +10,13 @@ export function BrandingSection() {
   const t = useTranslations()
   const { settings, updateBranding } = useSettingsStore()
   const [brandingDraft, setBrandingDraft] = useState(settings.branding)
-
-  useEffect(() => {
+  // Reset the local draft when the stored branding changes. Adjust-state-during-render
+  // (React's documented pattern) instead of a setState-in-effect cascade.
+  const [syncedBranding, setSyncedBranding] = useState(settings.branding)
+  if (settings.branding !== syncedBranding) {
+    setSyncedBranding(settings.branding)
     setBrandingDraft(settings.branding)
-  }, [settings.branding])
+  }
 
   const handleSaveBranding = () => {
     const merged = {

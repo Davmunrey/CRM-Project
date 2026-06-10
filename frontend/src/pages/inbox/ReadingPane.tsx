@@ -227,6 +227,7 @@ export function ReadingPane({
               )}
               {selectedEmail && folder !== 'snoozed' && folder !== 'drafts' && !threadInlineReply && (
                 <div className="px-3 py-2 border-t border-fg/6">
+                  {/* eslint-disable-next-line react-hooks/purity -- display-only undo-window check; one-render staleness of the Undo button is harmless */}
                   {folder === 'scheduled' && selectedEmail.undoableUntil && new Date(selectedEmail.undoableUntil).getTime() > Date.now() && (
                     <button type="button"
                       onClick={() => {

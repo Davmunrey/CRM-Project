@@ -44,8 +44,28 @@ const schema = z.object({
   STRIPE_SUCCESS_URL: z.string().url().optional(),
   STRIPE_CANCEL_URL: z.string().url().optional(),
 
-  // Anthropic (AI orchestrator)
+  // ───────────────────────────────────────────────────────────────────────
+  // AI / Agentic features — multi-provider. Gemini is the free default.
+  // Each provider activates only when its key is present; the AI features
+  // degrade gracefully (GET /ai/status reports `enabled: false`) when none
+  // is configured. AI_DEFAULT_PROVIDER picks which configured provider to use
+  // unless an org overrides it in organizations.settings.ai.provider.
+  // ───────────────────────────────────────────────────────────────────────
+  // Google Gemini — https://aistudio.google.com/apikey (generous free tier)
+  GEMINI_API_KEY: z.string().optional(),
+  // OpenAI — https://platform.openai.com/api-keys
+  OPENAI_API_KEY: z.string().optional(),
+  // Anthropic (also used by the legacy AI orchestrator)
   ANTHROPIC_API_KEY: z.string().optional(),
+  // Default provider when an org hasn't pinned one. Falls back to whichever
+  // provider has a key if the chosen one is unconfigured.
+  AI_DEFAULT_PROVIDER: z.enum(['gemini', 'openai', 'anthropic']).default('gemini'),
+  // Optional per-provider model overrides (sensible defaults baked into code).
+  AI_GEMINI_MODEL: z.string().optional(),
+  AI_OPENAI_MODEL: z.string().optional(),
+  AI_ANTHROPIC_MODEL: z.string().optional(),
+  // Hard ceiling on tool-call rounds in the agent loop (safety guardrail).
+  AI_AGENT_MAX_STEPS: z.coerce.number().min(1).max(20).default(8),
 
   // Encryption key for stored OAuth tokens (openssl rand -hex 32)
   TOKEN_ENCRYPTION_KEY: z.string().min(32).optional(),
@@ -58,6 +78,14 @@ const schema = z.object({
   // Internal operational key — gates POST /internal/* routes (e.g. sequence runner trigger).
   // Set to a random secret (>=16 chars). When unset, all /internal/* calls return 503.
   INTERNAL_KEY: z.string().min(16).optional(),
+
+  // Number of trusted reverse-proxy hops in front of the API, used to resolve the
+  // real client IP from X-Forwarded-For for rate limiting. Must match the real
+  // topology: too high lets clients spoof their IP (rotate XFF to defeat the
+  // auth-route limiter); too low collapses all clients onto the proxy IP.
+  //   docker-compose (nginx only) = 1   ·   privateprompt (edge + nginx) = 2
+  //   0 disables proxy trust (direct exposure / tests).
+  TRUST_PROXY: z.coerce.number().int().min(0).max(8).default(1),
 })
 
 const stripped = Object.fromEntries(

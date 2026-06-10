@@ -1,10 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../src/lib/supabase', () => ({
-  supabase: null,
-  isSupabaseConfigured: false,
-  isBootstrapFatalError: false,
-}))
 
 describe('email provider resolver', () => {
   afterEach(() => {

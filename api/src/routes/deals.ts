@@ -4,6 +4,24 @@ import { db } from '../db/client.js'
 import { sendSlackNotification } from './slack.js'
 import { checkPlanLimit } from './billing.js'
 
+/**
+ * Verify a foreign-key id belongs to the caller's org before linking it to a
+ * deal. Prevents cross-tenant FK injection (linking a deal to another org's
+ * contact/company/pipeline/user, which would leak the joined fields).
+ * The table name is a hard-coded literal, never user input.
+ */
+async function ownedInOrg(
+  table: 'contacts' | 'companies' | 'pipelines' | 'users',
+  id: string,
+  orgId: string,
+): Promise<boolean> {
+  const rows = await db.unsafe(
+    `SELECT 1 FROM ${table} WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+    [id, orgId],
+  )
+  return rows.length > 0
+}
+
 export async function dealsRoutes(app: FastifyInstance) {
   app.addHook('onRequest', app.authenticate)
 
@@ -55,6 +73,14 @@ export async function dealsRoutes(app: FastifyInstance) {
     if (!body.success) return reply.code(400).send({ error: 'Invalid request' })
 
     const orgId = req.user.org
+
+    // Reject FKs that don't belong to this org (cross-tenant link injection).
+    if (body.data.contactId && !(await ownedInOrg('contacts', body.data.contactId, orgId)))
+      return reply.code(400).send({ error: 'Invalid contactId' })
+    if (body.data.companyId && !(await ownedInOrg('companies', body.data.companyId, orgId)))
+      return reply.code(400).send({ error: 'Invalid companyId' })
+    if (body.data.pipelineId && !(await ownedInOrg('pipelines', body.data.pipelineId, orgId)))
+      return reply.code(400).send({ error: 'Invalid pipelineId' })
 
     const dealLimit = await checkPlanLimit(orgId, 'deals')
     if (!dealLimit.allowed) {
@@ -136,6 +162,17 @@ export async function dealsRoutes(app: FastifyInstance) {
     if (!body.success) return reply.code(400).send({ error: 'Invalid request', details: body.error.flatten() })
 
     const d = body.data
+
+    // Reject FKs that don't belong to this org (cross-tenant link injection).
+    if (d.contactId && !(await ownedInOrg('contacts', d.contactId, orgId)))
+      return reply.code(400).send({ error: 'Invalid contactId' })
+    if (d.companyId && !(await ownedInOrg('companies', d.companyId, orgId)))
+      return reply.code(400).send({ error: 'Invalid companyId' })
+    if (d.pipelineId && !(await ownedInOrg('pipelines', d.pipelineId, orgId)))
+      return reply.code(400).send({ error: 'Invalid pipelineId' })
+    if (d.assignedTo && !(await ownedInOrg('users', d.assignedTo, orgId)))
+      return reply.code(400).send({ error: 'Invalid assignedTo' })
+
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
     if (d.title !== undefined) updates.title = d.title
     if (d.value !== undefined) updates.value = d.value

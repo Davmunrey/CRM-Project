@@ -13,11 +13,6 @@ vi.mock('../../src/lib/api', async (importOriginal) => {
   return { ...actual, api: { ...actual.api, post: mockApiPost } }
 })
 
-vi.mock('../../src/lib/supabase', () => ({
-  supabase: null,
-  isSupabaseConfigured: true,
-  isBootstrapFatalError: false,
-}))
 
 vi.mock('react-router-dom', async (importOriginal) => {
   const actual = await importOriginal<typeof import('react-router-dom')>()

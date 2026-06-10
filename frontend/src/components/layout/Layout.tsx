@@ -1,11 +1,14 @@
 import type { ReactNode } from 'react'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { ToastContainer } from '../ui/Toast'
 import { CommandPalette } from './CommandPalette'
+import { AiAssistant } from '../ai/AiAssistant'
 import { useAuthStore } from '../../store/authStore'
+import { useAiStore } from '../../store/aiStore'
 import { toast } from '../../store/toastStore'
 import { useTranslations } from '../../i18n'
 import { EnvironmentBanner } from './EnvironmentBanner'
@@ -21,6 +24,7 @@ export function Layout({ children, title }: LayoutProps) {
   const [cmdOpen, setCmdOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const navigate = useNavigate()
+  const openAssistant = useAiStore((s) => s.openAssistant)
   const sessionCheckRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Session expiry check every 60 seconds
@@ -52,6 +56,11 @@ export function Layout({ children, title }: LayoutProps) {
     }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
+  }, [])
+
+  // Probe AI availability once so AI actions can show/hide app-wide.
+  useEffect(() => {
+    void useAiStore.getState().fetchStatus()
   }, [])
 
   useEffect(() => {
@@ -122,6 +131,16 @@ export function Layout({ children, title }: LayoutProps) {
           {children}
         </main>
       </div>
+      <button
+        type="button"
+        onClick={openAssistant}
+        aria-label={t.ai.openAssistant}
+        title={t.ai.assistantTitle}
+        className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full btn-gradient text-fg shadow-float focus-ring"
+      >
+        <Sparkles size={20} aria-hidden />
+      </button>
+      <AiAssistant />
       <ToastContainer />
       <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />
       </div>

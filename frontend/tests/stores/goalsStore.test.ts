@@ -15,11 +15,6 @@ vi.mock('../../src/lib/api', async (importOriginal) => {
   }
 })
 
-vi.mock('../../src/lib/supabase', () => ({
-  isSupabaseConfigured: false,
-  isBootstrapFatalError: false,
-  supabase: null,
-}))
 
 describe('goalsStore', () => {
   beforeEach(() => {

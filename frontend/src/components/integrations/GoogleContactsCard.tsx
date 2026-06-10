@@ -136,7 +136,7 @@ export function GoogleContactsCard() {
 
       {!hasContactsScope && isGoogleConnected && (
         <p className="text-xs text-fg-muted">
-          Your Google account is connected but the Contacts permission is not enabled. Click "Enable Contacts" to re-authorize with the additional permission.
+          Your Google account is connected but the Contacts permission is not enabled. Click &quot;Enable Contacts&quot; to re-authorize with the additional permission.
         </p>
       )}
 
