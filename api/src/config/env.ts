@@ -74,6 +74,14 @@ const schema = z.object({
   AI_ANTHROPIC_MODEL: z.string().optional(),
   // Hard ceiling on tool-call rounds in the agent loop (safety guardrail).
   AI_AGENT_MAX_STEPS: z.coerce.number().min(1).max(20).default(8),
+  // Per-org monthly output-token spend cap. 0 = unlimited. An org can set a
+  // lower cap in organizations.settings.ai.monthlyTokenCap. Prevents a runaway
+  // or abusive tenant from burning unbounded cost on a shared provider key.
+  AI_MONTHLY_TOKEN_CAP: z.coerce.number().min(0).default(0),
+  // Retention for AI conversations/messages/usage. 0 = keep forever. When > 0,
+  // a periodic purge deletes ai_messages/ai_conversations/ai_usage_log older
+  // than N days (PII-bearing transcripts should not persist indefinitely).
+  AI_MESSAGE_RETENTION_DAYS: z.coerce.number().min(0).default(0),
 
   // Encryption key for stored OAuth tokens (openssl rand -hex 32)
   TOKEN_ENCRYPTION_KEY: z.string().min(32).optional(),

@@ -50,6 +50,7 @@ import { internalRoutes } from './routes/internal.js'
 import { aiRoutes } from './routes/ai.js'
 import { authMiddleware } from './middleware/auth.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
+import { startAiRetention, stopAiRetention } from './services/ai/retention.js'
 import { registerRealtimeHandlers, broadcastDbChange } from './services/realtime.js'
 import {
   metricsRegistry,
@@ -363,9 +364,13 @@ try {
   // Start the background sequence runner after the server is up and DB is ready.
   startSequenceRunner()
 
-  // Graceful shutdown — stop the runner before the process exits.
+  // Start the AI data-retention purge (no-op unless AI_MESSAGE_RETENTION_DAYS > 0).
+  startAiRetention(app.log)
+
+  // Graceful shutdown — stop background work before the process exits.
   const shutdown = (): void => {
     stopSequenceRunner()
+    stopAiRetention()
   }
   process.once('SIGTERM', shutdown)
   process.once('SIGINT', shutdown)

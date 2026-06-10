@@ -31,21 +31,62 @@ import { getTool, toolDefs, type ToolContext } from '../services/ai/tools.js'
 // AI calls are expensive — cap at 30/min per org (the global default is 500/min).
 const AI_RATE_LIMIT = { max: 30, timeWindow: '1 minute' }
 
-/** Read an org's pinned AI provider from organizations.settings.ai.provider. */
-async function orgProviderPreference(orgId: string): Promise<string | null> {
-  const rows = await db`SELECT settings FROM organizations WHERE id = ${orgId} LIMIT 1`
-  const settings = rows[0]?.['settings'] as { ai?: { provider?: string } } | undefined
-  return settings?.ai?.provider ?? null
+interface OrgAiSettings {
+  provider: string | null
+  /** Per-tenant kill switch. Undefined/true = on; explicit false = off. */
+  enabled: boolean
+  /** Per-org monthly output-token cap; falls back to env AI_MONTHLY_TOKEN_CAP. */
+  monthlyTokenCap: number
 }
 
-/** Resolve a provider for this org, or send 503 and return null. */
+/** Read an org's AI governance settings from organizations.settings.ai.* */
+async function orgAiSettings(orgId: string): Promise<OrgAiSettings> {
+  const rows = await db`SELECT settings FROM organizations WHERE id = ${orgId} LIMIT 1`
+  const ai = (rows[0]?.['settings'] as { ai?: { provider?: string; enabled?: boolean; monthlyTokenCap?: number } } | undefined)?.ai
+  const orgCap = typeof ai?.monthlyTokenCap === 'number' ? ai.monthlyTokenCap : 0
+  return {
+    provider: ai?.provider ?? null,
+    enabled: ai?.enabled !== false,
+    // Use the stricter (non-zero, smaller) of the env cap and the per-org cap.
+    monthlyTokenCap:
+      orgCap > 0 && env.AI_MONTHLY_TOKEN_CAP > 0
+        ? Math.min(orgCap, env.AI_MONTHLY_TOKEN_CAP)
+        : orgCap || env.AI_MONTHLY_TOKEN_CAP,
+  }
+}
+
+/** Sum output tokens this org has used in the current calendar month. */
+async function monthlyTokensUsed(orgId: string): Promise<number> {
+  const rows = await db`
+    SELECT COALESCE(SUM(output_tokens), 0)::bigint AS used
+    FROM ai_usage_log
+    WHERE organization_id = ${orgId} AND created_at >= date_trunc('month', now())
+  `
+  return Number(rows[0]?.['used'] ?? 0)
+}
+
+/**
+ * Resolve a provider for this org, enforcing the per-tenant kill switch and the
+ * monthly token spend cap. Sends the appropriate 503/429 and returns null on failure.
+ */
 async function getProviderOr503(orgId: string, reply: FastifyReply): Promise<AiProvider | null> {
   if (!isAiConfigured()) {
     reply.code(503).send({ error: 'AI is not configured. Set GEMINI_API_KEY (free) or another provider key.' })
     return null
   }
-  const preferred = await orgProviderPreference(orgId)
-  const provider = resolveProvider(preferred)
+  const settings = await orgAiSettings(orgId)
+  if (!settings.enabled) {
+    reply.code(503).send({ error: 'AI features are disabled for this organization.' })
+    return null
+  }
+  if (settings.monthlyTokenCap > 0) {
+    const used = await monthlyTokensUsed(orgId)
+    if (used >= settings.monthlyTokenCap) {
+      reply.code(429).send({ error: 'Monthly AI usage limit reached for this organization.' })
+      return null
+    }
+  }
+  const provider = resolveProvider(settings.provider)
   if (!provider) {
     reply.code(503).send({ error: 'No AI provider available' })
     return null
@@ -85,9 +126,12 @@ export async function aiRoutes(app: FastifyInstance) {
   const auth = { onRequest: [app.authenticate], config: { rateLimit: AI_RATE_LIMIT } }
 
   // ── Status (no provider required) ──────────────────────────────────────────
-  app.get('/status', { onRequest: [app.authenticate] }, async () => {
+  app.get('/status', { onRequest: [app.authenticate] }, async (req) => {
     const providers = availableProviders()
-    const enabled = providers.length > 0
+    const configured = providers.length > 0
+    // Honor the per-org kill switch so the UI hides AI when an org disabled it.
+    const orgEnabled = configured ? (await orgAiSettings(req.user.org)).enabled : false
+    const enabled = configured && orgEnabled
     const provider = enabled ? resolveProvider(null) : null
     return {
       enabled,
