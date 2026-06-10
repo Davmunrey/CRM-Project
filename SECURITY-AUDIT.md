@@ -14,6 +14,7 @@ This report covers a gray-box review, the `/security-pen-testing` and
 | Medium   | 4 | 4 | 0 |
 | Low      | 3 | 3 | 0 |
 | Moderate (deps) | 3 | 3 | 0 |
+| Hardening (round 3) | 5 | 5 | 0 |
 
 `npm audit` reports **0 vulnerabilities** on both `api/` and `frontend/` (was 1 critical + several moderate).
 
@@ -21,6 +22,12 @@ This report covers a gray-box review, the `/security-pen-testing` and
 > is now fixed — see [Second pass](#second-hardening-pass-2026-06-10). The HIGH
 > rate-limit/`trustProxy` gap was resolved with a workflow-driven topology recon
 > that produced the exact (env-driven, hop-count) fix.
+>
+> **Hardening round 3 (2026-06-10).** Closed the last preventive/governance gaps —
+> a backend CI quality gate, account lockout, configurable self-registration, AI
+> tenant governance (kill switch + spend cap + retention purge), and removal of an
+> orphan passwordless-DB entrypoint + public Adminer service. See
+> [Hardening round 3](#hardening-round-3-2026-06-10).
 
 ---
 
@@ -108,3 +115,35 @@ Every previously-deferred item is now fixed. A workflow-driven topology recon
 - **Injection-safe SQL:** all tool queries use `postgres.js` tagged templates (parameterized); `db.unsafe` is used only with hard-coded table literals + bound params.
 - **Abuse limits:** AI routes are capped at 30 req/min/org; agent loop bounded by `AI_AGENT_MAX_STEPS` (default 8); message length and history are bounded.
 - **Secrets:** provider keys come from env only; `/ai/status` discloses only provider id/model to authenticated org users.
+
+---
+
+## Hardening round 3 (2026-06-10)
+
+These items are preventive/defense-in-depth and governance controls (not newly
+discovered exploitable findings), shipped after the second pass. All are **FIXED**.
+
+### Backend CI quality gate + ESLint → **FIXED**
+- **Was:** the backend had **no** lint/type/test gate — `api/` shipped with 0 automated checks and no ESLint config, so a regression (or an introduced vuln) could merge unnoticed.
+- **Fix:** added an `api` job in `.gitea/workflows/ci.yml` that runs `npm ci → tsc --noEmit → npm run lint (eslint) → vitest run → build → npm audit --audit-level=critical` on every push/PR. The API now has an ESLint flat config and a vitest suite (26 tests; was 0). The frontend `ci`/`security` jobs are unchanged.
+
+### Account lockout on failed logins → **FIXED**
+- **Where:** `api/src/routes/auth.ts` (login) + `api/src/db/redis.ts` (`recordFailedLogin`/`clearFailedLogins`/`isLoginLocked`).
+- **Impact (before):** unlimited password guesses per account enabled brute-force / credential-stuffing within the IP-keyed auth rate limit.
+- **Fix:** a per-account Redis failure counter (`LOGIN_LOCK_THRESHOLD = 10`) over a 15-minute sliding window (`LOGIN_FAIL_WINDOW_SEC = 900`, TTL set on first failure). Once 10 failures accrue the account is locked and login returns **429** until the window expires; a successful auth clears the counter. Complements the existing `{ max: 10, timeWindow: '15 minutes' }` IP-keyed auth rate limit.
+
+### Configurable self-registration → **FIXED**
+- **Where:** `api/src/routes/auth.ts` `/register` + `api/src/config/env.ts`.
+- **Impact (before):** the public `/register` endpoint always created a new admin account, so anyone could self-provision into an otherwise-private deployment.
+- **Fix:** registration policy is now env-driven. `ALLOW_OPEN_REGISTRATION` (default `true`) gates self-signup; `REGISTRATION_ALLOWED_DOMAINS` is an optional comma-separated email-domain allow-list (invite-only / enterprise lockdown). The **very first user** is always allowed so a fresh install can bootstrap; after that, a disabled policy returns **403** and an off-list domain returns **403**.
+
+### AI tenant governance (kill switch + spend cap + retention) → **FIXED**
+- **Where:** `api/src/routes/ai.ts` (`orgAiSettings` / provider-resolution guard), `api/src/services/ai/retention.ts`, `api/src/index.ts`, `api/src/config/env.ts`.
+- **Per-tenant kill switch:** `organizations.settings.ai.enabled = false` disables AI for that org — the resolver short-circuits and the frontend hides AI (`/ai/status` reports it as off). Undefined/true = on.
+- **Monthly output-token spend cap:** enforced from `env.AI_MONTHLY_TOKEN_CAP` and/or the per-org `settings.ai.monthlyTokenCap` (the smaller of the two when both are set). When this month's usage meets the cap the provider call is rejected with **429** before any spend is incurred.
+- **Retention purge:** `AI_MESSAGE_RETENTION_DAYS` (`0` = keep forever) drives a scheduled purge of `ai_messages` / related `ai_*` rows past the retention window, bounding stored prompt/response data.
+
+### Removed orphan passwordless-DB trust entrypoint + public Adminer service → **FIXED**
+- **Where:** `docker-compose.yml` (and `pg_hba`-style config it referenced).
+- **Impact (before):** an unused/orphan entrypoint trusted DB connections without a password (`trust` auth) and a publicly reachable Adminer container exposed a direct DB admin console — either could have given an attacker unauthenticated database access if reachable.
+- **Fix:** both were removed from the compose topology. The remaining `TRUST_PROXY` env in `docker-compose.yml` is the unrelated client-IP hop-count setting from round 2, not DB trust auth. Verified absent: no `adminer`, `pg_hba`, or `POSTGRES_HOST_AUTH_METHOD=trust` remains.

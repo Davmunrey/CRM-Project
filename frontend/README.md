@@ -15,15 +15,15 @@ velo-crm/
 
 ```
 Browser (React SPA)
-  └─ api  (Fastify 5, Node 22, PostgreSQL 16, Redis, Socket.io)
-       ├─ REST API  — /auth /contacts /deals /companies /activities ...
-       ├─ Realtime  — Socket.io, org-scoped rooms, JWT-verified middleware
-       └─ Background — BullMQ jobs on Redis
+  └─ api  (Fastify 5, Node 22, PostgreSQL 16 via PgBouncer, Redis, Socket.io)
+       ├─ REST API  — /auth /contacts /deals /companies /activities /ai ...
+       ├─ Realtime  — Socket.io, org-scoped rooms, JWT-verified handshake
+       └─ AI         — multi-provider (Gemini / OpenAI / Anthropic) + tool-using agent
 ```
 
-Auth: HS256 JWT (`sub/org/role/jti`). Every request carries `Authorization: Bearer <token>`. On 401: clear token, redirect `/login`.
+Auth: HS256 JWT carried in an **HttpOnly `auth_token` cookie** — the SPA never reads the token. Every API call sets `credentials: 'include'`; the Socket.io handshake uses `withCredentials`. On 401 the store resets and the app redirects to `/login`.
 
-Data: all Zustand stores are API-backed (optimistic UI + rollback). No Supabase PostgREST — direct Fastify routes scope every query by `organization_id` from JWT.
+Data: all Zustand stores are API-backed (optimistic UI + rollback). There is **no Supabase** — the app talks only to the Fastify API at `/api`, and every route scopes its query by `organization_id` from the JWT. (`src/lib/supabaseHelpers.ts` is a legacy-named thin wrapper over the API client — kept for its `getErrorMessage` helper.)
 
 Realtime: Socket.io from the same `api/` process; frontend subscribes to `__n0crmDbChange(table)` events for contacts, deals, activities, notifications.
 
@@ -51,6 +51,23 @@ Realtime: Socket.io from the same `api/` process; frontend subscribes to `__n0cr
 | Audit Log | Org activity trail |
 | Settings | Team management, SMTP, Google OAuth integration guide, API keys, webhooks, language (en/es/pt/fr/de/it) |
 | Notifications | In-app feed, mark-read, bulk clear |
+| AI Assistant | Global drawer + floating launcher (tool-using agent); inline AI actions — next-best-action on Contact/Deal detail, thread summarize + draft-reply in the Inbox |
+
+---
+
+## AI Assistant
+
+The AI features activate automatically when the API has at least one provider key configured (Gemini is the free default; OpenAI and Anthropic are also supported). When no provider is available — or the org has AI disabled — every AI surface hides itself, so the UI degrades gracefully.
+
+| Surface | What it does |
+|---------|-------------|
+| AI drawer (`AiAssistant`) | Mounted once in the app shell; a tool-using chat backed by `/ai/agent` with persisted conversations. An `allowWrites` toggle lets the agent create activities / move deal stages (org-scoped, audit-logged). |
+| Floating launcher | A `Sparkles` button in the layout that opens the drawer (`aiStore.openAssistant`). |
+| `AiInsight` button | A self-contained "run an AI action and render the result inline" control with copy / use / dismiss. Renders nothing when AI is disabled, so callers drop it in unconditionally. |
+| Next-best-action | `AiInsight` on Contact detail and the Deal panel → `/ai/next-best-action`. |
+| Summarize / Draft reply | Two `AiInsight` buttons in the Inbox thread view → `/ai/summarize` and `/ai/draft-reply`. |
+
+State lives in `src/store/aiStore.ts`; all labels are fully translated across the six locales.
 
 ---
 
@@ -102,11 +119,12 @@ docker-compose up -d
 
 ## Environment Variables
 
+The frontend needs only two env vars (everything else — Google OAuth, AI keys, SMTP — lives on the API).
+
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VITE_API_URL` | `/api` | API base URL. Local dev: `http://localhost:3001`. Docker: omit (nginx proxies `/api/*`) |
 | `VITE_APP_CHANNEL` | `development` | Build channel — `production` or `staging` for deployed builds |
-| `VITE_GOOGLE_CLIENT_ID` | — | Gmail OAuth (optional) |
 
 ---
 
@@ -139,12 +157,13 @@ src/
 │   ├── companies/    # CompanyForm
 │   ├── deals/        # DealCard, DealForm, KanbanColumn
 │   ├── activities/   # ActivityForm, ActivityItem
+│   ├── ai/           # AiAssistant (drawer), AiInsight (inline action)
 │   └── shared/       # SearchBar, EmptyState, SmartViewBar, EntityListsToolbar
 ├── pages/            # Route containers
-├── store/            # Zustand stores (API-backed, optimistic)
+├── store/            # Zustand stores (API-backed, optimistic) — incl. aiStore
 ├── types/            # TypeScript interfaces
 ├── hooks/            # useLocalStorage, useSearch, useFilters
-├── lib/              # api.ts (fetch client), envChannel, schemas
+├── lib/              # api.ts (cookie-auth fetch client), supabaseHelpers (legacy wrapper), schemas
 ├── i18n/             # en/es/pt/fr/de/it translation catalogs
 └── utils/            # formatters, constants, lead scoring, health engine
 ```
@@ -153,39 +172,45 @@ src/
 
 ## Auth Flow
 
+The JWT lives in an HttpOnly `auth_token` cookie set by the API — the SPA never touches the raw token; the browser sends it automatically because every request uses `credentials: 'include'`.
+
 | Step | What happens |
 |------|-------------|
-| Login | `POST /auth/login` → JWT (`sub/org/role/jti`) stored in `localStorage` |
-| Register | `POST /auth/register` → JWT with `org: null` → redirect `/org-setup` |
-| Org setup | `POST /orgs` → new JWT with `org` claim |
-| Invite accept | `GET + POST /invitations/:token` → new JWT |
-| Session restore | On load: read token → `GET /auth/me` → hydrate store |
-| Expiry guard | `enforceTokenExpiry()` runs before every API call — clears token + redirects on expiry |
-| 401 | `clearToken()` + redirect `/login` |
-| Logout | `POST /auth/logout` (revokes `jti` in Redis) + `clearToken()` + reset stores |
+| Login | `POST /auth/login` → API sets the HttpOnly `auth_token` cookie (`sub/org/role/jti`) |
+| Register | `POST /auth/register` → cookie with `org: null` → redirect `/org-setup` |
+| Org setup | `POST /orgs` → API re-issues the cookie with the `org` claim |
+| Invite accept | `GET + POST /invitations/:token` → cookie issued |
+| Session restore | On load: `GET /auth/me` (cookie sent automatically) → hydrate store |
+| 401 | reset stores + redirect `/login` (no client-side token to clear) |
+| Logout | `POST /auth/logout` (revokes `jti` in Redis, clears the cookie) + reset stores |
 | Password reset | `POST /auth/forgot-password` → DB token (1h TTL) → `POST /auth/reset-password` |
 
 ---
 
 ## Quality Gates
 
-Run before pushing:
+The CI `ci` job (`.gitea/workflows/ci.yml`) runs these in order — run them before pushing:
 
 ```bash
 npm run ui:lint          # design token / color guardrails
-npm run i18n:lint        # no bare strings in error handling
+npm run i18n:lint        # no bare user-facing strings in error handling
 npm run i18n:coverage    # all locales match en key paths
-npm run lint:ci          # ESLint on src/
-npx tsc --noEmit
+npm run lint:ci          # ESLint on src/ (lint policy: 0 new warnings)
+npx tsc --noEmit         # strict type check
 npm run test:run         # Vitest
-npm run build
+npm run build            # production build
+npm run bundle:check     # bundle budget — largest gzip JS chunk ≤ 250 KB
 ```
+
+The same workflow also has a dedicated **`api` job** (the backend now has its own gate: `tsc` → `eslint` → `vitest` → `build` → `npm audit`) and a **`security`** job (`npm audit --audit-level=critical`).
 
 ## Scripts
 
 ```bash
 npm run dev              # Vite dev server
 npm run build            # Production build → dist/
+npm run build:analyze    # Build + bundle stats in dist/stats.html
+npm run bundle:check     # Enforce gzip bundle budget
 npm run test             # Vitest watch
 npm run test:run         # Vitest single run
 npm run test:coverage    # Coverage report
@@ -202,4 +227,4 @@ Planning, phases, and requirement checkboxes under `.planning/`.
 
 ---
 
-*Last updated: 2026-05-18*
+*Last updated: 2026-06-10*

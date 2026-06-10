@@ -13,8 +13,8 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 | Pipedrive parity, webhooks/API spec, group killer gaps | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) | Benchmark + v1 webhook acceptance criteria + interview template. |
 | What shipped, in narrative form (Parts A + B) | [`master-implementation-history.md`](./master-implementation-history.md) | Archive-stable Part A; active Part B (sections 13–28). |
 | Go-live, QA matrices, production handoff | [`master-release-qa.md`](./master-release-qa.md) | Especially [Production handoff checklist](master-release-qa.md#production-handoff-checklist). |
-| Auth/SSO contracts, evidence index, Supabase external checklist | [`master-security-compliance.md`](./master-security-compliance.md) | Includes OAuth redirect / CORS reminders. |
-| Lead maintenance jobs, retention, ops | [`master-lead-management.md`](./master-lead-management.md) | Edge function `lead-score-maintenance`, runbooks. |
+| Auth/SSO contracts, evidence index, production hardening checklist | [`master-security-compliance.md`](./master-security-compliance.md) | Includes OAuth redirect / CORS reminders; AI governance + security controls. |
+| Lead maintenance jobs, retention, ops | [`master-lead-management.md`](./master-lead-management.md) | Lead-score maintenance runs in the `api/` background queue; runbooks. |
 | Resend/DNS, mailbox privacy, email smoke | [`master-email-operations.md`](./master-email-operations.md) | Deliverability + release gates for mail. |
 | Layout shells, navigation, profile display names | [`master-design-ui.md`](./master-design-ui.md) | UI conventions for new screens. |
 
@@ -28,7 +28,7 @@ This file **bridges** the long-form product/engineering docs in `docs/master-*.m
 
 1. **SPA routing** — every client-side route must resolve to the built `index.html` on cold load (configure the static host or reverse proxy accordingly). **Repo examples:** [`vercel.json`](../vercel.json), [`public/_redirects`](../public/_redirects) — explained in [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md).
 2. **Build-time env** — `VITE_APP_CHANNEL` when set is **`production`** or **`staging`** (otherwise inferred from Vite `MODE`; local dev → `development`); `VITE_API_URL` points to n0crm-api. See [`src/lib/envChannel.ts`](../src/lib/envChannel.ts) and [`vite.config.ts`](../vite.config.ts). Canonical copy: [`docs/deployment-spa-and-env.md`](./deployment-spa-and-env.md) and [`.env.example`](../.env.example).
-3. **Preview ↔ API** — set **`VITE_APP_CHANNEL=staging`** on preview builds and point `VITE_API_URL` at a staging n0crm-api instance; optionally set Edge secret **`EDGE_CORS_ORIGINS`** so Supabase Edge Function CORS matches those origins (see [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) · [`master-security-compliance.md` §3](./master-security-compliance.md#supabase-external-hardening-checklist)).
+3. **Preview ↔ API** — set **`VITE_APP_CHANNEL=staging`** on preview builds and point `VITE_API_URL` at a staging n0crm-api instance; set the API's **`CORS_ORIGIN`** (comma-separated exact origins) so the Fastify CORS guard matches those preview/prod origins (see [`deployment-spa-and-env.md`](./deployment-spa-and-env.md) · [`master-security-compliance.md`](./master-security-compliance.md#external-hardening-checklist)).
 4. **Production pipeline** — deploy from protected `main` (or your release branch) with a recorded smoke pass — [`docs/smoke-checklist-production.md`](./smoke-checklist-production.md).
 5. **Custom domain + TLS** — DNS and certificate as required by your provider.
 
@@ -45,26 +45,33 @@ flowchart LR
   Browser[Browser / SPA]
   Nginx[nginx / SPA host]
   API[api/ - Fastify]
+  PgBouncer[PgBouncer]
   Postgres[PostgreSQL 16]
-  Redis[Redis / BullMQ]
+  Redis[Redis]
+  AI[AI providers - Gemini / OpenAI / Anthropic]
   Browser --> Nginx
   Nginx -->|/api/*| API
-  API --> Postgres
+  API --> PgBouncer
+  PgBouncer --> Postgres
   API --> Redis
+  API -.optional.-> AI
 ```
 
-- **Frontend:** `frontend/` — React 18 + Vite + React Router + Zustand; hosted as a static SPA (rewrites to `index.html`). nginx proxies `/api/*` to the API in Docker.
-- **Backend:** `api/` — Fastify 5, Node.js 22, PostgreSQL 16 via `postgres.js`, BullMQ + Redis, Socket.io realtime.
-- **Auth:** HS256 JWT (`sub/org/role` claims), `@fastify/jwt`. `isLoadingAuth` starts `true` — prevents /login flash on cold load. All org-scoped routes check `req.user.org`.
-- **Monorepo:** `velo-crm/` root contains `docker-compose.yml` (orchestrates postgres, redis, api, web) and `privateprompt-app.json` (full-stack deployment manifest).
+- **Frontend:** `frontend/` — React 18 + Vite + React Router + Zustand + Tailwind; hosted as a static SPA (rewrites to `index.html`). Talks **only** to the Fastify API at `/api` with HttpOnly-cookie JWT auth. nginx proxies `/api/*` to the API in Docker. **Supabase has been fully removed** — there is no `@supabase/supabase-js`, no `frontend/supabase/` tree, and no Supabase env. (`src/lib/supabaseHelpers.ts` is a legacy-named thin wrapper over the API client and is still in use — that is fine.)
+- **Backend:** `api/` — Fastify 5, Node.js 22, PostgreSQL 16 via `postgres.js` (through PgBouncer), Redis 7, Socket.io realtime. (BullMQ is declared but **not yet** wired to a real job queue — background work runs on in-process pollers, e.g. the sequence runner; see Enterprise gaps.)
+- **AI / agentic layer:** `api/src/services/ai/*` — multi-provider (Google **Gemini = free default**, OpenAI, Anthropic) behind routes under `/ai`: `status`, `summarize`, `draft-reply`, `next-best-action`, `search`, and a tool-using `agent` with persisted conversations. The agent calls org-scoped CRM tools (search/get contacts, companies, deals; `create_activity`, `update_deal_stage`) gated by `allowWrites` and audit-logged. Migration `018_ai.sql` adds `ai_conversations` / `ai_messages` / `ai_usage_log`. Activates when **any** provider key is set; degrades gracefully (UI hides AI) otherwise.
+- **Auth:** HS256 JWT (`sub/org/role/jti` claims), `@fastify/jwt`, delivered as an HttpOnly cookie. `isLoadingAuth` starts `true` — prevents /login flash on cold load. All org-scoped routes check `req.user.org`.
+- **Monorepo:** root contains `docker-compose.yml` (orchestrates postgres, pgbouncer, redis, api, web) and `privateprompt-app.json` (full-stack deployment manifest).
 
 ---
 
-## Key decisions (rolled up; Apr 2026)
+## Key decisions (rolled up; Jun 2026)
 
-- **Observability (browser):** Sentry initializes when `VITE_SENTRY_DSN` is set; UI error boundary captures exceptions (`src/lib/sentry.ts`).
-- **MFA:** TOTP UI exists in Settings → Security (`src/components/settings/SettingsMfaPanel.tsx`); backend MFA enforcement via `api/` is future work.
-- **Soft delete + retention:** core tables carry `deleted_at`; purge jobs run via BullMQ workers in the `api/` background queue.
+- **AI assistant (shipped):** multi-provider AI in `api/src/services/ai/*` (Gemini free default, OpenAI, Anthropic) behind `/ai` routes. Frontend: a global AI Assistant drawer + floating launcher, `AiInsight` buttons (next-best-action on Contact/Deal detail; summarize + draft reply in the Inbox), `aiStore`, full i18n across all 6 locales. Gated by provider keys.
+- **AI governance (shipped):** per-org kill switch (`organizations.settings.ai.enabled=false`), monthly output-token spend cap (`AI_MONTHLY_TOKEN_CAP` env + per-org `settings.ai.monthlyTokenCap`; returns 429 when exceeded), and retention purge of `ai_*` data (`AI_MESSAGE_RETENTION_DAYS`, `0` = keep).
+- **Observability (browser):** Sentry initializes when `VITE_SENTRY_DSN` is set; UI error boundary captures exceptions (`src/lib/sentry.ts`). Backend error tracking / alerting / SLOs are still roadmap (see Enterprise gaps).
+- **MFA:** TOTP UI exists in Settings → Security (`src/components/settings/SettingsMfaPanel.tsx`); backend MFA enforcement via `api/` is **roadmap** (not implemented).
+- **Soft delete + retention:** core tables carry `deleted_at`; retention/purge work (including AI data) runs in the `api/` background processing path.
 - **Outbound webhooks:** stored in `webhook_subscriptions` table; deliveries are outboxed in `webhook_events` with max retry limit before reaching terminal state.
 - **Public API versioning:** REST public API (`/public/v1/`) with API key auth; see `api/README.md` for endpoints and `docs/public-api-phase1.md` for design.
 - **Org roles:** custom roles logic can be extended via `api/src/routes/` — RLS is applied at the SQL migration layer.
@@ -93,8 +100,8 @@ This section maps **unchecked `- [ ]` clusters** across `docs/master-*.md`, `.pl
 
 | Cluster / document | Typical IDs or rows | Owner | Close requires |
 |--------------------|---------------------|-------|----------------|
-| `.planning/REQUIREMENTS.md` — `AUTH-*`, `SEC-*`, product features | Auth flows, RLS, UI gates | Engineering | Code + tests; some rows need **Supabase dashboard** (Auth settings, URLs) |
-| `.planning/REQUIREMENTS.md` — `DEPLOY-01`–`DEPLOY-05` | Static host, SPA rewrites, TLS, preview vs prod | Ops + Engineering | **Evidence** (host, channel, Supabase project, smoke result, commit) pasted per REQUIREMENTS template; not `[x]` without human sign-off |
+| `.planning/REQUIREMENTS.md` — `AUTH-*`, `SEC-*`, product features | Auth flows, RLS, UI gates | Engineering | Code + tests; auth settings live in `api/` env + migrations (no external Auth dashboard) |
+| `.planning/REQUIREMENTS.md` — `DEPLOY-01`–`DEPLOY-05` | Static host, SPA rewrites, TLS, preview vs prod | Ops + Engineering | **Evidence** (host, channel, API endpoint, smoke result, commit) pasted per REQUIREMENTS template; not `[x]` without human sign-off |
 | `docs/smoke-checklist-production.md` | Post-deploy smoke | Ops / release | **Manual run** + note in STATE or release ticket |
 | `docs/master-release-qa.md` — Production handoff | Go/no-go matrices | PM + Ops + Eng | Mixed: code fixes vs **human QA** sign-off |
 | `docs/master-security-compliance.md` | DSAR, SOC mapping, buyer checklist | Security / Legal + Ops | **Runbooks + evidence**; many rows are not repo code |
@@ -121,7 +128,8 @@ The app ships **EN** (source), **ES**, and **PT** with full catalogs. **FR, DE, 
 - Data bootstrap, visibility-aware polling, and realtime: `src/hooks/useDataInit.ts`, `src/lib/realtimeSubscriptions.ts`.
 - `date-fns` locale loading: `src/lib/dateFnsLocale.ts`, `src/hooks/useDateLocale.ts`.
 - Chart theming (CSS variables → Recharts): `src/lib/chartTheme.ts`.
-- Deploy channel: `src/lib/envChannel.ts`; Supabase stub (for edge functions only): `src/lib/supabase.ts`.
+- Deploy channel: `src/lib/envChannel.ts`. API client: `src/lib/api.ts`; `src/lib/supabaseHelpers.ts` is a legacy-named thin wrapper over the API client (no Supabase — the file `src/lib/supabase.ts` was removed with the migration).
+- AI assistant UI: `src/store/aiStore.ts`, the global Assistant drawer + floating launcher, and `AiInsight` buttons on Contact/Deal detail and the Inbox.
 - Build splitting: `vite.config.ts` (`manualChunks` for heavy chart/date libraries).
 - Planning artifacts: `.planning/PROJECT.md`, `.planning/CODEBASE.md` (structure + conventions; UI canon points at `master-design-ui`).
 - Automations: `src/pages/Automations.tsx`, `src/store/automationsStore.ts`, canonical English seed rules `src/i18n/seed/automationSeedRulesEn.ts` (runtime labels via `getTranslations()`).
@@ -167,8 +175,43 @@ Major infrastructure and database layer hardening for 500-tenant scale:
 
 ---
 
-*Last updated: 2026-05-25 — Production hardening complete. Monorepo consolidation (2026-05-18) now paired with infrastructure and database hardening for 500-tenant deployments. Migrations auto-applied via `docker-entrypoint.sh`. RLS, Socket.io Redis adapter, Prometheus/Grafana, backup automation, and per-tenant rate limiting fully operational.*
+*Production hardening (2026-05-25): Monorepo consolidation (2026-05-18) paired with infrastructure and database hardening for 500-tenant deployments. Migrations auto-applied via `docker-entrypoint.sh`. RLS, Socket.io Redis adapter, Prometheus/Grafana, backup automation, and per-tenant rate limiting fully operational.*
 
 ---
 
-*Last updated (git): **2026-05-25***
+## AI assistant + security hardening + backend CI (2026-06-10)
+
+### AI / agentic feature (headline)
+- **Multi-provider AI** in `api/src/services/ai/*`: Google **Gemini (free default)**, OpenAI, Anthropic. Routes under `/ai`: `status`, `summarize`, `draft-reply`, `next-best-action`, `search`, and a tool-using **`agent`** with persisted conversations.
+- **Org-scoped CRM tools** (`api/src/services/ai/tools.ts`): search/get contacts, companies, deals; `create_activity` and `update_deal_stage` (writes) gated by `allowWrites` and written to `audit_log`.
+- **Schema:** migration `018_ai.sql` adds `ai_conversations`, `ai_messages`, `ai_usage_log`.
+- **Frontend:** global AI Assistant drawer + floating launcher, `AiInsight` buttons (next-best-action on Contact/Deal detail; summarize + draft reply in the Inbox), `aiStore`, full i18n across all 6 locales. The UI activates when any provider key is set and hides gracefully otherwise.
+
+### AI governance
+- Per-org **kill switch** (`organizations.settings.ai.enabled=false`).
+- Monthly **output-token spend cap** (`AI_MONTHLY_TOKEN_CAP` env + per-org `settings.ai.monthlyTokenCap`; **429** when exceeded).
+- **Retention purge** of `ai_*` data (`AI_MESSAGE_RETENTION_DAYS`, `0` = keep).
+
+### Security hardening (shipped)
+- **trustProxy hop-count** (`TRUST_PROXY` env) with rate-limit keyed on the resolved `req.ip` — XFF can no longer be spoofed on auth routes.
+- **Account lockout** — 10 failed logins / 15 min → 429 (`api/src/db/redis.ts`).
+- **Self-registration policy** — `ALLOW_OPEN_REGISTRATION` (default `true`), `REGISTRATION_ALLOWED_DOMAINS` allow-list; first user is always allowed.
+- `/metrics` gated on the raw socket peer + `x-internal-key`; `/_debug/sql` runs inside a **READ ONLY** transaction.
+- Socket.io handshake re-checks `users.is_active` + org; Slack outbound re-asserts the `hooks.slack.com` allow-list at send time; cross-org FK ownership checks on deals.
+- Sequence runner claims rows **`FOR UPDATE SKIP LOCKED`** (no double-send); billing free-tier caps for churned orgs when Stripe is configured; impersonation exit sets `ended_at`.
+- Removed an orphan passwordless DB-trust entrypoint and a public Adminer service. `npm audit` reports **0 vulnerabilities** on api and frontend.
+
+### Backend CI gate + tests
+- A new **`api`** job in [`.gitea/workflows/ci.yml`](../../.gitea/workflows/ci.yml) runs `npm ci → tsc → eslint → vitest → build → npm audit` (the backend previously had **no** lint/type/test gate).
+- The API now ships an eslint flat config and a **26-test vitest suite** (was 0 tests).
+- Frontend gates unchanged: `ui:lint`, `i18n:lint`, `i18n:coverage`, eslint (0 warnings), tsc, vitest, build, bundle budget (≤250 KB gzip largest chunk), `npm audit`.
+
+### New env vars (API `.env`)
+`GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `AI_DEFAULT_PROVIDER`, `AI_GEMINI_MODEL` / `AI_OPENAI_MODEL` / `AI_ANTHROPIC_MODEL`, `AI_AGENT_MAX_STEPS`, `AI_MONTHLY_TOKEN_CAP`, `AI_MESSAGE_RETENTION_DAYS`, `TRUST_PROXY` (nginx = 1; privateprompt edge + nginx = 2), `ALLOW_OPEN_REGISTRATION`, `REGISTRATION_ALLOWED_DOMAINS`. Frontend env is just `VITE_API_URL` (+ `VITE_APP_CHANNEL`); no Supabase env remains.
+
+### Enterprise gaps (still ROADMAP — do not claim as shipped)
+SSO/SAML/OIDC, SCIM, MFA/2FA enforcement, **server-side** RBAC enforcement (today RBAC is enforced inline by role; the granular permission UI is frontend-only), HA/DR (single Postgres/Redis), GDPR data-subject export/erasure (DSAR), full backend observability (error tracking / alerting / SLOs), and a real job queue (BullMQ declared but unused). See [`master-security-compliance.md`](./master-security-compliance.md).
+
+---
+
+*Last updated (git): **2026-06-10***

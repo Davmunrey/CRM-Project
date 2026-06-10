@@ -1,6 +1,6 @@
 # Security & Compliance (master)
 
-> Consolidated **2026-04-15**; auth migrated from Supabase to n0crm-api JWT **2026-05-13**; Edge/public-surface hardening narrative **2026-04-22** (rate limits, CORS allowlist env, webhook SSRF guards — see [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist)). Single reference for auth/SSO contracts, hardening matrix, sell-ready evidence index, external hardening checklist, SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
+> Consolidated **2026-04-15**; auth migrated from Supabase to n0crm-api JWT **2026-05-13**; the app is now **fully Supabase-free** — the entire `frontend/supabase/` tree, `@supabase/supabase-js`, the Supabase CLI and all `supabase:*` scripts were removed, and the live backend is **Fastify + postgres.js + Redis + Socket.io** only. API security + public-surface hardening shipped (trustProxy-keyed rate limits, CORS allow-list, webhook SSRF guards, account lockout, registration policy — see [#external-hardening-checklist](#external-hardening-checklist)). Single reference for auth/SSO contracts, the hardening matrix, the sell-ready evidence index, the external hardening checklist, AI governance, the SOC2/GDPR mapping, DSAR procedures, and Gitea CI governance.
 
 **Replaces:** auth-sso-backend-handoff, hardening-matrix, sell-ready-security-evidence-index, external-hardening-checklist, compliance-mapping, dsar-playbook, gitea-operations.
 
@@ -8,12 +8,14 @@
 
 - [Client password policy and Zustand selectors](#client-password-policy-and-zustand-selectors)
 - [Auth / SSO backend handoff](#auth-sso-backend-handoff)
+- [AI governance and safety](#ai-governance)
 - [Hardening matrix (audit-ready)](#hardening-matrix)
 - [Sell-ready security & compliance evidence index](#sell-ready-security-evidence-index)
-- [Supabase external hardening checklist](#supabase-external-hardening-checklist)
+- [External hardening checklist](#external-hardening-checklist)
 - [Compliance mapping (SOC2 / GDPR-lite)](#compliance-mapping)
 - [DSAR playbook](#dsar-playbook)
 - [Gitea production operations](#gitea-operations)
+- [Enterprise gaps (roadmap — not implemented)](#enterprise-gaps)
 
 ---
 
@@ -30,19 +32,25 @@
 ### React “maximum update depth” hygiene
 
 - **Zustand selectors must return stable references.** Selecting a freshly constructed object (for example `getFlags()` that returns `{ ... }` every call) causes `useSyncExternalStore` to re-subscribe in a tight loop. Prefer selecting a primitive slice or a stable store field, then derive view objects with `useMemo` in the component.
-- **Effects that call `setState` must depend on primitives**, not object identity from the host or Supabase session, unless the effect compares previous values and only updates when meaningfully changed.
+- **Effects that call `setState` must depend on primitives**, not object identity from the host or the auth session, unless the effect compares previous values and only updates when meaningfully changed.
 - **Context providers** should memoize their `value` object when it aggregates several fields, so consumers do not re-render every parent render.
 
 <a id="auth-sso-backend-handoff"></a>
 ## Auth / SSO backend handoff
 
-Auth is **email/password via n0crm-api** (Fastify backend in `api/` directory). JWT HS256 with `sub/org/role/jti` claims and algorithm pinned to prevent alg:none attacks. SSO (Google/Azure/Apple/SAML) is roadmap — the frontend has feature-flag toggles wired but backend routes are not yet implemented.
+Auth is **email/password via n0crm-api** (Fastify backend in `api/` directory). JWT HS256 with `sub/org/role/jti` claims, algorithm pinned to prevent alg:none attacks, delivered as an HttpOnly cookie. SSO (Google/Azure/Apple/SAML), SCIM, and MFA/2FA enforcement are **roadmap** — the frontend has feature-flag toggles (and a TOTP UI) wired, but backend routes/enforcement are not yet implemented. See [Enterprise gaps](#enterprise-gaps).
+
+**Auth-route hardening (shipped):**
+
+- **trustProxy hop-count** (`TRUST_PROXY` env, nginx = 1 / privateprompt edge + nginx = 2): `req.ip` resolves from the trusted XFF suffix only, so the leftmost attacker-controlled `X-Forwarded-For` value can no longer evade per-IP rate limits on auth routes.
+- **Account lockout**: 10 failed logins per account within 15 minutes returns **429** (`api/src/db/redis.ts`); counter clears on a successful authentication.
+- **Self-registration policy**: `ALLOW_OPEN_REGISTRATION` (default `true`) and `REGISTRATION_ALLOWED_DOMAINS` allow-list gate `POST /auth/register`; the **first** user (bootstrap) is always allowed.
 
 ## Document Control
 
 - Status: Active
 - Owner: Backend/Auth
-- Last updated: 2026-05-25 (production hardening: PgBouncer, RLS on 21 tables, 40+ indexes, per-tenant rate limiting, Socket.io Redis adapter, Prometheus/Grafana monitoring, backup automation)
+- Last updated: 2026-06-10 (AI assistant + governance shipped; auth-route hardening — trustProxy-keyed rate limits, account lockout, registration policy; backend CI gate + vitest suite). Prior: 2026-05-25 production hardening (PgBouncer, RLS on 21 tables, 40+ indexes, per-tenant rate limiting, Socket.io Redis adapter, Prometheus/Grafana, backup automation).
 - Canonical: Yes
 
 ## n0crm-api auth endpoints
@@ -77,18 +85,47 @@ These toggles only affect visible login options and are all currently `false`.
 ---
 
 
+<a id="ai-governance"></a>
+## AI governance and safety
+
+The AI / agentic feature (`api/src/services/ai/*`, routes under `/ai`) is **multi-provider** — Google Gemini (free default), OpenAI, Anthropic — and only activates when at least one provider key is configured (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`). When no key is set the UI hides AI entirely. Persisted state lives in `ai_conversations`, `ai_messages`, and `ai_usage_log` (migration `018_ai.sql`).
+
+## Document Control
+
+- Status: Active
+- Owner: Backend/AI/Security
+- Last updated: 2026-06-10
+- Canonical: Yes
+
+### Controls
+
+| Control | Mechanism | Notes |
+|---|---|---|
+| **Per-org kill switch** | `organizations.settings.ai.enabled=false` disables all AI for that tenant | Default on when a provider key exists |
+| **Monthly spend cap** | `AI_MONTHLY_TOKEN_CAP` (env) + per-org `settings.ai.monthlyTokenCap`; usage tracked in `ai_usage_log` | Returns **429** when the org exceeds its output-token cap |
+| **Tenant isolation of tools** | Agent CRM tools in `api/src/services/ai/tools.ts` are org-scoped; every query is bound to the caller's `organization_id` | Cannot read or touch another tenant's data |
+| **Write gating** | `create_activity` and `update_deal_stage` only execute when the caller passes `allowWrites: true`; each write appends an `audit_log` row | Read tools always allowed; writes are explicit + audited |
+| **Step bound** | `AI_AGENT_MAX_STEPS` caps the agent's tool-use loop | Prevents runaway multi-step calls |
+| **Data retention** | `AI_MESSAGE_RETENTION_DAYS` purges `ai_*` rows on a schedule (`api/src/services/ai/retention.ts`); `0` = keep indefinitely | Operator-tunable |
+| **Egress allow-list** | Provider HTTP calls target only `generativelanguage.googleapis.com`, `api.openai.com`, `api.anthropic.com` | Asserted in `providers.ts` |
+
+> **Related:** [Compliance mapping](#compliance-mapping) for how AI data maps to GDPR-lite data-minimization/retention expectations.
+
+---
+
+
 <a id="hardening-matrix"></a>
 ## Hardening matrix (audit-ready)
 
 This matrix tracks production hardening posture across security, reliability, operations, and governance.
 
-**Snapshot (2026-05-25):** Production hardening for 500 tenants completed. Database layer: RLS enabled on 21 tables with `set_current_org()` SECURITY DEFINER function enforcing `organization_id` at SQL execution. 40+ indexes (pg_trgm trigram indexes for full-text search, B-tree indexes on FK hot paths, composite list-query indexes). Infrastructure: PgBouncer in transaction mode (25 server connections, 500 max clients), Prometheus scraping `/metrics` every 15s, Grafana auto-provisioned with Prometheus datasource. Rate limiting: per-org 500 req/min (Redis-backed), per-IP 20 req/min on auth routes. Socket.io Redis adapter enables multi-node WebSocket scaling. Backup automation: pg_dump every 6h with 7-day retention. Health checks on all services (30s interval, 10s timeout, 3 retries). Matrix rows below stay open until **external** sign-offs (RLS review, DR drill calendar, secret rotation log) are attached as evidence.
+**Snapshot (2026-06-10):** API security hardening shipped on top of the 2026-05-25 infrastructure/database hardening. New controls: **trustProxy hop-count** (rate limits keyed on the resolved `req.ip`, XFF no longer spoofable on auth routes), **account lockout** (10 failed logins / 15 min → 429), **self-registration policy** (`ALLOW_OPEN_REGISTRATION` + `REGISTRATION_ALLOWED_DOMAINS`), `/metrics` gated on the raw socket peer + `x-internal-key`, `/_debug/sql` running in a **READ ONLY** transaction, Socket.io handshake re-checking `users.is_active` + org, Slack outbound re-asserting the `hooks.slack.com` allow-list at send, cross-org FK ownership checks on deals, and the sequence runner claiming rows `FOR UPDATE SKIP LOCKED`. An orphan passwordless DB-trust entrypoint and a public Adminer service were removed. `npm audit` reports **0 vulnerabilities** on api and frontend. The backend gained its first **CI gate** (`api` job: tsc → eslint → vitest → build → npm audit) and a **26-test vitest suite**. The AI feature ships with governance (per-org kill switch, monthly token cap, retention purge — see [AI governance](#ai-governance)). Prior (2026-05-25): RLS on 21 tables with `set_current_org()`, 40+ indexes, PgBouncer (transaction mode, 25 server conn / 500 max clients), Prometheus/Grafana, per-org 500 req/min + per-IP 20 req/min auth limits, Socket.io Redis adapter, pg_dump backups (6h / 7-day retention), service health checks. Matrix rows below stay open until **external** sign-offs (RLS review, DR drill calendar, secret rotation log) are attached as evidence.
 
 ## Document Control
 
 - Status: Active
 - Owner: Security/Ops/Backend
-- Last updated: 2026-05-25
+- Last updated: 2026-06-10
 - Canonical: Yes
 
 ## Scoring Legend
@@ -102,7 +139,13 @@ This matrix tracks production hardening posture across security, reliability, op
 | Domain | Risk | Impact | Likelihood | Current Control | Remaining Gap | Priority | Owner | ETA |
 |---|---|---|---|---|---|---|---|---|
 | Multi-tenancy | Cross-tenant data leakage | Critical | Low | `organization_id` model + RLS on 21 tables + `set_current_org()` function + claim helpers (`get_org_id`, `get_user_role`) | Periodic tenant-isolation regression in CI; production RLS validation drill | P0 | Backend | 1 sprint |
-| Auth/SSO | Provider misconfiguration blocks sign-in | High | Medium | JWT HS256 pinned, password reset tokens SHA-256 hashed, bcrypt login constant-time, rate-limit on `/auth/reset-password`, impersonation audit logged | SCIM lifecycle and IdP drift monitoring | P1 | Backend/Auth | 2 sprints |
+| Auth/SSO | Provider misconfiguration blocks sign-in | High | Medium | JWT HS256 pinned, password reset tokens SHA-256 hashed, bcrypt login constant-time, rate-limit on `/auth/reset-password`, impersonation audit logged | SSO/SCIM not implemented (roadmap); IdP drift monitoring | P1 | Backend/Auth | Roadmap |
+| Auth | Brute-force / credential stuffing | High | Medium | Account lockout: 10 failed logins / 15 min → 429 (`api/src/db/redis.ts`); counter clears on success | Tune thresholds; alert on lockout spikes | P1 | Backend/Auth | Shipped (monitor) |
+| Auth | XFF spoofing to evade per-IP rate limits | High | Medium | trustProxy hop-count (`TRUST_PROXY`); rate limits keyed on the resolved `req.ip` (trusted XFF suffix only) | Verify hop count per deployment topology | P1 | Backend/Ops | Shipped |
+| Tenancy / Registration | Unsanctioned self-registration | Medium | Medium | `ALLOW_OPEN_REGISTRATION` toggle + `REGISTRATION_ALLOWED_DOMAINS` allow-list; first user always allowed | Optional invite-only enforcement per org | P2 | Backend | Shipped |
+| Debug / Telemetry surface | Sensitive endpoint exposure | High | Low | `/metrics` gated on raw socket peer + `x-internal-key`; `/_debug/sql` runs in a READ ONLY transaction | Periodic review of debug routes in prod images | P1 | Backend/Ops | Shipped |
+| AI | Runaway AI spend / data over-retention | Medium | Medium | Per-org kill switch, monthly output-token cap (429 when exceeded), `AI_AGENT_MAX_STEPS`, `ai_*` retention purge, provider egress allow-list | Per-org spend dashboards + alerting | P2 | Backend/AI | Shipped (monitor) |
+| AI | Agent writes outside caller scope | High | Low | Org-scoped tools; writes (`create_activity`, `update_deal_stage`) gated by `allowWrites` and audit-logged | Add per-tool rate caps; expand audit coverage | P2 | Backend/AI | Shipped |
 | Auth/SSO | User enumeration via timing | High | Low | Bcrypt cost 12 with constant-time comparison on login; password reset always returns 200 (no user leakage) | Validate timing across all login paths in staging | P1 | Backend/Auth | 1 sprint |
 | Auth/SSO | Password reset token exposure | High | Low | SHA-256 hash in DB (not plaintext); 1-hour TTL; single-use | Rotate reset token secret on compromise | P1 | Backend/Auth | Ongoing |
 | Email Infra | Default provider rate limiting disrupts onboarding | High | Medium | SMTP/custom provider guidance documented | Production SMTP failover playbook | P1 | Ops | 1 sprint |
@@ -128,7 +171,7 @@ This matrix tracks production hardening posture across security, reliability, op
 
 ## Advisor-zero policy (operational)
 
-Use this rule for Supabase advisor findings:
+Use this rule for security/database advisor findings (e.g. `npm audit`, Postgres linters, dependency scanners):
 
 - **Security WARN (external-facing):** treat as release-blocking unless explicitly documented as intentional exposure with owner/date.
 - **INFO findings:** allowed only with documented rationale and follow-up target.
@@ -169,16 +212,16 @@ This index ties **internal documentation**, **code controls**, and **external ch
 2. Map items to procurement questionnaires (SOC2-style, GDPR-style) using [Compliance mapping](#compliance-mapping).
 3. For application-level control depth, cross-check against [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard) Level 1–2.
 
-**Where to find buyer-facing artifacts:** this file holds **Gitea**, **Supabase external checklist**, **hardening matrix**, **DSAR**, and **SOC2/GDPR mapping**. Use [`master-email-operations`](./master-email-operations.md) (deliverability), [`master-lead-management`](./master-lead-management.md) (maintenance + retention), [`master-release-qa`](./master-release-qa.md) (go-live + QA), [`master-design-ui`](./master-design-ui.md) (UI evidence), [`master-implementation-history`](./master-implementation-history.md) (engineering narrative). Code anchors for outbound mail: `supabase/functions/resend-send-email/index.ts`; deploy channels + auth: `src/lib/envChannel.ts`, `src/lib/supabase.ts`, `src/App.tsx`, `vite.config.ts`, `.env.example`.
+**Where to find buyer-facing artifacts:** this file holds **Gitea**, the **external hardening checklist**, the **hardening matrix**, **AI governance**, **DSAR**, and the **SOC2/GDPR mapping**. Use [`master-email-operations`](./master-email-operations.md) (deliverability), [`master-lead-management`](./master-lead-management.md) (maintenance + retention), [`master-release-qa`](./master-release-qa.md) (go-live + QA), [`master-design-ui`](./master-design-ui.md) (UI evidence), [`master-implementation-history`](./master-implementation-history.md) (engineering narrative). Code anchors for outbound mail: `api/src/routes/email.ts` (SMTP creds AES-256-GCM at rest) + `api/src/routes/slack.ts` (`hooks.slack.com` allow-list); auth + deploy channels: `api/src/routes/auth.ts`, `api/src/middleware/auth.ts`, `frontend/src/lib/envChannel.ts`, `frontend/src/lib/api.ts`, `frontend/vite.config.ts`, `api/.env.example`.
 
 ## ASVS (informal)
 
-- **V2 Authentication** — n0crm-api JWT (bcrypt cost 12, per-token `jti` denylist, rate-limited auth routes): [#auth-sso-backend-handoff](#auth-sso-backend-handoff); `tests/auth/*`
-- **V4 Access control** — RLS + app gates: [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist); `src/utils/permissions.ts`
-- **V9 Communications** — TLS to APIs + outbound mail controls: external CDN/infra; `supabase/functions/resend-send-email/index.ts`; [`master-email-operations`](./master-email-operations.md#email-deliverability-resend)
-- **V7 Error handling / logging** — `audit_log`, maintenance telemetry, failed send audit: [`master-lead-management`](./master-lead-management.md#lead-maintenance-runbook); [#hardening-matrix](#hardening-matrix); `src/store/emailStore.ts`
-- **V14 Configuration** — Channels + Supabase: `src/lib/envChannel.ts`, `src/lib/supabase.ts`, `vite.config.ts`, `.env.example` (`VITE_APP_CHANNEL` production/staging, `development` default in dev, staging/prod build gates; Supabase-only runtime, no hosted mock channel)
-- **V8 Data protection** — Tenant isolation + DSAR/retention: [#dsar-playbook](#dsar-playbook); [`master-lead-management`](./master-lead-management.md#data-retention-runbook)
+- **V2 Authentication** — n0crm-api JWT (bcrypt cost 12, per-token `jti` denylist, rate-limited auth routes, account lockout, trustProxy-keyed `req.ip`): [#auth-sso-backend-handoff](#auth-sso-backend-handoff); `api/src/routes/auth.test.ts`
+- **V4 Access control** — RLS + app gates + cross-org FK ownership checks: [#external-hardening-checklist](#external-hardening-checklist); `frontend/src/utils/permissions.ts` (note: granular RBAC is enforced inline by role server-side; the permission UI is frontend-only — see [Enterprise gaps](#enterprise-gaps))
+- **V9 Communications** — TLS to APIs + outbound mail/Slack controls: external CDN/infra; `api/src/routes/email.ts`, `api/src/routes/slack.ts` (SSRF allow-list); [`master-email-operations`](./master-email-operations.md#email-deliverability-resend)
+- **V7 Error handling / logging** — `audit_log` (incl. AI write tools), maintenance telemetry, failed-send audit: [`master-lead-management`](./master-lead-management.md#lead-maintenance-runbook); [#hardening-matrix](#hardening-matrix)
+- **V14 Configuration** — Channels + env validation: `frontend/src/lib/envChannel.ts`, `frontend/vite.config.ts`, `api/src/config/env.ts`, `api/.env.example` (`VITE_APP_CHANNEL` production/staging, `development` default in dev; API env validated at startup with fail-fast guards; no Supabase runtime)
+- **V8 Data protection** — Tenant isolation + DSAR/retention + AI data retention: [#dsar-playbook](#dsar-playbook); [#ai-governance](#ai-governance); [`master-lead-management`](./master-lead-management.md#data-retention-runbook)
 
 ## Revision history
 
@@ -188,44 +231,55 @@ Single consolidation 2026-04-15: prior `sell-ready-security-evidence-index` + re
 
 
 <a id="supabase-external-hardening-checklist"></a>
+<a id="external-hardening-checklist"></a>
 ## External hardening checklist
 
-Use this checklist when validating a **production** deployment. Record evidence (screenshots, SQL output, dashboard URLs) in your security ticket or the [#sell-ready security evidence index](#sell-ready-security-evidence-index).
+Use this checklist when validating a **production** deployment. The live backend is **Fastify + postgres.js + Redis + Socket.io** — there are no Supabase Edge Functions. Record evidence (screenshots, SQL output, log excerpts) in your security ticket or the [#sell-ready security evidence index](#sell-ready-security-evidence-index).
 
 **Doc hub:** [`README`](./README.md) (status snapshot and full index).
 
 ## 1. Authentication and sessions (n0crm-api)
 
-- [ ] `JWT_SECRET` is at least 64 chars / 32 random bytes (`openssl rand -hex 32`); min length enforced at startup in `api/config/env.ts`; rotate on compromise.
-- [ ] JWT algorithm pinned to HS256 (no `alg: none` attacks possible); verified in `config/env.ts` validation.
+- [x] `JWT_SECRET` minimum length enforced at startup in `api/src/config/env.ts`; rotate on compromise.
+- [x] JWT algorithm pinned to HS256 (no `alg: none` attacks possible); verified in `config/env.ts` validation.
 - [ ] JWT expiry (`JWT_EXPIRES_IN`) aligned with product risk (default 7d).
-- [ ] JWT includes `jti` (JWT ID) claim for per-token revocation; denylist in Redis with TTL.
-- [ ] `CORS_ORIGIN` on n0crm-api parsed into origins array and validated (not raw string match); split values checked for `*` in CORS production guard.
-- [ ] `POST /auth/forgot-password` always returns 200 (email enumeration prevention — already implemented).
-- [ ] `password_reset_tokens` stored as SHA-256 hashes (not plaintext); TTL is 1 hour (migration `002` — already applied).
-- [ ] `/auth/reset-password` rate-limited: 10 requests per 15 minutes per IP.
-- [ ] `/auth/login` uses bcrypt cost 12 with constant-time comparison (prevents timing-based user enumeration).
-- [ ] `POST /auth/logout` revokes JWT in Redis denylist before clearing session.
-- [ ] Impersonation audit log INSERT must succeed before token is issued (fail-fast on log failure).
+- [x] JWT includes `jti` (JWT ID) claim for per-token revocation; denylist in Redis with TTL. JWT delivered as an HttpOnly cookie.
+- [x] `CORS_ORIGIN` parsed into an origins array and validated (not raw string match); split values checked for `*` in the CORS production guard.
+- [x] `POST /auth/forgot-password` always returns 200 (email enumeration prevention).
+- [x] `password_reset_tokens` stored as SHA-256 hashes (not plaintext); TTL is 1 hour.
+- [x] `/auth/reset-password` rate-limited.
+- [x] `/auth/login` uses bcrypt cost 12 with constant-time comparison (prevents timing-based user enumeration).
+- [x] **Account lockout:** 10 failed logins / 15 min per account → 429 (`api/src/db/redis.ts`); counter clears on successful auth.
+- [x] **Self-registration policy:** `ALLOW_OPEN_REGISTRATION` (default `true`) + `REGISTRATION_ALLOWED_DOMAINS` allow-list gate `POST /auth/register`; first (bootstrap) user always allowed.
+- [x] **trustProxy hop-count** (`TRUST_PROXY`): rate limits keyed on the resolved `req.ip` (trusted XFF suffix only) — XFF not spoofable on auth routes.
+- [x] `POST /auth/logout` revokes JWT in Redis denylist before clearing session.
+- [x] Impersonation audit log INSERT must succeed before token is issued (fail-fast on log failure); impersonation exit sets `ended_at`.
 
-## 2. Row Level Security (RLS — Supabase Edge Functions)
+## 2. Tenant isolation and access control (PostgreSQL + app layer)
 
-- [ ] RLS **enabled** on all tables in `public` that hold tenant or user data.
-- [ ] No policy uses `USING (true)` for write operations without an org/user predicate.
-- [ ] `SECURITY DEFINER` functions reviewed; each validates org membership before mutating data.
-- [ ] Indexes exist on columns referenced in policies (avoid full-table scans at scale).
-- [ ] Run tenant-isolation smoke: User A cannot `select`/`update` User B org rows (automate where possible).
+- [x] RLS **enabled** on 21 tenant/user tables with `set_current_org()` SECURITY DEFINER and claim helpers (`get_org_id`, `get_user_role`).
+- [x] All org-scoped routes assert `req.user.org`; cross-org **FK ownership checks** on deals prevent attaching another tenant's records.
+- [x] `SECURITY DEFINER` functions reviewed; search-path hardening migration applied.
+- [x] Indexes exist on columns referenced in policies / hot paths (40+ indexes; avoids full-table scans at scale).
+- [ ] Run tenant-isolation smoke in CI: User A cannot read/update User B org rows (automate — see Immediate Actions).
+- [ ] **Note:** granular RBAC is enforced **inline by role** server-side; the per-permission UI is **frontend-only**. Full server-side RBAC enforcement is [roadmap](#enterprise-gaps).
 
-## 3. Edge Functions
+## 3. API surface, integrations, and egress
 
-- [x] **No** `service_role` key in client bundles; only server-side function env.
-- [ ] Each HTTP function validates `Authorization` (user JWT) where appropriate.
-- [x] Outbound integrations (e.g. Resend) enforce rate limits and payload caps — see `supabase/functions/resend-send-email/index.ts`.
-- [x] **CORS:** allowlist via Edge secret **`EDGE_CORS_ORIGINS`** (comma-separated exact origins `scheme://host:port`; trailing slash on entries normalized). Implemented in `supabase/functions/_shared/cors-allowlist.ts`; used by `api-keys`, `lead-capture-tokens`, `crm-public-api`, `lead-capture`, Google/Gmail functions. **When set:** browsers sending a disallowed `Origin` get **403** `cors_origin_not_allowed`; allowed origins get echo + `Access-Control-Allow-Credentials: true`. Requests **without** `Origin` still get `*` so curl/Bearer tests work. When unset, `Access-Control-Allow-Origin: *` (permissive).
-- [x] **Public read API / lead capture:** `crm-public-api` and `lead-capture` use explicit column selects (no `select('*')`), per-key or per-token rate limits, bounded request bodies, and generic client error bodies (details in logs only). Deploy with `npm run supabase:deploy:integrations` or full `npm run supabase:deploy:all-functions` (see [`../supabase/README.md`](../supabase/README.md)).
-- [x] **Outbound webhooks:** `webhook-worker` resolves subscriber URLs with SSRF defenses (`_shared/webhook-url-safety.ts`) and applies a safe custom-header allowlist (`_shared/webhook-safe-headers.ts`) before `fetch`.
-- [x] **SPA transport hygiene:** static responses include baseline security headers where the static host supports them ([`../vercel.json`](../vercel.json), [`../public/_headers`](../public/_headers)); email **signature preview** uses DOMPurify (`SignatureRichEditor.tsx`); client IDs use `crypto.randomUUID()` (no `uuid` npm dependency).
-- [x] **Google OAuth deploy gate on `master`:** [`.github/workflows/supabase-remote-deploy.yml`](../.github/workflows/supabase-remote-deploy.yml) runs on push, validates required secrets (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `GOOGLE_OAUTH_REDIRECT_URIS`, Supabase credentials), deploys full Edge set, then executes `npm run supabase:smoke:google-edge` (script: [`../scripts/verify-google-edge-health.mjs`](../scripts/verify-google-edge-health.mjs)).
+- [x] **No** server secrets in client bundles; the SPA holds only `VITE_API_URL` (+ `VITE_APP_CHANNEL`).
+- [x] **CORS:** `CORS_ORIGIN` allow-list (comma-separated exact origins) enforced by the Fastify CORS guard; production guard rejects `*`.
+- [x] **Per-tenant rate limiting:** per-org 500 req/min (Redis-backed) + per-IP 20 req/min on auth routes.
+- [x] **Outbound mail:** SMTP credentials encrypted at rest (AES-256-GCM); all sends routed through `api/` (`api/src/routes/email.ts`); payload caps applied.
+- [x] **Slack outbound:** the `hooks.slack.com` HTTPS allow-list is re-asserted at send time (`api/src/routes/slack.ts`, tested in `slack.test.ts`) — SSRF defense.
+- [x] **Outbound webhooks:** subscriber URLs resolved with SSRF defenses + a safe custom-header allow-list before `fetch`; deliveries outboxed with bounded retries.
+- [x] **Public read API / lead capture:** explicit column selects (no `select('*')`), per-key/per-token rate limits, bounded request bodies, generic client error bodies (details in logs only) — `/public/v1/*`, `/integrations/*`.
+- [x] **`/metrics`** gated on the raw socket peer (`req.socket.remoteAddress`) + `x-internal-key` (not the trustProxy-resolved `req.ip`).
+- [x] **`/_debug/sql`** runs inside a **READ ONLY** transaction unless `allow_writes:true` is explicitly passed; any write in a READ ONLY tx is rejected by Postgres.
+- [x] **Socket.io** handshake re-checks `users.is_active` + org membership; broadcasts only to org-scoped rooms.
+- [x] **Sequence runner** claims enrollments `FOR UPDATE SKIP LOCKED` — no double-send across ticks/nodes.
+- [x] **Billing:** free-tier caps applied for churned orgs when Stripe is configured.
+- [x] **SPA transport hygiene:** static responses include baseline security headers where the host supports them ([`../vercel.json`](../vercel.json), [`../public/_headers`](../public/_headers)); rich-text/signature preview sanitized with DOMPurify; client IDs use `crypto.randomUUID()`.
+- [x] Removed an orphan passwordless DB-trust entrypoint and a public Adminer service.
 
 ## 4. Backups and recovery
 
@@ -243,16 +297,18 @@ Use this checklist when validating a **production** deployment. Record evidence 
 
 ## 6. Observability
 
+- [x] Prometheus scrapes `/metrics` (15s) + postgres-exporter + node-exporter; Grafana auto-provisioned.
 - [ ] n0crm-api structured logs reviewed on a schedule (stdout → your log aggregator).
-- [ ] Supabase Edge Function logs reviewed for Gmail, webhook, and public-API errors.
-- [ ] Alerts for auth anomalies, function error rate, and database CPU/storage.
+- [ ] API logs reviewed for Gmail, webhook, AI, and public-API errors.
+- [ ] Alerts for auth anomalies (incl. lockout spikes), route error rate, AI spend/cap breaches, and database CPU/storage. **Backend error tracking / alerting / SLOs are [roadmap](#enterprise-gaps).**
 
 ## CI/CD and Secrets
 
-- [ ] CI workflows specify working directory: `ci.yml` uses `frontend/`, `build-api.yml` uses `api/`.
-- [ ] E2E secrets use n0crm-api endpoints (not Supabase): `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
+- [x] CI gates run per package: `.gitea/workflows/ci.yml` has an **`api`** job (`npm ci → tsc → eslint → vitest → build → npm audit`) and a **`ci`** job for `frontend/` (ui:lint, i18n:lint, i18n parity, eslint, tsc, vitest, build, bundle budget, npm audit). The backend previously had **no** lint/type/test gate; it now ships an eslint flat config and a **26-test vitest suite** (was 0).
+- [ ] E2E secrets use n0crm-api endpoints: `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
 - [ ] `build-production.yml` triggers only on `frontend/**` changes.
 - [ ] `build-api.yml` triggers on `api/**` changes.
+- [x] `npm audit` reports **0 vulnerabilities** on api and frontend.
 - [ ] No secrets committed; all environment variables set in CI/CD platform.
 
 ## Sign-off
@@ -275,15 +331,18 @@ It is a pragmatic engineering mapping (not legal advice and not a formal certifi
 
 - Status: Active
 - Owner: Security/Backend/Ops
-- Last updated: 2026-04-22
+- Last updated: 2026-06-10
 - Canonical: Yes
 
 **Related hub:** [`README`](./README.md) (status snapshot + index). DSAR and retention: [#dsar-playbook](#dsar-playbook), [`master-lead-management` — retention](./master-lead-management.md#data-retention-runbook).
 
+> **Honesty note:** This is a pragmatic engineering mapping, **not** a certification. n0CRM holds **no** SOC 2 / ISO 27001 / HIPAA / GDPR certification. SSO/SAML/OIDC, SCIM, MFA enforcement, server-side RBAC enforcement, HA/DR, and a fully operationalized GDPR DSAR (export/erasure) workflow are **[roadmap](#enterprise-gaps)**, not implemented.
+
 ## Scope
 
 - Application: n0CRM
-- Backend: n0crm-api (Fastify, PostgreSQL, JWT auth) + Supabase (Edge Functions, RLS for Edge-served data)
+- Backend: n0crm-api only — Fastify 5, PostgreSQL 16 (via PgBouncer), Redis 7, Socket.io, JWT auth. **No Supabase** (fully migrated off).
+- AI: multi-provider AI service with per-org governance (kill switch, token cap, retention) — see [#ai-governance](#ai-governance).
 - Operational controls: lead maintenance telemetry/SLA, runbooks, handoff checklists
 
 ## Control Mapping Table
@@ -295,11 +354,13 @@ It is a pragmatic engineering mapping (not legal advice and not a formal certifi
 | SOC2 - Security | Enforce least privilege access | Tenant isolation via `organization_id` + RLS + role claims (`get_org_id`, `get_user_role`) | hist:A, SQL migrations | Add scheduled tenant-isolation CI checks | Backend |
 | SOC2 - Availability | Detect and respond to processing disruptions | `lead-score-maintenance` telemetry + SLA mode + notifications | LM (score backend, runbook) | Add external paging integration and uptime SLO dashboard | Ops |
 | SOC2 - Processing Integrity | Ensure scoring jobs run correctly and are observable | `lead_score_maintenance_runs` status/error history + Settings Ops dashboard | LM (ops dashboard) | Add anomaly thresholds and automated weekly report | Backend/Ops |
-| SOC2 - Change Management | Controlled release readiness | Production handoff checklist with pre/post go-live checks | RQA | Enforce release gate in CI/CD | Engineering |
-| SOC2 - Confidentiality | Protect secrets and auth paths | Secret-based system mode (`LEAD_MAINTENANCE_SECRET`) and provider-specific auth flows | LM (score backend), sec (auth handoff) | Define secret rotation cadence and audit log | Ops/Security |
-| GDPR-lite - Data Segregation | Prevent cross-customer data access | Org-scoped data model and RLS per tenant | hist:A, migrations | Add documented quarterly RLS review | Backend |
-| GDPR-lite - Access and Correction | Enable controlled updates to customer data | Authenticated CRUD through scoped stores and RLS | sec (DSAR), app stores | Operationalize DSAR with ticket templates and measured SLAs | Product/Backend |
-| GDPR-lite - Data Minimization | Keep only necessary operational data | Scoped telemetry table for maintenance runs | `lead_score_maintenance_runs` migration, LM (retention) | Set org-specific retention periods and automated purge jobs where required | Product/Ops |
+| SOC2 - Change Management | Controlled release readiness | Production handoff checklist + **CI gates** on both packages (api: tsc/eslint/vitest/build/audit; frontend: full guardrail suite) | RQA, `.gitea/workflows/ci.yml` | Enforce required status checks on `master`; add tenant-isolation regression test | Engineering |
+| SOC2 - Confidentiality | Protect secrets and auth paths | JWT HS256 pinned + `jti` denylist, bcrypt cost 12, account lockout, SMTP creds AES-256-GCM at rest, env validated at startup | sec (auth handoff, external checklist) | Define secret rotation cadence and audit log | Ops/Security |
+| SOC2 - Security (monitoring) | Detect/limit abuse | trustProxy-keyed per-IP + per-org rate limits, account lockout, `/metrics`+`/_debug` surface gating, SSRF allow-lists (Slack/webhooks) | sec (external checklist) | Wire alerting on lockout/error-rate spikes (backend alerting is roadmap) | Backend/Ops |
+| AI Governance | Bound AI cost, scope, and data lifetime | Per-org kill switch, monthly output-token cap (429), org-scoped + audited agent tools, `AI_MESSAGE_RETENTION_DAYS` purge, egress allow-list | [#ai-governance](#ai-governance), `018_ai.sql` | Per-org AI spend dashboards + alerting | Backend/AI |
+| GDPR-lite - Data Segregation | Prevent cross-customer data access | Org-scoped data model + RLS per tenant + cross-org FK ownership checks | hist:A, migrations | Add documented quarterly RLS review | Backend |
+| GDPR-lite - Access and Correction | Enable controlled updates to customer data | Authenticated CRUD through scoped API routes + RLS | sec (DSAR), API routes | **Fully operationalize GDPR DSAR (export/erasure)** — currently a manual runbook, not automated ([roadmap](#enterprise-gaps)) | Product/Backend |
+| GDPR-lite - Data Minimization | Keep only necessary operational data | Scoped telemetry table + AI `ai_*` retention purge | `lead_score_maintenance_runs` migration, LM (retention), [#ai-governance](#ai-governance) | Set org-specific retention periods and automated purge where required | Product/Ops |
 | GDPR-lite - Incident Response | Procedure for failures that may impact service/data | Incident runbook with triage/recovery/escalation | LM (runbook) | Extend to broader security incident classes | Ops/Security |
 
 ## Compliance Posture Summary
@@ -331,7 +392,9 @@ Do not maintain a second list of the same links. Use **[Sell-ready security evid
 <a id="dsar-playbook"></a>
 ## DSAR playbook
 
-Engineering-oriented procedure for handling **data subject access requests** in a n0CRM deployment backed by **Supabase (Auth + Postgres + RLS)**. This is not legal advice; align intake, timelines, and legal review with your organization’s privacy counsel and jurisdiction.
+Engineering-oriented procedure for handling **data subject access requests** in a n0CRM deployment backed by **n0crm-api (JWT auth + PostgreSQL + RLS)**. This is not legal advice; align intake, timelines, and legal review with your organization’s privacy counsel and jurisdiction.
+
+> **Status:** This is a **manual runbook**, not an automated GDPR DSAR pipeline. A self-service export/erasure workflow is [roadmap](#enterprise-gaps).
 
 **Doc hub:** [`README`](./README.md).
 
@@ -340,7 +403,7 @@ Engineering-oriented procedure for handling **data subject access requests** in 
 | Role | Responsibility |
 |------|----------------|
 | **Intake owner** (Support / DPO delegate) | Ticket opened, identity verified per org policy, customer communication |
-| **Backend / Security** | Scoped export or deletion in Supabase, audit evidence |
+| **Backend / Security** | Scoped export or deletion against the n0crm-api database, audit evidence |
 | **Product** | Confirm in-app vs full-database scope for the tenant |
 
 ## Request types and scope
@@ -349,7 +412,7 @@ Engineering-oriented procedure for handling **data subject access requests** in 
 2. **Rectification** — Correct inaccurate profile or CRM records; prefer in-app flows when the subject is an authenticated org user.
 3. **Erasure** — Remove or anonymize personal data where contract and law allow (often constrained while a lawful business relationship exists).
 
-Always resolve the subject’s **`organization_id`** and enforce **tenant isolation** (RLS, service-role scripts scoped by org).
+Always resolve the subject’s **`organization_id`** and enforce **tenant isolation** (RLS + org-scoped queries). Remember the AI tables: `ai_conversations`, `ai_messages`, and `ai_usage_log` may hold subject data and are subject to `AI_MESSAGE_RETENTION_DAYS` purge (see [#ai-governance](#ai-governance)).
 
 ## Intake checklist
 
@@ -359,9 +422,9 @@ Always resolve the subject’s **`organization_id`** and enforce **tenant isolat
 - [ ] Jurisdiction and deadline noted (e.g. GDPR calendar days where applicable).
 - [ ] Legal/commercial hold assessed (active litigation, billing dispute, statutory retention).
 
-## Execution outline (Supabase)
+## Execution outline (n0crm-api / PostgreSQL)
 
-1. **Locate identifiers**: Auth `user_id`, work email, CRM `contacts` / `activities` / related tables per product schema.
+1. **Locate identifiers**: `users.id`, work email, CRM `contacts` / `activities` / related tables per product schema (and `ai_*` tables where applicable).
 2. **Read path (access/portability)**  
    - Use org-scoped queries or a **one-off SQL script** run with least privilege (prefer read replica if available).  
    - Export JSON/CSV; redact third-party secrets and other data subjects’ fields where not proportional.
@@ -384,8 +447,9 @@ Always resolve the subject’s **`organization_id`** and enforce **tenant isolat
 ## References
 
 - [#compliance-mapping](#compliance-mapping) (includes [evidence bundle](#compliance-evidence-bundle))
-- [#supabase-external-hardening-checklist](#supabase-external-hardening-checklist) — RLS and admin access hygiene
+- [#external-hardening-checklist](#external-hardening-checklist) — RLS, tenant isolation, and admin access hygiene
 - [#sell-ready-security-evidence-index](#sell-ready-security-evidence-index) — buyer review index
+- [#enterprise-gaps](#enterprise-gaps) — what is NOT yet implemented
 
 ---
 
@@ -409,8 +473,8 @@ Configure these settings in the Gitea repo:
    - Require at least 1 approval.
    - Block force pushes and branch deletion.
 3. **Required status checks**
-   - Require workflow jobs to pass before merge, e.g. `CI / ci` and `security / security` (see `.gitea/workflows/ci.yml`).
-   - In Gitea: **Settings → Branches → Branch protection → Enable status checks** and select both jobs. See [Gitea protected branches](https://docs.gitea.com/usage/access-control/protected-branches).
+   - Require workflow jobs to pass before merge: `CI / api`, `CI / ci`, and `CI / security` (see `.gitea/workflows/ci.yml`).
+   - In Gitea: **Settings → Branches → Branch protection → Enable status checks** and select all three jobs. See [Gitea protected branches](https://docs.gitea.com/usage/access-control/protected-branches).
 4. **Actions**
    - Enable Actions for this repository.
    - Ensure a runner is online and allowed to run workflows.
@@ -433,7 +497,7 @@ Recommended runner baseline:
 
 Current CI does not require project secrets.
 
-If you add deployment or Supabase integration jobs later, define secrets in Gitea Actions secrets (repo-level or org-level), never in `.env` committed files.
+If you add deployment or third-party integration jobs later, define secrets in Gitea Actions secrets (repo-level or org-level), never in `.env` committed files. Provider keys for the AI feature (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) belong in the API runtime environment, not in CI or the client bundle.
 
 ## Local Git Connectivity (SSH)
 
@@ -466,9 +530,37 @@ git ls-remote --heads origin
 When a workflow fails:
 
 1. Open Actions log in Gitea and identify failing step.
-2. Reproduce locally with:
+2. Reproduce locally with (per package — `api/` and `frontend/`):
    - `npm ci`
    - `npx tsc --noEmit`
+   - `npx eslint .`
    - `npx vitest run`
    - `npm run build`
+   - `npm audit --audit-level=critical`
 3. Push fix branch and re-run workflow.
+
+---
+
+
+<a id="enterprise-gaps"></a>
+## Enterprise gaps (roadmap — not implemented)
+
+For honesty in buyer/security conversations: the following are **not** implemented today. Do not claim them as shipped, and do not represent them as certifications.
+
+| Capability | Status | Notes |
+|---|---|---|
+| **SSO / SAML / OIDC** | Roadmap | Frontend feature-flag toggles exist (all `false`); no backend routes. |
+| **SCIM** (user lifecycle provisioning) | Roadmap | Not implemented. |
+| **MFA / 2FA enforcement** | Roadmap | A TOTP UI exists in Settings → Security, but the backend does not enforce MFA. |
+| **Server-side RBAC enforcement** | Partial | RBAC is enforced **inline by role** in `api/` routes; the granular per-permission model in the UI is **frontend-only**. |
+| **HA / DR** | Roadmap | Single Postgres + single Redis; no multi-AZ/replica failover. Backups exist (pg_dump 6h / 7-day), but no documented RTO/RPO or restore-drill calendar. |
+| **GDPR DSAR (export / erasure)** | Manual only | Engineering runbook exists ([#dsar-playbook](#dsar-playbook)); no self-service or automated export/erasure pipeline. |
+| **Full backend observability** | Partial | Prometheus/Grafana + health checks exist; backend **error tracking, alerting, and SLOs** are not in place (frontend has Sentry). |
+| **Real job queue** | Roadmap | BullMQ is declared but unused; background work (e.g. sequence runner) runs on in-process pollers. |
+| **Compliance certifications** | None | No SOC 2 / ISO 27001 / HIPAA / GDPR certification. This file is an engineering evidence map, not an audit artifact. |
+
+> See also the project-level roadmap in [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) and the engineering state in [`project-state.md`](./project-state.md).
+
+---
+
+*Last updated: **2026-06-10** — Supabase fully removed (Fastify-only backend); AI assistant + governance documented; API security hardening + backend CI gate reflected; enterprise gaps (SSO/SCIM/MFA, server-side RBAC, HA/DR, GDPR DSAR) honestly marked as roadmap.*

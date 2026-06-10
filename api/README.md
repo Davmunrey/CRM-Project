@@ -5,13 +5,15 @@ Fastify REST API for n0CRM — self-hosted B2B CRM backend. This is the `api/` s
 | Layer | Tech |
 |-------|------|
 | Runtime | Node.js 22, TypeScript |
-| Framework | Fastify 5 |
-| Database | PostgreSQL 16 via `postgres.js` (camelCase transform) |
-| Auth | HS256 JWT — `{ sub, org, role, jti }` claims; per-token Redis denylist |
-| Queues | BullMQ + Redis (ioredis) |
-| Realtime | Socket.io — org-scoped rooms, JWT-verified middleware |
-| Validation | Zod on every route |
-| Encryption | AES-256-GCM for OAuth tokens, SMTP passwords, webhook secrets |
+| Framework | Fastify 5 (`trustProxy` = `TRUST_PROXY` hops) |
+| Database | PostgreSQL 16 via `postgres.js` (camelCase transform), through PgBouncer in production |
+| Auth | HS256 JWT — `{ sub, org, role, jti }` claims; HttpOnly `auth_token` cookie; per-user/per-token Redis denylist |
+| Queues | Redis (ioredis); BullMQ is a declared dependency but the live sequence runner is a polling worker, not a BullMQ queue |
+| Realtime | Socket.io — org-scoped rooms, JWT-verified handshake (re-checks `is_active` + org) |
+| Validation | Zod on every route + on env (`config/env.ts`) |
+| Encryption | AES-256-GCM for OAuth tokens, SMTP passwords, webhook/Slack/Zoom secrets |
+| AI | Multi-provider (Google Gemini free default / OpenAI / Anthropic) — `services/ai/*`, routes under `/ai` |
+| Quality gates | ESLint flat config + `tsc --noEmit` + Vitest (26 tests) + `npm audit`, enforced by the `api` CI job |
 
 ---
 
@@ -314,6 +316,104 @@ The field is returned as `linkedin_url` in all `GET /contacts` and `GET /contact
 |--------|------|------|-------------|
 | POST | `/ux-metrics/ingest` | ✓ | Batch ingest telemetry events (max 500, fire-and-forget) |
 
+### Analytics
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/analytics/summary` | ✓ | Org KPI summary |
+| GET | `/analytics/deals-by-stage` | ✓ | Pipeline breakdown |
+| GET | `/analytics/revenue-by-month` | ✓ | Monthly revenue series |
+| GET | `/analytics/activities-by-type` | ✓ | Activity-type breakdown |
+| GET | `/analytics/contacts-by-source` | ✓ | Contact-source breakdown |
+| GET | `/analytics/sales-reps` | ✓ | Per-rep performance |
+| GET | `/analytics/forecast` | ✓ | Weighted forecast |
+
+### Saved Views, Email Inbox, Lists & Preferences
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET/POST/PATCH/DELETE | `/views` | ✓ | Saved filter/view CRUD (server-synced) |
+| GET/POST/PATCH/DELETE | `/email/inbox` | ✓ | Email inbox store; `POST /email/send` sends (60/min) |
+| GET/POST/PATCH/DELETE | `/distribution-lists` | ✓ | Distribution-list CRUD |
+| GET | `/preferences/me` | ✓ | User prefs; `PATCH /preferences/me/navigation`, `PATCH /preferences/me/onboarding` |
+
+### Billing (Stripe — when configured)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/billing/subscription` | ✓ | Current subscription/plan |
+| POST | `/billing/checkout` | ✓ | Create a Stripe Checkout session |
+| POST | `/billing/portal` | ✓ | Create a Stripe billing-portal session |
+| POST | `/webhooks/stripe` | — | Stripe webhook (signature-verified via `STRIPE_WEBHOOK_SECRET`) |
+
+### Super-Admin (`/admin`)
+
+Platform-operator routes (super-admin role). Includes org stats/list/detail/update, suspend/unsuspend, subscription management, plans CRUD, user list/update, CSV exports, impersonation (`POST /admin/orgs/:id/impersonate`, `POST /admin/impersonate/exit` — sets `ended_at`), and `GET /admin/impersonation-logs`.
+
+### AI / Agentic Assistant
+
+Multi-provider AI (Google **Gemini** — free default, **OpenAI**, **Anthropic**). All routes are JWT-authenticated, org-scoped, and rate-limited to **30 req/min per org** (the global default is 500/min) because provider calls cost tokens. When no provider key is set, action routes return **503** and `GET /ai/status` reports `enabled: false` so the UI hides AI. See the [AI Provider Abstraction](#ai-provider-abstraction--agent) section below.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/ai/status` | ✓ | Feature flags: `{ enabled, providers, defaultProvider, activeProvider, model, maxSteps }`. `enabled` is false when no key is set **or** the org kill switch is off. |
+| POST | `/ai/summarize` | ✓ | Summarize a thread. Body: `{ messages: string[] (1–100) }` → `{ text, provider }` |
+| POST | `/ai/draft-reply` | ✓ | Draft a reply. Body: `{ thread, instructions? }` → `{ text, provider }` |
+| POST | `/ai/next-best-action` | ✓ | Recommend the next action. Body: `{ contactId?, dealId? }` (at least one). Server fetches the contact/deal + latest activity for context. → `{ text, provider }` |
+| POST | `/ai/search` | ✓ | AI re-ranks an org-scoped candidate pool (newest 60). Body: `{ query, scope: 'contacts'\|'deals', limit≤20 }` → `{ results, provider }` |
+| POST | `/ai/agent` | ✓ | Tool-using agent. Body: `{ message, conversationId?, allowWrites? }` → `{ conversationId, reply, steps, stoppedReason, provider }`. Creates the conversation if `conversationId` is omitted; loads up to 40 prior turns for context. |
+| GET | `/ai/conversations` | ✓ | List the caller's conversations (latest 50, `{ id, title, created_at, updated_at }`) |
+| GET | `/ai/conversations/:id` | ✓ | Fetch one conversation + its messages (incl. tool `steps`) |
+
+All AI write tools and conversations are scoped to `req.user.org`; output-token usage is recorded best-effort in `ai_usage_log` for cost/limit visibility.
+
+---
+
+## AI Provider Abstraction & Agent
+
+The AI feature lives in `src/services/ai/` and is wired by `src/routes/ai.ts`.
+
+### Provider abstraction (`services/ai/providers.ts`)
+
+One normalized `AiMessage` / `AiToolDef` format is translated to each vendor's wire protocol by a small `AiProvider` interface (`chat(messages, opts)`). Three providers implement it:
+
+| Provider | id | Default model (override env) | Key env |
+|----------|-----|------------------------------|---------|
+| Google Gemini (free) | `gemini` | `gemini-2.0-flash` (`AI_GEMINI_MODEL`) | `GEMINI_API_KEY` |
+| OpenAI | `openai` | `gpt-4o-mini` (`AI_OPENAI_MODEL`) | `OPENAI_API_KEY` |
+| Anthropic | `anthropic` | `claude-sonnet-4-6` (`AI_ANTHROPIC_MODEL`) | `ANTHROPIC_API_KEY` |
+
+- `availableProviders()` returns the configured providers in preference order (the `AI_DEFAULT_PROVIDER` is sorted first); `resolveProvider(preferred?)` honors an org override, then the env default, then any configured provider.
+- Outbound `fetch` is restricted to a hard-coded host allow-list (`generativelanguage.googleapis.com`, `api.openai.com`, `api.anthropic.com`) with a 30s timeout — no user-supplied URL ever reaches the network layer.
+- Errors surface as `AiError` with an appropriate status (502 for provider/network failures, 400 for 4xx vendor errors).
+
+### Tool-using agent (`services/ai/agent.ts` + `tools.ts`)
+
+`runAgent()` is a provider- and tool-agnostic loop: it calls the model, executes any requested tool calls, feeds the results back, and repeats until the model returns a final answer or `maxSteps` (env `AI_AGENT_MAX_STEPS`, default 8, max 20) is hit. On `max_steps` it asks the model for a best-effort final answer with tools disabled. Each executed tool call is recorded in `steps` for UI transparency and persisted on the assistant message.
+
+CRM tools (all strictly org-scoped):
+
+| Tool | Type | Action |
+|------|------|--------|
+| `search_contacts` | read | Search contacts by name/email |
+| `get_contact` | read | One contact + recent activities |
+| `search_companies` | read | Search companies by name/domain |
+| `search_deals` | read | List/filter deals (status, title) |
+| `get_deal` | read | One deal + linked contact + activities |
+| `create_activity` | write | Log/schedule an activity |
+| `update_deal_stage` | write | Move a deal stage / mark won/lost |
+
+Write tools run **only** when the request sets `allowWrites: true`; otherwise they return a soft error the model relays to the user. Writes verify FK ownership against the caller's org before mutating and append an `audit_log` row (`ai_activity_created` / `ai_deal_stage_updated`).
+
+### AI Governance
+
+| Control | How |
+|---------|-----|
+| **Per-org kill switch** | `organizations.settings.ai.enabled = false` → action routes 503, `/ai/status` reports `enabled: false`. |
+| **Monthly spend cap** | `AI_MONTHLY_TOKEN_CAP` (env) and per-org `settings.ai.monthlyTokenCap` — the stricter non-zero value wins. Output tokens used this calendar month are summed from `ai_usage_log`; **429** once the cap is reached. `0` = unlimited. |
+| **Provider pinning** | `organizations.settings.ai.provider` overrides `AI_DEFAULT_PROVIDER` for that org (falls back if the pinned provider has no key). |
+| **Retention purge** | `AI_MESSAGE_RETENTION_DAYS` (env, `0` = keep forever). When > 0, a daily background purge deletes `ai_conversations` / `ai_messages` / `ai_usage_log` older than N days so PII-bearing transcripts do not persist indefinitely. |
+
 ---
 
 ## Database
@@ -334,6 +434,12 @@ Migrations in `migrations/` — pure PostgreSQL, applied in filename order.
 | `010_webhooks.sql` | `webhooks`, `webhook_events` |
 | `011_activity_linkedin_type.sql` | Adds `linkedin` to `activities_type_check` constraint |
 | `012_contacts_linkedin_url.sql` | Adds `linkedin_url text` column to `contacts` |
+| `013_org_branding_billing.sql` | Org branding + billing fields |
+| `014_plans_subscriptions.sql` | `plans`, subscription/billing tables (Stripe) |
+| `015_server_sync_stores.sql` | Server-side sync stores (views, preferences, distribution lists) |
+| `016_admin_enhancements.sql` | Admin/impersonation enhancements |
+| `017_bootstrap_super_admin.sql` | Bootstrap super-admin |
+| `018_ai.sql` | `ai_conversations`, `ai_messages`, `ai_usage_log` (org-scoped, RLS-enabled, indexed) |
 | `002_indexes_and_perf.sql` | pg_trgm trigram indexes (full-text search), 40+ B-tree indexes on FK hot paths, composite list-query indexes, RLS on 21 tables, `set_current_org()` SECURITY DEFINER function |
 
 ```bash
@@ -345,26 +451,81 @@ npm run db:seed      # seed default org + admin
 
 ## Environment Variables
 
+This mirrors [`.env.example`](.env.example), validated by Zod in [`src/config/env.ts`](src/config/env.ts) — the process **exits at boot** if validation fails.
+
+### Core
+
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
+| `NODE_ENV` | | `development` | `development` \| `production` \| `test` |
 | `DATABASE_URL` | ✓ | — | PostgreSQL connection string (should point to PgBouncer at `pgbouncer:6432` in production) |
-| `JWT_SECRET` | ✓ | — | Min 64 chars — `openssl rand -hex 32` |
-| `TOKEN_ENCRYPTION_KEY` | ✓* | — | 32-byte hex — AES-256-GCM key for OAuth tokens, SMTP passwords, webhook secrets. Required to use Gmail/Calendar/SMTP features. |
-| `INTERNAL_KEY` | ✓ (prod) | — | Min 16 chars — protects `/internal/*` routes (e.g. `/internal/sequences/run`) |
-| `REDIS_URL` | | `redis://localhost:6379` | BullMQ + Socket.io Redis adapter + JWT denylist |
+| `JWT_SECRET` | ✓ | — | Min 32 chars — `openssl rand -hex 32` |
+| `JWT_EXPIRES_IN` | | `7d` | Token lifetime (`^\d+[smhdw]$`) |
+| `REFRESH_TOKEN_EXPIRES_DAYS` | | `30` | Refresh-token lifetime in days |
+| `TOKEN_ENCRYPTION_KEY` | ✓* | — | 32-byte hex — AES-256-GCM key for OAuth tokens, SMTP/Slack/Zoom secrets, webhook secrets. *Required only to use those integrations. |
+| `INTERNAL_KEY` | ✓ (prod) | — | Min 16 chars — gates `/internal/*` routes and the `/metrics` cross-container path. When unset, `/internal/*` returns 503. |
+| `DEBUG_TOKEN` | | — | Min 16 chars — when set, enables `/_debug/*` routes gated by the `X-Debug-Token` header (`/_debug/sql` runs in a READ ONLY transaction). Unset = disabled. |
+| `REDIS_URL` | | `redis://localhost:6379` | Rate-limit store + Socket.io adapter + JWT denylist + login-lockout counters |
 | `PORT` | | `3001` | HTTP listen port |
-| `CORS_ORIGIN` | | `http://localhost:5173` | Allowed browser origin(s) — comma-separated in production |
-| `JWT_EXPIRES_IN` | | `7d` | Token lifetime |
+| `CORS_ORIGIN` | | — | Allowed browser origin(s), comma-separated. **Must** be set (no `*`) in production or the process exits. |
 | `APP_URL` | | `http://localhost:5173` | Frontend URL for email links (reset, invite) |
+| `TRUST_PROXY` | | `1` | Trusted reverse-proxy hop count for client-IP resolution (rate limiting). nginx only = `1`; platform edge + nginx = `2`; `0` = direct. Too high lets clients spoof `X-Forwarded-For`; too low collapses clients onto the proxy IP. |
+
+### Registration policy
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `ALLOW_OPEN_REGISTRATION` | | `true` | `false`/`0` = invite-only. The **first** user can always register (bootstrap). |
+| `REGISTRATION_ALLOWED_DOMAINS` | | — | Optional comma-separated email-domain allow-list for self-registration. |
+
+### Email
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
 | `EMAIL_FROM` | | `noreply@n0crm.com` | From address for transactional emails |
 | `RESEND_API_KEY` | | — | Resend.com (optional — falls back to SMTP) |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | | — | Global SMTP fallback (optional) |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | | — | Global SMTP fallback (optional; per-org SMTP also supported at runtime) |
+
+### Google OAuth (Gmail / Calendar)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
 | `GOOGLE_CLIENT_ID` | | — | Google OAuth — enables Gmail + Calendar features |
 | `GOOGLE_CLIENT_SECRET` | | — | Google OAuth secret |
 | `GOOGLE_REDIRECT_URI` | | — | Must match Google Cloud console (e.g. `http://localhost:5173/auth/gmail/callback`) |
 | `GOOGLE_CALENDAR_WEBHOOK_URL` | | — | Public HTTPS base URL for Google push notifications (production only) |
-| `ANTHROPIC_API_KEY` | | — | Optional — AI features |
-| `GRAFANA_PASSWORD` | | `admin` | Grafana admin password for Docker Compose stack |
+
+### Stripe billing (optional)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `STRIPE_SECRET_KEY` | | — | Enables billing; free-tier caps apply to churned orgs when configured |
+| `STRIPE_WEBHOOK_SECRET` | | — | Verifies the Stripe webhook |
+| `STRIPE_SUCCESS_URL` / `STRIPE_CANCEL_URL` | | — | Checkout redirect URLs |
+
+### AI / Agentic features
+
+The AI assistant + agent activate as soon as **any one** provider key is set. With none set the feature degrades gracefully (`/ai/status` → `enabled: false`, action routes 503).
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `GEMINI_API_KEY` | | — | Google Gemini (free) — https://aistudio.google.com/apikey |
+| `OPENAI_API_KEY` | | — | OpenAI (optional) |
+| `ANTHROPIC_API_KEY` | | — | Anthropic (optional) |
+| `AI_DEFAULT_PROVIDER` | | `gemini` | `gemini` \| `openai` \| `anthropic` — preferred when several keys are set and no per-org override |
+| `AI_GEMINI_MODEL` | | `gemini-2.0-flash` | Model override |
+| `AI_OPENAI_MODEL` | | `gpt-4o-mini` | Model override |
+| `AI_ANTHROPIC_MODEL` | | `claude-sonnet-4-6` | Model override |
+| `AI_AGENT_MAX_STEPS` | | `8` | Max tool-call rounds per agent request (1–20) |
+| `AI_MONTHLY_TOKEN_CAP` | | `0` | Per-org monthly output-token cap (`0` = unlimited). Orgs can set a lower cap in `settings.ai.monthlyTokenCap`. 429 when exceeded. |
+| `AI_MESSAGE_RETENTION_DAYS` | | `0` | Retention for AI conversations/messages/usage in days (`0` = keep forever) |
+
+### Misc / Docker stack
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `GRAFANA_PASSWORD` | | `admin` | Grafana admin password for the Docker Compose stack |
+| `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` / `SEED_ADMIN_NAME` / `SEED_ORG_NAME` / `SEED_ORG_SLUG` | | see `.env.example` | Used by `npm run db:seed` |
 
 ---
 
@@ -372,27 +533,51 @@ npm run db:seed      # seed default org + admin
 
 ```bash
 npm run dev          # tsx watch, hot-reload
-npm run build        # compile TypeScript → dist/
+npm run build        # compile TypeScript → dist/  (tsc)
 npm run start        # production: node dist/index.js
 npm run db:migrate   # apply pending SQL migrations
 npm run db:seed      # seed default org + admin
-npm test             # vitest
+npm run lint         # eslint src
+npm test             # vitest run (one-shot)
+npm run test:watch   # vitest (watch mode)
 ```
+
+---
+
+## Quality Gates (lint / type / test)
+
+The backend is gated in CI by the **`api` job** in [`.gitea/workflows/ci.yml`](../.gitea/workflows/ci.yml). Run the same checks locally from `api/`:
+
+```bash
+npx tsc --noEmit                 # type check (no emit)
+npm run lint                     # ESLint (flat config — eslint.config.js)
+npx vitest run                   # unit tests (26 tests across 5 files)
+npm run build                    # tsc → dist/
+npm audit --audit-level=critical # dependency audit (0 vulnerabilities expected)
+```
+
+- **ESLint** uses a flat config (`eslint.config.js`): `@eslint/js` + `typescript-eslint` recommended. Unused vars are an error (underscore-prefixed args/vars ignored); `no-explicit-any` is a warning (off in tests); `no-empty` allows empty catch blocks.
+- **Vitest** suite (`*.test.ts`) covers the AI providers, agent loop, CRM tools, retention purge, and the Slack outbound allow-list — no DB or network required (providers/tools are injected as fakes).
+
+This `api` job is new: the backend previously had no lint/type/test gate. The frontend has its own job (ui:lint, i18n:lint, i18n:coverage, eslint with 0 warnings, tsc, vitest, build, ≤250KB gzip bundle budget, npm audit).
 
 ---
 
 ## Security Notes
 
-- All PATCH/DELETE routes verify `organization_id` ownership before mutation.
-- **Row-Level Security (RLS)** enabled on 21 tables — enforced at database layer via `set_current_org()` function. API must call this per-request to set the GUC before executing queries.
-- JWTs are denied at request time via Redis denylist (logout + token rotation).
-- OAuth refresh tokens and SMTP passwords are encrypted AES-256-GCM at rest.
-- Webhook secrets are encrypted at rest; HMAC-SHA256 signatures are verified with `timingSafeEqual`.
-- API keys are stored as SHA-256 hashes — raw value never stored.
-- Public inbound webhook requires HMAC signature when a secret is registered.
-- **Rate limiting:** 10 req/15 min on auth routes (per IP), 500 req/min per organization (Redis-backed), 20 req/min per IP on auth routes — prevents brute force and abuse.
-- Slack webhook URLs are encrypted AES-256-GCM at rest in `organizations.settings`.
-- `/metrics` endpoint accessible only from localhost — protects sensitive monitoring data.
+- **Auth & tokens:** JWTs are HS256, delivered as an HttpOnly `auth_token` cookie (not returned in the login body — XSS protection), and denied at request time via a Redis denylist (logout + rotation; `valid-after` per user invalidates older tokens on login).
+- **Tenant isolation:** every read filters and every PATCH/DELETE verifies `organization_id` ownership before mutation; cross-org FK ownership is checked on deals and on AI write tools. **Row-Level Security (RLS)** is enabled on 21+ tables (incl. the `ai_*` tables) via `set_current_org()`, as defense-in-depth behind app-layer filtering.
+- **Client-IP resolution:** Fastify `trustProxy` is set to `TRUST_PROXY` hops, so the rate limiter keys on the genuine `req.ip` and `X-Forwarded-For` can no longer be spoofed on auth routes.
+- **Account lockout:** after **10 failed logins within 15 minutes** per account (Redis counter), further attempts return 429 regardless of correctness — layered on top of the per-IP limit. bcrypt always runs (constant-time) to prevent user enumeration.
+- **Self-registration policy:** governed by `ALLOW_OPEN_REGISTRATION` (default open) and the optional `REGISTRATION_ALLOWED_DOMAINS` allow-list; the first user can always register to bootstrap a fresh install.
+- **Encryption at rest:** OAuth refresh tokens, SMTP passwords, Slack webhook URLs, Zoom secrets, and webhook signing secrets are AES-256-GCM encrypted.
+- **Webhooks:** API keys stored as SHA-256 hashes (raw value never stored); HMAC-SHA256 signatures verified with `timingSafeEqual`; inbound webhooks require a valid HMAC when a secret is registered; outbound subscriptions are HTTPS-only; Slack outbound re-asserts the `hooks.slack.com` allow-list at send time.
+- **AI egress:** outbound provider calls go only to a fixed vendor host allow-list with a 30s timeout — no user-supplied URL ever reaches `fetch`.
+- **Rate limiting:** 500 req/min per organization (Redis-backed), 20 req/min per IP on auth routes, 10 req/15 min on `/auth/login` + `/auth/register`, and 30 req/min per org on `/ai/*`.
+- **`/metrics`** is gated on the **raw socket peer** being loopback **or** a matching `x-internal-key` header (not `req.ip`, which is XFF-derived under `trustProxy`). `/_debug/sql` runs in a READ ONLY transaction and the `/_debug/*` routes only exist when `DEBUG_TOKEN` is set.
+- **Realtime:** the Socket.io handshake re-checks `users.is_active` + org membership.
+- **Background work:** the sequence runner claims rows `FOR UPDATE SKIP LOCKED` so concurrent workers never double-send. Impersonation exit sets `ended_at`.
+- `npm audit` reports **0 vulnerabilities** on the API.
 
 ---
 
@@ -532,10 +717,10 @@ All errors return a JSON body with an `error` key. Status codes:
 | 401 | Missing or expired JWT — clear token and redirect to `/login` |
 | 403 | No organization claim on JWT, or insufficient role; `/metrics` from non-localhost IPs returns 403 |
 | 404 | Record not found, or doesn't belong to your org |
-| 429 | Rate limit exceeded (10 req/15 min on auth routes; 500 req/min per org globally; 20 req/min per IP on auth routes) |
+| 429 | Rate limit exceeded (500/min per org; 20/min per IP on auth routes; 10/15 min on login+register; 30/min per org on `/ai/*`) **or** account locked (10 failed logins/15 min) **or** monthly AI token cap reached |
 | 500 | Server error — check API logs |
-| 502 | External service error (Slack, Gmail, SMTP) |
-| 503 | Health check failed (database or Redis unavailable) |
+| 502 | External service error (Slack, Gmail, SMTP, AI provider) |
+| 503 | Health check failed (database/Redis down); AI not configured or disabled for the org; or `/internal/*` with no `INTERNAL_KEY` set |
 
 ### Validation errors (400)
 
@@ -585,7 +770,7 @@ docker-compose up -d
 # Core services:
 #   postgres       → PostgreSQL 16 (internal, port 5432)
 #   pgbouncer      → Connection pool (port 6432, API connects here)
-#   redis          → BullMQ + Socket.io adapter (port 6379)
+#   redis          → rate limiting + Socket.io adapter + JWT denylist (port 6379)
 #   api            → Fastify (port 3001)
 #   web            → nginx + frontend (port 80)
 #
@@ -633,7 +818,10 @@ sudo systemctl enable --now n0crm-api
 
 ### Production checklist
 
-- [ ] `JWT_SECRET` — at least 64 chars (`openssl rand -hex 32`)
+- [ ] `JWT_SECRET` — min 32 chars (use `openssl rand -hex 32` → a 64-char hex string)
+- [ ] `TRUST_PROXY` — set to your real proxy hop count (nginx=1, edge+nginx=2); wrong values break IP-based rate limiting
+- [ ] `ALLOW_OPEN_REGISTRATION` / `REGISTRATION_ALLOWED_DOMAINS` — lock down signup for enterprise deployments
+- [ ] AI (optional) — set at least one of `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`; consider `AI_MONTHLY_TOKEN_CAP` and `AI_MESSAGE_RETENTION_DAYS` for a shared key
 - [ ] `TOKEN_ENCRYPTION_KEY` — exactly 32 bytes hex (`openssl rand -hex 32`)
 - [ ] `INTERNAL_KEY` — min 16 chars for `/internal/*` routes (sequences/run, etc.)
 - [ ] `CORS_ORIGIN` — set to your frontend domain (no trailing slash)
@@ -777,4 +965,4 @@ If a migration partially applied, manually drop the incomplete table and re-run.
 
 ---
 
-*Last updated: 2026-05-25*
+*Last updated: 2026-06-10*
