@@ -7,6 +7,8 @@ import { env } from '../config/env.js'
 import { sendEmail } from '../services/email.js'
 import { denyToken, setUserTokensValidAfter, recordFailedLogin, clearFailedLogins, isLoginLocked } from '../db/redis.js'
 import { setAuthCookie, clearAuthCookie } from '../services/cookieAuth.js'
+import { encryptToken, decryptToken } from '../services/tokenCipher.js'
+import { generateSecret, verifyTotp, otpauthUrl } from '../services/totp.js'
 
 const AUTH_RATE_LIMIT = { max: 10, timeWindow: '15 minutes' }
 const BCRYPT_ROUNDS = 12
@@ -22,6 +24,8 @@ function jwtExpirySeconds(expiresIn: string): number {
 const loginBody = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  // Required only when the account has MFA enabled (see login flow).
+  totp: z.string().optional(),
 })
 
 const registerBody = z.object({
@@ -53,7 +57,8 @@ export async function authRoutes(app: FastifyInstance) {
 
     const users = await db`
       SELECT u.id, u.email, u.password_hash, u.name, u.role, u.is_active,
-             u.organization_id, o.slug as org_slug
+             u.organization_id, o.slug as org_slug,
+             u.mfa_enabled, u.mfa_secret_cipher
       FROM users u
       LEFT JOIN organizations o ON o.id = u.organization_id
       WHERE u.email = ${email}
@@ -67,6 +72,26 @@ export async function authRoutes(app: FastifyInstance) {
       await recordFailedLogin(accountKey)
       return reply.code(401).send({ error: 'Invalid credentials' })
     }
+
+    // Second factor (TOTP) when the account has MFA enabled.
+    if (user.mfaEnabled === true) {
+      const code = body.data.totp
+      if (!code) {
+        // Password was correct but a code is required — signal the client to prompt.
+        return reply.code(401).send({ error: 'MFA code required', mfaRequired: true })
+      }
+      let secret: string
+      try {
+        secret = decryptToken(user.mfaSecretCipher as string)
+      } catch {
+        return reply.code(500).send({ error: 'MFA is misconfigured for this account' })
+      }
+      if (!verifyTotp(secret, code)) {
+        await recordFailedLogin(accountKey)
+        return reply.code(401).send({ error: 'Invalid MFA code', mfaRequired: true })
+      }
+    }
+
     // Successful auth — reset the failure counter.
     await clearFailedLogins(accountKey)
 
@@ -171,7 +196,7 @@ export async function authRoutes(app: FastifyInstance) {
   app.get('/me', { onRequest: [app.authenticate] }, async (req, reply) => {
     const { sub: userId } = req.user
     const rows = await db`
-      SELECT u.id, u.email, u.name, u.role, u.is_active, u.is_super_admin,
+      SELECT u.id, u.email, u.name, u.role, u.is_active, u.is_super_admin, u.mfa_enabled,
              u.organization_id, o.name as org_name, o.slug as org_slug
       FROM users u
       LEFT JOIN organizations o ON o.id = u.organization_id
@@ -188,6 +213,7 @@ export async function authRoutes(app: FastifyInstance) {
         name: user.name,
         role: user.role,
         isSuperAdmin: user.isSuperAdmin === true,
+        mfaEnabled: user.mfaEnabled === true,
         organizationId: user.organizationId ?? null,
         orgName: user.orgName ?? null,
         orgSlug: user.orgSlug ?? null,
@@ -294,6 +320,66 @@ export async function authRoutes(app: FastifyInstance) {
     const passwordHash = await bcrypt.hash(body.data.newPassword, BCRYPT_ROUNDS)
     await db`UPDATE users SET password_hash = ${passwordHash}, updated_at = now() WHERE id = ${userId}`
     return reply.send({ ok: true })
+  })
+
+  // ── MFA (TOTP) ───────────────────────────────────────────────────────────
+  // POST /auth/mfa/setup — generate a secret + otpauth URL (not yet enabled).
+  app.post('/mfa/setup', { onRequest: [app.authenticate], config: { rateLimit: AUTH_RATE_LIMIT } }, async (req, reply) => {
+    const { sub: userId } = req.user
+    const rows = await db`SELECT email, mfa_enabled FROM users WHERE id = ${userId} LIMIT 1`
+    if (rows.length === 0) return reply.code(404).send({ error: 'User not found' })
+    if (rows[0]!.mfaEnabled === true) return reply.code(409).send({ error: 'MFA is already enabled' })
+
+    const secret = generateSecret()
+    const cipher = encryptToken(secret)
+    if (!cipher) return reply.code(503).send({ error: 'MFA requires TOKEN_ENCRYPTION_KEY to be configured' })
+
+    // Store the (encrypted) pending secret; enabled stays false until verified.
+    await db`UPDATE users SET mfa_secret_cipher = ${cipher}, updated_at = now() WHERE id = ${userId}`
+    return reply.send({ secret, otpauthUrl: otpauthUrl(secret, rows[0]!.email as string) })
+  })
+
+  // POST /auth/mfa/enable — confirm possession with a code, then turn MFA on.
+  app.post('/mfa/enable', { onRequest: [app.authenticate], config: { rateLimit: AUTH_RATE_LIMIT } }, async (req, reply) => {
+    const { sub: userId } = req.user
+    const body = z.object({ token: z.string().min(6) }).safeParse(req.body)
+    if (!body.success) return reply.code(400).send({ error: 'A 6-digit code is required' })
+
+    const rows = await db`SELECT mfa_secret_cipher FROM users WHERE id = ${userId} LIMIT 1`
+    const cipher = rows[0]?.mfaSecretCipher as string | null | undefined
+    if (!cipher) return reply.code(400).send({ error: 'Run MFA setup first' })
+
+    let secret: string
+    try { secret = decryptToken(cipher) } catch { return reply.code(500).send({ error: 'MFA secret could not be read' }) }
+    if (!verifyTotp(secret, body.data.token)) return reply.code(401).send({ error: 'Invalid code' })
+
+    await db`UPDATE users SET mfa_enabled = true, updated_at = now() WHERE id = ${userId}`
+    await db`
+      INSERT INTO audit_log (action, entity_type, entity_id, entity_name, details, user_id, organization_id)
+      SELECT 'mfa_enabled', 'user', ${userId}, email, 'TOTP MFA enabled', ${userId}, organization_id
+      FROM users WHERE id = ${userId} AND organization_id IS NOT NULL
+    `
+    return reply.send({ enabled: true })
+  })
+
+  // POST /auth/mfa/disable — re-auth with the current password, then turn MFA off.
+  app.post('/mfa/disable', { onRequest: [app.authenticate], config: { rateLimit: AUTH_RATE_LIMIT } }, async (req, reply) => {
+    const { sub: userId } = req.user
+    const body = z.object({ password: z.string().min(1) }).safeParse(req.body)
+    if (!body.success) return reply.code(400).send({ error: 'Password is required' })
+
+    const rows = await db`SELECT password_hash FROM users WHERE id = ${userId} LIMIT 1`
+    if (rows.length === 0) return reply.code(404).send({ error: 'User not found' })
+    const valid = await bcrypt.compare(body.data.password, rows[0]!.passwordHash as string)
+    if (!valid) return reply.code(401).send({ error: 'Password is incorrect' })
+
+    await db`UPDATE users SET mfa_enabled = false, mfa_secret_cipher = NULL, updated_at = now() WHERE id = ${userId}`
+    await db`
+      INSERT INTO audit_log (action, entity_type, entity_id, entity_name, details, user_id, organization_id)
+      SELECT 'mfa_disabled', 'user', ${userId}, email, 'TOTP MFA disabled', ${userId}, organization_id
+      FROM users WHERE id = ${userId} AND organization_id IS NOT NULL
+    `
+    return reply.send({ enabled: false })
   })
 
   // POST /auth/admin/reset-password — admin sets another user's password directly
