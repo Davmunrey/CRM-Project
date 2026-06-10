@@ -41,3 +41,22 @@ docs/security-audit-*.md
 .env
 .env*.local
 .mcp.json
+
+# OneDrive conflict copies (this repo currently lives under OneDrive, which
+# creates "<name>-<DEVICE>.<ext>" duplicates of edited files). Never commit them.
+# NOTE: keeping a repo's .git under OneDrive is unsafe — move it out of OneDrive.
+*-MSI.*
+*-MSI/
+*-DESKTOP-*.*
+
+# Dead legacy removed from the live app — re-ignored so an accidental re-add
+# can't resurrect it. (frontend/src/lib/supabaseHelpers.ts is LIVE — kept.)
+/frontend/supabase/
+/frontend/src/lib/supabase.ts
+/frontend/src/lib/database.gen.ts
+/frontend/src/lib/database.types.ts
+/frontend/tests/__mocks__/supabase.ts
+/frontend/tests/lib/supabase.test.ts
+/frontend/scripts/supabase-set-webhook-worker-secret.mjs
+/frontend/scripts/verify-google-edge-health.mjs
+/api/postgres-custom/

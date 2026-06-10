@@ -11,7 +11,7 @@ const leadBody = z.object({
   last_name: z.string().max(100).optional(),
 })
 
-async function verifyApiKey(app: FastifyInstance) {
+async function verifyApiKey(_app: FastifyInstance) {
   return async function (req: import('fastify').FastifyRequest, reply: import('fastify').FastifyReply) {
     const apiKey = req.headers['x-api-key'] as string | undefined
     if (!apiKey) return reply.code(401).send({ error: 'API key required' })

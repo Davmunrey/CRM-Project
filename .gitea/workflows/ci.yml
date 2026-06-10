@@ -7,6 +7,51 @@ on:
   pull_request:
 
 jobs:
+  api:
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - name: Checkout
+        working-directory: ${{ github.workspace }}
+        env:
+          GIT_TOKEN: ${{ github.token }}
+        run: |
+          rm -rf .git
+          git init
+          git remote add origin "https://oauth2:${GIT_TOKEN}@gitea.apps.privateprompt.tech/clovrlabs/n0CRM.git"
+          git fetch --depth=1 origin "${GITHUB_SHA}"
+          git checkout FETCH_HEAD
+
+      - name: Setup Node 22
+        run: |
+          export NVM_DIR="${HOME}/.nvm"
+          if [ -s "${NVM_DIR}/nvm.sh" ]; then
+            . "${NVM_DIR}/nvm.sh"
+            nvm use 22 2>/dev/null || nvm install 22
+          fi
+          node --version
+          npm --version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npx vitest run
+
+      - name: Build
+        run: npm run build
+
+      - name: Dependency audit (critical)
+        run: npm audit --audit-level=critical
+
   ci:
     runs-on: self-hosted
     defaults:

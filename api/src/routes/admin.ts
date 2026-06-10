@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { randomBytes } from 'node:crypto'
 import { db } from '../db/client.js'
-import { env } from '../config/env.js'
 import { setAuthCookie, setRestoreCookie, getRestoreCookie, clearRestoreCookie, COOKIE_NAME } from '../services/cookieAuth.js'
 
 async function isSuperAdmin(req: { user: { sub: string } }): Promise<boolean> {

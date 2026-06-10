@@ -63,7 +63,7 @@ export async function contactsRoutes(app: FastifyInstance) {
 
     const total = Number(rows[0]?.['total_count'] ?? 0)
     // Strip the internal pagination column before sending to the client
-    const data = rows.map(({ total_count, ...rest }) => rest)
+    const data = rows.map(({ total_count: _total_count, ...rest }) => rest)
 
     return reply.send({ data, total, limit, offset })
   })

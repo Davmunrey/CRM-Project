@@ -121,12 +121,12 @@ export async function automationsRoutes(app: FastifyInstance) {
               ? new Date(Date.now() + daysFromNow * 86_400_000).toISOString()
               : null
             await db`
-              INSERT INTO activities (type, subject, description, status, deal_id, organization_id, created_by, created_at, updated_at)
+              INSERT INTO activities (type, subject, description, status, deal_id, due_date, organization_id, created_by, created_at, updated_at)
               VALUES (
                 ${(action['activityType'] as string) ?? 'task'},
                 ${(action['activitySubject'] as string) ?? `Follow-up: ${dealTitle}`},
                 ${`Auto-created by rule: ${rule.name as string}`},
-                'pending', ${dealId}, ${orgId2}, 'Automations',
+                'pending', ${dealId}, ${dueDate}, ${orgId2}, 'Automations',
                 ${now}, ${now}
               )
             `

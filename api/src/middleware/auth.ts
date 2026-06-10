@@ -8,7 +8,7 @@ declare module 'fastify' {
   }
 }
 
-export function authMiddleware(app: FastifyInstance) {
+export function authMiddleware(_app: FastifyInstance) {
   return async function authenticate(req: FastifyRequest, reply: FastifyReply) {
     try {
       await req.jwtVerify()
