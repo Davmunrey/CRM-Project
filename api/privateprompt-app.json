@@ -61,7 +61,11 @@
         "CORS_ORIGIN":           { "secret": false, "generate": false, "label": "CORS origin — public URL of the n0CRM frontend (no trailing slash). Comma-separate multiple.", "default": "" },
         "EMAIL_FROM":            { "secret": false, "generate": false, "label": "From address for transactional emails", "default": "noreply@n0crm.com" },
         "RESEND_API_KEY":        { "secret": true,  "generate": false, "label": "Resend API key for transactional email (optional)", "default": "" },
+        "GEMINI_API_KEY":        { "secret": true,  "generate": false, "label": "Google Gemini API key (free — enables AI assistant)", "default": "" },
+        "OPENAI_API_KEY":        { "secret": true,  "generate": false, "label": "OpenAI API key for AI features (optional)", "default": "" },
         "ANTHROPIC_API_KEY":     { "secret": true,  "generate": false, "label": "Anthropic API key for AI features (optional)", "default": "" },
+        "AI_DEFAULT_PROVIDER":   { "secret": false, "generate": false, "label": "Default AI provider", "default": "gemini" },
+        "TRUST_PROXY":           { "secret": false, "generate": false, "label": "Trusted reverse-proxy hops for client-IP resolution (platform edge + nginx = 2; direct = 0)", "default": "2" },
         "DEBUG_TOKEN":           { "secret": true,  "generate": true,  "label": "Diagnostic /_debug/* routes — when set (>=16 chars), exposes debug endpoints gated by X-Debug-Token header. Leave empty in production to disable." },
         "BACKUP_INTERVAL_HOURS": { "secret": false, "generate": false, "label": "How often to run pg_dump to the internal /backups volume. 0 disables scheduling.", "default": "6" },
         "BACKUP_KEEP":           { "secret": false, "generate": false, "label": "Number of scheduled backups to retain before rotating.", "default": "10" }
@@ -72,24 +76,6 @@
         "timeout": "5s",
         "retries": 5,
         "start_period": "60s"
-      }
-    },
-    "adminer": {
-      "image": "adminer:latest",
-      "port": 8080,
-      "memory_mb": 64,
-      "cpu": 0.25,
-      "env": {
-        "ADMINER_DEFAULT_SERVER": { "secret": false, "generate": false, "label": "Default DB host in Adminer login", "default": "postgres" },
-        "ADMINER_DEFAULT_DRIVER": { "secret": false, "generate": false, "label": "Default DB driver", "default": "pgsql" },
-        "ADMINER_DEFAULT_DB":     { "secret": false, "generate": false, "label": "Default DB name", "default": "n0crm" }
-      },
-      "healthcheck": {
-        "test": ["CMD", "wget", "-qO-", "http://localhost:8080/"],
-        "interval": "30s",
-        "timeout": "5s",
-        "retries": 3,
-        "start_period": "15s"
       }
     }
   },
