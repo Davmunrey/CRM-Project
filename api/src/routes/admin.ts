@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { randomBytes } from 'node:crypto'
 import { db } from '../db/client.js'
 import { setAuthCookie, setRestoreCookie, getRestoreCookie, clearRestoreCookie, COOKIE_NAME } from '../services/cookieAuth.js'
+import { recordSecurityEvent } from '../services/securityEvents.js'
 
 async function isSuperAdmin(req: { user: { sub: string } }): Promise<boolean> {
   const rows = await db`SELECT is_super_admin FROM users WHERE id = ${req.user.sub} LIMIT 1`
@@ -244,6 +245,12 @@ export async function adminRoutes(app: FastifyInstance) {
       VALUES (${req.user.sub}, ${id}, ${owner.id})
     `
 
+    recordSecurityEvent(req, 'impersonation_started', {
+      actorUserId: req.user.sub,
+      organizationId: id,
+      detail: `super-admin impersonating user ${owner.id as string}`,
+    })
+
     // Save the original session for restore, then swap to impersonation token
     const originalToken = (req.cookies as Record<string, string | undefined>)[COOKIE_NAME]
     if (originalToken) setRestoreCookie(reply, originalToken)
@@ -263,6 +270,10 @@ export async function adminRoutes(app: FastifyInstance) {
           AND target_user_id = ${req.user.sub}
           AND ended_at IS NULL
       `
+      recordSecurityEvent(req, 'impersonation_ended', {
+        actorUserId: impersonatedBy,
+        detail: `ended impersonation of user ${req.user.sub}`,
+      })
     }
     const restoreToken = getRestoreCookie(req)
     clearRestoreCookie(reply)
@@ -393,6 +404,29 @@ export async function adminRoutes(app: FastifyInstance) {
     const [plan] = await db`UPDATE plans SET ${db(updates)} WHERE id = ${id} RETURNING *`
     if (!plan) return reply.code(404).send({ error: 'Not found' })
     return reply.send(plan)
+  })
+
+  // ── GET /admin/security-events ──────────────────────────────────────────────
+  // Tamper-evident auth/security event log (login, logout, failed login, password
+  // change, MFA, impersonation). Super-admin only (guarded by the preHandler hook).
+  app.get('/security-events', async (req, reply) => {
+    const query = z.object({
+      limit: z.coerce.number().min(1).max(200).default(50),
+      offset: z.coerce.number().min(0).default(0),
+      type: z.string().optional(),
+    }).safeParse(req.query)
+    if (!query.success) return reply.code(400).send({ error: 'Invalid query' })
+    const { limit, offset, type } = query.data
+
+    const rows = await db`
+      SELECT id, event_type, actor_user_id, actor_email, organization_id, ip, user_agent, detail, created_at
+      FROM security_events
+      WHERE ${type ? db`event_type = ${type}` : db`true`}
+      ORDER BY created_at DESC
+      LIMIT ${limit} OFFSET ${offset}
+    `
+    const [cnt] = await db`SELECT COUNT(*)::int AS count FROM security_events`
+    return reply.send({ data: rows, total: Number(cnt?.['count'] ?? 0), limit, offset })
   })
 
   // ── GET /admin/impersonation-logs ───────────────────────────────────────────

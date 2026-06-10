@@ -9,6 +9,7 @@ import { denyToken, setUserTokensValidAfter, recordFailedLogin, clearFailedLogin
 import { setAuthCookie, clearAuthCookie } from '../services/cookieAuth.js'
 import { encryptToken, decryptToken } from '../services/tokenCipher.js'
 import { generateSecret, verifyTotp, otpauthUrl } from '../services/totp.js'
+import { recordSecurityEvent } from '../services/securityEvents.js'
 
 const AUTH_RATE_LIMIT = { max: 10, timeWindow: '15 minutes' }
 const BCRYPT_ROUNDS = 12
@@ -70,6 +71,12 @@ export async function authRoutes(app: FastifyInstance) {
     const valid = await bcrypt.compare(password, hashToCheck)
     if (!user || !user.isActive || !valid) {
       await recordFailedLogin(accountKey)
+      recordSecurityEvent(req, 'login_failed', {
+        actorUserId: (user?.id as string | undefined) ?? null,
+        actorEmail: email,
+        organizationId: (user?.organizationId as string | undefined) ?? null,
+        detail: !user ? 'unknown account' : !user.isActive ? 'inactive account' : 'bad password',
+      })
       return reply.code(401).send({ error: 'Invalid credentials' })
     }
 
@@ -78,6 +85,7 @@ export async function authRoutes(app: FastifyInstance) {
       const code = body.data.totp
       if (!code) {
         // Password was correct but a code is required — signal the client to prompt.
+        recordSecurityEvent(req, 'login_mfa_required', { actorUserId: user.id as string, actorEmail: email, organizationId: (user.organizationId as string | null) ?? null })
         return reply.code(401).send({ error: 'MFA code required', mfaRequired: true })
       }
       let secret: string
@@ -88,12 +96,14 @@ export async function authRoutes(app: FastifyInstance) {
       }
       if (!verifyTotp(secret, code)) {
         await recordFailedLogin(accountKey)
+        recordSecurityEvent(req, 'login_mfa_failed', { actorUserId: user.id as string, actorEmail: email, organizationId: (user.organizationId as string | null) ?? null })
         return reply.code(401).send({ error: 'Invalid MFA code', mfaRequired: true })
       }
     }
 
     // Successful auth — reset the failure counter.
     await clearFailedLogins(accountKey)
+    recordSecurityEvent(req, 'login_success', { actorUserId: user.id as string, actorEmail: email, organizationId: (user.organizationId as string | null) ?? null })
 
     const ttl = jwtExpirySeconds(env.JWT_EXPIRES_IN)
     const token = app.jwt.sign(
@@ -160,6 +170,7 @@ export async function authRoutes(app: FastifyInstance) {
     const ttl = jwtExpirySeconds(env.JWT_EXPIRES_IN)
     const token = app.jwt.sign({ sub: user!.id, org: null, role: user!.role, jti: randomBytes(16).toString('hex') }, { expiresIn: env.JWT_EXPIRES_IN })
 
+    recordSecurityEvent(req, 'register', { actorUserId: user!.id as string, actorEmail: email })
     setAuthCookie(reply, token, ttl)
 
     return reply.code(201).send({
@@ -244,6 +255,7 @@ export async function authRoutes(app: FastifyInstance) {
         html: `<p>Click the link below to reset your password. It expires in 1 hour.</p><p><a href="${resetLink}">${resetLink}</a></p>`,
         text: `Reset your password: ${resetLink}`,
       })
+      recordSecurityEvent(req, 'password_reset_requested', { actorUserId: users[0]!.id as string, actorEmail: body.data.email })
     }
 
     return reply.send({ ok: true })
@@ -273,6 +285,7 @@ export async function authRoutes(app: FastifyInstance) {
     const passwordHash = await bcrypt.hash(body.data.password, BCRYPT_ROUNDS)
     await db`UPDATE users SET password_hash = ${passwordHash}, updated_at = now() WHERE id = ${row.userId}`
     await db`DELETE FROM password_reset_tokens WHERE user_id = ${row.userId}`
+    recordSecurityEvent(req, 'password_reset_completed', { actorUserId: row.userId as string })
 
     return reply.send({ ok: true })
   })
@@ -319,6 +332,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     const passwordHash = await bcrypt.hash(body.data.newPassword, BCRYPT_ROUNDS)
     await db`UPDATE users SET password_hash = ${passwordHash}, updated_at = now() WHERE id = ${userId}`
+    recordSecurityEvent(req, 'password_changed', { actorUserId: userId })
     return reply.send({ ok: true })
   })
 
@@ -359,6 +373,7 @@ export async function authRoutes(app: FastifyInstance) {
       SELECT 'mfa_enabled', 'user', ${userId}, email, 'TOTP MFA enabled', ${userId}, organization_id
       FROM users WHERE id = ${userId} AND organization_id IS NOT NULL
     `
+    recordSecurityEvent(req, 'mfa_enabled', { actorUserId: userId })
     return reply.send({ enabled: true })
   })
 
@@ -379,6 +394,7 @@ export async function authRoutes(app: FastifyInstance) {
       SELECT 'mfa_disabled', 'user', ${userId}, email, 'TOTP MFA disabled', ${userId}, organization_id
       FROM users WHERE id = ${userId} AND organization_id IS NOT NULL
     `
+    recordSecurityEvent(req, 'mfa_disabled', { actorUserId: userId })
     return reply.send({ enabled: false })
   })
 
@@ -411,6 +427,7 @@ export async function authRoutes(app: FastifyInstance) {
       if (ttl > 0) await denyToken(jti, ttl)
     }
     clearAuthCookie(reply)
+    recordSecurityEvent(req, 'logout', { actorUserId: req.user.sub, organizationId: req.user.org ?? null })
     return reply.send({ ok: true })
   })
 
