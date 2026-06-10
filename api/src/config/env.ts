@@ -12,6 +12,14 @@ const schema = z.object({
   JWT_EXPIRES_IN: z.string().regex(/^\d+[smhdw]$/).default('7d'),
   REFRESH_TOKEN_EXPIRES_DAYS: z.coerce.number().default(30),
 
+  // Self-registration policy. Open by default (self-host onboarding). Set to
+  // "false"/"0" for invite-only (enterprise). The very first user can always
+  // register so a fresh install can be bootstrapped. (z.coerce.boolean treats
+  // any non-empty string as true, so parse the string explicitly.)
+  ALLOW_OPEN_REGISTRATION: z.string().default('true').transform((v) => v !== 'false' && v !== '0'),
+  // Optional comma-separated email-domain allow-list for self-registration.
+  REGISTRATION_ALLOWED_DOMAINS: z.string().optional(),
+
   // CORS — use comma-separated URLs in production; '*' is rejected in production.
   // Intentionally no .default() here so we can detect when it was NOT explicitly
   // provided and emit a startup warning. See index.ts CORS_ORIGIN guard.

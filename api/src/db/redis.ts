@@ -57,3 +57,27 @@ export async function consumeOAuthState(state: string): Promise<string | null> {
   if (userId !== null) await redis.del(key)
   return userId
 }
+
+// ── Account lockout (brute-force / credential-stuffing defense) ────────────────
+const LOGIN_FAIL_PREFIX = 'login:fail:'
+export const LOGIN_LOCK_THRESHOLD = 10
+const LOGIN_FAIL_WINDOW_SEC = 900 // 15 minutes (sliding via TTL on first failure)
+
+/** Increment the failed-login counter for an account key; returns the new count. */
+export async function recordFailedLogin(accountKey: string): Promise<number> {
+  const key = `${LOGIN_FAIL_PREFIX}${accountKey}`
+  const n = await redis.incr(key)
+  if (n === 1) await redis.expire(key, LOGIN_FAIL_WINDOW_SEC)
+  return n
+}
+
+/** Clear the failed-login counter on a successful authentication. */
+export async function clearFailedLogins(accountKey: string): Promise<void> {
+  await redis.del(`${LOGIN_FAIL_PREFIX}${accountKey}`)
+}
+
+/** True once an account has hit the failure threshold within the window. */
+export async function isLoginLocked(accountKey: string): Promise<boolean> {
+  const v = await redis.get(`${LOGIN_FAIL_PREFIX}${accountKey}`)
+  return v !== null && parseInt(v, 10) >= LOGIN_LOCK_THRESHOLD
+}

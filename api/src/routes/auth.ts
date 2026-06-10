@@ -5,7 +5,7 @@ import { randomBytes, createHash } from 'node:crypto'
 import { db } from '../db/client.js'
 import { env } from '../config/env.js'
 import { sendEmail } from '../services/email.js'
-import { denyToken, setUserTokensValidAfter } from '../db/redis.js'
+import { denyToken, setUserTokensValidAfter, recordFailedLogin, clearFailedLogins, isLoginLocked } from '../db/redis.js'
 import { setAuthCookie, clearAuthCookie } from '../services/cookieAuth.js'
 
 const AUTH_RATE_LIMIT = { max: 10, timeWindow: '15 minutes' }
@@ -42,6 +42,14 @@ export async function authRoutes(app: FastifyInstance) {
     if (!body.success) return reply.code(400).send({ error: 'Invalid request' })
 
     const { email, password } = body.data
+    const accountKey = email.toLowerCase()
+
+    // Account lockout: after repeated failures within the window, refuse further
+    // attempts regardless of correctness (credential-stuffing / brute-force guard,
+    // layered on top of the per-IP rate limit).
+    if (await isLoginLocked(accountKey)) {
+      return reply.code(429).send({ error: 'Account temporarily locked after too many failed attempts. Try again later.' })
+    }
 
     const users = await db`
       SELECT u.id, u.email, u.password_hash, u.name, u.role, u.is_active,
@@ -55,7 +63,12 @@ export async function authRoutes(app: FastifyInstance) {
     // Always run bcrypt to prevent timing-based user enumeration
     const hashToCheck = (user?.passwordHash as string | undefined) ?? '$2a$12$invalidhashpadding000000000000000000000000000000000000000'
     const valid = await bcrypt.compare(password, hashToCheck)
-    if (!user || !user.isActive || !valid) return reply.code(401).send({ error: 'Invalid credentials' })
+    if (!user || !user.isActive || !valid) {
+      await recordFailedLogin(accountKey)
+      return reply.code(401).send({ error: 'Invalid credentials' })
+    }
+    // Successful auth — reset the failure counter.
+    await clearFailedLogins(accountKey)
 
     const ttl = jwtExpirySeconds(env.JWT_EXPIRES_IN)
     const token = app.jwt.sign(
@@ -88,6 +101,24 @@ export async function authRoutes(app: FastifyInstance) {
     if (!body.success) return reply.code(400).send({ error: 'Invalid request' })
 
     const { email, password, name } = body.data
+
+    // Registration policy. The very first user can always register so a fresh
+    // install can be bootstrapped; after that, honor ALLOW_OPEN_REGISTRATION and
+    // the optional domain allow-list (invite-only / enterprise lockdown).
+    const [counts] = await db`SELECT COUNT(*)::int AS n FROM users`
+    const isBootstrap = Number(counts?.['n'] ?? 0) === 0
+    if (!isBootstrap) {
+      if (!env.ALLOW_OPEN_REGISTRATION) {
+        return reply.code(403).send({ error: 'Self-registration is disabled. Contact your administrator for an invite.' })
+      }
+      if (env.REGISTRATION_ALLOWED_DOMAINS) {
+        const allowed = env.REGISTRATION_ALLOWED_DOMAINS.split(',').map((d) => d.trim().toLowerCase()).filter(Boolean)
+        const domain = email.toLowerCase().split('@')[1] ?? ''
+        if (!allowed.includes(domain)) {
+          return reply.code(403).send({ error: 'Email domain not permitted for registration.' })
+        }
+      }
+    }
 
     const existing = await db`SELECT id FROM users WHERE email = ${email} LIMIT 1`
     if (existing.length > 0) return reply.code(409).send({ error: 'Registration failed' })
