@@ -1,393 +1,305 @@
-# n0CRM
+<div align="center">
 
-> Outbound-native CRM for high-velocity sales teams — built and maintained by **Clovr Labs**.
+# ⚡ n0CRM
 
-Internal tooling. Not open source.
+### Outbound-native CRM for high-velocity sales teams — *your infrastructure, your data, zero lock-in.*
+
+Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · Automations · Lead scoring · Reports — **plus a multi-provider, tool-using AI sales assistant.**
+
+<br/>
+
+[![CI](https://img.shields.io/badge/CI-tsc·eslint·vitest·build·audit-2ea44f?style=flat-square)](.gitea/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-API%2060%20·%20Web%20263-2ea44f?style=flat-square)](#-quality-gates)
+[![Vulnerabilities](https://img.shields.io/badge/npm%20audit-0%20vulnerabilities-2ea44f?style=flat-square)](#-security-at-a-glance)
+[![License](https://img.shields.io/badge/license-Internal-555?style=flat-square)](#)
+[![Maintained by Clovr Labs](https://img.shields.io/badge/by-Clovr%20Labs-4f46e5?style=flat-square)](#)
+
+<br/>
+
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![React 18](https://img.shields.io/badge/React%2018-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![Fastify](https://img.shields.io/badge/Fastify%205-000000?style=flat-square&logo=fastify&logoColor=white)
+![Node 22](https://img.shields.io/badge/Node.js%2022-339933?style=flat-square&logo=node.js&logoColor=white)
+![PostgreSQL 16](https://img.shields.io/badge/PostgreSQL%2016-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Redis 7](https://img.shields.io/badge/Redis%207-DC382D?style=flat-square&logo=redis&logoColor=white)
+![Socket.io](https://img.shields.io/badge/Socket.io-010101?style=flat-square&logo=socket.io&logoColor=white)
+![Gemini](https://img.shields.io/badge/AI-Gemini%20·%20OpenAI%20·%20Anthropic-8E75FF?style=flat-square&logo=googlegemini&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+
+</div>
 
 ---
 
-## Tech Stack
+## ✨ Why n0CRM
+
+|  |  |
+|---|---|
+| 🤖 **AI sales assistant** | A tool-using agent over your **own** CRM data — searches contacts/deals, drafts replies, suggests the next best action, logs activities. Multi-provider with **Google Gemini free by default** (or OpenAI / Anthropic). Degrades gracefully with no key. |
+| 🏢 **True multi-tenant** | Every query scoped to `organization_id` from the JWT. Server-side **RBAC** (owner / admin / manager / sales_rep / viewer) enforced in the API, not just the browser. |
+| 🔐 **Security-first** | MFA (TOTP), account lockout, HttpOnly-cookie JWT with revocation, AES-256-GCM field encryption, SSRF-hardened webhooks, tamper-evident security-event log, GDPR data-subject export & erasure. **0 npm vulnerabilities.** |
+| 📬 **Outbound-native** | Gmail thread sync + send/reply, Google Calendar, A/B email sequences, lead scoring, automations, multi-pipeline deals with a quote builder. |
+| 🌍 **6 languages** | Full UI i18n: English · Español · Português · Français · Deutsch · Italiano. |
+| 🛠️ **Yours to run** | Docker Compose or Private Prompt. Postgres + Fastify + Redis + nginx. No BaaS, no lock-in, no surprise bills. |
+
+---
+
+## 📑 Table of Contents
+
+[Highlights](#-whats-new) · [Tech Stack](#-tech-stack) · [Architecture](#-architecture) · [CRM Modules](#-crm-modules) · [Quick Start](#-quick-start) · [Docker](#-docker--full-stack) · [Deploy](#-deploy--private-prompt) · [Environment](#-environment-variables) · [API](#-api-overview) · [Security](#-security-at-a-glance) · [Quality Gates](#-quality-gates) · [CI/CD](#-cicd) · [Roadmap](#-roadmap)
+
+---
+
+## 🆕 What's new
+
+> The platform was migrated off Supabase to a self-hosted **Fastify + PostgreSQL + Redis** stack, then hardened toward enterprise readiness.
+
+- 🤖 **AI / agentic capability** — multi-provider (`Gemini` free default / `OpenAI` / `Anthropic`), a tool-using CRM agent with persisted conversations, in-app assistant drawer, next-best-action on Contact/Deal detail, and Inbox summarize + draft-reply.
+- 🛡️ **AI governance** — per-tenant kill switch, monthly token spend cap, and retention purge of AI transcripts.
+- 🔑 **MFA (TOTP)** — RFC-6238, end-to-end (enroll in Settings → Security, code prompt at login).
+- 👮 **Server-side RBAC** — permission matrix + `requirePermission` middleware, wired into member-lifecycle, API-key and webhook management.
+- 🧾 **Compliance** — security-event audit log (login/MFA/role changes/impersonation) + GDPR export & erasure endpoints.
+- 🔭 **Observability** — request-correlation IDs (`x-request-id`), central error capture, liveness/readiness probes.
+- ✅ **Backend CI gate** — the API gained ESLint + a 60-test Vitest suite + a CI job (it previously had *none*).
+
+---
+
+## 🧱 Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18 + TypeScript 5 + Vite |
-| Styling | Tailwind CSS 3 (dark theme) |
-| State | Zustand 5 — optimistic, API-backed stores |
-| Routing | React Router v6 |
-| Forms | React Hook Form + Zod |
-| Charts | Recharts |
-| Icons | lucide-react |
-| i18n | en / es / pt / fr / de / it |
-| API | Fastify 5 + Node.js 22 |
-| Database | PostgreSQL 16 via postgres.js |
-| Connection pooling | PgBouncer (transaction mode, 25 server connections) |
-| Cache / Queue | Redis 7 + BullMQ (ioredis) |
-| Realtime | Socket.io 4 (org-scoped rooms, Redis adapter for multi-node) |
-| Auth | JWT HS256 — HttpOnly cookie, jti denylist in Redis |
+| Frontend | React 18 · TypeScript 5 · Vite · Tailwind CSS 3 (dark) |
+| State / Forms | Zustand 5 (optimistic, API-backed) · React Hook Form + Zod |
+| Charts / Icons | Recharts · lucide-react |
+| i18n | en · es · pt · fr · de · it |
+| API | Fastify 5 · Node.js 22 |
+| Database | PostgreSQL 16 via postgres.js · PgBouncer (transaction pool) |
+| Cache / Realtime | Redis 7 (ioredis) · Socket.io 4 (org-scoped rooms, Redis adapter) |
+| Auth | JWT HS256 — HttpOnly cookie · `jti` denylist · TOTP MFA |
 | Encryption | AES-256-GCM (field-level) |
-| AI | Multi-provider — Google Gemini (free default), OpenAI, Anthropic — with a tool-using CRM agent |
-| Monitoring | Prometheus + Grafana + postgres-exporter + node-exporter |
-| Backup | Automated pg_dump (every 6h, 7-day retention) |
-| Payments | Stripe |
-| Email | Nodemailer (SMTP) |
-| Validation | Zod (API + frontend) |
-| Testing | Vitest (API + frontend) |
+| 🤖 AI | Google Gemini (free default) · OpenAI · Anthropic — tool-using CRM agent |
+| Monitoring | Prometheus · Grafana · postgres/node-exporter · `x-request-id` correlation |
+| Email / Payments | Nodemailer (SMTP) / Resend · Stripe |
+| Testing | Vitest (API + frontend) · Playwright (e2e) |
 
 ---
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 Browser (React SPA)
   │
   ├── REST API   ──→  Fastify 5  (Node 22)
-  │   │                 ├─ /auth /contacts /deals /companies /activities
+  │   │                 ├─ /auth  /contacts /deals /companies /activities
   │   │                 ├─ /leads /sequences /automations /products
   │   │                 ├─ /reports /forecast /inbox /calendar
-  │   │                 ├─ /custom-fields /goals /audit /webhooks
-  │   │                 ├─ /ai (status / summarize / draft-reply / next-best-action / search / agent)
-  │   │                 ├─ /health /metrics /internal/*
-  │   │                 └─ /admin  /public-api
+  │   │                 ├─ /ai (status · summarize · draft-reply · next-best-action · search · agent)
+  │   │                 ├─ /privacy (GDPR export · erasure)   /custom-fields /goals /audit /webhooks
+  │   │                 ├─ /health(/live·/ready)  /metrics  /internal/*
+  │   │                 └─ /admin  /public/v1
   │   │
-  │   ├── Realtime   ──→  Socket.io 4 (Redis-backed adapter)
-  │   │                     └─ __n0crmDbChange(table) — org-scoped rooms, JWT-verified
-  │   │
-  │   └── Background ──→  BullMQ on Redis
-  │                         └─ email sends, sequence scheduling, enrichment jobs, sequence runner
+  │   ├── Realtime   ──→  Socket.io 4 (Redis adapter) — org-scoped rooms, JWT + is_active verified
+  │   └── Background ──→  sequence runner (FOR UPDATE SKIP LOCKED) · AI retention purge
   │
-  ├── PgBouncer ──→ PostgreSQL 16
-  │                 └─ Transaction pool mode (25 server connections, 500 max clients)
-  │
-  └── Monitoring
-      ├── Prometheus (scrapes /metrics every 15s, also postgres-exporter, node-exporter)
-      ├── Grafana (port 3002, auto-provisioned Prometheus datasource)
-      └── Backup service (pg_dump every 6h, gzip, 7-day retention)
+  ├── PgBouncer ──→ PostgreSQL 16   (transaction pool, every query org-scoped)
+  └── Monitoring  ──→ Prometheus + Grafana · 6-hourly pg_dump backups
 ```
 
-**Auth flow:** `POST /auth/login` → HS256 JWT (`sub / org / role / jti`) set as an **HttpOnly cookie** (never returned in the body — XSS protection). The browser sends it automatically with every request. On 401: redirect `/login`. Logout revokes `jti` in the Redis denylist and clears the cookie.
-
-**Data:** all Zustand stores are API-backed with optimistic UI + rollback. PostgreSQL queries are scoped to `organization_id` from the JWT — no tenant leakage possible.
+**Auth flow:** `POST /auth/login` → HS256 JWT (`sub / org / role / jti`) set as an **HttpOnly cookie** (never in the body — XSS-safe), with optional **TOTP** second factor. On 401 the client clears state and redirects to `/login`; logout revokes the `jti` in Redis.
 
 ---
 
-## Monorepo Structure
-
-```
-velo-crm/
-├── frontend/                  # React 18 SPA
-│   ├── src/
-│   │   ├── components/        # UI primitives, layout, feature components
-│   │   ├── pages/             # Route containers
-│   │   ├── store/             # Zustand stores
-│   │   ├── hooks/             # useLocalStorage, useSearch, useFilters
-│   │   ├── lib/               # api.ts fetch client, env, schemas
-│   │   ├── i18n/              # Translation catalogs (6 locales)
-│   │   └── utils/             # Formatters, constants, lead scoring
-│   ├── nginx.conf.template    # Production nginx (envsubst)
-│   ├── Dockerfile
-│   └── package.json
-│
-├── api/                       # Fastify 5 backend
-│   ├── src/
-│   │   ├── routes/            # 40+ route modules
-│   │   ├── plugins/           # JWT, CORS, rate-limit, helmet
-│   │   ├── services/          # Business logic
-│   │   ├── workers/           # BullMQ job handlers
-│   │   └── config/            # env.ts (Zod-validated)
-│   ├── migrations/            # 18 SQL migration files (auto-applied on boot)
-│   ├── scripts/               # migrate.ts, seed.ts
-│   ├── docker-entrypoint.sh   # Runs migrations then starts server
-│   ├── Dockerfile
-│   └── package.json
-│
-├── .gitea/workflows/          # Gitea Actions CI/CD
-│   ├── ci.yml                 # api job (tsc/eslint/vitest/build/audit) + frontend ci + security
-│   ├── build-production.yml   # Frontend Docker image
-│   └── build-api.yml          # API Docker image
-│
-├── docker-compose.yml         # Full-stack local orchestration
-└── privateprompt-app.json     # Private Prompt deployment manifest
-```
-
----
-
-## CRM Modules
+## 🧩 CRM Modules
 
 | Module | Description |
 |--------|-------------|
-| **Dashboard** | KPI cards, revenue chart, deal funnel, activity heatmap, onboarding checklist |
-| **Contacts** | Table/grid view, CSV export, duplicate detection, bulk actions, smart views, distribution lists, LinkedIn enrichment |
-| **Companies** | Industry/status/size filters, domain deduplication, revenue tracking |
-| **Deals** | Kanban + list view, multi-pipeline, stage auto-resolve, quote builder (save/export/email) |
-| **Activities** | Unified feed, overdue highlighting, quick complete/delete |
-| **Leads** | Configurable scoring engine, score snapshots, events timeline |
-| **Automations** | Rule builder (trigger → condition → action), execution log |
-| **Sequences** | Email sequences with A/B variants, enrollment management, step scheduling |
-| **Products** | Product catalog for deal line items and quotes |
-| **Reports** | Revenue by month, Won/Lost donut, activities by type, conversion funnel, email open/click stats |
-| **Forecast** | Weighted pipeline forecast, pipeline health score, best-bet deals |
-| **AI Assistant** | Multi-provider (Gemini/OpenAI/Anthropic) — global drawer chat with a tool-using CRM agent, next-best-action on Contact/Deal detail, thread summarize + draft reply in the Inbox; degrades gracefully when no provider key is set |
-| **Inbox** | Gmail OAuth, full thread sync, send/reply/compose, attachment download, thread-to-record linking, AI summarize + draft reply |
-| **Calendar** | Google Calendar sync, event create/edit, month/week/day view, Meet link display |
-| **Custom Fields** | Per-entity definitions (contact/company/deal/lead), values, multilingual labels |
-| **Goals** | Sales targets per rep, period tracking, current progress |
-| **Audit Log** | Org-scoped activity trail |
-| **Settings** | Team management, SMTP, Google OAuth guide, API keys, webhooks, language selection |
-| **Notifications** | In-app feed, mark-read, bulk clear |
-| **Admin** | Org management, impersonation (full audit log) |
-| **Public API** | API key auth, rate-limited, org-scoped |
-| **Webhooks** | Configurable event subscriptions with delivery log |
+| 📊 **Dashboard** | KPI cards, revenue chart, deal funnel, activity heatmap, onboarding checklist |
+| 👤 **Contacts** | Table/grid, CSV export, duplicate detection, bulk actions, smart views, distribution lists, LinkedIn enrichment |
+| 🏢 **Companies** | Industry/status/size filters, domain dedup, revenue tracking |
+| 💼 **Deals** | Kanban + list, multi-pipeline, stage auto-resolve, quote builder (save/export/email) |
+| ✅ **Activities** | Unified feed, overdue highlighting, quick complete/delete |
+| 🎯 **Leads** | Configurable scoring engine, score snapshots, events timeline |
+| ⚙️ **Automations** | Rule builder (trigger → condition → action), execution log |
+| ✉️ **Sequences** | Email sequences with A/B variants, enrollment management, step scheduling |
+| 🤖 **AI Assistant** | Multi-provider agent drawer · next-best-action on Contact/Deal · Inbox summarize + draft reply · graceful no-key fallback |
+| 📥 **Inbox** | Gmail OAuth, thread sync, send/reply/compose, attachments, record linking, AI assist |
+| 📅 **Calendar** | Google Calendar sync, event create/edit, month/week/day, Meet links |
+| 📈 **Reports / Forecast** | Revenue, Won/Lost, conversion funnel, email stats · weighted pipeline forecast + health |
+| 🔒 **Settings → Security** | TOTP MFA enrollment, team/role management, SMTP, API keys, webhooks |
+| 🛡️ **Admin** | Org management, impersonation (audited), security-event log |
+| 🔌 **Public API & Webhooks** | API-key auth with scopes, rate-limited, org-scoped; signed webhook delivery |
 
 ---
 
-## Quick Start — Local Development
+## 🚀 Quick Start
 
-**Requirements:** Node 22+, PostgreSQL 16, Redis 7.
+> **Requirements:** Node 22+, PostgreSQL 16, Redis 7.
 
 ```bash
-# 1. Start infrastructure
-brew services start postgresql@16 redis       # macOS
-# or: docker-compose up postgres redis -d     # Docker
+# 1. Infrastructure
+docker compose up postgres redis -d            # or: brew services start postgresql@16 redis
 
-# 2. Start the API
+# 2. API
 cd api
-cp .env.example .env                          # fill in DB credentials + JWT_SECRET
-npm install
-npm run db:migrate
-npm run db:seed                               # seeds admin@n0crm.local / Admin1234! (per .env.example)
-npm run dev                                   # http://localhost:3001
+cp .env.example .env                            # set DATABASE_URL + JWT_SECRET (min 32 chars)
+npm install && npm run db:migrate && npm run db:seed   # seeds admin@n0crm.local / Admin1234!
+npm run dev                                     # → http://localhost:3001
 
-# 3. Start the frontend (separate terminal)
+# 3. Frontend (separate terminal)
 cd frontend
-cp .env.example .env                          # VITE_API_URL=http://localhost:3001
-npm install
-npm run dev                                   # http://localhost:5173
+cp .env.example .env                            # VITE_API_URL=http://localhost:3001
+npm install && npm run dev                      # → http://localhost:5173
 ```
 
+> 💡 **Turn on the AI assistant:** grab a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) and set `GEMINI_API_KEY` in `api/.env`. With no key, AI features hide themselves automatically.
+
 ---
 
-## Docker — Full Stack
-
-Spin up everything with a single command:
+## 🐳 Docker — Full Stack
 
 ```bash
-# Required secrets
 export JWT_SECRET=<min-32-char-secret>
 export TOKEN_ENCRYPTION_KEY=<32-char-aes-key>
 export POSTGRES_PASSWORD=<db-password>
 export INTERNAL_KEY=<min-16-char-internal-secret>
 export GRAFANA_PASSWORD=<grafana-admin-password>
 
-docker-compose up -d
-docker-compose --profile seed up seed  # Optional: separate seed profile
+docker compose up -d
+docker compose --profile seed up seed           # optional: seed initial data
 ```
 
 | Service | URL |
 |---------|-----|
 | Frontend | http://localhost |
-| API | http://localhost:3001 |
-| PgBouncer | localhost:6432 (API connects here, not directly to postgres) |
-| PostgreSQL | localhost:5432 (internal, via PgBouncer) |
-| Redis | localhost:6379 (internal) |
-| Prometheus | http://localhost:9090 |
-| Grafana | http://localhost:3002 (admin / GRAFANA_PASSWORD) |
+| API | http://localhost:3001 (loopback-bound — reached via nginx in prod) |
+| Prometheus / Grafana | http://localhost:9090 · http://localhost:3002 |
 
-The API container auto-runs all pending migrations on boot via `docker-entrypoint.sh`. Seed is now a separate profile: run with `--profile seed` to apply initial data.
+The API auto-runs pending migrations on boot.
 
 ---
 
-## Deploy — Private Prompt
+## ☁️ Deploy — Private Prompt
 
-The `privateprompt-app.json` at the repo root defines the full 4-service stack:
-
-| Service | Image |
-|---------|-------|
-| `postgres` | postgres:16-alpine |
-| `redis` | redis:7-alpine |
-| `api` | `gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:latest` |
-| `web` | `gitea.apps.privateprompt.tech/clovrlabs/velo-crm:latest` |
-
-`JWT_SECRET` and `TOKEN_ENCRYPTION_KEY` are auto-generated by Private Prompt on first deploy.
-
-CI pipelines (`.gitea/workflows/`) build and push both images automatically on every merge to `main`.
+`privateprompt-app.json` (repo root) defines the 4-service stack: `postgres` · `redis` · `api` · `web`. `JWT_SECRET` and `TOKEN_ENCRYPTION_KEY` are auto-generated on first deploy; set `TRUST_PROXY=2` (platform edge + nginx). CI builds & pushes both images on every merge to `master`.
 
 ---
 
-## Environment Variables
+## 🔧 Environment Variables
 
 ### API (`api/.env`)
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | yes | `postgres://user:pass@pgbouncer:6432/db` (connect via PgBouncer, not directly to postgres) |
-| `REDIS_URL` | yes | `redis://localhost:6379` |
-| `JWT_SECRET` | yes | HS256 signing secret (min 32 chars) |
-| `TOKEN_ENCRYPTION_KEY` | yes | AES-256-GCM key (exactly 32 chars) |
-| `CORS_ORIGIN` | yes | Comma-separated allowed origins |
-| `INTERNAL_KEY` | yes (prod) | Min 16 chars — protects `/internal/*` routes (sequences/run, etc.) |
-| `JWT_EXPIRES_IN` | no | Token TTL — default `7d` |
-| `SMTP_HOST/PORT/USER/PASS` | no | Outbound email per org (tenant-scoped) |
-| `STRIPE_SECRET_KEY` | no | Stripe integration |
-| `GOOGLE_CLIENT_ID/SECRET` | no | Gmail + Calendar OAuth |
-| `GRAFANA_PASSWORD` | no | Grafana admin password (default: `admin` if unset) |
-| `GEMINI_API_KEY` | no | Google Gemini key — the free default AI provider |
-| `OPENAI_API_KEY` | no | OpenAI API key |
-| `ANTHROPIC_API_KEY` | no | Anthropic API key |
-| `AI_DEFAULT_PROVIDER` | no | `gemini` (default) · `openai` · `anthropic` — provider used when an org hasn't pinned one |
-| `AI_GEMINI_MODEL` / `AI_OPENAI_MODEL` / `AI_ANTHROPIC_MODEL` | no | Per-provider model overrides (sensible defaults baked in) |
-| `AI_AGENT_MAX_STEPS` | no | Max tool-call rounds in the agent loop — default `8` (1–20) |
-| `AI_MONTHLY_TOKEN_CAP` | no | Per-org monthly output-token spend cap; `0` = unlimited (429 when exceeded) |
-| `AI_MESSAGE_RETENTION_DAYS` | no | Purge `ai_*` data older than N days; `0` = keep forever |
-| `TRUST_PROXY` | no | Trusted reverse-proxy hop count for client-IP resolution — nginx-only `1` (default), privateprompt edge+nginx `2`, direct `0` |
-| `ALLOW_OPEN_REGISTRATION` | no | Allow self-service signup — default `true` (first user is always allowed) |
-| `REGISTRATION_ALLOWED_DOMAINS` | no | Comma-separated email-domain allow-list for self-registration |
+| Variable | Req | Description |
+|----------|-----|-------------|
+| `DATABASE_URL` | ✅ | `postgres://user:pass@pgbouncer:6432/db` |
+| `REDIS_URL` | ✅ | `redis://localhost:6379` |
+| `JWT_SECRET` | ✅ | HS256 signing secret (min 32 chars) |
+| `TOKEN_ENCRYPTION_KEY` | ✅ | AES-256-GCM key (32-byte hex) |
+| `CORS_ORIGIN` | ✅ | Comma-separated allowed origins (no `*` in prod) |
+| `INTERNAL_KEY` | prod | Min 16 chars — gates `/internal/*` + `/metrics` scrape |
+| `TRUST_PROXY` | – | Proxy hop count for client-IP — nginx `1` (default), edge+nginx `2`, direct `0` |
+| `ALLOW_OPEN_REGISTRATION` / `REGISTRATION_ALLOWED_DOMAINS` | – | Self-signup toggle + domain allow-list (first user always allowed) |
+| `GEMINI_API_KEY` | – | **Free** default AI provider — [get one](https://aistudio.google.com/apikey) |
+| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | – | Alternative AI providers |
+| `AI_DEFAULT_PROVIDER` | – | `gemini` (default) · `openai` · `anthropic` |
+| `AI_AGENT_MAX_STEPS` | – | Agent tool-call ceiling — default `8` |
+| `AI_MONTHLY_TOKEN_CAP` / `AI_MESSAGE_RETENTION_DAYS` | – | Per-org spend cap (`0`=∞) · transcript retention (`0`=keep) |
+| `SENTRY_DSN` | – | Error tracking (else structured logs) |
+| `SMTP_*` / `RESEND_API_KEY` | – | Outbound email |
+| `STRIPE_SECRET_KEY` | – | Billing |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | – | Gmail + Calendar OAuth |
 
 ### Frontend (`frontend/.env`)
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VITE_API_URL` | `/api` | API base URL. Local dev: `http://localhost:3001` |
-| `VITE_APP_CHANNEL` | `development` | `production` or `staging` for deployed builds |
-| `VITE_GOOGLE_CLIENT_ID` | — | Gmail OAuth (optional) |
+| `VITE_API_URL` | `/api` | API base URL (local dev: `http://localhost:3001`) |
+| `VITE_APP_CHANNEL` | `development` | `production` / `staging` for deployed builds |
 
 ---
 
-## API Overview
+## 🔌 API Overview
 
-All routes are prefixed `/api/v1` and require `Authorization: Bearer <jwt>` unless noted.
+Routes are served under `/api` (nginx proxy) and require the auth cookie unless noted. Key prefixes: `/auth` · `/contacts` · `/companies` · `/deals` · `/activities` · `/leads` · `/sequences` · `/automations` · `/products` · `/reports` · `/forecast` · `/inbox` · `/calendar` · `/custom-fields` · `/goals` · `/audit` · `/webhooks` · `/notifications` · `/admin` · `/public/v1`.
 
-| Prefix | Description |
-|--------|-------------|
-| `POST /auth/login` | Authenticate, returns JWT |
-| `POST /auth/register` | Create account |
-| `POST /auth/logout` | Revoke token (jti denylist) |
-| `POST /auth/forgot-password` | Send reset email |
-| `POST /auth/reset-password` | Consume reset token |
-| `/contacts` | CRUD + bulk actions + smart views |
-| `/companies` | CRUD + filters |
-| `/deals` | CRUD + pipeline management |
-| `/activities` | CRUD + feed |
-| `/leads` | CRUD + scoring |
-| `/automations` | Rule CRUD + execution log |
-| `/sequences` | Sequence + step + enrollment management |
-| `/products` | Product catalog |
-| `/reports` | Aggregated analytics |
-| `/forecast` | Pipeline forecast + health |
-| `/inbox` | Gmail threads + send/reply |
-| `/ai` | AI features — `status`, `summarize`, `draft-reply`, `next-best-action`, `search`, and a tool-using `agent` with persisted conversations |
-| `/calendar` | Google Calendar events |
-| `/custom-fields` | Field definitions + values |
-| `/goals` | Sales targets |
-| `/audit` | Org audit log |
-| `/webhooks` | Webhook CRUD + delivery log |
-| `/notifications` | In-app notifications |
-| `/admin` | Org management (admin role) |
-| `/public-api` | API key management |
+| Prefix | Highlights |
+|--------|-----------|
+| `/auth` | login (+ TOTP), register, logout, refresh, password reset, **MFA** (`/mfa/setup·enable·disable`) |
+| `/ai` | `status` · `summarize` · `draft-reply` · `next-best-action` · `search` · tool-using `agent` (persisted conversations) |
+| `/privacy` | GDPR — org export, per-subject export, erasure/anonymization |
+| `/orgs/me/members` | member lifecycle — change role / activate-deactivate (RBAC + safety rules) |
+| `/admin` | org management, impersonation, **security-events** log |
 
-Full API documentation: see [`api/README.md`](api/README.md).
+Full reference: [`api/README.md`](api/README.md).
 
 ---
 
-## Webhooks
-
-Configure webhook endpoints in Settings → Webhooks. Events are delivered as `POST` requests with:
-
-```json
-{
-  "event": "contact.created",
-  "organization_id": "uuid",
-  "timestamp": "2026-05-18T12:00:00Z",
-  "data": { ... }
-}
-```
-
-Available events: `contact.*`, `company.*`, `deal.*`, `activity.*`, `lead.*`.
-
----
+## 🔐 Security at a glance
 
 | Concern | Implementation |
 |---------|---------------|
-| Authentication | JWT HS256, algorithm pinned at sign + verify |
-| Session revocation | `jti` denylist in Redis on logout |
-| Password hashing | bcrypt rounds 12, constant-time comparison |
-| Password reset tokens | SHA-256 hashed before DB storage |
-| Rate limiting | Auth routes: 10 req / 15 min; per-org: 500 req/min (Redis-backed); internal routes: protected by `x-internal-key` |
-| Account lockout | 10 failed logins / 15 min on an account → `429`, regardless of correctness (brute-force / credential-stuffing guard) |
-| Registration policy | `ALLOW_OPEN_REGISTRATION` toggle + `REGISTRATION_ALLOWED_DOMAINS` allow-list; first user is always permitted |
-| Proxy / IP spoofing | `TRUST_PROXY` hop-count resolves the real `req.ip` from `X-Forwarded-For`; the auth limiter keys on it so XFF rotation can't bypass it |
-| `/metrics` gating | Restricted to the raw-socket peer plus an `x-internal-key` header — not publicly scrapeable |
-| `/_debug/sql` | Runs in a `READ ONLY` transaction, gated behind `DEBUG_TOKEN` |
-| AI governance | Per-org kill switch (`settings.ai.enabled=false`), monthly output-token spend cap (`429` over budget), and retention purge of `ai_*` data |
-| Sequence runner | Claims due rows `FOR UPDATE SKIP LOCKED` — no double-send across concurrent workers |
-| Field encryption | AES-256-GCM for sensitive values |
-| Row-level security | RLS enabled on 21 tables, org isolation enforced via `set_current_org()` function |
-| Transport | HTTPS enforced in production (nginx) |
-| Containers | Non-root `node` user, `.dockerignore` excludes .env, resource limits on all services |
-| Secrets | `JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `INTERNAL_KEY` enforced as required |
-| DB isolation | Every query scoped to `organization_id` from JWT; RLS double-enforces at DB layer |
-| Impersonation | Full audit log entry required — failure blocks token issuance |
-| CORS | Strict origin allowlist, wildcards blocked in production |
-| Connection pooling | PgBouncer in transaction mode; API pool reduced to 10 (outer multiplexer) |
+| Authentication | JWT HS256 (alg pinned), HttpOnly cookie, `jti` denylist, **TOTP MFA** |
+| Account protection | bcrypt (rounds 12), **account lockout** (10 fails / 15 min → 429), configurable registration |
+| Multi-tenant RBAC | Every query org-scoped; **server-side `requirePermission`** on member/API-key/webhook management |
+| Rate limiting | 10/15 min auth · 500/min per-org · `TRUST_PROXY`-resolved IP (XFF rotation can't bypass) |
+| SSRF | Webhooks resolve + pin the IP; Slack/AI calls use fixed host allow-lists |
+| Secrets / encryption | AES-256-GCM field encryption (incl. MFA seeds & OAuth tokens); required secrets enforced at boot |
+| Compliance | Tamper-evident **security-event log** · **GDPR** export & erasure · audit log |
+| AI governance | Per-tenant kill switch · monthly token spend cap (429) · transcript retention purge |
+| Hardened endpoints | `/metrics` (socket-peer + key), `/_debug/sql` (READ ONLY tx), no public DB console |
+| Supply chain | `npm audit --audit-level=critical` in CI — **0 vulnerabilities** |
+
+📄 Full audit + remediation history: [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md).
 
 ---
 
-## Quality Gates
-
-Run before every merge:
+## ✅ Quality Gates
 
 ```bash
-# Frontend
-cd frontend
-npm run ui:lint          # design token / color guardrails
-npm run i18n:lint        # no bare strings
-npm run i18n:coverage    # all 6 locales match en key paths
-npm run lint:ci          # ESLint
-npx tsc --noEmit
-npm run test:run         # Vitest
-npm run build
-
 # API
-cd api
-npx tsc --noEmit         # type check
-npm run lint             # ESLint (flat config)
-npx vitest run           # Vitest suite
-npm run build
-npm audit --audit-level=critical
+cd api && npx tsc --noEmit && npm run lint && npx vitest run && npm run build && npm audit --audit-level=critical
+
+# Frontend
+cd frontend && npm run ui:lint && npm run i18n:lint && npm run i18n:coverage \
+  && npm run lint:ci && npx tsc --noEmit && npm run test:run && npm run build && npm run bundle:check
 ```
 
-The API now has a real CI gate (tsc → ESLint → Vitest → build → npm audit); previously the backend had no lint/type/test enforcement.
+**Status:** API 60 tests · Frontend 263 tests · 0 ESLint warnings · bundle 125 KB / 250 KB cap · 0 npm vulnerabilities.
 
 ---
 
-## CI / CD
+## 🔁 CI/CD
 
-| Workflow | Job | Trigger | Action |
-|----------|-----|---------|--------|
-| `ci.yml` | `api` | Push to `master` / PR | `npm ci` → tsc → ESLint → Vitest → build → npm audit (critical) |
-| `ci.yml` | `ci` | Push to `master` / PR | UI guardrails, i18n lint + coverage, ESLint, tsc, Vitest, build, bundle budget (≤250 KB gzip) |
-| `ci.yml` | `security` | After `ci` | `npm audit --audit-level=critical` |
-| `build-production.yml` | — | Push to `master` | Build + push frontend image to Gitea |
-| `build-api.yml` | — | Push to `master` | Build + push API image to Gitea |
-
-Images: `gitea.apps.privateprompt.tech/clovrlabs/velo-crm:latest` and `n0crm-api:latest`.
+| Workflow · Job | Trigger | Action |
+|---|---|---|
+| `ci.yml` · **api** | push `master` / PR | `npm ci` → tsc → ESLint → Vitest → build → `npm audit` |
+| `ci.yml` · **ci** | push `master` / PR | UI + i18n guardrails, ESLint, tsc, Vitest, build, bundle budget |
+| `ci.yml` · **security** | after `ci` | `npm audit --audit-level=critical` |
+| `build-api.yml` / `build-production.yml` | push `master` | build & push Docker images to Gitea |
 
 ---
 
-## Internationalization
+## 🗺️ Roadmap
 
-UI is fully translated in 6 locales. Language selector in Settings.
+Shipped foundations toward enterprise-grade; next up:
 
-| Code | Language |
-|------|----------|
-| `en` | English |
-| `es` | Spanish |
-| `pt` | Portuguese |
-| `fr` | French |
-| `de` | German |
-| `it` | Italian |
-
-Translation catalogs: `frontend/src/i18n/`.
+- [ ] **SSO** — SAML / OIDC federation
+- [ ] **SCIM** provisioning
+- [ ] **HA / DR** — replicated Postgres + Redis, WAL/PITR, tested off-site restore
+- [ ] Extend `requirePermission` to all CRM CRUD routes
+- [ ] Decide RLS: enforce DB-level (non-owner role + per-tx GUC) or retire the inert policies
+- [x] MFA · RBAC · GDPR DSAR · AI governance · audit logging · observability · backend CI
 
 ---
 
-*Internal tool — Clovr Labs — Last updated: 2026-06-10*
+## 🌍 Internationalization
+
+Fully translated UI in **6 locales** (en · es · pt · fr · de · it). `en` is the typed source of truth; `es`/`pt` are full catalogs; `de`/`fr`/`it` inherit via spread. Catalogs: `frontend/src/i18n/`.
+
+---
+
+<div align="center">
+
+**Internal tool — built & maintained by Clovr Labs** · _Last updated: 2026-06-11_
+
+</div>
