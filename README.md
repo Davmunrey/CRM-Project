@@ -249,7 +249,7 @@ Full reference: [`api/README.md`](api/README.md).
 | Hardened endpoints | `/metrics` (socket-peer + key), `/_debug/sql` (READ ONLY tx), no public DB console |
 | Supply chain | `npm audit --audit-level=critical` in CI — **0 vulnerabilities** |
 
-📄 Full audit + remediation history: [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md).
+📄 Full audit + remediation history: [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md) · Backup & disaster-recovery runbook: [`docs/disaster-recovery.md`](docs/disaster-recovery.md).
 
 ---
 
@@ -285,7 +285,7 @@ Shipped foundations toward enterprise-grade; next up:
 
 - [ ] **SSO** — SAML / OIDC federation
 - [ ] **SCIM** provisioning
-- [ ] **HA / DR** — replicated Postgres + Redis, WAL/PITR, tested off-site restore
+- [ ] **HA / DR** — replicated Postgres + Redis, WAL/PITR, automated failover ([restore runbook already documented](docs/disaster-recovery.md))
 - [ ] Extend `requirePermission` to all CRM CRUD routes
 - [ ] Decide RLS: enforce DB-level (non-owner role + per-tx GUC) or retire the inert policies
 - [x] MFA · RBAC · GDPR DSAR · AI governance · audit logging · observability · backend CI
