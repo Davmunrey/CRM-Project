@@ -12,7 +12,7 @@ This document is the **single repo source** for: (1) **how to obtain Google OAut
 
 <a id="operator-setup-google-oauth"></a>
 
-## Operator setup: Google Cloud + Supabase
+## Operator setup: Google Cloud
 
 ### What you need from Google (OAuth 2.0 “Web client”, not a generic API key)
 
@@ -20,8 +20,8 @@ n0CRM does **not** use a Google “API key” for this flow. You create an **OAu
 
 | Field | Where it goes |
 |--------|----------------|
-| **Client ID** (ends with `.apps.googleusercontent.com`) | Supabase Edge secret `GOOGLE_CLIENT_ID` |
-| **Client secret** | Supabase Edge secret `GOOGLE_CLIENT_SECRET` — **never** in the browser or `VITE_*` |
+| **Client ID** (ends with `.apps.googleusercontent.com`) | `api/.env` → `GOOGLE_CLIENT_ID` |
+| **Client secret** | `api/.env` → `GOOGLE_CLIENT_SECRET` — **never** in the browser or `VITE_*` |
 
 ### 1. Google Cloud project and APIs
 
@@ -50,7 +50,7 @@ Set these variables in `api/.env` for the self-hosted Gmail and Calendar OAuth r
 | `GOOGLE_CLIENT_ID` | Web client ID from Google |
 | `GOOGLE_CLIENT_SECRET` | Web client secret |
 | `TOKEN_ENCRYPTION_KEY` | **64 hex characters** (32 bytes). Generate: `openssl rand -hex 32` |
-| `GOOGLE_REDIRECT_URI` | OAuth redirect URI: `{api_origin}/auth/gmail/callback` (e.g. `http://localhost:3000/auth/gmail/callback` for local dev, `https://api.yourdomain.com/auth/gmail/callback` for production) |
+| `GOOGLE_REDIRECT_URI` | **Optional / informational.** The OAuth redirect URI is the **frontend** route `{frontend_origin}/auth/gmail/callback` (e.g. `http://localhost:5173/auth/gmail/callback` dev, `https://app.yourdomain.com/auth/gmail/callback` prod). The SPA computes and sends it per request via [`getGmailRedirectUri()`](../src/services/gmailService.ts); the backend uses the value from the request body, so this env var is only echoed by `GET /gmail/oauth-configured` for reference. |
 
 ### 5. Database
 
@@ -58,11 +58,13 @@ Apply migrations in `api/migrations/` that include tables for Gmail token storag
 
 ### 6. API server startup
 
-The backend (Fastify 5) runs at `http://localhost:3000` (or your configured port) and serves the Gmail and Calendar OAuth routes at:
-- `/auth/gmail/callback` — OAuth callback handler
-- `/auth/gmail/refresh` — Token refresh endpoint
-- `/integrations/gmail/*` — Gmail integration endpoints
-- `/integrations/calendar/*` — Calendar integration endpoints
+The backend (Fastify 5) runs at `http://localhost:3001` (or your configured port) and serves the Gmail/Calendar OAuth routes:
+- `POST /gmail/oauth-start` — builds the Google authorization URL (PKCE `code_challenge`, scope bundle)
+- `POST /gmail/oauth-exchange` — exchanges the auth code for tokens and stores them (encrypted)
+- `POST /gmail/refresh-token` · `POST /gmail/disconnect` · `GET /gmail/integration-status` · `GET /gmail/oauth-configured`
+- `/calendar/*` — Calendar-specific OAuth and sync endpoints
+
+> The OAuth **callback itself is a frontend route** — `{frontend_origin}/auth/gmail/callback` (the SPA page [`GmailCallback.tsx`](../src/pages/GmailCallback.tsx)) — which then calls `POST /gmail/oauth-exchange`. There is no backend `/auth/gmail/callback` route.
 
 Ensure `api/.env` is configured and the server is running before testing OAuth from the frontend.
 
@@ -93,25 +95,25 @@ Ensure `api/.env` is configured and the server is running before testing OAuth f
 
 ### Checklist (Google Cloud Console — verification)
 
-1. **Project** — Same Google Cloud project as the **Web** OAuth client used for `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in Supabase Edge (not a `VITE_` client secret in the SPA).
+1. **Project** — Same Google Cloud project as the **Web** OAuth client used for `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `api/.env` (never a `VITE_` client secret in the SPA).
 2. **OAuth consent screen** — User type (Internal vs External). External apps need the full verification path for broad release.
 3. **Scopes** — Declare only what the product uses. Remove unused scopes before submission.
 4. **App domain & branding** — Homepage, privacy policy URL, terms (if applicable). Production URLs should be **HTTPS**.
 5. **Demo video / justification** — Google often requires a short screen recording showing scope usage and data handling; show opt-in, disconnect, and server-only token storage.
-6. **Supabase Auth redirect URIs** — Add production and staging callback URLs exactly as Supabase Auth requires (separate from Gmail’s `/auth/gmail/callback` — that is for Google’s OAuth client, not Supabase Auth’s).
+6. **Authorized redirect URIs** — Add the **frontend** Gmail callback for every environment exactly: `{frontend_origin}/auth/gmail/callback`. (There is no Supabase Auth; app sign-in is JWT email/password + optional OIDC SSO, which is unrelated to Google’s OAuth client.)
 7. **Submit for verification** — After deploy, use the production URL in the submission where possible.
 
-## Gmail OAuth redirect URIs (backend callback)
+## Gmail OAuth redirect URIs (frontend callback)
 
-The OAuth callback is handled by the backend at `{api_origin}/auth/gmail/callback`. **Google Cloud Console → your OAuth Web client → Authorized redirect URIs** must list every origin you use.
+The OAuth callback is the **frontend** route `{frontend_origin}/auth/gmail/callback` (the SPA page `GmailCallback.tsx`), which exchanges the code via `POST /gmail/oauth-exchange`. **Google Cloud Console → your OAuth Web client → Authorized redirect URIs** must list every **frontend** origin you use.
 
-| Surface | Typical API origin | Example redirect URI to register |
-|--------|-------------------|-----------------------------------|
-| Local dev | `http://localhost:3000` (or your configured port) | `http://localhost:3000/auth/gmail/callback` — add each port you use |
-| Staging | Your staging API domain | `https://<api-staging>.yourdomain.com/auth/gmail/callback` |
-| Production | Your HTTPS API domain | `https://<api.yourdomain.com>/auth/gmail/callback` |
+| Surface | Typical frontend origin | Example redirect URI to register |
+|--------|-------------------------|-----------------------------------|
+| Local dev | `http://localhost:5173` (your Vite port) | `http://localhost:5173/auth/gmail/callback` — add each port you use |
+| Staging | Your staging app domain | `https://<app-staging>.yourdomain.com/auth/gmail/callback` |
+| Production | Your HTTPS app domain | `https://app.yourdomain.com/auth/gmail/callback` |
 
-**Frontend origins:** Set the frontend’s API base URL in its environment (e.g. `VITE_API_URL`). The frontend redirects the user to Google’s OAuth consent, which then redirects to the backend callback.
+**Authorized JavaScript origins:** the **frontend** origin only (no path), e.g. `http://localhost:5173`, `https://app.yourdomain.com`. The SPA opens Google’s consent screen; Google redirects back to the frontend callback, which posts the code to the API.
 
 **Track:** keep verification status and dates in [`project-state.md`](./project-state.md) (Gaps table) while Google processes the application.
 
@@ -140,7 +142,7 @@ Use this section as the **single “what is still to do”** list for Google int
 | A2 | **Branding:** app name, logo, support email, **privacy policy URL**, **terms** (if you show them), authorized domains. | Required for verification and user trust; not implemented in application code. |
 | A3 | **Test users** (while app is in *Testing*). | Only listed users can complete OAuth until the app is published / verified. |
 | A4 | **Submit for restricted-scope verification** (Gmail + Calendar sensitive scopes) when you need **non–test-user** access at scale. | Often multi-week; track status in [`.planning/STATE.md`](../.planning/STATE.md) Notes and the [Gaps table](./project-state.md#gaps-not-fully-owned-by-a-single-master-today) in `project-state.md`. |
-| A5 | **Authorized redirect URIs:** `{api_origin}/auth/gmail/callback` for backend (e.g. `http://localhost:3000/auth/gmail/callback` for local dev). | Must match `GOOGLE_REDIRECT_URI` in `api/.env`. Register every environment (local, staging, production). |
+| A5 | **Authorized redirect URIs:** the **frontend** callback `{frontend_origin}/auth/gmail/callback` (e.g. `http://localhost:5173/auth/gmail/callback` for local dev). | This is what the SPA sends as `redirect_uri`; register every environment (local, staging, production). |
 | A6 | **Authorized JavaScript origins:** the **origin** of the **frontend** (e.g. `http://localhost:5173`, `https://app.yourdomain.com`). | Web client OAuth requirement for the browser to call Google's authorization endpoint. |
 
 ### B. Backend (api/) — per environment
@@ -149,7 +151,7 @@ Use this section as the **single “what is still to do”** list for Google int
 |---|------|-----|
 | B1 | **Environment variables:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TOKEN_ENCRYPTION_KEY` (64 hex), `GOOGLE_REDIRECT_URI`. | Without these, OAuth routes fail at runtime. Set in `api/.env` and ensure they match Google Cloud Console values. |
 | B2 | After **schema** changes: Apply migrations in `api/migrations/`. | Example: changes to token storage tables must be applied before the backend processes OAuth tokens. |
-| B3 | **API server deployment:** Ensure `api/` is running and routes are accessible at the configured `GOOGLE_REDIRECT_URI` origin. | Frontend OAuth callback needs a reachable backend endpoint. Local dev: `http://localhost:3000`; production: your API domain. |
+| B3 | **API server deployment:** Ensure `api/` is running (default `:3001`) and reachable by the SPA so `POST /gmail/oauth-exchange` succeeds. | The OAuth callback itself is the frontend route; it posts the code to the API. Local dev API: `http://localhost:3001`; production: your API domain (proxied at `/api`). |
 
 ### C. Product / engineering (repo — beyond “connect” UI)
 
@@ -159,7 +161,7 @@ These are **not** finished just because Settings → Integrations shows “Conne
 |---|------|--------|
 | C1 | **Calendar features using granted scopes** | The second OAuth step stores Calendar scopes on `gmail_tokens` and surfaces status in the UI. **End-to-end Calendar sync** (read/write events, webhooks, conflict handling) is separate work unless already implemented elsewhere in the app. Columns such as `calendar_sync_token` on `gmail_tokens` are placeholders for future sync — confirm design in roadmap / email master before building. |
 | C2 | **Gmail sync depth** | Policy remains: **metadata-first** where applicable; any bulk body ingestion needs explicit product sign-off and retention alignment ([`master-email-operations.md`](./master-email-operations.md)). |
-| C3 | **Optional hardening** | Rate limits, backoff, and observability for Edge Gmail/Calendar callers; Sentry or structured logs if not already wired for these functions. |
+| C3 | **Optional hardening** | Rate limits, backoff, and observability for the Gmail/Calendar API routes; Sentry or structured logs if not already wired for these routes. |
 
 ### D. Evidence / release (when closing verification or a major release)
 
@@ -172,7 +174,7 @@ These are **not** finished just because Settings → Integrations shows “Conne
 
 *Operational detail only; not legal advice. Keep privacy policy and in-product disclosures aligned with actual data processing.*
 
-*Last updated (git): **2026-05-18***
+*Last updated: **2026-06-11***
 
 ## TOKEN_ENCRYPTION_KEY rotation
 

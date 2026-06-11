@@ -2,67 +2,113 @@
 
 ## Overview
 
-Unauthenticated prospects can submit a form that creates a **lead** in the correct organization. Secrets are **opaque tokens** (`lct_…`) created by admins; only a **hash** is stored (`lead_capture_tokens`).
+Unauthenticated prospects submit a form that creates a **lead** (a contact of type `lead`) inside the correct organization. The endpoint is a standard Fastify route on the self-hosted API — there is no Supabase Edge, no `functions/v1/`, and no separate promote-lead step.
 
-## Lead lifecycle (high level)
+---
 
-```mermaid
-flowchart TD
-  subgraph Capture
-    W[Public form / workflow]
-    E[Edge lead-capture]
-  end
-  subgraph CRM
-    L[leads row]
-    P[promote-lead Edge]
-    C[contacts / companies / deals]
-  end
-  W --> E
-  E --> L
-  L --> P
-  P --> C
+## 🔑 Authentication
+
+The endpoint is authenticated by an **API key** (prefix `n0crm_`) passed in the `x-api-key` request header. The key must have the `leads:write` scope explicitly granted (keys with no declared scopes retain legacy full-access; a key that declares any explicit scope list is restricted to it).
+
+| Header | Value |
+|--------|-------|
+| `x-api-key` | `n0crm_<key>` (full plaintext key, returned once on creation) |
+
+Keys are created and scoped in **Settings > Integrations**. Only users with the `apikeys:manage` permission (owner / admin) can create, rotate, or revoke keys.
+
+---
+
+## 📥 Request
+
+```http
+POST /api/public/v1/leads
+x-api-key: n0crm_<key>
+Content-Type: application/json
 ```
 
-- Inbound capture is org-scoped (token / org id) and rate-limited at the Edge layer.
-- **Promote** is idempotent: a lead already converted should not create duplicate CRM rows (see `supabase/functions/promote-lead`).
+### Body fields
 
-## Admin flow
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `email` | string | Yes | Valid email, max 254 chars |
+| `firstName` or `first_name` | string | No | Max 100 chars; both spellings accepted |
+| `lastName` or `last_name` | string | No | Max 100 chars; both spellings accepted |
 
-1. Authenticated user calls the `lead-capture-tokens` Edge Function (`action`: `create` | `list` | `delete`) with `organizationId`.
-2. On `create`, the plaintext token is returned **once** (same pattern as API keys).
-3. Embed the token in a hidden field on your public site.
-4. `delete` is idempotent and returns `200` with `deleted: true|false` to keep retries safe.
+> The endpoint accepts camelCase (`firstName`) and snake_case (`first_name`) interchangeably for compatibility with both browser fetch calls and server-side integrations.
 
-## Public POST (`lead-capture`)
+### Rate limit
 
-- **POST** `.../functions/v1/lead-capture` with JSON body:
-  - `token` (required): full `lct_…` string
-  - `first_name`, `last_name`, `email` (required)
-  - `phone`, `company_name`, `notes` (optional)
-  - `website` (honeypot): must be empty — bots that fill all fields are ignored with a silent 200.
+20 requests per minute per API key.
 
-## Spam and CSP
+---
 
-- Use a honeypot field (`website`) and optionally rate-limit at the edge or CDN.
-- If the form is embedded on another origin, configure **CORS** on your hosting; the Edge Function allows `Access-Control-Allow-Origin: *` for simple integrations.
+## 📤 Responses
 
-## Duplicate emails
+| Status | Body | Meaning |
+|--------|------|---------|
+| `201` | `{ id, email, first_name, last_name, type, created_at }` | Lead created (or re-touched on duplicate) |
+| `400` | `{ error: "Invalid request", details: ... }` | Validation failure (missing/malformed fields) |
+| `401` | `{ error: "API key required" }` | `x-api-key` header absent |
+| `401` | `{ error: "Invalid API key" }` | Key not found, revoked, or expired |
+| `403` | `{ error: "Insufficient API key scope", required: "leads:write" }` | Key exists but lacks `leads:write` scope |
 
-- `leads` enforces unique email per organization. Duplicate submissions return `{ ok: true, duplicate: true }` without error.
+### Duplicate email handling
 
-## Error contract and support workflow
+`contacts` enforces a unique index on `(email, organization_id)`. If the same email is submitted twice for the same org, the row is upserted (`updated_at` refreshed) and `201` is returned with the existing row — no error, no duplicate row.
 
-- Token management endpoints (`lead-capture-tokens`) return standardized errors:
-  - `{ error, code, status, request_id }`
-- Public endpoint (`lead-capture`) also includes `request_id` in responses for log correlation.
-- Common statuses:
-  - `401`: invalid/disabled token or invalid session for token management.
-  - `403`: user lacks organization permissions for token mutations.
-  - `400`: validation issue (missing fields, malformed payload).
+---
+
+## 🗄️ What gets written
+
+The endpoint inserts (or upserts) a row in the `contacts` table with `type = 'lead'`, scoped to the organization that owns the API key. There is no separate `leads` table.
+
+---
+
+## 🎟️ Lead-capture tokens (`lct_`)
+
+Lead-capture tokens are a **separate** admin-managed credential with prefix `lct_`. They are stored as SHA-256 hashes in the `lead_capture_tokens` table and are distinct from `api_keys`.
+
+Current status: the `/api/public/v1/leads` endpoint authenticates exclusively via `api_keys` (the `x-api-key` header path). Lead-capture tokens are managed through the authenticated routes below and are available for use by custom embed flows that require a lighter credential.
+
+### Admin routes (require session + `apikeys:manage`)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/lead-capture-tokens` | List tokens for the org (prefix, label, enabled, created_at) |
+| `POST` | `/lead-capture-tokens` | Create token; body `{ label?: string }`. Returns plaintext `lct_…` once |
+| `DELETE` | `/lead-capture-tokens/:id` | Delete a token (hard delete) |
+
+Tokens have an `enabled` boolean and an optional `label` for identification. The plaintext token is returned only at creation time (same pattern as API keys).
+
+---
+
+## 🔧 Embedding example
+
+```js
+// Minimal fetch from a public landing page
+await fetch('https://crm.example.com/api/public/v1/leads', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': 'n0crm_<your-key>',
+  },
+  body: JSON.stringify({
+    email: formData.get('email'),
+    firstName: formData.get('first_name'),
+    lastName: formData.get('last_name'),
+  }),
+})
+```
+
+For forms hosted on a different origin, configure CORS on your reverse proxy (nginx) or rely on same-origin embedding.
+
+---
 
 ## Cross-links
 
 - Lead scoring and lifecycle: [`master-lead-management.md`](./master-lead-management.md)
+- API key management: **Settings > Integrations** (scope selector UI shows `leads:write`, `scim`)
+
 ---
 
-*Last updated (git): **2026-05-18***
+*Last updated: 2026-06-11*

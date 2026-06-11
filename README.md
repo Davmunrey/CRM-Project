@@ -9,7 +9,7 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 <br/>
 
 [![CI](https://img.shields.io/badge/CI-tsc·eslint·vitest·build·audit-2ea44f?style=flat-square)](.gitea/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-API%2060%20·%20Web%20263-2ea44f?style=flat-square)](#-quality-gates)
+[![Tests](https://img.shields.io/badge/tests-API%2085%20·%20Web%20263-2ea44f?style=flat-square)](#-quality-gates)
 [![Vulnerabilities](https://img.shields.io/badge/npm%20audit-0%20vulnerabilities-2ea44f?style=flat-square)](#-security-at-a-glance)
 [![License](https://img.shields.io/badge/license-Internal-555?style=flat-square)](#)
 [![Maintained by Clovr Labs](https://img.shields.io/badge/by-Clovr%20Labs-4f46e5?style=flat-square)](#)
@@ -270,7 +270,7 @@ cd frontend && npm run ui:lint && npm run i18n:lint && npm run i18n:coverage \
   && npm run lint:ci && npx tsc --noEmit && npm run test:run && npm run build && npm run bundle:check
 ```
 
-**Status:** API 60 tests · Frontend 263 tests · 0 ESLint warnings · bundle 125 KB / 250 KB cap · 0 npm vulnerabilities.
+**Status:** API 85 tests (12 files; migrations 018 AI · 019 MFA · 020 security_events) · Frontend 263 tests · 0 ESLint warnings · bundle 125 KB / 250 KB cap · 0 npm vulnerabilities.
 
 ---
 

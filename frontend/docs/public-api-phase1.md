@@ -1,49 +1,92 @@
-# Public API — phase 1 (read-only)
+# Public API — Lead Capture
 
-This document describes the n0CRM public REST surface. The database migration `20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` adds `organization_api_keys` (hashed secrets). This is a self-hosted REST API at `/public/v1/*`.
+The n0CRM public API exposes a single write endpoint for ingesting leads from embeddable
+forms and external integrations. It is **not** a read/collection API — there are no
+public `GET` endpoints.
+
+Implementation: `api/src/routes/publicApi.ts` (mounted at prefix `/public/v1`).
+The API service listens on port `3001`; in production the SPA's nginx proxies the API
+under `/api`, so the canonical path is `/api/public/v1/leads`.
+
+## Endpoint
+
+**POST** `/api/public/v1/leads`
+
+Creates (or updates) a contact of type `lead` in the authenticated key's organization.
+
+Rate limit: **20 requests / minute** per client.
 
 ## Authentication
 
-- **API keys** are created by org admins in the UI (Settings → API keys), authenticated with the user JWT.
-- Format: `crm_live_<base64url>` (only shown once at creation).
-- Storage: **SHA-256 hex** of the full key; never store the plaintext key in Postgres.
-- Authenticate requests with `Authorization: Bearer <api_key>` header.
-- Error payload contract: `{ error, code, status, request_id }`.
+- Authenticate with the header `x-api-key: <key>`. There is no `Authorization: Bearer` flow.
+- Keys are minted in the UI under **Settings → Integrations**, by members with the
+  `apikeys:manage` permission (owner/admin). The plaintext key is shown **once** at creation.
+- Format: `n0crm_<base64url>` (24 random bytes). Only the SHA-256 hash (`key_hash`) is
+  stored in the `api_keys` table — never the plaintext.
+- A key is rejected if it does not exist, is revoked (`revoked_at` set), or is expired
+  (`expires_at` in the past).
 
-## Read API endpoints
+### Scopes
 
-Base URL: `{api_origin}/public/v1`
+API keys carry an optional scope allow-list (selected in the Settings → Integrations
+scope picker). This endpoint requires the **`leads:write`** scope.
 
-- **GET** `/public/v1/<collection>?limit=<1–100>` where `<collection>` is `deals`, `contacts`, `companies`, or `activities`.
-- Response: `{ "data": [...], "meta": { "collection", "limit" }, "request_id": "<uuid>" }`
-- Rows are filtered by the key’s `organization_id`. Successful requests update `last_used_at` on the key row.
-- Error payload includes `request_id` so support can map API errors to backend logs.
+- A key with **no scopes** declared is treated as full access (back-compat with
+  pre-scope keys).
+- A `*` or `all` wildcard scope grants everything.
+- Otherwise the key must explicitly include `leads:write`.
 
-## Operational troubleshooting
+A key lacking the scope receives:
 
-- `401` + `code: unauthorized`: missing `Authorization: Bearer <api_key>` header, or revoked/deleted API key.
-- `403` + `code: forbidden`: API key's organization does not have access to the requested collection.
-- `400` + `code: validation_error`: invalid `limit`, invalid collection name, or malformed request.
-- Use `request_id` from the response when checking backend logs.
+```json
+{ "error": "Insufficient API key scope", "required": "leads:write" }
+```
 
-## Idempotency and behavior notes
+## Request body
 
-- Phase 1 is read-only; **Idempotency-Key** is reserved for future mutating methods.
-- Management deletes are idempotent by design to avoid broken retries in the UI/automation path.
+JSON object. `email` is required; name fields are optional and accept either camelCase or
+snake_case (camelCase wins if both are present).
 
-## Operational notes
+| Field        | Type   | Required | Notes                          |
+| ------------ | ------ | -------- | ------------------------------ |
+| `email`      | string | yes      | Valid email, max 254 chars     |
+| `firstName`  | string | no       | Max 100 chars                  |
+| `first_name` | string | no       | Alias for `firstName`          |
+| `lastName`   | string | no       | Max 100 chars                  |
+| `last_name`  | string | no       | Alias for `lastName`           |
 
-- API keys are managed in the CRM UI; revoked keys (`revoked_at` set) are rejected with 401.
-- Base URL depends on your deployment: `http://localhost:3000/public/v1` for local dev, `https://api.yourdomain.com/public/v1` for production.
+The contact is upserted on `(email, organization_id)`: a new lead is inserted, or an
+existing row's `updated_at` is bumped.
 
-## Example request
+## Responses
+
+| Status | Body | When |
+| ------ | ---- | ---- |
+| `201` | The contact row (`id`, `email`, `first_name`, `last_name`, `type`, `created_at`) | Lead captured |
+| `400` | `{ "error": "Invalid request", "details": { ... } }` | Body fails Zod validation (e.g. missing/invalid email) |
+| `401` | `{ "error": "API key required" }` | Missing `x-api-key` header |
+| `401` | `{ "error": "Invalid API key" }` | Unknown, revoked, or expired key |
+| `403` | `{ "error": "Insufficient API key scope", "required": "leads:write" }` | Key lacks `leads:write` |
+| `429` | rate-limit error | More than 20 requests/minute |
+
+## Example
 
 ```bash
-curl -X GET "http://localhost:3000/public/v1/deals?limit=10" \
-  -H "Authorization: Bearer crm_live_..." \
-  -H "Content-Type: application/json"
+curl -X POST "https://your-n0crm-host/api/public/v1/leads" \
+  -H "x-api-key: n0crm_..." \
+  -H "Content-Type: application/json" \
+  -d '{ "email": "lead@example.com", "firstName": "Ada", "lastName": "Lovelace" }'
+```
+
+Local development (API bound to `127.0.0.1:3001`):
+
+```bash
+curl -X POST "http://localhost:3001/api/public/v1/leads" \
+  -H "x-api-key: n0crm_..." \
+  -H "Content-Type: application/json" \
+  -d '{ "email": "lead@example.com" }'
 ```
 
 ---
 
-*Last updated (git): **2026-05-18***
+*Last updated: 2026-06-11*

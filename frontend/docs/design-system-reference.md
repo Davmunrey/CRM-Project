@@ -198,7 +198,7 @@ Script: `frontend/scripts/ui-lint.mjs`.
 
 Allowlist: `frontend/src/lib/brandingAccent.ts` and `frontend/src/lib/theme.ts` (which write CSS variables from raw hex).
 
-CI: `.github/workflows/ci.yml` runs `npm run ui:lint` and `npm run i18n:lint` after `npm ci` in the frontend.
+CI: `.gitea/workflows/ci.yml` (canonical pipeline; Gitea is the authoritative remote) runs `npm run ui:lint` and `npm run i18n:lint` after `npm ci` in the frontend. A `.github/workflows/` mirror may exist but is not authoritative.
 
 ### i18n guardrails (`i18n:lint`)
 
@@ -232,4 +232,4 @@ Persistent hints for agents: `.cursor/rules/ui-consistency.mdc` (tokens, primiti
 
 - **Status:** Active  
 - **Owner:** Frontend  
-- **Last updated:** 2026-05-18  
+- **Last updated:** 2026-06-11  

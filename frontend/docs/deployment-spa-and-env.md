@@ -1,6 +1,6 @@
 # Static hosting: SPA routing and build-time env
 
-Backend is **api/** (self-hosted Fastify + PostgreSQL) in the velo-crm monorepo. No Supabase dependency.
+Backend is **api/** (self-hosted Fastify + PostgreSQL) in the n0CRM monorepo. No Supabase dependency.
 
 ## SPA fallback
 
@@ -28,7 +28,6 @@ Optional checked-in artifacts:
 |----------|----------|-------------|
 | `VITE_API_URL` | ✓ | Fastify API base URL. Docker: omit (nginx proxies `/api/*`). Local: `http://localhost:3001` |
 | `VITE_APP_CHANNEL` | — | `production` or `staging` (optional; defaults to Vite `MODE`) |
-| `VITE_GMAIL_CLIENT_ID` | — | Google OAuth client ID (Gmail integration) |
 | `VITE_GMAIL_REDIRECT_URI` | — | Gmail OAuth redirect URI |
 | `VITE_WORKSPACE_ROOT_DOMAIN` | — | Multi-tenant subdomain root (optional) |
 
@@ -49,7 +48,7 @@ docker-compose up -d
 
 Frontend: `http://localhost`. API: `http://localhost:3001`.
 
-Services: `postgres` (5432 internal), `redis` (6379 internal), `api` (3001 internal), `web` (nginx + frontend on 80).
+Core services (see `docker-compose.yml`): `postgres` (5432), `pgbouncer`, `redis` (6379), `api` (3001), `frontend` (nginx SPA on 80). Plus one-shot `migrate` / `seed`, and the ops stack `prometheus` · `grafana` · `postgres-exporter` · `node-exporter` · `backup` (6-hourly `pg_dump`).
 
 ## Staging vs production
 
@@ -70,4 +69,4 @@ All environment variables (`JWT_SECRET`, `TOKEN_ENCRYPTION_KEY`, `CORS_ORIGIN`, 
 
 After deploy: run through [smoke-checklist-production.md](./smoke-checklist-production.md).
 
-*Last updated: 2026-05-18*
+*Last updated: 2026-06-11*
