@@ -88,6 +88,8 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 
 ## 🏗️ Architecture
 
+> 🗺️ **Full file-by-file structural map:** [`docs/CODEBASE-MAP.md`](docs/CODEBASE-MAP.md) — every one of the ~400 source files (API routes, services, migrations, frontend pages/stores/components, infra) with its purpose and key exports.
+
 ```
 Browser (React SPA)
   │
