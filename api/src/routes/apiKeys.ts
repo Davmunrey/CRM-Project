@@ -30,6 +30,9 @@ export async function apiKeysRoutes(app: FastifyInstance) {
     const body = z.object({
       name: z.string().min(1).max(100),
       expiresInDays: z.number().int().min(1).max(3650).optional(),
+      // Optional scope allow-list (e.g. ['leads:write']). Empty/omitted = full
+      // access (back-compat); '*' is an explicit wildcard. Enforced on /public/v1.
+      scopes: z.array(z.string().max(64)).max(50).optional(),
     }).safeParse(req.body)
     if (!body.success) return reply.code(400).send({ error: 'Name required' })
 
@@ -42,9 +45,9 @@ export async function apiKeysRoutes(app: FastifyInstance) {
       : null
 
     const [row] = await db`
-      INSERT INTO api_keys (organization_id, name, key_prefix, key_hash, expires_at, created_at, updated_at)
-      VALUES (${orgId}, ${body.data.name}, ${keyPrefix}, ${keyHash}, ${expiresAt}, ${now}, ${now})
-      RETURNING id, name, key_prefix, expires_at, created_at
+      INSERT INTO api_keys (organization_id, name, key_prefix, key_hash, scopes, expires_at, created_at, updated_at)
+      VALUES (${orgId}, ${body.data.name}, ${keyPrefix}, ${keyHash}, ${db.json(body.data.scopes ?? [])}, ${expiresAt}, ${now}, ${now})
+      RETURNING id, name, key_prefix, scopes, expires_at, created_at
     `
 
     return reply.code(201).send({ key: row, apiKey: rawKey })

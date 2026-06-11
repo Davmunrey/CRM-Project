@@ -3,6 +3,20 @@ import { z } from 'zod'
 import { createHash } from 'node:crypto'
 import { db } from '../db/client.js'
 
+/**
+ * API-key scope check. Back-compat: a key with NO scopes set (the historical
+ * default — scopes were stored but never enforced) is treated as full access,
+ * so existing integrations keep working. A '*'/'all' wildcard also grants all.
+ * Once a key declares explicit scopes, it is restricted to them.
+ */
+export function hasScope(keyScopes: unknown, required: string): boolean {
+  if (!Array.isArray(keyScopes) || keyScopes.length === 0) return true // legacy all-access
+  const scopes = keyScopes.filter((s): s is string => typeof s === 'string')
+  return scopes.includes('*') || scopes.includes('all') || scopes.includes(required)
+}
+
+type ApiKeyReq = import('fastify').FastifyRequest & { apiKeyOrg: string; apiKeyScopes: string[] }
+
 const leadBody = z.object({
   email: z.string().email().max(254),
   firstName: z.string().max(100).optional(),
@@ -28,7 +42,9 @@ async function verifyApiKey(_app: FastifyInstance) {
 
     if (rows.length === 0) return reply.code(401).send({ error: 'Invalid API key' })
 
-    ;(req as import('fastify').FastifyRequest & { apiKeyOrg: string }).apiKeyOrg = rows[0]!.organizationId as string
+    const r = req as ApiKeyReq
+    r.apiKeyOrg = rows[0]!.organizationId as string
+    r.apiKeyScopes = Array.isArray(rows[0]!.scopes) ? (rows[0]!.scopes as string[]) : []
   }
 }
 
@@ -39,7 +55,11 @@ export async function publicApiRoutes(app: FastifyInstance) {
 
   // Lead capture endpoint — used by embeddable forms
   app.post('/leads', { config: { rateLimit: { max: 20, timeWindow: '1 minute' } } }, async (req, reply) => {
-    const orgId = (req as import('fastify').FastifyRequest & { apiKeyOrg: string }).apiKeyOrg
+    const r = req as ApiKeyReq
+    if (!hasScope(r.apiKeyScopes, 'leads:write')) {
+      return reply.code(403).send({ error: 'Insufficient API key scope', required: 'leads:write' })
+    }
+    const orgId = r.apiKeyOrg
     const body = leadBody.safeParse(req.body)
     if (!body.success) return reply.code(400).send({ error: 'Invalid request', details: body.error.flatten() })
     const d = body.data
