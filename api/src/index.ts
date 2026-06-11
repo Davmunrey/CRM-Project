@@ -48,6 +48,7 @@ import { userPreferencesRoutes } from './routes/userPreferences.js'
 import { billingRoutes, stripeWebhookRoute } from './routes/billing.js'
 import { internalRoutes } from './routes/internal.js'
 import { aiRoutes } from './routes/ai.js'
+import { dataPrivacyRoutes } from './routes/dataPrivacy.js'
 import { authMiddleware } from './middleware/auth.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
 import { startAiRetention, stopAiRetention } from './services/ai/retention.js'
@@ -241,6 +242,7 @@ await app.register(billingRoutes, { prefix: '/billing' })
 await app.register(stripeWebhookRoute)
 await app.register(internalRoutes, { prefix: '/internal' })
 await app.register(aiRoutes, { prefix: '/ai' })
+await app.register(dataPrivacyRoutes, { prefix: '/privacy' })
 
 // ---------------------------------------------------------------------------
 // Task 5: Prometheus /metrics endpoint
