@@ -879,6 +879,9 @@ export interface Translations {
     integrationsPublicApiAuthHint: string
     integrationsApiKeyName: string
     integrationsCreateApiKey: string
+    integrationsApiKeyScopes: string
+    integrationsScopeLeads: string
+    integrationsScopeScim: string
     integrationsApiKeysList: string
     integrationsApiKeysEmpty: string
     integrationsCopyKeyOnce: string

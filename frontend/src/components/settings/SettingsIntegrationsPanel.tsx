@@ -9,19 +9,24 @@ import { Input } from '../ui/Input'
 import { ConfirmDialog } from '../ui/Modal'
 import { toast } from '../../store/toastStore'
 
+// The API uses postgres.camel, so responses are camelCase (not the DB's snake_case).
 type ApiKeyRow = {
   id: string
   name: string
-  key_prefix: string
-  created_at: string
-  revoked_at: string | null
-  last_used_at: string | null
+  keyPrefix: string
+  createdAt: string
+  revokedAt: string | null
+  lastUsedAt: string | null
+  scopes?: string[] | null
 }
+
+// Scopes the UI offers when minting a key. Empty selection = full access (legacy default).
+const SCOPE_OPTIONS = ['leads:write', 'scim'] as const
 
 type LeadTokenRow = {
   id: string
   label: string
-  created_at: string
+  createdAt: string
   enabled: boolean
 }
 
@@ -36,6 +41,7 @@ export function SettingsIntegrationsPanel() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [keyName, setKeyName] = useState('')
+  const [keyScopes, setKeyScopes] = useState<string[]>([])
   const [tokenLabel, setTokenLabel] = useState('')
   const [savingKey, setSavingKey] = useState(false)
   const [savingToken, setSavingToken] = useState(false)
@@ -95,9 +101,12 @@ export function SettingsIntegrationsPanel() {
     if (!name) return
     setSavingKey(true)
     try {
-      const res = await api.post<{ apiKey?: string }>('/integrations/api-keys', { name })
+      // Omit scopes entirely when none are selected → backend treats it as full access.
+      const payload = keyScopes.length > 0 ? { name, scopes: keyScopes } : { name }
+      const res = await api.post<{ apiKey?: string }>('/integrations/api-keys', payload)
       if (res?.apiKey) setLastShownApiKey(res.apiKey)
       setKeyName('')
+      setKeyScopes([])
       void load()
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t.settings.integrationsLoadError)
@@ -219,7 +228,7 @@ export function SettingsIntegrationsPanel() {
         </div>
 
         {canManage && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             <div className="min-w-0 flex-1">
               <Input
                 label={t.settings.integrationsApiKeyName}
@@ -227,6 +236,24 @@ export function SettingsIntegrationsPanel() {
                 onChange={(e) => setKeyName(e.target.value)}
               />
             </div>
+            <fieldset className="flex flex-col gap-2">
+              <legend className="text-xs font-medium text-fg-muted mb-1">{t.settings.integrationsApiKeyScopes}</legend>
+              {SCOPE_OPTIONS.map((scope) => (
+                <label key={scope} className="flex items-center gap-2 text-sm text-fg-muted cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="rounded border-fg/20 text-accent-500 focus:ring-accent-500/40"
+                    checked={keyScopes.includes(scope)}
+                    onChange={(e) =>
+                      setKeyScopes((prev) =>
+                        e.target.checked ? [...prev, scope] : prev.filter((s) => s !== scope),
+                      )
+                    }
+                  />
+                  {scope === 'scim' ? t.settings.integrationsScopeScim : t.settings.integrationsScopeLeads}
+                </label>
+              ))}
+            </fieldset>
             <Button type="button" size="sm" className="self-start" onClick={() => void handleCreateKey()} disabled={savingKey || !keyName.trim()}>
               {t.settings.integrationsCreateApiKey}
             </Button>
@@ -248,10 +275,22 @@ export function SettingsIntegrationsPanel() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-fg">{k.name}</p>
                   <p className="text-xs text-fg-subtle">
-                    {t.settings.integrationsKeyPrefix}: {k.key_prefix}
-                    {k.revoked_at ? ` · ${t.settings.integrationsRevokedBadge}` : ''}
-                    {k.last_used_at ? ` · ${t.settings.integrationsLastUsed}: ${new Date(k.last_used_at).toLocaleString()}` : ''}
+                    {t.settings.integrationsKeyPrefix}: {k.keyPrefix}
+                    {k.revokedAt ? ` · ${t.settings.integrationsRevokedBadge}` : ''}
+                    {k.lastUsedAt ? ` · ${t.settings.integrationsLastUsed}: ${new Date(k.lastUsedAt).toLocaleString()}` : ''}
                   </p>
+                  {k.scopes && k.scopes.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {k.scopes.map((s) => (
+                        <span
+                          key={s}
+                          className="rounded-md bg-accent-500/12 text-accent-300 px-1.5 py-0.5 text-[10px] font-mono"
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {canManage && (
                   <Button
@@ -307,7 +346,7 @@ export function SettingsIntegrationsPanel() {
               >
                 <div>
                   <p className="text-sm font-medium text-fg">{tok.label}</p>
-                  <p className="text-xs text-fg-subtle">{new Date(tok.created_at).toLocaleString()}</p>
+                  <p className="text-xs text-fg-subtle">{new Date(tok.createdAt).toLocaleString()}</p>
                 </div>
                 {canManage && (
                   <Button
