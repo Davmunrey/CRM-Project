@@ -240,7 +240,8 @@ Full reference: [`api/README.md`](api/README.md).
 |---------|---------------|
 | Authentication | JWT HS256 (alg pinned), HttpOnly cookie, `jti` denylist, **TOTP MFA** |
 | Account protection | bcrypt (rounds 12), **account lockout** (10 fails / 15 min → 429), configurable registration |
-| Multi-tenant RBAC | Every query org-scoped; **server-side `requirePermission`** on member/API-key/webhook management |
+| Multi-tenant isolation | **App-layer org scoping is the authoritative control** — every query filters on `organization_id` from the JWT + writes verify FK ownership. RLS policies exist as opt-in defense-in-depth (not relied upon under the owner role + PgBouncer pool — see [ADR 0001](docs/adr/0001-tenant-isolation-and-rls.md)) |
+| Multi-tenant RBAC | **Server-side `requirePermission`/`requireCrudPermission`** across CRM CRUD + member/API-key/webhook management (viewer read-only, sales_rep no-delete, etc.) |
 | Rate limiting | 10/15 min auth · 500/min per-org · `TRUST_PROXY`-resolved IP (XFF rotation can't bypass) |
 | SSRF | Webhooks resolve + pin the IP; Slack/AI calls use fixed host allow-lists |
 | Secrets / encryption | AES-256-GCM field encryption (incl. MFA seeds & OAuth tokens); required secrets enforced at boot |
@@ -287,7 +288,7 @@ Shipped foundations toward enterprise-grade; next up:
 - [ ] **SCIM** provisioning
 - [ ] **HA / DR** — replicated Postgres + Redis, WAL/PITR, automated failover ([restore runbook already documented](docs/disaster-recovery.md))
 - [ ] Extend `requirePermission` to all CRM CRUD routes
-- [ ] Decide RLS: enforce DB-level (non-owner role + per-tx GUC) or retire the inert policies
+- [x] RLS decision documented — app-layer scoping is authoritative; RLS is opt-in defense-in-depth ([ADR 0001](docs/adr/0001-tenant-isolation-and-rls.md))
 - [x] MFA · RBAC · GDPR DSAR · AI governance · audit logging · observability · backend CI
 
 ---
