@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { db } from '../db/client.js'
+import { requireCrudPermission } from '../middleware/rbac.js'
 
 const activityBody = z.object({
   type: z.enum(['call', 'email', 'meeting', 'task', 'note', 'demo', 'follow_up', 'linkedin']),
@@ -18,6 +19,7 @@ const activityBody = z.object({
 
 export async function activitiesRoutes(app: FastifyInstance) {
   const auth = { onRequest: [app.authenticate] }
+  app.addHook('preHandler', requireCrudPermission('activities'))
 
   app.get('/', auth, async (req) => {
     const orgId = req.user.org

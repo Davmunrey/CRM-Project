@@ -1,9 +1,11 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { db } from '../db/client.js'
+import { requireCrudPermission } from '../middleware/rbac.js'
 
 export async function companiesRoutes(app: FastifyInstance) {
   app.addHook('onRequest', app.authenticate)
+  app.addHook('preHandler', requireCrudPermission('companies'))
 
   app.get('/', async (req, reply) => {
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })

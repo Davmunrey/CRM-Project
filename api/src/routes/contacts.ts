@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { db } from '../db/client.js'
 import { checkPlanLimit } from './billing.js'
 import { sendSlackNotification } from './slack.js'
+import { requireCrudPermission } from '../middleware/rbac.js'
 
 const listQuery = z.object({
   limit: z.coerce.number().min(1).max(500).default(50),
@@ -30,6 +31,7 @@ const contactBody = z.object({
 
 export async function contactsRoutes(app: FastifyInstance) {
   app.addHook('onRequest', app.authenticate)
+  app.addHook('preHandler', requireCrudPermission('contacts'))
 
   app.get('/', async (req, reply) => {
     const query = listQuery.safeParse(req.query)

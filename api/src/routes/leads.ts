@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { db } from '../db/client.js'
+import { requireCrudPermission } from '../middleware/rbac.js'
 
 const leadBody = z.object({
   firstName: z.string().min(1),
@@ -35,6 +36,7 @@ const scoringRulePatch = z.object({
 
 export async function leadsRoutes(app: FastifyInstance) {
   const auth = { onRequest: [app.authenticate] }
+  app.addHook('preHandler', requireCrudPermission('leads'))
 
   // Leads CRUD
   app.get('/', auth, async (req) => {

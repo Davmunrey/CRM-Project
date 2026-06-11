@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { db } from '../db/client.js'
 import { sendSlackNotification } from './slack.js'
 import { checkPlanLimit } from './billing.js'
+import { requireCrudPermission } from '../middleware/rbac.js'
 
 /**
  * Verify a foreign-key id belongs to the caller's org before linking it to a
@@ -24,6 +25,7 @@ async function ownedInOrg(
 
 export async function dealsRoutes(app: FastifyInstance) {
   app.addHook('onRequest', app.authenticate)
+  app.addHook('preHandler', requireCrudPermission('deals'))
 
   app.get('/', async (req, reply) => {
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })

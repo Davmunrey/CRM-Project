@@ -18,3 +18,26 @@ export function requirePermission(permission: string) {
     }
   }
 }
+
+/** Map an HTTP method to a CRUD action: GET/HEAD→read, DELETE→delete, else write. */
+export function crudAction(method: string): 'read' | 'write' | 'delete' {
+  const m = method.toUpperCase()
+  if (m === 'GET' || m === 'HEAD') return 'read'
+  if (m === 'DELETE') return 'delete'
+  return 'write'
+}
+
+/**
+ * Resource-wide RBAC guard for CRUD route plugins: derives the permission from
+ * the request method (`<resource>:<read|write|delete>`). Register once per
+ * resource plugin as a preHandler hook so reads stay open to readers while
+ * writes/deletes require the matching permission (e.g. viewer is read-only).
+ */
+export function requireCrudPermission(resource: string) {
+  return async function crudGuard(req: FastifyRequest, reply: FastifyReply): Promise<void> {
+    const role = (req.user as { role?: string } | undefined)?.role ?? ''
+    if (!roleHasPermission(role, `${resource}:${crudAction(req.method)}`)) {
+      return reply.code(403).send({ error: 'Insufficient permissions' })
+    }
+  }
+}
