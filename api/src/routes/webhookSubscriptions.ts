@@ -6,6 +6,7 @@ import https from 'node:https'
 import { db } from '../db/client.js'
 import { encryptToken, decryptToken } from '../services/tokenCipher.js'
 import { resolvePublicIp } from '../services/ssrfGuard.js'
+import { requirePermission } from '../middleware/rbac.js'
 
 /** Resolves and validates the webhook URL, returning the pinned IP and parsed URL. */
 async function resolveWebhookUrl(rawUrl: string): Promise<{ parsed: URL; resolvedIp: string }> {
@@ -80,7 +81,7 @@ export async function webhookSubscriptionsRoutes(app: FastifyInstance) {
   })
 
   // POST /webhook-subscriptions — create subscription
-  app.post('/', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.post('/', { onRequest: [app.authenticate], preHandler: [requirePermission('webhooks:manage')] }, async (req, reply) => {
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })
     const body = z.object({
       name: z.string().min(1).max(255),
@@ -121,7 +122,7 @@ export async function webhookSubscriptionsRoutes(app: FastifyInstance) {
   })
 
   // PATCH /webhook-subscriptions/:id — update subscription
-  app.patch('/:id', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.patch('/:id', { onRequest: [app.authenticate], preHandler: [requirePermission('webhooks:manage')] }, async (req, reply) => {
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })
     const { id } = req.params as { id: string }
     const body = z.object({
@@ -148,7 +149,7 @@ export async function webhookSubscriptionsRoutes(app: FastifyInstance) {
   })
 
   // DELETE /webhook-subscriptions/:id
-  app.delete('/:id', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.delete('/:id', { onRequest: [app.authenticate], preHandler: [requirePermission('webhooks:manage')] }, async (req, reply) => {
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })
     const { id } = req.params as { id: string }
     await db`
@@ -159,7 +160,7 @@ export async function webhookSubscriptionsRoutes(app: FastifyInstance) {
   })
 
   // POST /webhook-subscriptions/:id/test — send test payload to target URL
-  app.post('/:id/test', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.post('/:id/test', { onRequest: [app.authenticate], preHandler: [requirePermission('webhooks:manage')] }, async (req, reply) => {
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })
     const { id } = req.params as { id: string }
 
@@ -222,7 +223,7 @@ export async function webhookSubscriptionsRoutes(app: FastifyInstance) {
   })
 
   // POST /webhook-subscriptions/:id/rotate-secret — rotate signing secret
-  app.post('/:id/rotate-secret', { onRequest: [app.authenticate] }, async (req, reply) => {
+  app.post('/:id/rotate-secret', { onRequest: [app.authenticate], preHandler: [requirePermission('webhooks:manage')] }, async (req, reply) => {
     if (!req.user.org) return reply.code(403).send({ error: 'No organization' })
     const { id } = req.params as { id: string }
 

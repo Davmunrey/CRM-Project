@@ -2,6 +2,10 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { randomBytes, createHash } from 'node:crypto'
 import { db } from '../db/client.js'
+import { requirePermission } from '../middleware/rbac.js'
+
+// API keys + lead-capture tokens grant programmatic access — mutations are admin-only.
+const manageKeys = { preHandler: [requirePermission('apikeys:manage')] }
 
 function sha256hex(input: string): string {
   return createHash('sha256').update(input).digest('hex')
@@ -24,7 +28,7 @@ export async function apiKeysRoutes(app: FastifyInstance) {
     return reply.send({ keys: rows })
   })
 
-  app.post('/api-keys', async (req, reply) => {
+  app.post('/api-keys', manageKeys, async (req, reply) => {
     const orgId = req.user.org
     if (!orgId) return reply.code(403).send({ error: 'No organization' })
     const body = z.object({
@@ -54,7 +58,7 @@ export async function apiKeysRoutes(app: FastifyInstance) {
   })
 
   // POST /api-keys/:id/rotate — revoke old key, issue new one with same name
-  app.post('/api-keys/:id/rotate', async (req, reply) => {
+  app.post('/api-keys/:id/rotate', manageKeys, async (req, reply) => {
     const orgId = req.user.org
     if (!orgId) return reply.code(403).send({ error: 'No organization' })
     const { id } = req.params as { id: string }
@@ -81,7 +85,7 @@ export async function apiKeysRoutes(app: FastifyInstance) {
     return reply.send({ key: row, apiKey: rawKey })
   })
 
-  app.delete('/api-keys/:id', async (req, reply) => {
+  app.delete('/api-keys/:id', manageKeys, async (req, reply) => {
     const orgId = req.user.org
     if (!orgId) return reply.code(403).send({ error: 'No organization' })
     const { id } = req.params as { id: string }
@@ -106,7 +110,7 @@ export async function apiKeysRoutes(app: FastifyInstance) {
     return reply.send({ tokens: rows })
   })
 
-  app.post('/lead-capture-tokens', async (req, reply) => {
+  app.post('/lead-capture-tokens', manageKeys, async (req, reply) => {
     const orgId = req.user.org
     if (!orgId) return reply.code(403).send({ error: 'No organization' })
     const body = z.object({ label: z.string().max(100).optional() }).safeParse(req.body)
@@ -127,7 +131,7 @@ export async function apiKeysRoutes(app: FastifyInstance) {
     return reply.code(201).send({ token_row: row, token: rawToken })
   })
 
-  app.delete('/lead-capture-tokens/:id', async (req, reply) => {
+  app.delete('/lead-capture-tokens/:id', manageKeys, async (req, reply) => {
     const orgId = req.user.org
     if (!orgId) return reply.code(403).send({ error: 'No organization' })
     const { id } = req.params as { id: string }

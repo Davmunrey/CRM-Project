@@ -5,6 +5,10 @@ import { db } from '../db/client.js'
 import { env } from '../config/env.js'
 import { sendEmail } from '../services/email.js'
 import { setAuthCookie } from '../services/cookieAuth.js'
+import { requirePermission } from '../middleware/rbac.js'
+import { setUserTokensValidAfter } from '../db/redis.js'
+
+const MANAGEABLE_ROLES = ['admin', 'manager', 'sales_rep', 'viewer'] as const
 
 function jwtExpirySeconds(expiresIn: string): number {
   const m = /^(\d+)([smhd])$/.exec(expiresIn)
@@ -66,6 +70,74 @@ export async function orgsRoutes(app: FastifyInstance) {
       ORDER BY name ASC
     `
     return reply.send({ data: rows })
+  })
+
+  // PATCH /orgs/me/members/:userId/role — change a member's role (server-side RBAC)
+  app.patch('/me/members/:userId/role', { preHandler: [requirePermission('members:manage')] }, async (req, reply) => {
+    const { userId } = req.params as { userId: string }
+    const orgId = req.user.org
+    const body = z.object({ role: z.enum(['owner', ...MANAGEABLE_ROLES]) }).safeParse(req.body)
+    if (!body.success) return reply.code(400).send({ error: 'Invalid role' })
+    const newRole = body.data.role
+
+    // Only an owner may grant the owner role.
+    if (newRole === 'owner' && req.user.role !== 'owner') {
+      return reply.code(403).send({ error: 'Only an owner can assign the owner role' })
+    }
+
+    const [target] = await db`
+      SELECT id, role, name, is_active FROM users WHERE id = ${userId} AND organization_id = ${orgId} LIMIT 1
+    `
+    if (!target) return reply.code(404).send({ error: 'Member not found' })
+
+    // Never demote the last active owner.
+    if (target['role'] === 'owner' && newRole !== 'owner') {
+      const owners = await db`SELECT COUNT(*)::int AS n FROM users WHERE organization_id = ${orgId} AND role = 'owner' AND is_active = true`
+      if (Number(owners[0]?.['n'] ?? 0) <= 1) return reply.code(409).send({ error: 'Cannot demote the last owner' })
+    }
+
+    await db`UPDATE users SET role = ${newRole}, updated_at = now() WHERE id = ${userId} AND organization_id = ${orgId}`
+    // Force the member's existing sessions to re-mint so the new role takes effect now.
+    await setUserTokensValidAfter(userId, jwtExpirySeconds(env.JWT_EXPIRES_IN))
+    await db`
+      INSERT INTO audit_log (action, entity_type, entity_id, entity_name, details, user_id, organization_id)
+      VALUES ('member_role_changed', 'user', ${userId}, ${target['name'] as string}, ${`role → ${newRole}`}, ${req.user.sub}, ${orgId})
+    `
+    return reply.send({ ok: true, role: newRole })
+  })
+
+  // PATCH /orgs/me/members/:userId/status — activate / deactivate a member
+  app.patch('/me/members/:userId/status', { preHandler: [requirePermission('members:manage')] }, async (req, reply) => {
+    const { userId } = req.params as { userId: string }
+    const orgId = req.user.org
+    const body = z.object({ isActive: z.boolean() }).safeParse(req.body)
+    if (!body.success) return reply.code(400).send({ error: 'isActive (boolean) required' })
+
+    if (userId === req.user.sub && !body.data.isActive) {
+      return reply.code(400).send({ error: 'You cannot deactivate your own account' })
+    }
+
+    const [target] = await db`
+      SELECT id, role, name, is_active FROM users WHERE id = ${userId} AND organization_id = ${orgId} LIMIT 1
+    `
+    if (!target) return reply.code(404).send({ error: 'Member not found' })
+
+    // Never deactivate the last active owner.
+    if (!body.data.isActive && target['role'] === 'owner') {
+      const owners = await db`SELECT COUNT(*)::int AS n FROM users WHERE organization_id = ${orgId} AND role = 'owner' AND is_active = true`
+      if (Number(owners[0]?.['n'] ?? 0) <= 1) return reply.code(409).send({ error: 'Cannot deactivate the last owner' })
+    }
+
+    await db`UPDATE users SET is_active = ${body.data.isActive}, updated_at = now() WHERE id = ${userId} AND organization_id = ${orgId}`
+    if (!body.data.isActive) {
+      // Invalidate the deactivated member's sessions immediately.
+      await setUserTokensValidAfter(userId, jwtExpirySeconds(env.JWT_EXPIRES_IN))
+    }
+    await db`
+      INSERT INTO audit_log (action, entity_type, entity_id, entity_name, details, user_id, organization_id)
+      VALUES (${body.data.isActive ? 'member_activated' : 'member_deactivated'}, 'user', ${userId}, ${target['name'] as string}, '', ${req.user.sub}, ${orgId})
+    `
+    return reply.send({ ok: true, isActive: body.data.isActive })
   })
 
   // GET /orgs/me/subscription
