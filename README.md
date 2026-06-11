@@ -58,10 +58,11 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 - 🤖 **AI / agentic capability** — multi-provider (`Gemini` free default / `OpenAI` / `Anthropic`), a tool-using CRM agent with persisted conversations, in-app assistant drawer, next-best-action on Contact/Deal detail, and Inbox summarize + draft-reply.
 - 🛡️ **AI governance** — per-tenant kill switch, monthly token spend cap, and retention purge of AI transcripts.
 - 🔑 **MFA (TOTP)** — RFC-6238, end-to-end (enroll in Settings → Security, code prompt at login).
+- 🪪 **Enterprise SSO + SCIM** — OIDC/OAuth2 single sign-on (PKCE, JIT user provisioning) with a one-click login button, plus **SCIM 2.0** (`/scim/v2`) for automated user provisioning & deprovisioning from your IdP (Entra / Okta / OneLogin).
 - 👮 **Server-side RBAC** — permission matrix + `requirePermission` middleware, wired into member-lifecycle, API-key and webhook management.
 - 🧾 **Compliance** — security-event audit log (login/MFA/role changes/impersonation) + GDPR export & erasure endpoints.
 - 🔭 **Observability** — request-correlation IDs (`x-request-id`), central error capture, liveness/readiness probes.
-- ✅ **Backend CI gate** — the API gained ESLint + a 60-test Vitest suite + a CI job (it previously had *none*).
+- ✅ **Backend CI gate** — the API gained ESLint + an 85-test Vitest suite + a CI job (it previously had *none*).
 
 ---
 
@@ -225,12 +226,14 @@ Routes are served under `/api` (nginx proxy) and require the auth cookie unless 
 | Prefix | Highlights |
 |--------|-----------|
 | `/auth` | login (+ TOTP), register, logout, refresh, password reset, **MFA** (`/mfa/setup·enable·disable`) |
+| `/auth/sso` | **OIDC SSO** — `status` · `start` (PKCE authorize redirect) · `callback` (JIT provisioning) |
+| `/scim/v2` | **SCIM 2.0** — `Users` CRUD + `ServiceProviderConfig` (Bearer api-key scoped `scim`; deprovision = deactivate + session revoke) |
 | `/ai` | `status` · `summarize` · `draft-reply` · `next-best-action` · `search` · tool-using `agent` (persisted conversations) |
 | `/privacy` | GDPR — org export, per-subject export, erasure/anonymization |
 | `/orgs/me/members` | member lifecycle — change role / activate-deactivate (RBAC + safety rules) |
 | `/admin` | org management, impersonation, **security-events** log |
 
-Full reference: [`api/README.md`](api/README.md).
+Full reference: [`api/README.md`](api/README.md). Enterprise identity setup: [`docs/sso-and-scim.md`](docs/sso-and-scim.md).
 
 ---
 
@@ -284,10 +287,11 @@ cd frontend && npm run ui:lint && npm run i18n:lint && npm run i18n:coverage \
 
 Shipped foundations toward enterprise-grade; next up:
 
-- [ ] **SSO** — SAML / OIDC federation
-- [ ] **SCIM** provisioning
+- [x] **SSO** — OIDC/OAuth2 federation (PKCE + JIT provisioning); SAML still open
+- [x] **SCIM 2.0** provisioning — `Users` CRUD + `ServiceProviderConfig`, IdP-driven deprovisioning
+- [x] `requirePermission`/`requireCrudPermission` across CRM CRUD + member/API-key/webhook management
 - [ ] **HA / DR** — replicated Postgres + Redis, WAL/PITR, automated failover ([restore runbook already documented](docs/disaster-recovery.md))
-- [ ] Extend `requirePermission` to all CRM CRUD routes
+- [ ] SAML 2.0 federation (for IdPs without OIDC)
 - [x] RLS decision documented — app-layer scoping is authoritative; RLS is opt-in defense-in-depth ([ADR 0001](docs/adr/0001-tenant-isolation-and-rls.md))
 - [x] MFA · RBAC · GDPR DSAR · AI governance · audit logging · observability · backend CI
 

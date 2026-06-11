@@ -50,6 +50,7 @@ import { internalRoutes } from './routes/internal.js'
 import { aiRoutes } from './routes/ai.js'
 import { dataPrivacyRoutes } from './routes/dataPrivacy.js'
 import { ssoRoutes } from './routes/sso.js'
+import { scimRoutes } from './routes/scim.js'
 import { authMiddleware } from './middleware/auth.js'
 import { resolveRequestId, captureException } from './services/observability.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
@@ -212,6 +213,8 @@ await app.register(authRoutes, {
 })
 await app.register(ssoRoutes, { prefix: '/auth/sso' })
 await app.register(publicApiRoutes, { prefix: '/public/v1' })
+// SCIM 2.0 — authed via a Bearer api-key scoped `scim` (its own onRequest hook), not JWT.
+await app.register(scimRoutes, { prefix: '/scim/v2' })
 await app.register(webhookRoutes, { prefix: '/webhooks' })
 
 // Routes — protected (require JWT)
