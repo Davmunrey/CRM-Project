@@ -49,6 +49,7 @@ import { billingRoutes, stripeWebhookRoute } from './routes/billing.js'
 import { internalRoutes } from './routes/internal.js'
 import { aiRoutes } from './routes/ai.js'
 import { dataPrivacyRoutes } from './routes/dataPrivacy.js'
+import { ssoRoutes } from './routes/sso.js'
 import { authMiddleware } from './middleware/auth.js'
 import { resolveRequestId, captureException } from './services/observability.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
@@ -209,6 +210,7 @@ await app.register(authRoutes, {
     },
   },
 })
+await app.register(ssoRoutes, { prefix: '/auth/sso' })
 await app.register(publicApiRoutes, { prefix: '/public/v1' })
 await app.register(webhookRoutes, { prefix: '/webhooks' })
 

@@ -58,6 +58,22 @@ export async function consumeOAuthState(state: string): Promise<string | null> {
   return userId
 }
 
+// ── SSO (OIDC) flow state ──────────────────────────────────────────────────────
+const SSO_STATE_PREFIX = 'oidc:state:'
+
+/** Persist the per-login OIDC state→{nonce,codeVerifier} binding (10-min TTL). */
+export async function storeSsoFlow(state: string, data: { nonce: string; codeVerifier: string }): Promise<void> {
+  await redis.set(`${SSO_STATE_PREFIX}${state}`, JSON.stringify(data), 'EX', 600)
+}
+
+/** Consume the OIDC flow state (one-time use). Returns null when unknown/expired. */
+export async function consumeSsoFlow(state: string): Promise<{ nonce: string; codeVerifier: string } | null> {
+  const key = `${SSO_STATE_PREFIX}${state}`
+  const v = await redis.get(key)
+  if (v !== null) await redis.del(key)
+  return v ? (JSON.parse(v) as { nonce: string; codeVerifier: string }) : null
+}
+
 // ── Account lockout (brute-force / credential-stuffing defense) ────────────────
 const LOGIN_FAIL_PREFIX = 'login:fail:'
 export const LOGIN_LOCK_THRESHOLD = 10

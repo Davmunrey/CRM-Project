@@ -12,6 +12,17 @@ const schema = z.object({
   JWT_EXPIRES_IN: z.string().regex(/^\d+[smhdw]$/).default('7d'),
   REFRESH_TOKEN_EXPIRES_DAYS: z.coerce.number().default(30),
 
+  // ── SSO (OIDC) ───────────────────────────────────────────────────────────
+  // Provider-agnostic OpenID Connect (Entra / Okta / Google Workspace / Auth0…).
+  // SSO activates only when issuer + client id + secret are all set. The issuer
+  // is the base URL whose /.well-known/openid-configuration is fetched.
+  OIDC_ISSUER: z.string().url().optional(),
+  OIDC_CLIENT_ID: z.string().optional(),
+  OIDC_CLIENT_SECRET: z.string().optional(),
+  OIDC_REDIRECT_URI: z.string().url().optional(),
+  // Role assigned to users provisioned via SSO on first login.
+  OIDC_DEFAULT_ROLE: z.enum(['admin', 'manager', 'sales_rep', 'viewer']).default('sales_rep'),
+
   // Self-registration policy. Open by default (self-host onboarding). Set to
   // "false"/"0" for invite-only (enterprise). The very first user can always
   // register so a fresh install can be bootstrapped. (z.coerce.boolean treats
