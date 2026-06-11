@@ -834,7 +834,7 @@ export const es: Translations = {
       'Lee datos de n0CRM con una API key del proyecto. Soporta colecciones: deals, contacts, companies y activities.',
     integrationsEndpointLabel: 'Ejemplo de petición',
     integrationsPublicApiAuthHint:
-      'Usa Authorization: Bearer crm_live_… y revisa docs/public-api-phase1.md para ejemplos completos.',
+      'Envía la clave en la cabecera x-api-key (las claves empiezan por n0crm_) y revisa docs/public-api-phase1.md para ejemplos completos.',
     integrationsApiKeyName: 'Nombre de la clave',
     integrationsCreateApiKey: 'Crear clave API',
     integrationsApiKeyScopes: 'Permisos — deja todo sin marcar para acceso completo',
