@@ -95,6 +95,11 @@ const schema = z.object({
   // Set to a random secret (>=16 chars). When unset, all /internal/* calls return 503.
   INTERNAL_KEY: z.string().min(16).optional(),
 
+  // Error-tracking DSN (optional). When set, captureException is expected to
+  // forward to the configured tracker; observability degrades to structured
+  // logs when unset.
+  SENTRY_DSN: z.string().optional(),
+
   // Number of trusted reverse-proxy hops in front of the API, used to resolve the
   // real client IP from X-Forwarded-For for rate limiting. Must match the real
   // topology: too high lets clients spoof their IP (rotate XFF to defeat the

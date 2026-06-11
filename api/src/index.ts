@@ -50,6 +50,7 @@ import { internalRoutes } from './routes/internal.js'
 import { aiRoutes } from './routes/ai.js'
 import { dataPrivacyRoutes } from './routes/dataPrivacy.js'
 import { authMiddleware } from './middleware/auth.js'
+import { resolveRequestId, captureException } from './services/observability.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
 import { startAiRetention, stopAiRetention } from './services/ai/retention.js'
 import { registerRealtimeHandlers, broadcastDbChange } from './services/realtime.js'
@@ -69,6 +70,14 @@ const app = Fastify({
   // to the genuine client IP and cannot be spoofed by injecting extra leftmost
   // XFF entries (which nginx appends to, never strips). See config/env.ts.
   trustProxy: env.TRUST_PROXY,
+  // Request-correlation id: continue a trusted upstream X-Request-Id or mint one.
+  // Included in every per-request log line (pino reqId) and echoed to the client.
+  genReqId: (req) => resolveRequestId(req.headers['x-request-id']),
+})
+
+// Echo the correlation id so clients/proxies can stitch a request to its logs.
+app.addHook('onRequest', async (req, reply) => {
+  reply.header('x-request-id', String(req.id))
 })
 
 // @fastify/cookie must be registered before @fastify/jwt when using cookie extraction
@@ -343,13 +352,25 @@ app.addHook('onResponse', async (req, reply) => {
 })
 
 // Scrub internal error details from responses in production
-app.setErrorHandler((err: Error & { statusCode?: number }, _req, reply) => {
-  app.log.error(err)
+app.setErrorHandler((err: Error & { statusCode?: number }, req, reply) => {
   const status = err.statusCode ?? 500
-  if (env.NODE_ENV === 'production' && status >= 500) {
-    return reply.code(status).send({ error: 'Internal server error' })
+  // Server-side faults go through central capture (structured log + tracker hook)
+  // with correlation context; client errors (4xx) just log at debug level.
+  if (status >= 500) {
+    captureException(req.log, err, {
+      requestId: String(req.id),
+      method: req.method,
+      route: req.routeOptions?.url ?? req.url,
+      orgId: (req.user as { org?: string } | undefined)?.org ?? null,
+      statusCode: status,
+    })
+  } else {
+    req.log.debug({ requestId: String(req.id), err: err.message }, 'client_error')
   }
-  return reply.code(status).send({ error: err.message ?? 'Internal server error' })
+  if (env.NODE_ENV === 'production' && status >= 500) {
+    return reply.code(status).send({ error: 'Internal server error', requestId: String(req.id) })
+  }
+  return reply.code(status).send({ error: err.message ?? 'Internal server error', requestId: String(req.id) })
 })
 
 app.addHook('onClose', async () => {
