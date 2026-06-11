@@ -1505,6 +1505,8 @@ export interface Translations {
     newPassword: string
     confirmPassword: string
     forgotPassword: string
+    ssoSignIn: string
+    ssoError: string
     rememberMe: string
     loginButton: string
     registerButton: string

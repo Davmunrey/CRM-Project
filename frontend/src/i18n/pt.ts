@@ -1439,6 +1439,8 @@ export const pt: Translations = {
     newPassword: 'Nova senha',
     confirmPassword: 'Confirmar nova senha',
     forgotPassword: 'Esqueceu a senha?',
+    ssoSignIn: 'Entrar com SSO',
+    ssoError: 'Falha no login com SSO. Tente novamente ou use sua senha.',
     rememberMe: 'Lembrar de mim',
     loginButton: 'Entrar',
     registerButton: 'Criar Conta',

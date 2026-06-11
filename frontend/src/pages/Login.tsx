@@ -12,6 +12,9 @@ import { useTranslations } from '../i18n'
 import { AuthLayout } from '../components/auth/AuthLayout'
 import { SecurePasswordField } from '../components/auth/SecurePasswordField'
 import { trackUxAction } from '../lib/uxMetrics'
+import { api } from '../lib/api'
+
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api'
 
 function LoginHero({ branding, t }: { branding: AppSettings['branding']; t: ReturnType<typeof useTranslations> }) {
   const items = [
@@ -62,6 +65,7 @@ export function Login() {
   const [mfaRequired, setMfaRequired] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [ssoEnabled, setSsoEnabled] = useState(false)
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
   const navigate = useNavigate()
   const login = useAuthStore((s) => s.login)
@@ -70,6 +74,13 @@ export function Login() {
     const unsub = useSettingsStore.subscribe((s) => setBranding(s.settings.branding))
     return unsub
   }, [])
+
+  useEffect(() => {
+    // Surface a failed SSO round-trip (callback redirects to /login?sso_error=…).
+    if (new URLSearchParams(window.location.search).has('sso_error')) setError(t.auth.ssoError)
+    // Show the SSO button only when the backend has an IdP configured.
+    api.get<{ enabled: boolean }>('/auth/sso/status').then((r) => setSsoEnabled(r.enabled)).catch(() => setSsoEnabled(false))
+  }, [t.auth.ssoError])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -177,6 +188,19 @@ export function Login() {
         >
           {t.auth.loginButton}
         </Button>
+
+        {ssoEnabled && (
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full rounded-xl"
+            size="lg"
+            leftIcon={<ShieldCheck size={16} aria-hidden />}
+            onClick={() => { window.location.href = `${API_BASE}/auth/sso/start` }}
+          >
+            {t.auth.ssoSignIn}
+          </Button>
+        )}
       </form>
 
       <div className="mt-6 pt-5 border-t border-fg/6 text-center">

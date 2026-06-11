@@ -1426,6 +1426,8 @@ export const en: Translations = {
     newPassword: 'New password',
     confirmPassword: 'Confirm new password',
     forgotPassword: 'Forgot your password?',
+    ssoSignIn: 'Sign in with SSO',
+    ssoError: 'SSO sign-in failed. Please try again or use your password.',
     rememberMe: 'Remember me',
     loginButton: 'Log In',
     registerButton: 'Create Account',
