@@ -70,7 +70,7 @@ export interface AuthState {
   passwords: Record<string, string>
   invitations: Invitation[]
 
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  login: (email: string, password: string, totp?: string) => Promise<{ success: boolean; error?: string; mfaRequired?: boolean }>
   logout: () => Promise<void>
   register: (data: { name: string; email: string; password: string }) => Promise<{ success: boolean; error?: string }>
 
@@ -216,9 +216,9 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      login: async (email, password) => {
+      login: async (email, password, totp) => {
         try {
-          const res = await api.post<LoginResponse>('/auth/login', { email, password })
+          const res = await api.post<LoginResponse>('/auth/login', { email, password, ...(totp ? { totp } : {}) })
           // Token is now in an HttpOnly cookie — not accessible from JS.
           // Store only the user profile and expiry timestamp in Zustand.
           const now = new Date().toISOString()
@@ -255,6 +255,8 @@ export const useAuthStore = create<AuthState>()(
 
           return { success: true }
         } catch (e) {
+          const body = (e as { body?: { mfaRequired?: boolean; error?: string } }).body
+          if (body?.mfaRequired) return { success: false, mfaRequired: true, error: body.error }
           return { success: false, error: e instanceof Error ? e.message : 'Login failed' }
         }
       },

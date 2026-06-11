@@ -58,6 +58,8 @@ export function Login() {
   const t = useTranslations()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [totp, setTotp] = useState('')
+  const [mfaRequired, setMfaRequired] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
@@ -75,8 +77,16 @@ export function Login() {
     setLoading(true)
     trackUxAction('auth_login_attempt')
 
-    const result = await login(email, password)
+    const result = mfaRequired ? await login(email, password, totp.trim()) : await login(email, password)
     setLoading(false)
+
+    if (result.mfaRequired) {
+      // Correct password, but a TOTP code is needed — reveal the code field.
+      setMfaRequired(true)
+      // Only show an error once the user has actually submitted a (wrong) code.
+      setError(mfaRequired && totp ? t.mfa.invalidCode : '')
+      return
+    }
 
     if (!result.success) {
       trackUxAction('auth_login_error', { reason: (result.error ?? 'unknown').slice(0, 120) })
@@ -138,6 +148,19 @@ export function Login() {
           enforceStrongPasswordMinLength={false}
         />
 
+        {mfaRequired && (
+          <Input
+            label={t.mfa.codeLabel}
+            value={totp}
+            onChange={(e) => setTotp(e.target.value)}
+            placeholder="123456"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            autoFocus
+            helpText={t.mfa.loginPrompt}
+          />
+        )}
+
         <div className="text-right -mt-2">
           <Link to="/forgot-password" className="text-xs text-fg-muted hover:text-accent-400 transition-colors">
             {t.auth.forgotPassword}
@@ -148,7 +171,7 @@ export function Login() {
           type="submit"
           className="w-full rounded-xl"
           size="lg"
-          disabled={loading || !email || !password}
+          disabled={loading || !email || !password || (mfaRequired && totp.trim().length < 6)}
           loading={loading}
           rightIcon={<ArrowRight size={16} aria-hidden />}
         >

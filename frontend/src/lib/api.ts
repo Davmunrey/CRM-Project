@@ -19,16 +19,19 @@ async function request<T>(
     signal,
   })
 
-  if (res.status === 401) {
-    if (!window.location.pathname.startsWith('/login')) {
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ error: res.statusText })) as { error?: string; [k: string]: unknown }
+    // A 401 on a protected page means the session is gone — bounce to /login.
+    // On the login page itself, a 401 is an expected auth response (bad creds,
+    // MFA required) and must surface to the caller, not redirect.
+    if (res.status === 401 && !window.location.pathname.startsWith('/login')) {
       window.location.replace('/login')
     }
-    throw new Error('Unauthorized')
-  }
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText })) as { error?: string }
-    throw new Error(err.error ?? `HTTP ${res.status}`)
+    const e = new Error((typeof errBody.error === 'string' ? errBody.error : undefined) ?? `HTTP ${res.status}`) as
+      Error & { status?: number; body?: Record<string, unknown> }
+    e.status = res.status
+    e.body = errBody
+    throw e
   }
 
   if (res.status === 204) return undefined as T

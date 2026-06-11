@@ -1991,4 +1991,23 @@ export interface Translations {
     analyzing: string
     nextBestActionTitle: string
   }
+  mfa: {
+    title: string
+    description: string
+    enabled: string
+    disabled: string
+    statusEnabled: string
+    enableButton: string
+    setupInstructions: string
+    secretLabel: string
+    codeLabel: string
+    confirmEnable: string
+    disableButton: string
+    disablePrompt: string
+    passwordLabel: string
+    confirmDisable: string
+    cancel: string
+    invalidCode: string
+    loginPrompt: string
+  }
 }
