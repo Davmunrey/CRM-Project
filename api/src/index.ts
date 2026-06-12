@@ -52,6 +52,7 @@ import { dataPrivacyRoutes } from './routes/dataPrivacy.js'
 import { ssoRoutes } from './routes/sso.js'
 import { scimRoutes } from './routes/scim.js'
 import { updatesRoutes } from './routes/updates.js'
+import { leadFormsRoutes } from './routes/leadForms.js'
 import { authMiddleware } from './middleware/auth.js'
 import { resolveRequestId, captureException } from './services/observability.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
@@ -214,6 +215,9 @@ await app.register(authRoutes, {
 })
 await app.register(ssoRoutes, { prefix: '/auth/sso' })
 await app.register(publicApiRoutes, { prefix: '/public/v1' })
+// Public web-to-lead forms — token-in-path, no JWT/API-key (its own plugin so it
+// isn't caught by publicApiRoutes' x-api-key hook).
+await app.register(leadFormsRoutes, { prefix: '/public/forms' })
 // SCIM 2.0 — authed via a Bearer api-key scoped `scim` (its own onRequest hook), not JWT.
 await app.register(scimRoutes, { prefix: '/scim/v2' })
 await app.register(webhookRoutes, { prefix: '/webhooks' })
