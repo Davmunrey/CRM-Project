@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CircleHelp, Clock3, Flame, FunnelPlus, Plus, RefreshCw, Trash2, UserPlus } from 'lucide-react'
+import { AtSign, CircleHelp, Clock3, Flame, FunnelPlus, Plus, RefreshCw, Trash2, UserPlus } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { useLeadsStore } from '../store/leadsStore'
 import { useAuthStore } from '../store/authStore'
@@ -13,6 +13,7 @@ import { Button } from '../components/ui/Button'
 import { Select } from '../components/ui/Select'
 import { EmptyState } from '../components/ui/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
+import { UpdatesPanel } from '../components/shared/UpdatesPanel'
 
 const STAGES: LeadLifecycleStage[] = ['subscriber', 'lead', 'mql', 'sql', 'opportunity', 'customer']
 
@@ -116,6 +117,7 @@ export function Leads() {
   const [companyName, setCompanyName] = useState('')
   const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null)
   const [expandedScoreLeadId, setExpandedScoreLeadId] = useState<string | null>(null)
+  const [expandedUpdatesLeadId, setExpandedUpdatesLeadId] = useState<string | null>(null)
 
   const filtered = useMemo(() => getFilteredLeads(), [getFilteredLeads])
   const stageLabels = t.leads.stageLabels
@@ -305,6 +307,14 @@ export function Leads() {
               >
                 {t.leads.scoreBreakdownAction}
               </button>
+              <button
+                type="button"
+                onClick={() => setExpandedUpdatesLeadId(expandedUpdatesLeadId === lead.id ? null : lead.id)}
+                className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-fg/6 hover:bg-fg/10 text-fg-muted"
+              >
+                <AtSign size={10} />
+                {t.updates.title}
+              </button>
               {lead.status !== 'converted' && (
                 <div className="inline-flex items-center gap-1">
                   <button
@@ -357,6 +367,13 @@ export function Leads() {
                         ))}
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+              {expandedUpdatesLeadId === lead.id && (
+                <div className="px-4 pb-4">
+                  <div className="ml-12 rounded-lg border border-fg/8 bg-fg/[0.02] p-3">
+                    <UpdatesPanel entityType="lead" entityId={lead.id} />
                   </div>
                 </div>
               )}

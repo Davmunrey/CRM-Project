@@ -32,6 +32,7 @@ import { DealKanban } from './DealKanban'
 import { DealListView } from './DealListView'
 import { DealToolbar } from './DealToolbar'
 import { QuoteBuilder } from './QuoteBuilder'
+import { UpdatesPanel } from '../../components/shared/UpdatesPanel'
 
 function getStageDurationDays(updatedAt: string): number {
   return Math.floor((Date.now() - new Date(updatedAt).getTime()) / 86400000)
@@ -376,6 +377,11 @@ export function DealsPage() {
             <div className="bg-fg/4 rounded-xl p-4 space-y-3">
               <h3 className="text-sm font-semibold text-fg-muted">{t.common.details}</h3>
               <CustomFieldsForm entityId={selectedDeal.id} entityType="deal" />
+            </div>
+
+            <div className="bg-fg/4 rounded-xl p-4 space-y-3">
+              <h3 className="text-sm font-semibold text-fg-muted">{t.updates.title}</h3>
+              <UpdatesPanel entityType="deal" entityId={selectedDeal.id} />
             </div>
 
             <div>
