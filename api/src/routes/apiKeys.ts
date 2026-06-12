@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { randomBytes, createHash } from 'node:crypto'
 import { db } from '../db/client.js'
 import { requirePermission } from '../middleware/rbac.js'
+import { resolveFormConfig } from './leadForms.js'
 
 // API keys + lead-capture tokens grant programmatic access — mutations are admin-only.
 const manageKeys = { preHandler: [requirePermission('apikeys:manage')] }
@@ -102,7 +103,7 @@ export async function apiKeysRoutes(app: FastifyInstance) {
     const orgId = req.user.org
     if (!orgId) return reply.code(403).send({ error: 'No organization' })
     const rows = await db`
-      SELECT id, label, token_prefix, enabled, created_at
+      SELECT id, label, token_prefix, enabled, config, submission_count, created_at
       FROM lead_capture_tokens
       WHERE organization_id = ${orgId}
       ORDER BY created_at DESC
@@ -129,6 +130,32 @@ export async function apiKeysRoutes(app: FastifyInstance) {
     `
 
     return reply.code(201).send({ token_row: row, token: rawToken })
+  })
+
+  // Update a lead-capture token's label/enabled and its web-to-lead form definition.
+  app.patch('/lead-capture-tokens/:id', manageKeys, async (req, reply) => {
+    const orgId = req.user.org
+    if (!orgId) return reply.code(403).send({ error: 'No organization' })
+    const { id } = req.params as { id: string }
+    const body = z
+      .object({ label: z.string().max(100).optional(), enabled: z.boolean().optional(), config: z.record(z.unknown()).optional() })
+      .safeParse(req.body)
+    if (!body.success) return reply.code(400).send({ error: 'Invalid request' })
+
+    const now = new Date().toISOString()
+    // Sanitize the form config through the same resolver the public endpoint uses.
+    const cfg = body.data.config !== undefined ? db.json(resolveFormConfig(body.data.config) as never) : null
+    const [row] = await db`
+      UPDATE lead_capture_tokens SET
+        label = COALESCE(${body.data.label ?? null}, label),
+        enabled = COALESCE(${body.data.enabled ?? null}, enabled),
+        config = COALESCE(${cfg}, config),
+        updated_at = ${now}
+      WHERE id = ${id} AND organization_id = ${orgId}
+      RETURNING id, label, token_prefix, enabled, config, submission_count, created_at
+    `
+    if (!row) return reply.code(404).send({ error: 'Not found' })
+    return reply.send({ token_row: row })
   })
 
   app.delete('/lead-capture-tokens/:id', manageKeys, async (req, reply) => {
