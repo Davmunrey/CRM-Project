@@ -50,6 +50,7 @@ const PipelineTimeline = lazy(() => import('./pages/PipelineTimeline').then((m) 
 const Automations = lazy(() => import('./pages/Automations').then((m) => ({ default: m.Automations })))
 const Products = lazy(() => import('./pages/Products').then((m) => ({ default: m.Products })))
 const GmailCallback = lazy(() => import('./pages/GmailCallback').then((m) => ({ default: m.GmailCallback })))
+const PublicLeadForm = lazy(() => import('./pages/PublicLeadForm').then((m) => ({ default: m.PublicLeadForm })))
 const Landing = lazy(() => import('./pages/Landing').then((m) => ({ default: m.Landing })))
 const Admin = lazy(() => import('./pages/Admin').then((m) => ({ default: m.Admin })))
 
@@ -130,6 +131,7 @@ function AppRoutes() {
         <Route path="/org-access-required" element={<OrgAccessRequired />} />
         <Route path="/accept-invite" element={<AcceptInvite />} />
         <Route path="/auth/gmail/callback" element={<GmailCallback />} />
+        <Route path="/forms/:token" element={<PublicLeadForm />} />
 
         {/* Home: landing for guests, dashboard for authenticated */}
         <Route path="/" element={<HomeRoute />} />
