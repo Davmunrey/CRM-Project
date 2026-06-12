@@ -49,6 +49,7 @@ The 31-60 and 61-90 horizons below have substantially shipped. These tracks are 
 | **Calendar + Timeline views** (Monday-style) | Shipped | Deals board view modes (alongside Kanban/List): month Calendar by `expectedCloseDate` + Gantt Timeline, stage-colour-coded |
 | **Composable dashboard widgets** (Monday-style) | Shipped | Overview/Custom toggle; drag-and-drop number/bar/funnel/list widgets computed from stores; per-user layout via `PATCH /preferences/me/dashboard` (migration 022) |
 | **Automation recipe center** (Monday-style) | Shipped | Visual builder + searchable template library + starter templates + "when → then" recipe lines on rule/template cards (over the existing `automation_rules` backend) |
+| **Web-to-lead capture** (HubSpot/Pipedrive-style) | Shipped (form); builder UI pending | Public `GET/POST /public/forms/:token` (honeypot + rate limit) + hosted form page `{origin}/forms/<token>` → creates leads (`source: web_form`). Migration 023. Field-customization builder UI is the next batch. |
 
 > **Tenant isolation note:** app-layer org scoping is the authoritative control; RLS is opt-in defense-in-depth (see `docs/adr/0001-tenant-isolation-and-rls.md`).
 

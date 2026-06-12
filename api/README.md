@@ -284,6 +284,15 @@ Member-management routes are guarded by `requirePermission('members:manage')` (s
 |--------|------|------|-------------|
 | POST | `/public/v1/leads` | `x-api-key` (scope `leads:write`) | Create lead from external form (upserts by email). Requires the `leads:write` scope; otherwise `403 { error: "Insufficient API key scope", required: "leads:write" }`. |
 
+### Web-to-lead forms (public, token-in-path)
+
+No JWT/API-key — the `lct_` lead-capture token is the public credential, embedded in the form. Anti-spam: honeypot + 10/min rate limit. Hosted form lives at the SPA route `{origin}/forms/:token`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/public/forms/:token` | Public form config (`{ title, description, fields, successMessage }`) for the hosted render |
+| POST | `/public/forms/:token` | Submit — creates/updates a lead (`source: web_form`) in the token's org, increments `submission_count` |
+
 ### Slack Integration
 
 | Method | Path | Auth | Description |
@@ -504,6 +513,7 @@ Migrations in `migrations/` — pure PostgreSQL, applied in filename order.
 | `020_security_events.sql` | `security_events` (append-only auth/account-security log; nullable org/actor; indexed by created_at/actor/org/type) |
 | `021_item_updates.sql` | `item_updates` (Monday-style threaded Updates on contacts/companies/deals/leads; `parent_id` replies, `mentions` jsonb, soft-delete; RLS-enabled) |
 | `022_user_dashboard.sql` | Adds `user_preferences.dashboard` jsonb (per-user composable dashboard widget layout; `PATCH /preferences/me/dashboard`) |
+| `023_lead_form_config.sql` | Adds `lead_capture_tokens.config` jsonb + `submission_count` (web-to-lead form definition + counter; public `/public/forms/:token`) |
 | `002_indexes_and_perf.sql` | pg_trgm trigram indexes (full-text search), 40+ B-tree indexes on FK hot paths, composite list-query indexes, RLS on 21 tables, `set_current_org()` SECURITY DEFINER function |
 
 ```bash

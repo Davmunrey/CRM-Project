@@ -6,7 +6,7 @@
 
 *This document is a reference index, not a substitute for the source. Paths are clickable repo-relative links.*
 
-> **Added after this map was generated** (Monday-style features, not yet folded into the sections below): `api/src/routes/updates.ts` (+ `updates.test.ts`) · `api/migrations/021_item_updates.sql` · `frontend/src/components/shared/UpdatesPanel.tsx` — threaded **Updates & @mentions** on contacts/companies/deals/leads; `frontend/src/pages/deals/DealCalendarView.tsx` + `DealTimelineView.tsx` — **Calendar & Timeline** board views; `frontend/src/components/dashboard/CustomDashboard.tsx` + `frontend/src/store/dashboardStore.ts` + `api/migrations/022_user_dashboard.sql` — **composable widget dashboard**.
+> **Added after this map was generated** (Monday-style features, not yet folded into the sections below): `api/src/routes/updates.ts` (+ `updates.test.ts`) · `api/migrations/021_item_updates.sql` · `frontend/src/components/shared/UpdatesPanel.tsx` — threaded **Updates & @mentions** on contacts/companies/deals/leads; `frontend/src/pages/deals/DealCalendarView.tsx` + `DealTimelineView.tsx` — **Calendar & Timeline** board views; `frontend/src/components/dashboard/CustomDashboard.tsx` + `frontend/src/store/dashboardStore.ts` + `api/migrations/022_user_dashboard.sql` — **composable widget dashboard**; `api/src/routes/leadForms.ts` (+ `leadForms.test.ts`) + `api/migrations/023_lead_form_config.sql` + `frontend/src/pages/PublicLeadForm.tsx` — **web-to-lead forms** (public `/public/forms/:token` + hosted `/forms/:token`).
 
 ## Contents
 

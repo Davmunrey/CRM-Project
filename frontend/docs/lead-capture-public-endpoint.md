@@ -68,7 +68,7 @@ The endpoint inserts (or upserts) a row in the `contacts` table with `type = 'le
 
 Lead-capture tokens are a **separate** admin-managed credential with prefix `lct_`. They are stored as SHA-256 hashes in the `lead_capture_tokens` table and are distinct from `api_keys`.
 
-Current status: the `/api/public/v1/leads` endpoint authenticates exclusively via `api_keys` (the `x-api-key` header path). Lead-capture tokens are managed through the authenticated routes below and are available for use by custom embed flows that require a lighter credential.
+These tokens power the **web-to-lead form**: the public endpoints `GET /api/public/forms/:token` (form config) and `POST /api/public/forms/:token` (submission — honeypot + 10/min rate limit) authenticate by the `lct_` token in the path (no JWT/API-key) and create a lead (`source: web_form`) in the token's org. A hosted form is served at the SPA route `{origin}/forms/<token>`. The token's form definition (title, fields, success message) lives in `lead_capture_tokens.config` (migration 023). The separate `/api/public/v1/leads` endpoint remains the `x-api-key` path for server-side integrations.
 
 ### Admin routes (require session + `apikeys:manage`)
 

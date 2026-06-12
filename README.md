@@ -56,6 +56,7 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 > The platform was migrated off Supabase to a self-hosted **Fastify + PostgreSQL + Redis** stack, then hardened toward enterprise readiness.
 
 - 🗂️ **Monday-style collaboration & views** — threaded **Updates with @mentions** (notify teammates) on contacts, companies, deals & leads; **Calendar** and **Timeline (Gantt)** board views on the Deals board alongside Kanban/List; a **composable widget dashboard** (drag-and-drop number/chart/funnel/list widgets, saved per user); and a **no-code automation recipe center** (builder + searchable template library + "when → then" recipe lines).
+- 🧲 **Web-to-lead capture** — HubSpot/Pipedrive-style public lead forms backed by a revocable `lct_` token: a hosted form at `{origin}/forms/<token>` (honeypot + rate-limited) that drops leads straight into the CRM.
 - 🤖 **AI / agentic capability** — multi-provider (`Gemini` free default / `OpenAI` / `Anthropic`), a tool-using CRM agent with persisted conversations, in-app assistant drawer, next-best-action on Contact/Deal detail, and Inbox summarize + draft-reply.
 - 🛡️ **AI governance** — per-tenant kill switch, monthly token spend cap, and retention purge of AI transcripts.
 - 🔑 **MFA (TOTP)** — RFC-6238, end-to-end (enroll in Settings → Security, code prompt at login).
