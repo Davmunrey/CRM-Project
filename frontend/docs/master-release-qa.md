@@ -92,8 +92,7 @@ Use this operational plan to close unchecked items across `docs/**/*.md`, `.plan
   - `docs/**/*.md`: 110
   - `.planning/**/*.md`: 49
 - Active blockers (external/runtime):
-  - Supabase Edge Function deploy (`supabase-remote-deploy.yml`) blocked until `SUPABASE_ACCESS_TOKEN` and Google OAuth secrets are set in GitHub Actions secrets.
-  - Password reset email delivery not yet implemented (token created in DB; SMTP/Resend integration pending).
+  - Password reset email delivery depends on a configured SMTP provider (token is created and SHA-256 hashed in DB; delivery requires `SMTP_*` env vars set in production).
 
 ---
 
@@ -107,7 +106,7 @@ Use this checklist before shipping a "sell-ready" baseline release.
 
 - Status: Active
 - Owner: Product/QA
-- Last updated: 2026-05-18
+- Last updated: 2026-06-11
 - Canonical: Yes
 
 ## Scope and Planning
@@ -160,7 +159,7 @@ Non-negotiable merge/release gates:
 - `npm run lint:ci` (full ESLint on `src/`)
 - `npx tsc --noEmit`
 - `npm run test:run` (or `npx vitest run` in CI)
-- `npm run build -- --mode development` (Vite compile gate; production deploys use `VITE_APP_CHANNEL` + Supabase secrets)
+- `npm run build -- --mode development` (Vite compile gate; production deploys use `VITE_APP_CHANNEL` and api env vars)
 - Release smoke from [`smoke-checklist-production.md`](./smoke-checklist-production.md)
 
 ### Branch protection (Gitea / GitHub)
@@ -176,7 +175,7 @@ When enabling **required status checks** on the default branch (`master`):
 
 Cross-check before any **external** customer rollout (evidence lives in linked docs; platform tasks are org-specific):
 
-- [x] Outbound Resend function abuse controls and logging (`supabase/functions/resend-send-email`, index: [`master-security-compliance` — evidence](./master-security-compliance.md#sell-ready-security-evidence-index)).
+- [x] Outbound email abuse controls and logging (SMTP provider; audit log records send state; index: [`master-security-compliance` — evidence](./master-security-compliance.md#sell-ready-security-evidence-index)).
 - [x] Deploy channels: `VITE_APP_CHANNEL` (`src/lib/envChannel.ts`), auth fail-closed (`src/App.tsx`), build validation (`vite.config.ts`), `.env.example`.
 - [x] Auth store does not restore stale or demo credentials on rehydrate (`src/store/authStore.ts`).
 - [x] Email send state matches provider outcome (`failed` + audit path where applicable).
@@ -184,6 +183,63 @@ Cross-check before any **external** customer rollout (evidence lives in linked d
 - [ ] **JWT and auth hardening (new 2026-05-18):** Verify JWT_SECRET min 32 chars, algorithm pinned to HS256, password reset tokens SHA-256 hashed, bcrypt login constant-time, `/auth/reset-password` rate-limited (10 req/15 min), impersonation audit logged before token issue, Redis denylist for JWT revocation (see [`master-security-compliance` — External hardening checklist § 1](./master-security-compliance.md#supabase-external-hardening-checklist)).
 - [ ] **Docker non-root (new 2026-05-18):** api/Dockerfile uses `USER node`, api/.dockerignore excludes `.env`, docker-entrypoint.sh auto-runs migrations (see [`master-security-compliance` — External hardening checklist § 5](./master-security-compliance.md#supabase-external-hardening-checklist)).
 - [ ] **Per deployment:** External hardening checklist signed, SPF/DKIM/DMARC evidence, branch protection in Gitea (see [`master-security-compliance` — hardening checklist](./master-security-compliance.md#supabase-external-hardening-checklist), [`master-email-operations` — deliverability](./master-email-operations.md#email-deliverability-resend), [`master-security-compliance` — Gitea](./master-security-compliance.md#gitea-operations)).
+
+## Enterprise feature QA gates (shipped features)
+
+Run these checks when the relevant surface is in scope for the release or when validating a new deployment.
+
+### MFA (TOTP) — migration 019
+
+- [ ] `POST /auth/mfa/setup` returns `otpauth://` URI for an authenticated user; second call returns 409 when already enabled.
+- [ ] `POST /auth/mfa/enable` accepts a valid TOTP code and sets `mfa_enabled = true`; invalid code returns 401.
+- [ ] `POST /auth/mfa/disable` requires a valid code and clears the secret cipher.
+- [ ] Login with MFA-enrolled account returns `{ mfaRequired: true }` when `totp` field is absent; login succeeds with correct code.
+- [ ] Settings → Security: enroll flow renders QR code + manual secret; login code prompt renders after password step.
+- [ ] Security-event audit log records `login_mfa_required`, `login_mfa_failed`, `mfa_enabled`, `mfa_disabled`.
+
+### OIDC SSO — `sso.ts` + `oidcService`
+
+- [ ] `GET /auth/sso/status` returns `{ enabled, issuer }` (enabled/disabled state reflects `OIDC_ISSUER` env var).
+- [ ] SSO login button rendered in frontend login page only when `/auth/sso/status` returns `enabled: true`.
+- [ ] `GET /auth/sso/start` redirects to IdP authorize URL; PKCE S256 code_challenge present in redirect.
+- [ ] `GET /auth/sso/callback` validates state, verifies JWKS RS256 ID token, JIT-provisions the user on first login, and sets auth cookie.
+- [ ] Invalid `state` or `id_token` redirects to login with `?sso_error=` param.
+- [ ] JIT-provisioned user receives `OIDC_DEFAULT_ROLE` and is active; security event `register` recorded with `detail: 'sso provisioned'`.
+
+### SCIM 2.0 — `scim.ts`, migration base + `scim` scope
+
+- [ ] `GET /scim/v2/ServiceProviderConfig` accessible with valid Bearer SCIM API key; returns RFC 7643 payload.
+- [ ] `GET /scim/v2/Users` lists org users; pagination with `startIndex` + `count` works.
+- [ ] `POST /scim/v2/Users` provisions a new user; duplicate `userName` returns 409.
+- [ ] `PUT /scim/v2/Users/:id` updates `displayName` / `active`; setting `active: false` soft-deprovisions the user and revokes sessions.
+- [ ] `DELETE /scim/v2/Users/:id` soft-deletes the user; last active owner cannot be deleted (returns 409).
+- [ ] Bearer token without `scim` scope returns 401.
+- [ ] Audit log records SCIM provisioning operations.
+
+### AI features — migration 018 + `ai.ts` routes
+
+- [ ] AI is disabled by default until `settings.ai.enabled = true` is set for the org.
+- [ ] `GET /ai/status` reflects the org kill switch; AI routes return 403 when disabled.
+- [ ] CRM agent (tool-using) responds correctly; `POST /ai/agent` works with a test question referencing a contact.
+- [ ] Inbox summarize + draft-reply work for a threaded Gmail message.
+- [ ] Token cap (`AI_MONTHLY_TOKEN_CAP`) enforced: usage exceeding the cap returns 429.
+- [ ] `AI_MESSAGE_RETENTION_DAYS` purge: verify old conversation rows are not retained beyond the configured window in staging.
+- [ ] Multi-provider routing: Gemini (default), OpenAI, and Anthropic configured via env vars; switching provider does not break conversation persistence.
+
+### Security-event audit log — migration 020 + `securityEvents.ts`
+
+- [ ] `security_events` table present (migration 020 applied).
+- [ ] Login success, login failure, MFA events, SSO events, password change, logout are all recorded in `security_events`.
+- [ ] GDPR erasure is recorded in the audit log.
+- [ ] Admin can query the audit log via `GET /audit` (requires `audit:read` permission).
+
+### GDPR — `dataPrivacy.ts` + `/privacy` routes
+
+- [ ] `GET /privacy/export` (Art. 20) returns a full JSON dump for the org; requires owner/admin.
+- [ ] `GET /privacy/subject/:contactId/export` (Art. 15) returns all data for one contact.
+- [ ] `POST /privacy/subject/:contactId/erase` (Art. 17) anonymizes PII fields; subsequent export returns anonymized values.
+- [ ] Erasure operation is recorded in the audit log as `gdpr_erasure`.
+- [ ] Non-owner/non-admin role is denied with 403.
 
 ---
 
@@ -253,7 +309,7 @@ Use after changes to **Dashboard**, **Settings → Getting started**, or [`onboa
 
 - Status: Active
 - Owner: QA/Engineering
-- Last updated: 2026-04-16
+- Last updated: 2026-06-11
 - Canonical: Yes
 
 **Status:** Baseline evidence for the **product** sell-ready GO ([#go-no-go-sell-ready-baseline](#go-no-go-sell-ready-baseline)). Post–Apr 2026 **security** checks are listed in [#sell-ready-release-checklist](#sell-ready-release-checklist) (Security section) and [`master-security-compliance` — evidence](./master-security-compliance.md#sell-ready-security-evidence-index).
@@ -292,7 +348,7 @@ Use after changes to **Dashboard**, **Settings → Getting started**, or [`onboa
 
 - `npm run test:run -- tests/utils/permissions.test.ts tests/utils/formatters.test.ts`
 - Result: `2 files passed`, `52 tests passed` (scoped subset only — not the full suite)
-- Full regression: `npm run test:run` (Vitest — last verified **36** files / **183** tests, 0 failures, exit 0 on 2026-04-21)
+- Full regression: `npm run test:run` (Vitest — last verified **43** files / **263** frontend tests, 0 failures, exit 0; API: **12** files / **85** tests, 0 failures)
 - Lint diagnostics on modified files: no errors
 
 ## Defects
@@ -321,7 +377,7 @@ Fill this document for each release candidate.
 
 - Status: Active
 - Owner: QA
-- Last updated: 2026-04-16
+- Last updated: 2026-06-11
 - Canonical: Yes
 
 **Example (filled):** [#qa-evidence-sell-ready-baseline](#qa-evidence-sell-ready-baseline) — copy structure from this template for new releases.
@@ -359,7 +415,7 @@ Fill this document for each release candidate.
 
 - Status: Active
 - Owner: Product/Engineering
-- Last updated: 2026-04-16
+- Last updated: 2026-06-11
 - Canonical: Yes
 
 ## Decision
@@ -411,10 +467,10 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 
 - Status: Active
 - Owner: Ops/Engineering
-- Last updated: 2026-04-16
+- Last updated: 2026-06-11
 - Canonical: Yes
 
-**Related:** Security/compliance evidence map [`master-security-compliance`](./master-security-compliance.md#sell-ready-security-evidence-index); Supabase external checklist [`master-security-compliance`](./master-security-compliance.md#supabase-external-hardening-checklist); repo CI [`master-security-compliance`](./master-security-compliance.md#gitea-operations).
+**Related:** Security/compliance evidence map [`master-security-compliance`](./master-security-compliance.md#sell-ready-security-evidence-index); external hardening checklist [`master-security-compliance`](./master-security-compliance.md#supabase-external-hardening-checklist); repo CI [`master-security-compliance`](./master-security-compliance.md#gitea-operations).
 
 ## 1) Pre-Go-Live (T-7 to T-1 days)
 
@@ -493,7 +549,7 @@ This checklist is the operational handoff for go-live and post-go-live stabiliza
 - [ ] Capacity checks:
   - [ ] n0crm-api rate limits acceptable (PostgreSQL + Redis load under expected traffic)
   - [ ] SMTP/email provider health stable
-  - [ ] edge function latency acceptable
+  - [ ] API p95 latency acceptable (target: < 500ms per SLO baseline)
 - [ ] Product checks:
   - [ ] smart views localization consistent
   - [ ] lead scoring confidence behavior acceptable
