@@ -53,6 +53,7 @@ import { ssoRoutes } from './routes/sso.js'
 import { scimRoutes } from './routes/scim.js'
 import { updatesRoutes } from './routes/updates.js'
 import { leadFormsRoutes } from './routes/leadForms.js'
+import { ticketsRoutes } from './routes/tickets.js'
 import { authMiddleware } from './middleware/auth.js'
 import { resolveRequestId, captureException } from './services/observability.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
@@ -263,6 +264,7 @@ await app.register(internalRoutes, { prefix: '/internal' })
 await app.register(aiRoutes, { prefix: '/ai' })
 await app.register(dataPrivacyRoutes, { prefix: '/privacy' })
 await app.register(updatesRoutes, { prefix: '/updates' })
+await app.register(ticketsRoutes, { prefix: '/tickets' })
 
 // ---------------------------------------------------------------------------
 // Task 5: Prometheus /metrics endpoint
@@ -335,6 +337,7 @@ const ROUTE_TABLE_MAP: Record<string, string> = {
   '/audit': 'audit_log',
   '/orgs': 'organization_members',
   '/updates': 'item_updates',
+  '/tickets': 'tickets',
 }
 
 app.addHook('onResponse', async (req, reply) => {
