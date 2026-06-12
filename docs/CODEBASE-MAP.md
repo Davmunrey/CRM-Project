@@ -6,6 +6,8 @@
 
 *This document is a reference index, not a substitute for the source. Paths are clickable repo-relative links.*
 
+> **Added after this map was generated** (Monday-style features, not yet folded into the sections below): `api/src/routes/updates.ts` (+ `updates.test.ts`) · `api/migrations/021_item_updates.sql` · `frontend/src/components/shared/UpdatesPanel.tsx` — threaded **Updates & @mentions** on contacts/companies/deals/leads; `frontend/src/pages/deals/DealCalendarView.tsx` + `DealTimelineView.tsx` — **Calendar & Timeline** board views.
+
 ## Contents
 
 1. [API — Core & Infrastructure](#api-core-infrastructure) — 10 files

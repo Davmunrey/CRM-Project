@@ -141,6 +141,7 @@ Provider-agnostic single sign-on (Entra / Okta / Auth0 / any OIDC IdP). Enabled 
 | Deals | `/deals` | `GET ?pipelineId=`. Stage auto-resolves from pipeline on create. |
 | Activities | `/activities` | CRUD |
 | Notifications | `/notifications` | `POST /mark-all-read`, `DELETE /` (clear all for user) |
+| Updates | `/updates` | Threaded item Updates + @mentions — `GET /?entityType=&entityId=`, `POST /` (update or reply; parses `@[Name](uuid)` → mention notifications), `DELETE /:id` (soft-delete; author or owner/admin/manager) |
 | Audit Log | `/audit` | GET + POST — read requires admin/owner/manager role |
 
 ### Sales
@@ -501,6 +502,7 @@ Migrations in `migrations/` — pure PostgreSQL, applied in filename order.
 | `018_ai.sql` | `ai_conversations`, `ai_messages`, `ai_usage_log` (org-scoped, RLS-enabled, indexed) |
 | `019_mfa.sql` | `users.mfa_enabled`, `users.mfa_secret_cipher` (AES-256-GCM-encrypted TOTP secret) |
 | `020_security_events.sql` | `security_events` (append-only auth/account-security log; nullable org/actor; indexed by created_at/actor/org/type) |
+| `021_item_updates.sql` | `item_updates` (Monday-style threaded Updates on contacts/companies/deals/leads; `parent_id` replies, `mentions` jsonb, soft-delete; RLS-enabled) |
 | `002_indexes_and_perf.sql` | pg_trgm trigram indexes (full-text search), 40+ B-tree indexes on FK hot paths, composite list-query indexes, RLS on 21 tables, `set_current_org()` SECURITY DEFINER function |
 
 ```bash

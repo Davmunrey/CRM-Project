@@ -45,6 +45,8 @@ The 31-60 and 61-90 horizons below have substantially shipped. These tracks are 
 | **Multi-provider AI + governance** | Shipped | Gemini (free default) / OpenAI / Anthropic; tool-using CRM agent, persisted conversations, assistant drawer, next-best-action, Inbox summarize + draft-reply; per-org kill switch `settings.ai.enabled`, `AI_MONTHLY_TOKEN_CAP`, `AI_MESSAGE_RETENTION_DAYS` purge; migration 018 |
 | **Security-event audit log** | Shipped | `security_events` table + `recordSecurityEvent`; migration 020 |
 | **Observability** | Shipped | `x-request-id` correlation, `captureException`, `/health` `/health/ready` `/health/live`, optional `SENTRY_DSN`, `/metrics` (loopback/internal-key gated), Prometheus + Grafana |
+| **Updates & @mentions** (Monday-style) | Shipped | Threaded `/updates` on contacts/companies/deals/leads; @mention autocomplete → notifications; replies + soft-delete; migration 021 (`item_updates`) |
+| **Calendar + Timeline views** (Monday-style) | Shipped | Deals board view modes (alongside Kanban/List): month Calendar by `expectedCloseDate` + Gantt Timeline, stage-colour-coded |
 
 > **Tenant isolation note:** app-layer org scoping is the authoritative control; RLS is opt-in defense-in-depth (see `docs/adr/0001-tenant-isolation-and-rls.md`).
 
