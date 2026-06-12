@@ -56,7 +56,7 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 > The platform was migrated off Supabase to a self-hosted **Fastify + PostgreSQL + Redis** stack, then hardened toward enterprise readiness.
 
 - 🗂️ **Monday-style collaboration & views** — threaded **Updates with @mentions** (notify teammates) on contacts, companies, deals & leads; **Calendar** and **Timeline (Gantt)** board views on the Deals board alongside Kanban/List; a **composable widget dashboard** (drag-and-drop number/chart/funnel/list widgets, saved per user); and a **no-code automation recipe center** (builder + searchable template library + "when → then" recipe lines).
-- 🧲 **Web-to-lead capture** — HubSpot/Pipedrive-style public lead forms backed by a revocable `lct_` token: a hosted form at `{origin}/forms/<token>` (honeypot + rate-limited) that drops leads straight into the CRM.
+- 🧲 **Web-to-lead form builder** — HubSpot/Pipedrive-style public lead forms backed by a revocable `lct_` token: configure title/fields/success in Settings, grab the hosted-form URL `{origin}/forms/<token>` or iframe embed (honeypot + rate-limited), and leads drop straight into the CRM.
 - 🔥 **Deal rotting & activity-based selling** — Pipedrive-style flags on deal cards for idle/"rotting" deals and deals with **no next activity scheduled**, alongside the existing deal-health scoring.
 - 🤖 **AI / agentic capability** — multi-provider (`Gemini` free default / `OpenAI` / `Anthropic`), a tool-using CRM agent with persisted conversations, in-app assistant drawer, next-best-action on Contact/Deal detail, and Inbox summarize + draft-reply.
 - 🛡️ **AI governance** — per-tenant kill switch, monthly token spend cap, and retention purge of AI transcripts.
