@@ -47,6 +47,7 @@ The 31-60 and 61-90 horizons below have substantially shipped. These tracks are 
 | **Observability** | Shipped | `x-request-id` correlation, `captureException`, `/health` `/health/ready` `/health/live`, optional `SENTRY_DSN`, `/metrics` (loopback/internal-key gated), Prometheus + Grafana |
 | **Updates & @mentions** (Monday-style) | Shipped | Threaded `/updates` on contacts/companies/deals/leads; @mention autocomplete → notifications; replies + soft-delete; migration 021 (`item_updates`) |
 | **Calendar + Timeline views** (Monday-style) | Shipped | Deals board view modes (alongside Kanban/List): month Calendar by `expectedCloseDate` + Gantt Timeline, stage-colour-coded |
+| **Composable dashboard widgets** (Monday-style) | Shipped | Overview/Custom toggle; drag-and-drop number/bar/funnel/list widgets computed from stores; per-user layout via `PATCH /preferences/me/dashboard` (migration 022) |
 
 > **Tenant isolation note:** app-layer org scoping is the authoritative control; RLS is opt-in defense-in-depth (see `docs/adr/0001-tenant-isolation-and-rls.md`).
 

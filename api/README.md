@@ -503,6 +503,7 @@ Migrations in `migrations/` — pure PostgreSQL, applied in filename order.
 | `019_mfa.sql` | `users.mfa_enabled`, `users.mfa_secret_cipher` (AES-256-GCM-encrypted TOTP secret) |
 | `020_security_events.sql` | `security_events` (append-only auth/account-security log; nullable org/actor; indexed by created_at/actor/org/type) |
 | `021_item_updates.sql` | `item_updates` (Monday-style threaded Updates on contacts/companies/deals/leads; `parent_id` replies, `mentions` jsonb, soft-delete; RLS-enabled) |
+| `022_user_dashboard.sql` | Adds `user_preferences.dashboard` jsonb (per-user composable dashboard widget layout; `PATCH /preferences/me/dashboard`) |
 | `002_indexes_and_perf.sql` | pg_trgm trigram indexes (full-text search), 40+ B-tree indexes on FK hot paths, composite list-query indexes, RLS on 21 tables, `set_current_org()` SECURITY DEFINER function |
 
 ```bash
