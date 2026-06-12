@@ -29,6 +29,7 @@ export const en: Translations = {
     settings: 'Settings',
     integrations: 'Integrations',
     audit: 'Audit Log',
+    tickets: 'Tickets',
     collapse: 'Collapse',
     expand: 'Expand',
     collapseSidebar: 'Collapse sidebar',
@@ -1964,5 +1965,15 @@ export const en: Translations = {
     formUrl: 'Public form URL',
     embedCode: 'Embed code',
     fieldMessage: 'Message',
+  },
+  tickets: {
+    title: 'Tickets',
+    newTicket: 'New ticket',
+    subject: 'Subject',
+    empty: 'No tickets yet.',
+    created: 'Ticket created',
+    deleteConfirm: 'Delete this ticket? This cannot be undone.',
+    statusLabels: { open: 'Open', pending: 'Pending', resolved: 'Resolved', closed: 'Closed' },
+    priorityLabels: { low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent' },
   },
 }

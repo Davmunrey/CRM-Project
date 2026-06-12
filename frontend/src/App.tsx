@@ -20,6 +20,7 @@ const Forecast = lazy(() => import('./pages/Forecast').then((m) => ({ default: m
 const ManagerDashboard = lazy(() => import('./pages/ManagerDashboard').then((m) => ({ default: m.ManagerDashboard })))
 const Contacts = lazy(() => import('./pages/Contacts').then((m) => ({ default: m.Contacts })))
 const Leads = lazy(() => import('./pages/Leads').then((m) => ({ default: m.Leads })))
+const Tickets = lazy(() => import('./pages/Tickets').then((m) => ({ default: m.Tickets })))
 const Companies = lazy(() => import('./pages/Companies').then((m) => ({ default: m.Companies })))
 const Deals = lazy(() => import('./pages/Deals').then((m) => ({ default: m.Deals })))
 const Activities = lazy(() => import('./pages/Activities').then((m) => ({ default: m.Activities })))
@@ -142,6 +143,7 @@ function AppRoutes() {
         <Route path="/companies/:id" element={<ProtectedPage title={t.nav.companies} requiredPermission="companies:read"><CompanyDetail /></ProtectedPage>} />
         <Route path="/deals" element={<ProtectedPage title={t.nav.deals} requiredPermission="deals:read"><Deals /></ProtectedPage>} />
         <Route path="/activities" element={<ProtectedPage title={t.nav.activities} requiredPermission="activities:read"><Activities /></ProtectedPage>} />
+        <Route path="/tickets" element={<ProtectedPage title={t.nav.tickets} requiredPermission="contacts:read"><Tickets /></ProtectedPage>} />
         <Route
           path="/reports"
           element={

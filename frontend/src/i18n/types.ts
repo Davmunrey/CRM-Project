@@ -76,6 +76,7 @@ export interface Translations {
     /** Settings → Integrations (Google) */
     integrations: string
     audit: string
+    tickets: string
     collapse: string
     expand: string
     collapseSidebar: string
@@ -2059,5 +2060,15 @@ export interface Translations {
     formUrl: string
     embedCode: string
     fieldMessage: string
+  }
+  tickets: {
+    title: string
+    newTicket: string
+    subject: string
+    empty: string
+    created: string
+    deleteConfirm: string
+    statusLabels: { open: string; pending: string; resolved: string; closed: string }
+    priorityLabels: { low: string; medium: string; high: string; urgent: string }
   }
 }

@@ -69,6 +69,7 @@ export const NAV_PERMISSIONS: NavPermission[] = [
   { path: '/companies', requiredPermission: 'companies:read' },
   { path: '/deals', requiredPermission: 'deals:read' },
   { path: '/activities', requiredPermission: 'activities:read' },
+  { path: '/tickets', requiredPermission: 'contacts:read' },
   { path: '/follow-ups', requiredPermission: 'contacts:read' },
   { path: '/goals', requiredPermission: 'goals:read' },
   { path: '/inbox', requiredPermission: 'email:read' },

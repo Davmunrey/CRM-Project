@@ -3,6 +3,16 @@ import { en } from './en'
 import { workflowLibraryPt } from './workflowLibrary/pt'
 
 export const pt: Translations = {
+  tickets: {
+    title: 'Tickets',
+    newTicket: 'Novo ticket',
+    subject: 'Assunto',
+    empty: 'Ainda não há tickets.',
+    created: 'Ticket criado',
+    deleteConfirm: 'Excluir este ticket? Esta ação não pode ser desfeita.',
+    statusLabels: { open: 'Aberto', pending: 'Pendente', resolved: 'Resolvido', closed: 'Fechado' },
+    priorityLabels: { low: 'Baixa', medium: 'Média', high: 'Alta', urgent: 'Urgente' },
+  },
   leadForm: {
     configure: 'Configurar formulário',
     formTitle: 'Título do formulário',
@@ -75,6 +85,7 @@ export const pt: Translations = {
     settings: 'Configurações',
     integrations: 'Integrações',
     audit: 'Auditoria',
+    tickets: 'Tickets',
     collapse: 'Recolher',
     expand: 'Expandir',
     collapseSidebar: 'Recolher barra lateral',

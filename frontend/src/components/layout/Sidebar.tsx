@@ -5,7 +5,7 @@ import {
   Activity, BarChart3, Settings, ChevronLeft, ChevronRight,
   Mail, UserCheck, FileText, ScrollText, Target, UsersRound, BellRing, GanttChart,
   LineChart, ListOrdered, Workflow, Package, FunnelPlus,
-  Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays, LayoutGrid, Crown,
+  Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays, LayoutGrid, Crown, LifeBuoy,
 } from 'lucide-react'
 import { Logo } from '../brand/Logo'
 import { useViewsStore } from '../../store/viewsStore'
@@ -56,6 +56,7 @@ function buildSalesItems(t: Translations): NavItem[] {
     { id: 'managerDashboard', to: '/manager', icon: <LayoutGrid size={18} />, label: t.nav.managerDashboard },
     { id: 'notifications', to: '/notifications', icon: <BellRing size={18} />, label: t.nav.notifications },
     { id: 'inbox', to: '/inbox', icon: <Mail size={18} />, label: t.nav.inbox },
+    { id: 'tickets', to: '/tickets', icon: <LifeBuoy size={18} />, label: t.nav.tickets },
     { id: 'reports', to: '/reports', icon: <BarChart3 size={18} />, label: t.nav.reports },
     { id: 'forecast', to: '/forecast', icon: <LineChart size={18} />, label: t.nav.forecast },
   ]
