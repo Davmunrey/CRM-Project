@@ -23,12 +23,24 @@ type ApiKeyRow = {
 // Scopes the UI offers when minting a key. Empty selection = full access (legacy default).
 const SCOPE_OPTIONS = ['leads:write', 'scim'] as const
 
+interface LeadFormConfig {
+  title?: string
+  description?: string
+  fields?: string[]
+  successMessage?: string
+}
+
 type LeadTokenRow = {
   id: string
   label: string
   createdAt: string
   enabled: boolean
+  config?: LeadFormConfig | null
+  submissionCount?: number
 }
+
+// Optional fields the form builder can toggle; `email` is always included by the API.
+const FORM_FIELD_OPTIONS = ['firstName', 'lastName', 'company', 'phone', 'message'] as const
 
 export function SettingsIntegrationsPanel() {
   const t = useTranslations()
@@ -45,6 +57,11 @@ export function SettingsIntegrationsPanel() {
   const [tokenLabel, setTokenLabel] = useState('')
   const [savingKey, setSavingKey] = useState(false)
   const [savingToken, setSavingToken] = useState(false)
+  const [configToken, setConfigToken] = useState<LeadTokenRow | null>(null)
+  const [draftTitle, setDraftTitle] = useState('')
+  const [draftSuccess, setDraftSuccess] = useState('')
+  const [draftFields, setDraftFields] = useState<string[]>([])
+  const [savingConfig, setSavingConfig] = useState(false)
   const [lastShownApiKey, setLastShownApiKey] = useState<string | null>(null)
   const [lastShownToken, setLastShownToken] = useState<string | null>(null)
   const [deleteKeyId, setDeleteKeyId] = useState<string | null>(null)
@@ -148,6 +165,47 @@ export function SettingsIntegrationsPanel() {
     }
   }
 
+  const formUrl = (token: string) => `${window.location.origin}/forms/${token}`
+  const embedSnippet = (token: string) =>
+    `<iframe src="${formUrl(token)}" width="100%" height="520" style="border:0" title="Contact form"></iframe>`
+
+  const fieldLabels: Record<string, string> = {
+    firstName: t.contacts.firstName,
+    lastName: t.contacts.lastName,
+    company: t.contacts.company,
+    phone: t.common.phone,
+    message: t.leadForm.fieldMessage,
+  }
+
+  const openConfig = (tok: LeadTokenRow) => {
+    setConfigToken(tok)
+    setDraftTitle(tok.config?.title ?? '')
+    setDraftSuccess(tok.config?.successMessage ?? '')
+    setDraftFields(tok.config?.fields ?? ['firstName', 'lastName', 'email', 'company', 'message'])
+  }
+
+  const saveConfig = async () => {
+    if (!configToken) return
+    setSavingConfig(true)
+    try {
+      await api.patch(`/integrations/lead-capture-tokens/${configToken.id}`, {
+        config: {
+          title: draftTitle.trim() || undefined,
+          successMessage: draftSuccess.trim() || undefined,
+          // email is always included server-side; keep the user's optional picks.
+          fields: Array.from(new Set(['email', ...draftFields])),
+        },
+      })
+      toast.success(t.common.save)
+      setConfigToken(null)
+      void load()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : t.settings.integrationsLoadError)
+    } finally {
+      setSavingConfig(false)
+    }
+  }
+
   const handleDeleteToken = async () => {
     if (!organizationId || !deleteTokenId) return
     const id = deleteTokenId
@@ -210,9 +268,22 @@ export function SettingsIntegrationsPanel() {
           <code className="block text-xs font-mono break-all text-fg-muted bg-surface-1 p-2 rounded-lg border border-border-subtle">
             {lastShownToken}
           </code>
-          <Button type="button" size="sm" variant="secondary" leftIcon={<Copy size={14} />} onClick={() => void copyText(lastShownToken)}>
-            {t.common.copy}
-          </Button>
+          <p className="text-xs font-medium text-fg-muted pt-1">{t.leadForm.formUrl}</p>
+          <code className="block text-xs font-mono break-all text-fg-muted bg-surface-1 p-2 rounded-lg border border-border-subtle">
+            {formUrl(lastShownToken)}
+          </code>
+          <p className="text-xs font-medium text-fg-muted pt-1">{t.leadForm.embedCode}</p>
+          <code className="block text-[11px] font-mono break-all text-fg-muted bg-surface-1 p-2 rounded-lg border border-border-subtle">
+            {embedSnippet(lastShownToken)}
+          </code>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" size="sm" variant="secondary" leftIcon={<Copy size={14} />} onClick={() => void copyText(formUrl(lastShownToken))}>
+              {t.leadForm.formUrl}
+            </Button>
+            <Button type="button" size="sm" variant="secondary" leftIcon={<Copy size={14} />} onClick={() => void copyText(embedSnippet(lastShownToken))}>
+              {t.leadForm.embedCode}
+            </Button>
+          </div>
           <Button type="button" size="sm" variant="ghost" onClick={() => setLastShownToken(null)}>
             {t.common.close}
           </Button>
@@ -340,28 +411,69 @@ export function SettingsIntegrationsPanel() {
         ) : (
           <ul className="space-y-2">
             {tokens.map((tok) => (
-              <li
-                key={tok.id}
-                className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-fg/8 px-3 py-2"
-              >
-                <div>
-                  <p className="text-sm font-medium text-fg">{tok.label}</p>
-                  <p className="text-xs text-fg-subtle">{new Date(tok.createdAt).toLocaleString()}</p>
+              <li key={tok.id} className="rounded-lg border border-fg/8 px-3 py-2 space-y-2">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-fg">{tok.label}</p>
+                    <p className="text-xs text-fg-subtle">
+                      {new Date(tok.createdAt).toLocaleString()}
+                      {typeof tok.submissionCount === 'number' ? ` · ${tok.submissionCount}` : ''}
+                    </p>
+                  </div>
+                  {canManage && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => (configToken?.id === tok.id ? setConfigToken(null) : openConfig(tok))}
+                      >
+                        {t.leadForm.configure}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeleteTokenId(tok.id)}
+                        disabled={deletingTokenId === tok.id}
+                      >
+                        {deletingTokenId === tok.id ? 'Deleting...' : <Trash2 size={14} className="text-danger" aria-hidden />}
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                {canManage && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setDeleteTokenId(tok.id)}
-                    disabled={deletingTokenId === tok.id}
-                  >
-                    {deletingTokenId === tok.id ? (
-                      'Deleting...'
-                    ) : (
-                      <Trash2 size={14} className="text-danger" aria-hidden />
-                    )}
-                  </Button>
+
+                {configToken?.id === tok.id && (
+                  <div className="space-y-3 rounded-lg bg-fg/[0.03] p-3">
+                    <Input label={t.leadForm.formTitle} value={draftTitle} onChange={(e) => setDraftTitle(e.target.value)} />
+                    <Input label={t.leadForm.successMessage} value={draftSuccess} onChange={(e) => setDraftSuccess(e.target.value)} />
+                    <div>
+                      <p className="text-sm font-medium text-fg-muted mb-1.5">{t.leadForm.fields}</p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-2">
+                        {FORM_FIELD_OPTIONS.map((f) => (
+                          <label key={f} className="flex items-center gap-1.5 text-sm text-fg-muted">
+                            <input
+                              type="checkbox"
+                              className="rounded border-fg/20 text-accent-500 focus:ring-accent-500/40"
+                              checked={draftFields.includes(f)}
+                              onChange={(e) =>
+                                setDraftFields((prev) => (e.target.checked ? [...prev, f] : prev.filter((x) => x !== f)))
+                              }
+                            />
+                            {fieldLabels[f] ?? f}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="button" size="sm" onClick={() => void saveConfig()} loading={savingConfig}>
+                        {t.common.save}
+                      </Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setConfigToken(null)}>
+                        {t.common.cancel}
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </li>
             ))}

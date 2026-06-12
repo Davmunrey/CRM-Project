@@ -2051,4 +2051,13 @@ export interface Translations {
     idleFor: string
     noNextStep: string
   }
+  leadForm: {
+    configure: string
+    formTitle: string
+    successMessage: string
+    fields: string
+    formUrl: string
+    embedCode: string
+    fieldMessage: string
+  }
 }

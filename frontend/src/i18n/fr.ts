@@ -4,6 +4,15 @@ import { workflowLibraryFr } from './workflowLibrary/fr'
 
 export const fr: Translations = {
   ...en,
+  leadForm: {
+    configure: 'Configurer le formulaire',
+    formTitle: 'Titre du formulaire',
+    successMessage: 'Message de succès',
+    fields: 'Champs',
+    formUrl: 'URL publique du formulaire',
+    embedCode: "Code d'intégration",
+    fieldMessage: 'Message',
+  },
   dealRot: {
     rotting: 'En stagnation',
     idleFor: '{days}j sans activité',

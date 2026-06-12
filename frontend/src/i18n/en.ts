@@ -1956,4 +1956,13 @@ export const en: Translations = {
     idleFor: '{days}d idle',
     noNextStep: 'No next activity scheduled',
   },
+  leadForm: {
+    configure: 'Configure form',
+    formTitle: 'Form title',
+    successMessage: 'Success message',
+    fields: 'Fields',
+    formUrl: 'Public form URL',
+    embedCode: 'Embed code',
+    fieldMessage: 'Message',
+  },
 }
