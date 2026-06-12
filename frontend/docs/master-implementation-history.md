@@ -38,6 +38,10 @@ Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part
 | 2026-04-22 | [§27](#implementation-history-section-27) | API & capture hardening: idempotent delete contracts, standardized error payloads (`error/code/status/request_id`), structured Edge logs, requestId propagation, resilient Settings feedback, Playwright smoke coverage, and English runbooks. |
 | 2026-04-22 | [§28](#implementation-history-section-28) | Supabase-only SPA shell: remove offline/mock demo paths and SSO buttons; default settings from `defaultAppSettings.ts`; strong password UX (`SecurePasswordField`, `src/lib/securePassword.ts`, Team + auth forms); workspace host mismatch effect uses primitive deps; memoized `GmailTokenContext` value; **Dashboard** onboarding flags read `byOrg[id]` + `useMemo` (never `getFlags()` inside a Zustand selector — new object per tick caused React maximum update depth after login). |
 | 2026-05-15 | [§29](#implementation-history-section-29) | Quality audit + LinkedIn enrichment: 35-page frontend audit, Supabase bypass fix (sbDelete → api.delete), double-invite fix, CSVImport assignedTo fix, LinkedIn enrichment (migration 012, backend + frontend), full .md documentation sweep. |
+| 2026-05-28 | [§31](#implementation-history-section-31) | **Supabase removal complete:** migrated fully off Supabase/Edge Functions to the self-hosted Fastify API; no `@supabase` client, no `functions/v1/*` endpoints; public lead capture moves to `POST /api/public/v1/leads` (`x-api-key`). |
+| 2026-06-02 | [§32](#implementation-history-section-32) | **Multi-provider AI + tool agent + governance:** Gemini (free default) / OpenAI / Anthropic, tool-using CRM agent, persisted conversations, assistant drawer, next-best-action, Inbox summarize + draft-reply; per-org kill switch, monthly token cap, retention purge (migration 018). |
+| 2026-06-11 | [§33](#implementation-history-section-33) | **Enterprise wave:** MFA (TOTP, migration 019), OIDC SSO + frontend SSO button, SCIM 2.0, server-side RBAC + member lifecycle, GDPR export/erasure, security-event audit log (migration 020), observability/health/metrics, API-key scopes + Settings UI. |
+| 2026-06-11 | [§34](#implementation-history-section-34) | **Structural reference:** `docs/CODEBASE-MAP.md` (full 403-file map) and identity setup doc `docs/sso-and-scim.md`; tenant-isolation ADR `docs/adr/0001`. |
 
 ---
 
@@ -45,7 +49,7 @@ Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part
 <a id="implementation-history-sections-01-12"></a>
 ## Part A — Sections 1–12 (foundation)
 
-Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–28).
+Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–30).
 
 ## Document control
 
@@ -215,9 +219,9 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 
 
 <a id="implementation-history"></a>
-## Part B — Sections 13–28 (recent waves)
+## Part B — Sections 13–30 (recent waves)
 
-**Part B** is the active delivery narrative (sections 13–28). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
+**Part B** is the active delivery narrative (sections 13–30). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
 
 ## Document control
 
@@ -231,9 +235,9 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 | Part | Location | Sections |
 |------|----------|----------|
 | **A** | [Anchor `#implementation-history-sections-01-12`](#implementation-history-sections-01-12) | 1–12: platform, tenancy, auth, org setup, security, email tracking, **leads**, i18n, UI, SSO, tests, ops notes |
-| **B** | *below in this section* | 13–30 |
+| **B** | *below in this section* | 13–34 |
 
-Cross-references elsewhere in the repo to **”section 19”**, **”section 21”**, etc. mean **Part B** in this file. References to **section 7** (leads baseline) mean **Part A** above. Section 30 (monorepo restructure, 2026-05-18) is the most recent addition to Part B.
+Cross-references elsewhere in the repo to **”section 19”**, **”section 21”**, etc. mean **Part B** in this file. References to **section 7** (leads baseline) mean **Part A** above. Section 34 (structural reference docs, 2026-06-11) is the most recent addition to Part B; the 2026-06 enterprise wave is sections 31–34.
 
 <a id="implementation-history-section-13"></a>
 ## 13) Current status summary
@@ -630,7 +634,123 @@ All `.md` files in both repos updated to reflect 2026-05-15 state. Key updates:
 ### Related documentation
 
 - Monorepo structure: [README](../README.md)
-- CI/CD workflows: `.gitea/workflows/` (or `.github/workflows/`)
-- Backend routes and auth contracts: `api/docs/` or `api/README.md` (n0crm-api)
+- CI/CD workflows: `.gitea/workflows/ci.yml` (canonical; Gitea is the authoritative remote — `.github/workflows/` may exist as a mirror)
+- Backend routes and auth contracts: `api/README.md`
 - Frontend environment and channel setup: `frontend/docs/deployment-spa-and-env.md`
 - Security baseline: [`master-security-compliance.md` — Hardening matrix](./master-security-compliance.md#hardening-matrix)
+
+<a id="implementation-history-section-31"></a>
+## 31) Supabase removal complete — fully self-hosted backend (May 2026)
+
+The platform is now **migrated off Supabase**. There is no Supabase client, no Edge Functions, and no `functions/v1/*` endpoints anywhere in the runtime; persistence, auth, and realtime are all served by the self-hosted stack.
+
+### Backend now owns persistence, auth, and realtime
+
+- **Persistence:** PostgreSQL 16 accessed via [postgres.js](https://github.com/porsager/postgres) with `transform: postgres.camel` (snake_case columns surface as camelCase in JS), behind **PgBouncer** in transaction-pooling mode.
+- **Auth/runtime:** Fastify 5 on Node 22 (`api/`) issues and verifies HS256 JWTs; sessions, denylist, and ephemeral state live in **Redis 7** (ioredis).
+- **Realtime:** **Socket.io 4** with org-scoped rooms and a Redis-backed `db:change` broadcast (replaces Supabase Realtime channels).
+
+### What was removed / replaced
+
+- **Edge Functions retired:** the former `crm-public-api`, `lead-capture`, `lead-capture-tokens`, `api-keys`, `track-open`/`track-click`, `webhook-worker`, `resend-send-email`, `promote-lead`, and `lead-score-maintenance` Edge Functions (referenced in sections 6, 14, 19, 26–28) are no longer part of the runtime — their behavior moved into `api/src/routes/*` and `api/src/services/*`.
+- **Public lead capture:** embeddable forms now call **`POST /api/public/v1/leads`**, authenticated by the header **`x-api-key: <key>`** (key prefix `n0crm_`, minted in **Settings > Integrations**). The endpoint requires the **`leads:write`** scope; a key without it gets `403 {error:"Insufficient API key scope", required:"leads:write"}`. It is a write-only capture endpoint, not a read API. Source: `api/src/routes/publicApi.ts`.
+- **Frontend data layer:** stores call the REST API (`api.*`) directly; the only remaining `supabase`-named symbols are historical helper file/function names (`src/lib/supabaseHelpers.ts`, `mapContactFromSupabaseRow`) — there is no `@supabase/*` dependency in the SPA runtime.
+
+> Note: `frontend/.agents/skills/supabase*` are vendored agent-skill bundles and are **out of scope** — they are not part of the application and are never edited.
+
+### Tenant isolation model
+
+App-layer org scoping is the **authoritative** tenant-isolation control (every query is constrained by `organization_id` from the JWT). PostgreSQL **RLS is opt-in defense-in-depth**, not the primary boundary — see [`docs/adr/0001-tenant-isolation-and-rls.md`](../../docs/adr/0001-tenant-isolation-and-rls.md). Earlier sections (§1–§2, §15) that described "RLS enforced by tenant context" reflect the prior Supabase era; the current control plane is application-layer scoping.
+
+### Related documentation
+
+- Tenant isolation: [`docs/adr/0001-tenant-isolation-and-rls.md`](../../docs/adr/0001-tenant-isolation-and-rls.md)
+- Full structural map: [`docs/CODEBASE-MAP.md`](../../docs/CODEBASE-MAP.md)
+
+<a id="implementation-history-section-32"></a>
+## 32) Multi-provider AI, tool-using agent, and AI governance (June 2026)
+
+A first-class AI layer shipped on top of the self-hosted backend, with provider choice and per-tenant governance. Schema: **migration 018** (`api/migrations/018_ai.sql`).
+
+### Multi-provider AI service
+
+- **Providers:** Google **Gemini** is the free default (`gemini-2.0-flash`), with **OpenAI** (`gpt-4o-mini`) and **Anthropic** (`claude-sonnet-4-6`) as drop-in alternatives. A provider is only usable when its API key is configured. A unified internal message format is translated to each vendor's wire protocol. Source: `api/src/services/ai/providers.ts`.
+
+### Tool-using CRM agent + AI features
+
+- **Agent loop:** `POST /api/ai/agent` runs a tool-using loop over the CRM (search/read tools in `api/src/services/ai/tools.ts`, loop in `agent.ts`) and **persists conversations** (`ai_conversations` / `ai_messages`); `GET /api/ai/conversations` and `GET /api/ai/conversations/:id` list and replay turns.
+- **Feature endpoints:** `POST /api/ai/summarize` and `POST /api/ai/draft-reply` power the **Inbox** summarize + draft-reply actions; `POST /api/ai/next-best-action` and `POST /api/ai/search` back the assistant. `GET /api/ai/status` reports whether AI is available for the org.
+- **Frontend:** an assistant drawer and AI insight surfaces (`frontend/src/store/aiStore.ts`, `frontend/src/components/ai/`).
+
+### Governance (per-org controls)
+
+- **Kill switch:** per-org `settings.ai.enabled` (undefined/true = on; explicit `false` disables AI and the UI hides it). Source: `api/src/routes/ai.ts`.
+- **Spend cap:** `AI_MONTHLY_TOKEN_CAP` env plus an optional per-org cap; the effective cap is the min of the two when both are set.
+- **Retention:** `AI_MESSAGE_RETENTION_DAYS` env drives a periodic purge of AI conversation/message data (no-op when `0` / unset). Source: `api/src/services/ai/retention.ts`.
+
+### Related documentation
+
+- Full structural map: [`docs/CODEBASE-MAP.md`](../../docs/CODEBASE-MAP.md)
+
+<a id="implementation-history-section-33"></a>
+## 33) Enterprise identity, RBAC, GDPR, and observability wave (June 2026)
+
+A coordinated enterprise-hardening wave landed across identity, authorization, privacy, and operability.
+
+### MFA — TOTP (migration 019)
+
+- TOTP per RFC 6238, AES-256-GCM-encrypted secret. Endpoints: **`POST /auth/mfa/setup`** (generate secret + otpauth URL), **`POST /auth/mfa/enable`** (confirm with a code), **`POST /auth/mfa/disable`** (re-auth with password). Enrollment lives in **Settings > Security**; login prompts for the code when MFA is on. Source: `api/src/routes/auth.ts`, `api/src/services/totp.ts`, `api/migrations/019_mfa.sql`.
+
+### OIDC SSO + frontend button
+
+- **Endpoints:** **`GET /auth/sso/status`** (`{ enabled, issuer }`), **`GET /auth/sso/start`** (302 to the IdP authorize URL; state + nonce + PKCE stored in Redis), **`GET /auth/sso/callback`** (verify state + ID token, JIT-provision the user, set the auth cookie).
+- **Crypto/flow:** PKCE **S256**, ID token verified by **JWKS RS256** signature. JIT-provisioned users get role **`OIDC_DEFAULT_ROLE`** (default `sales_rep`).
+- **Frontend:** the **SSO button** in `Login.tsx` is gated by `GET /auth/sso/status` (hidden unless SSO is configured). Source: `api/src/services/oidc.ts`, `api/src/routes/sso.ts`.
+
+### SCIM 2.0 user provisioning
+
+- **`/scim/v2`**: Users CRUD (`GET/POST /Users`, `GET /Users/:id`, plus update/patch/delete) and **`GET /ServiceProviderConfig`** (RFC 7643/7644). Authenticated by a **Bearer API key scoped `scim`** that maps to the target org. Soft-deprovision + session revoke on deactivate; the last active owner is protected; all actions are audit-logged. Source: `api/src/routes/scim.ts`. Setup guide: [`docs/sso-and-scim.md`](../../docs/sso-and-scim.md).
+
+### Server-side RBAC + member lifecycle
+
+- **RBAC:** `requirePermission()` / `requireCrudPermission()` enforce authorization server-side across CRM CRUD and member / API-key / webhook management. Roles: **owner / admin / manager / sales_rep / viewer**. Source: `api/src/services/permissions.ts`, `api/src/middleware/rbac.ts`.
+- **Member lifecycle:** **`PATCH /orgs/me/members/:userId/role`** and **`PATCH /orgs/me/members/:userId/status`** change role / activate-deactivate with safety rules (last-active-owner protection). Source: `api/src/routes/orgs.ts`.
+
+### GDPR — export + erasure
+
+- **`GET /privacy/export`** (Art. 20, full org data export / portability), **`GET /privacy/subject/:contactId/export`** (Art. 15, one subject's data), **`POST /privacy/subject/:contactId/erase`** (Art. 17, anonymize the subject's PII in place; audit-logged). Owner/admin gated. Source: `api/src/routes/dataPrivacy.ts`.
+
+### Security-event audit log (migration 020)
+
+- A `security_events` table plus `recordSecurityEvent()` capture security-relevant events (login, MFA, SSO, impersonation, privilege changes) for SOC2-aligned evidence. Source: `api/src/services/securityEvents.ts`, `api/migrations/020_security_events.sql`.
+
+### Observability
+
+- **Correlation:** `x-request-id` propagated through requests; `captureException` for error reporting (optional `SENTRY_DSN`).
+- **Health:** `GET /health`, `GET /health/ready`, `GET /health/live`.
+- **Metrics:** `GET /metrics` (Prometheus) gated to loopback or internal-key callers; Prometheus + Grafana wiring. Source: `api/src/routes/health.ts`, `api/src/services/observability.ts`, `api/src/services/metrics.ts`.
+
+### API-key scopes + Settings UI
+
+- API keys carry **scopes** (`leads:write`, `scim`); a key with no scopes is treated as legacy full-access for back-compat (see §31). **Settings > Integrations** exposes a per-key scope selector and shows the scopes attached to each key. Source: `api/src/routes/publicApi.ts` (`hasScope`), `frontend/src/components/settings/SettingsIntegrationsPanel.tsx`, `frontend/src/components/settings/SettingsSsoScimPanel.tsx`.
+
+### Still genuinely open (kept honest)
+
+These remain **not shipped**: SAML federation; HA/DR automated failover (a restore runbook exists at `docs/disaster-recovery.md`); broader SSO provider testing/diagnostics; field-level security; forecasting v2; AI v2; industry pipeline templates; formal certifications (SOC2/ISO audits); and a real background job queue (BullMQ is present but unused).
+
+### Related documentation
+
+- Identity setup: [`docs/sso-and-scim.md`](../../docs/sso-and-scim.md)
+- Security baseline: [`master-security-compliance.md` — Hardening matrix](./master-security-compliance.md#hardening-matrix)
+- Full structural map: [`docs/CODEBASE-MAP.md`](../../docs/CODEBASE-MAP.md)
+
+<a id="implementation-history-section-34"></a>
+## 34) Structural reference docs (June 2026)
+
+- **`docs/CODEBASE-MAP.md`** — a full structural map of the repository (403 files) covering the `api/` and `frontend/` trees, routes, services, workers, and migrations. Use it as the entry point when locating where a feature lives.
+- **`docs/sso-and-scim.md`** — identity setup doc for OIDC SSO and SCIM 2.0 provisioning (§33).
+- **`docs/adr/0001-tenant-isolation-and-rls.md`** — the tenant-isolation decision record: app-layer org scoping is authoritative, RLS is opt-in defense-in-depth (§31).
+
+---
+
+> **Last updated:** 2026-06-11. Sections 31–34 document the post-Supabase, AI, and enterprise-identity waves; sections 1–30 are preserved as written.

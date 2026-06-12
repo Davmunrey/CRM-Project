@@ -2,7 +2,7 @@
 
 **Status:** Active  
 **Owner:** Engineering  
-**Last updated:** 2026-05-25  
+**Last updated:** 2026-06-11  
 **Canonical:** Yes (with code in `frontend/src/features/sequences-flow/`, `frontend/src/pages/Sequences.tsx`, and `api/src/workers/sequenceRunner.ts`)
 
 ## Overview
@@ -27,15 +27,11 @@ Edges may set `sourceHandle` to `a` or `b` for branches leaving an `ab_split` no
 
 | Column | Purpose |
 |--------|---------|
-| `current_step` | Legacy 0-based index along the **primary path** projection (still updated). |
-| `current_node_id` | Active node id in `flow_definition` when resolved at enroll time. |
-| `ab_variant` | `a` \| `b` when the contact was assigned a branch at an A/B split on entry. |
+| `current_step` | 0-based index into the `steps` array; the runner advances this on every tick. |
+| `current_node_id` | Reserved — populated at enroll time by `computeEnrollmentStart` for future graph-aware runners; **not read by the current worker**. |
+| `ab_variant` | Reserved — set at enroll time for future A/B branch tracking; **not read by the current worker**. |
 
 `computeEnrollmentStart` (in `src/features/sequences-flow/sequenceFlowEnrollment.ts`) picks the first actionable node and resolves an initial A/B branch using weights.
-
-## Analytics (`sequence_step_events`)
-
-Append-only table for future metrics (entered node, email sent, open, click, reply). **Not populated** by the stub worker; the UI shows an em dash placeholder on nodes until ingestion exists.
 
 ## Internationalization
 
@@ -57,20 +53,19 @@ The **sequence runner** is a background job that automatically advances enrolled
 
 ### How it works
 
-1. **Polling**: Every 60 seconds, the runner queries for enrollments with `next_step_at <= now()` (up to 50 per tick)
-2. **Step execution**: For each enrollment:
-   - Resolves the current node from `flow_definition` using `current_node_id`
-   - If it is an **email** step: sends email via organization SMTP settings
-   - If it is a **wait** step: calculates next execution time, skips to next step
-   - If it is an **A/B split**: uses stored `ab_variant` to branch correctly
-3. **Error handling**: Per-enrollment errors are logged (no cascade failure); enrollment moves to error state; runner continues with next enrollment
-4. **Advancement**: On success, enrollments advance to the next step; `next_step_at` is recalculated based on step type (email sends immediately, wait steps use configured duration)
+1. **Polling**: Every 60 seconds, the runner queries `sequence_enrollments` for rows with `status = 'active'` and `next_step_at <= NOW()`, fetching up to 50 per tick ordered by `next_step_at ASC`.
+2. **Row locking**: Each enrollment is claimed with `SELECT … FOR UPDATE SKIP LOCKED` inside a transaction — a concurrent tick or manual trigger will skip a row already held by another worker rather than double-sending.
+3. **Step execution**: The step at `current_step` (0-based index) is read from the `steps` jsonb array on `email_sequences`:
+   - **`email` step**: renders subject/body with `{{variable}}` substitution (first\_name, last\_name, company), optionally loads an email template by `templateId`, loads the org's SMTP config, and sends via `sendEmail()`. On success, an `activities` row and an `audit_log` row (`sequence_email_sent`) are written. On send failure, the enrollment is set to `status = 'error'` and an `audit_log` row (`sequence_email_failed`) is written.
+   - **`wait` step (or any unrecognised type)**: no email is sent; the enrollment advances immediately.
+4. **Advancement**: `current_step` is incremented and `next_step_at` is set to `NOW() + <next step's delay_days> days`. When there is no next step the enrollment is marked `completed`.
+5. **Error safety**: Per-enrollment errors are caught; the runner logs the error and continues to the next enrollment without cascading.
 
 ### Starting the runner
 
-The sequence runner **starts automatically** on API boot. Check logs for:
+The sequence runner **starts automatically** on API boot and fires one initial tick immediately (so it does not wait a full 60 s on startup). Check logs for:
 ```
-[startup] Sequence runner started — polling every 60s
+[sequenceRunner] Starting (tick every 60s)
 ```
 
 ### Manual trigger (for testing)
@@ -86,23 +81,10 @@ curl -X POST http://localhost:3001/internal/sequences/run \
 Response:
 ```json
 {
-  "processed": 12,
-  "errors": 1
+  "ok": true,
+  "message": "Sequence cycle completed",
+  "elapsedMs": 143
 }
-```
-
-### Monitoring
-
-The runner exports metrics to Prometheus:
-
-- `n0crm_sequence_enrollments_processed_total` — Total enrollments advanced (counter)
-- `n0crm_sequence_runner_ticks_total` — Total runner ticks (counter)
-- `n0crm_sequence_runner_tick_duration_seconds` — Tick duration histogram (for performance tracking)
-- `n0crm_sequence_step_send_failures_total` — Email send failures (counter)
-
-View these in Grafana or query Prometheus directly:
-```
-rate(n0crm_sequence_enrollments_processed_total[1m])  # enrollments per minute
 ```
 
 ### Implementation details
@@ -112,21 +94,21 @@ rate(n0crm_sequence_enrollments_processed_total[1m])  # enrollments per minute
 - **Integrations:**
   - Reads from `sequence_enrollments` and `email_sequences` tables
   - Uses org-scoped SMTP config from `org_smtp_settings`
-  - Appends to `sequence_step_events` (append-only audit trail)
-  - Respects RLS policies (queries filtered by `organization_id`)
+  - Writes activity records to `activities` and audit entries to `audit_log`
+  - All queries are filtered by `organization_id` (app-layer tenant scoping)
 
 ### Troubleshooting
 
 **Runner not advancing enrollments:**
-1. Check API logs for errors: `[sequence-runner] ERROR ...`
-2. Verify `SMTP_HOST` and org SMTP settings are configured
-3. Test with `POST /internal/sequences/run` — if manual trigger fails, check permissions and INTERNAL_KEY
-4. Ensure `sequence_enrollments.next_step_at` is in the past for test enrollments
+1. Check API logs for errors: `[sequenceRunner] ERROR ...` or `[sequenceRunner] Unexpected error ...`
+2. Verify org SMTP settings are configured (Settings > Email) — missing SMTP causes the step to be skipped and enrollment set to `error`
+3. Test with `POST /internal/sequences/run` — on success you get `{ ok: true, message: "...", elapsedMs: N }`; on failure check `INTERNAL_KEY` env var and API logs
+4. Ensure `sequence_enrollments.next_step_at` is in the past and `status = 'active'` for test enrollments
 
 ## Related code
 
 - UI: `frontend/src/pages/Sequences.tsx`, `frontend/src/features/sequences-flow/SequenceFlowStudio.tsx`
 - Converters: `frontend/src/features/sequences-flow/sequenceFlowConverters.ts`
 - Store: `frontend/src/store/sequencesStore.ts`
-- Migration: `api/migrations/20260422120000_sequences_flow_and_events.sql`
+- Schema: `api/migrations/001_schema.sql` (tables `email_sequences`, `sequence_enrollments`)
 - Unit tests: `frontend/tests/sequenceFlowConverters.test.ts`

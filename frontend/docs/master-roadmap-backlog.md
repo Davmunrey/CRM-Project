@@ -19,14 +19,34 @@
 
 This roadmap starts from the current implemented baseline and prioritizes features that move the product closer to HubSpot/Pipedrive-level value.
 
-> **Status refresh (2026-05-18):** Monorepo restructure complete (frontend/ + api/ + docker-compose.yml). Navigation customization, core i18n (EN/ES/PT + partial FR/DE/IT), sell-ready **product** baseline, security hardening (Redis JWT denylist, Socket.io JWT verification, AES-256-GCM encryption, rate limiting), **Workflow Automations v1 + Lead Scoring v2**, **Manager Dashboard Pack + Onboarding**, Gmail fully self-hosted (api/src/routes/gmail.ts + calendar.ts), **LinkedIn URL enrichment on contacts** (migration 012), Slack/Zoom/Google Calendar integrations, Public REST API (api/routes/public/v1/*), API key management are shipped. This roadmap tracks **remaining** horizons (SSO depth, AI, org-wide email rollups, advanced webhooks). **Ola C (docs):** i18n execution waves, per-release translation QA template — see [`master-implementation-history` — section 22](./master-implementation-history.md#implementation-history-section-22).
+> **Status refresh (2026-06-11):** Monorepo restructure complete (frontend/ + api/ + docker-compose.yml). Navigation customization, core i18n (EN/ES/PT + partial FR/DE/IT), sell-ready **product** baseline, security hardening (Redis JWT denylist, Socket.io JWT verification, AES-256-GCM encryption, rate limiting), **Workflow Automations v1 + Lead Scoring v2**, **Manager Dashboard Pack + Onboarding**, Gmail fully self-hosted (api/src/routes/gmail.ts + calendar.ts), **LinkedIn URL enrichment on contacts** (migration 012), Slack/Zoom/Google Calendar integrations, Public REST API (`POST /api/public/v1/leads`, `x-api-key` + `leads:write` scope), API key management are shipped. The **enterprise readiness wave is now shipped**: **MFA (TOTP)**, **OIDC SSO**, **SCIM 2.0 provisioning**, **server-side RBAC + member lifecycle**, **GDPR data-subject endpoints**, **multi-provider AI agent + governance**, **observability stack** — see the new **[Shipped (enterprise readiness)](#shipped-enterprise-readiness)** section. This roadmap now tracks only genuinely-open horizons (SAML, broader SSO provider testing, field-level security, forecasting, AI v2, industry pipeline templates, HA/DR drills, certifications). **Ola C (docs):** i18n execution waves, per-release translation QA template — see [`master-implementation-history` — section 22](./master-implementation-history.md#implementation-history-section-22).
 
 ## Document Control
 
 - Status: Active
 - Owner: Product
-- Last updated: 2026-05-18
+- Last updated: 2026-06-11
 - Canonical: Yes
+
+<a id="shipped-enterprise-readiness"></a>
+## ✅ Shipped (enterprise readiness)
+
+The 31-60 and 61-90 horizons below have substantially shipped. These tracks are **done** and tracked in code, not in the roadmap — kept here so they are not re-planned:
+
+| Capability | Status | Where it lives |
+|---|---|---|
+| **MFA (TOTP, RFC 6238)** | Shipped | `/auth/mfa/setup·enable·disable`; enroll in Settings > Security; login code prompt; AES-256-GCM secret; migration 019 |
+| **OIDC SSO** | Shipped | `/auth/sso/status·start·callback`; PKCE S256, JWKS RS256 verify, JIT provisioning, `OIDC_DEFAULT_ROLE`; frontend SSO button gated by `/auth/sso/status` |
+| **SCIM 2.0 provisioning** | Shipped | `/scim/v2` Users CRUD + ServiceProviderConfig; Bearer api-key scoped `scim`; soft-deprovision + session revoke; last-active-owner protected; audit-logged |
+| **Server-side RBAC** | Shipped | `requirePermission` / `requireCrudPermission` across CRM CRUD + member/API-key/webhook mgmt; roles owner/admin/manager/sales_rep/viewer (`api/src/middleware/rbac.ts`, `api/src/services/permissions.ts`) |
+| **Member lifecycle** | Shipped | `PATCH /orgs/me/members/:id/role·status` with safety rules (last-active-owner protected) |
+| **Public API scopes** | Shipped | `POST /api/public/v1/leads`, header `x-api-key`, requires scope `leads:write` (403 otherwise); minted in Settings > Integrations with scope selector (`leads:write`, `scim`) |
+| **GDPR data-subject endpoints** | Shipped | `/privacy` org export (Art. 20), subject export (Art. 15), erasure/anonymize (Art. 17); owner/admin gated; audit-logged |
+| **Multi-provider AI + governance** | Shipped | Gemini (free default) / OpenAI / Anthropic; tool-using CRM agent, persisted conversations, assistant drawer, next-best-action, Inbox summarize + draft-reply; per-org kill switch `settings.ai.enabled`, `AI_MONTHLY_TOKEN_CAP`, `AI_MESSAGE_RETENTION_DAYS` purge; migration 018 |
+| **Security-event audit log** | Shipped | `security_events` table + `recordSecurityEvent`; migration 020 |
+| **Observability** | Shipped | `x-request-id` correlation, `captureException`, `/health` `/health/ready` `/health/live`, optional `SENTRY_DSN`, `/metrics` (loopback/internal-key gated), Prometheus + Grafana |
+
+> **Tenant isolation note:** app-layer org scoping is the authoritative control; RLS is opt-in defense-in-depth (see `docs/adr/0001-tenant-isolation-and-rls.md`).
 
 ## 0-30 days (Revenue + execution fundamentals)
 
@@ -59,20 +79,17 @@ Reduce enterprise sales blockers and increase deployability in managed environme
 
 ### Deliverables
 
-1. **SSO/SCIM Readiness Pack**
-   - provider diagnostics UI
-   - SSO connection health checks
-   - user-provisioning hooks (SCIM-compatible contract for backend).
+1. ~~**SSO/SCIM Readiness Pack**~~ **Shipped (core)** — OIDC SSO (`/auth/sso`, PKCE S256, JWKS verify, JIT provisioning) and SCIM 2.0 (`/scim/v2` Users CRUD + ServiceProviderConfig) are live; see [Shipped (enterprise readiness)](#shipped-enterprise-readiness) and `docs/sso-and-scim.md`.
+   - **Still open:** provider diagnostics UI, broader SSO provider testing / connection health checks, SAML federation.
 
-2. **Governance and Security v2**
-   - field-level visibility controls for sensitive data
-   - tenant-automated retention / delete jobs (engineering runbooks: `docs/master-lead-management.md#data-retention-runbook`, `docs/master-security-compliance.md#dsar-playbook` — product automation still to build)
-   - expanded audit coverage for auth/admin changes.
+2. **Governance and Security v2** — _partially shipped_
+   - ~~expanded audit coverage for auth/admin changes~~ **Shipped** — `security_events` table + `recordSecurityEvent` (migration 020); permission-change audit trail.
+   - **Still open:** field-level visibility controls for sensitive data.
+   - **Still open:** tenant-automated retention / delete jobs (engineering runbooks: `docs/master-lead-management.md#data-retention-runbook`, `docs/master-security-compliance.md#dsar-playbook` — product automation still to build). _Note: ad-hoc GDPR subject export/erasure (Art. 15/17/20) is shipped at `/privacy`; scheduled per-tenant purge remains open._
 
-3. **API + Webhooks**
-   - stable public API surface for core entities
-   - outbound webhook subscriptions (lead/deal/activity lifecycle events)
-   - replay/dead-letter strategy.
+3. **API + Webhooks** — _partially shipped_
+   - ~~stable public API surface~~ **Shipped** — `POST /api/public/v1/leads` (header `x-api-key`, scope `leads:write`); API keys minted in Settings > Integrations with scope selector.
+   - **Still open:** broader public surface for additional core entities, outbound webhook subscriptions (lead/deal/activity lifecycle events), replay/dead-letter strategy.
 
 4. **Reliability Controls**
    - retry and idempotency for critical async flows
@@ -93,11 +110,9 @@ Move from “feature parity” toward differentiation through intelligence and v
 
 ### Deliverables
 
-1. **AI Copilot v2**
-   - account summary
-   - next-best-action recommendations
-   - meeting prep briefs
-   - contextual email draft generation.
+1. **AI Copilot** — _v1 shipped, v2 open_
+   - ~~next-best-action recommendations~~ **Shipped** — multi-provider AI agent (Gemini/OpenAI/Anthropic), tool-using CRM agent, persisted conversations, assistant drawer, Inbox summarize + draft-reply; governance kill switch + token cap + retention purge.
+   - **Still open (v2):** account summary, meeting prep briefs, deeper contextual email draft generation.
 
 2. **Forecasting and Revenue Intelligence**
    - weighted forecast by confidence and historical conversion
@@ -126,8 +141,8 @@ Move from “feature parity” toward differentiation through intelligence and v
 2. ~~Lead Scoring v2~~ (done)
 3. ~~Manager Dashboard Pack~~ (done)
 4. ~~Onboarding + Activation~~ (done)
-5. SSO/SCIM readiness
-6. API/Webhooks
+5. ~~SSO/SCIM readiness~~ (OIDC SSO + SCIM 2.0 done; SAML + provider diagnostics open)
+6. ~~Public API (leads:write scope)~~ (done; outbound webhooks open)
 7. AI Copilot v2 + Forecasting
 
 ## Immediate sprint start (next coding block)
@@ -147,13 +162,13 @@ Move from “feature parity” toward differentiation through intelligence and v
 
 This is the actionable backlog derived from the 30/60/90 roadmap.
 
-> **Status refresh (2026-05-18):** This board lists **remaining** execution work. Shipped items live in **`docs/master-implementation-history.md#implementation-history-sections-01-12`** (Part A) + **`docs/master-implementation-history.md#implementation-history`** (Part B) and in the status table in **`docs/README.md`**. Keep long “done” narratives out of this file.
+> **Status refresh (2026-06-11):** This board lists **remaining** execution work. The enterprise readiness wave (MFA, OIDC SSO, SCIM 2.0, server-side RBAC + member lifecycle, GDPR endpoints, multi-provider AI + governance, observability) has **shipped** — see [Shipped (enterprise readiness)](#shipped-enterprise-readiness). Other shipped items live in **`docs/master-implementation-history.md#implementation-history-sections-01-12`** (Part A) + **`docs/master-implementation-history.md#implementation-history`** (Part B) and in the status table in **`docs/README.md`**. Keep long “done” narratives out of this file.
 
 ## Document Control
 
 - Status: Active
 - Owner: Product/Engineering
-- Last updated: 2026-05-18
+- Last updated: 2026-06-11
 - Canonical: Yes
 
 ## Shipped tracks (do not duplicate here)
@@ -239,24 +254,34 @@ Ship **incrementally** after the 0–30 manager + onboarding focus; do not block
   - [ ] CRM import/export hardening (mapping presets per industry)
   - [ ] Webhooks v1 with retry policy and signed payloads
 - [ ] Enterprise trust and compliance baseline
-  - [x] Engineering runbooks: `docs/master-lead-management.md#data-retention-runbook`, `docs/master-security-compliance.md#dsar-playbook`, `docs/master-security-compliance.md#supabase-external-hardening-checklist` (external evidence + procedures)
-  - [ ] **Product:** per-tenant retention schedules and automated purge where required by contract
-  - [ ] **Product:** in-app or operator-assisted DSR tooling (export/delete) beyond manual Supabase procedures
-  - [ ] Backup/restore and DR **test cadence** executed and logged (checklist in Supabase doc; calendar owner = Ops)
+  - [x] Engineering runbooks: `docs/master-lead-management.md#data-retention-runbook`, `docs/master-security-compliance.md#dsar-playbook` (procedures + evidence index)
+  - [x] **Product:** in-app / operator-assisted DSR tooling — `/privacy` endpoints for org export (Art. 20), subject export (Art. 15), erasure/anonymize (Art. 17), owner/admin gated, audit-logged
+  - [x] **Product:** security-event audit log (`security_events` table + `recordSecurityEvent`, migration 020)
+  - [ ] **Product:** per-tenant *scheduled* retention / automated purge where required by contract
+  - [ ] Backup/restore and DR **test cadence** executed and logged (restore runbook at `docs/disaster-recovery.md`; calendar owner = Ops)
 - [x] Manager Dashboard Pack **(shipped)**
   - [x] MQL/SQL snapshot + mix KPI (see metrics doc)
   - [x] Stage aging heatmap (open deals × `updatedAt` buckets)
   - [x] Owner first-touch / response-time KPI (median hours, completed touch activities)
 - [ ] API + Webhooks baseline
-  - [ ] Public endpoint policy and versioning
+  - [x] Public endpoint policy and versioning — `POST /api/public/v1/leads` (versioned `/v1`), `x-api-key` auth + `leads:write` scope, keys minted in Settings > Integrations
+  - [ ] Broader public surface for additional core entities
   - [ ] Webhook subscriptions with retries
 
-## Later
+## Later (remaining horizons)
 
-- [ ] SSO/SCIM enterprise readiness
-- [ ] Governance and field-level security
-- [ ] AI copilot v2
-- [ ] Forecasting intelligence
+Reduced to genuinely-open work — the enterprise readiness wave above has shipped.
+
+- [x] ~~SSO/SCIM enterprise readiness~~ — OIDC SSO + SCIM 2.0 shipped; see [Shipped (enterprise readiness)](#shipped-enterprise-readiness)
+- [ ] SAML federation
+- [ ] Broader SSO provider testing / diagnostics UI / connection health checks
+- [ ] Field-level security (sensitive-field visibility controls)
+- [ ] Forecasting intelligence (weighted forecast, commit/best/worst views, slippage prediction)
+- [ ] AI copilot v2 (account summaries, meeting prep briefs)
+- [ ] Industry pipeline templates (SaaS, Services, Real Estate, Insurance)
+- [ ] HA/DR automated failover + logged DR drills (restore runbook at `docs/disaster-recovery.md`)
+- [ ] Formal certifications (SOC 2 / ISO 27001 audits)
+- [ ] Real background job queue (BullMQ present but unused)
 
 ## Differentiation wedge and growth loop (founder-led)
 
@@ -289,7 +314,7 @@ Use this matrix as release gates before onboarding broader customer segments.
 | Enterprise permissions | Preset matrix + audit shipped; custom role builder open | Dynamic RBAC with profile presets + auditability | P0 |
 | Branding/white-label | Baseline shipped (logo, color, domain, legal links) | Deeper white-label + partner flows | P1 |
 | Integrations | Partial (email-focused) | Connector abstraction + webhooks + import mapping | P1 |
-| Compliance operations | Runbooks + evidence index shipped; external DNS/RLS sign-off pending per tenant | Executable **tenant** automation + logged DR drills | P1 |
+| Compliance operations | Runbooks + evidence index shipped; GDPR subject export/erasure (`/privacy`) + security-event audit log shipped; scheduled per-tenant purge + logged DR drills open | Scheduled **tenant** retention automation + logged DR drills + formal certs | P1 |
 | Sales enablement packaging | Low | Vertical onboarding templates + deployment playbooks | P2 |
 
 Execution order for GTM priorities matches **[Pro roadmap 30–60–90](#pro-roadmap-30-60-90)** (avoid duplicating here).
@@ -307,9 +332,9 @@ Use this table so **large** backlog rows have a single agreed horizon; execution
 | Provider abstraction (Google / Microsoft email, calendar) | **31–60 days** | Integration baseline in roadmap. |
 | CRM import/export hardening | **31–60 days** | Same track as integration baseline / enterprise pilots. |
 | Webhooks v1 (retries, signed payloads) | **31–60 days** | Listed under **API + Webhooks** in [31–60 days](#pro-roadmap-30-60-90). |
-| Per-tenant retention schedules + automated purge | **31–60 days** | Governance pack; engineering runbooks already exist. |
-| In-app / operator-assisted DSR tooling | **31–60 days** | Enterprise trust; playbook exists, product automation open. |
-| Backup/restore + DR **test cadence** logged | **31–60 days** (Ops) | Calendar owner; evidence in compliance / ops docs per tenant. |
+| ~~In-app / operator-assisted DSR tooling~~ | **Shipped** | `/privacy` org/subject export + erasure (GDPR Art. 15/17/20). |
+| Per-tenant *scheduled* retention + automated purge | **31–60 days** | Governance pack; ad-hoc DSR shipped, scheduled purge open; engineering runbooks exist. |
+| Backup/restore + DR **test cadence** logged | **31–60 days** (Ops) | Calendar owner; restore runbook at `docs/disaster-recovery.md`. |
 
 ## Archived sprint (sell-ready product baseline)
 

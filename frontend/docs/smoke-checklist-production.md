@@ -12,7 +12,7 @@ Use after a production deploy. Record pass/fail and who ran it.
 - [ ] JWT_SECRET set (min 32 chars), CORS_ORIGIN parsed and validated, Redis available for JWT denylist
 - [ ] `INTERNAL_KEY` set (min 16 chars) for `/internal/*` routes
 - [ ] **PgBouncer running** (`docker compose ps pgbouncer` shows healthy); `infra/pgbouncer/userlist.txt` has real MD5 password hash
-- [ ] E2E test environment variables configured: `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` (n0crm-api endpoints, not Supabase)
+- [ ] E2E test environment variables configured: `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD` (n0crm-api endpoints)
 
 ## Auth flows
 
@@ -36,7 +36,13 @@ Use after a production deploy. Record pass/fail and who ran it.
 
 13. **Password reset** — Use forgot-password flow; verify token is single-use; verify email not enumerated (always 200 response)
 14. **Logout revocation** — Logout; verify old JWT token cannot re-access protected routes (Redis denylist active)
-15. **Rate limiting** — Attempt `/auth/reset-password` 11+ times in 15 minutes; verify rate limit response (429) after 10 requests
+15. **Rate limiting (auth)** — Attempt `/auth/login` 21+ times in 1 minute from the same IP; verify 429 after 20 requests (per-IP limit on auth routes)
+16. **Rate limiting (global)** — Authenticated client sends 501+ requests in 1 minute; verify 429 after 500 req/min per org
+17. **MFA login** — In Settings > Security, enroll TOTP (scan QR with authenticator app); log out; log back in → verify TOTP prompt appears; enter correct code → access granted; enter wrong code → rejected
+18. **SSO round-trip** *(if `OIDC_ISSUER` configured)* — Visit `/login`; confirm SSO button visible (gated by `GET /auth/sso/status`); click → redirected to IdP → complete login → land on dashboard with JIT-provisioned account
+19. **SCIM provisioning** *(if scim-scoped API key configured)* — `POST /scim/v2/Users` with Bearer scim key → 201 created; `GET /scim/v2/Users/:id` → user returned; `DELETE /scim/v2/Users/:id` → user soft-deprovisioned and sessions revoked; verify `GET /scim/v2/ServiceProviderConfig` returns 200
+20. **GDPR export** — As owner/admin, call `GET /privacy/export` → 200 with org-level data export (Art. 20)
+21. **GDPR subject erasure** — As owner/admin, call `POST /privacy/subject/:contactId/erase` → 200; verify contact data anonymized in database (Art. 17)
 
 ## Optional (if configured)
 
@@ -53,18 +59,11 @@ Use after a production deploy. Record pass/fail and who ran it.
 - [ ] `/metrics` accessible from localhost: `curl http://localhost:3001/metrics` returns 200 with Prometheus metrics
 - [ ] `/metrics` restricted externally: `curl http://<external-ip>:3001/metrics` returns 403 Forbidden
 
-## Auth and security flows
-
-13. **Password reset** — Use forgot-password flow; verify token is single-use; verify email not enumerated (always 200 response)
-14. **Logout revocation** — Logout; verify old JWT token cannot re-access protected routes (Redis denylist active)
-15. **Rate limiting per org** — Verify with `x-org-id` header differentiation; test 501+ requests in 1 min to verify 429 response after 500 req/min per org
-
 ## Sequence runner
 
-- [ ] `POST /internal/sequences/run` with `x-internal-key` header returns 200 with `{ processed: number, errors: number }`
-- [ ] Sequence runner auto-starts on API boot (check logs for "Sequence runner started")
+- [ ] `POST /internal/sequences/run` with `x-internal-key` header returns 200 with `{ ok: true, message: "...", elapsedMs: number }`
+- [ ] Sequence runner auto-starts on API boot (check logs for `[sequenceRunner] Starting (tick every 60s)`)
 - [ ] Enroll a contact in an active sequence; wait for runner tick (60s); verify enrollment `current_step` advances in database
-- [ ] Monitor sequence runner via Prometheus: `n0crm_sequence_enrollments_processed_total` metric tracks completed enrollments
 
 ## Automated smoke
 
@@ -86,7 +85,7 @@ From api/ directory:
 npm test
 ```
 
-*Last updated: 2026-05-25*
+*Last updated: 2026-06-11*
 
 ## Deployment checklist
 
@@ -98,5 +97,5 @@ npm test
 - [ ] Password reset tokens stored as SHA-256 hashes (verified DB schema and login code)
 - [ ] Rate limiting active on auth routes (verified config in api/src/routes)
 - [ ] Redis denylist for JWT revocation operational (verified with logout test flow)
-- [ ] RLS enforced on all tenant tables (verified migration 002; run `\d+ <table>` on each table in psql to confirm RLS policies)
+- [ ] Tenant isolation: app-layer org scoping is the authoritative control; RLS is opt-in defense-in-depth (see docs/adr/0001-tenant-isolation-and-rls.md)
 - [ ] PgBouncer MD5 hash in `userlist.txt` is correct (verified: `echo -n "password" | md5sum` matches userlist entry)

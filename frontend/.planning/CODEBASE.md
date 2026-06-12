@@ -1,242 +1,359 @@
-# Codebase map (consolidated)
+# Codebase overview
 
-This file consolidates the prior `.planning/codebase/*.md` documents into a single source of truth to reduce file sprawl while keeping the original content.
+Internal technical reference for the n0CRM monorepo. Covers architecture,
+directory layout, backend surface, and frontend structure at a high level.
+
+For a full file-by-file structural map see **`../../docs/CODEBASE-MAP.md`**.
+
+---
 
 ## Architecture
 
-**Source:** `.planning/codebase/ARCHITECTURE.md`  
-**Analysis date:** 2026-05-18
+n0CRM is a self-hosted monorepo: a Fastify 5 / Node 22 API (`api/`) and a
+React 18 SPA (`frontend/`) sharing a PostgreSQL 16 database and a Redis 7
+cache. There is no Supabase runtime dependency — all data, auth, and
+real-time traffic flows through `n0crm-api`.
 
-### Pattern overview
+**Overall data flow:**
 
-**Overall:** React 18 SPA (frontend/) + `n0crm-api` Fastify 5 backend (api/) in monorepo. PostgreSQL 16 + Redis. Zustand stores for client state. Auth via HS256 JWT (`{ sub, org, role, jti }`). Real-time via Socket.io. No Supabase runtime dependency — `supabase` client is `null` at runtime; all data goes through n0crm-api including Gmail OAuth.
+```
+Browser (React 18 SPA)
+  │  REST / JSON  (VITE_API_URL → api:3001)
+  │  Socket.io    (org-scoped rooms, Redis-backed db:change broadcast)
+  ▼
+Fastify 5 API  (api/)
+  │  postgres.js (transform: postgres.camel) + PgBouncer (transaction pooling)
+  │  ioredis
+  ▼
+PostgreSQL 16 / Redis 7
+```
 
-**Key characteristics:**
-- `n0crm-api` is the primary backend for auth, persistence, and realtime sync.
-- Zustand remains the app state layer; all mutations go through `src/lib/api.ts` (`VITE_API_URL`).
-- Route-level protection via `ProtectedRoute` + JWT `org`/`role` claims.
-- Gmail integration uses PKCE + n0crm-api `/gmail/*` routes for token exchange (fully self-hosted — no Supabase Edge Function dependency).
+Key characteristics:
 
-### Layers
+- All mutations go through `frontend/src/lib/api.ts`; no client-side SQL.
+- Auth: HS256 JWT (`{ sub, org, role, jti }`). `GET /auth/me` restores session
+  on mount; `isLoadingAuth` prevents login flash.
+- Route-level protection: `ProtectedRoute` + `RequirePermission` gate components.
+- Real-time: Socket.io events → `window.__n0crmDbChange(table)` global →
+  affected stores refetch.
+- i18n: localised UI strings live in `src/i18n/`; catalogs are not mirrored
+  in Markdown.
+- RBAC: server-side `requirePermission` / `requireCrudPermission` enforced
+  across all CRM CRUD, member, API-key, and webhook management routes.
+  Roles: `owner`, `admin`, `manager`, `sales_rep`, `viewer`.
+- Tenant isolation: application-layer `WHERE organization_id = $org` is the
+  authoritative control; PostgreSQL RLS is opt-in defense-in-depth (see
+  `docs/adr/0001-tenant-isolation-and-rls.md`).
 
-**App shell + routing (`src/App.tsx`):**
-- Declares routes and protected wrappers.
-- Initializes auth via `GET /auth/me` on mount (`isLoadingAuth` prevents /login flash).
-- Uses lazy loading for chart-heavy routes (`Dashboard`, `Reports`, `Forecast`).
+---
 
-**Pages (`src/pages/*`):**
-- Route containers that compose store data, domain components, and services.
-- Main business UX for CRM entities, inbox, reporting, settings.
+## Monorepo layout
 
-**Stores (`src/store/*`):**
-- Domain-specific Zustand stores.
-- All CRUD via `src/lib/api.ts` REST calls to n0crm-api; optimistic updates where implemented.
-- `supabase` is `null` — all `!supabase` / `supabase?.` guards fire; Supabase-dependent panels show info states.
-- Real-time: Socket.io events (api:3001) → `window.__n0crmDbChange(table)` global fires → stores refetch.
+```
+n0CRM/
+├── frontend/                   # React 18 SPA (this tree)
+│   ├── .planning/              # Planning docs (including this file)
+│   ├── public/                 # Static assets served by Vite as-is
+│   ├── src/
+│   │   ├── components/         # Domain + shared + UI components (see below)
+│   │   ├── hooks/              # Custom React hooks
+│   │   ├── i18n/               # Translation catalogs and language store
+│   │   ├── lib/                # Client utilities: api.ts, realtime, sentry, etc.
+│   │   ├── pages/              # One file/subdir per route (route containers)
+│   │   ├── services/           # Stateless integration adapters
+│   │   ├── store/              # Zustand domain stores
+│   │   ├── types/              # TypeScript interfaces and union types
+│   │   ├── utils/              # Pure helpers and constants
+│   │   ├── App.tsx             # Router definition, app-level effects
+│   │   ├── main.tsx            # React DOM entry point
+│   │   └── index.css           # Tailwind CSS global entry
+│   ├── index.html
+│   └── package.json
+│
+├── api/                        # Fastify 5 backend (Node.js 22)
+│   ├── migrations/             # Sequential PostgreSQL schema migrations (001–020)
+│   ├── src/
+│   │   ├── config/env.ts       # Env validation (zod)
+│   │   ├── db/                 # postgres.js client + ioredis client
+│   │   ├── middleware/         # auth.ts, rbac.ts
+│   │   ├── routes/             # One file per feature area (see below)
+│   │   ├── services/           # Business logic + external integrations
+│   │   ├── types/              # Shared TS types
+│   │   └── workers/            # sequenceRunner.ts (60 s polling)
+│   ├── package.json
+│   └── Dockerfile
+│
+├── docker-compose.yml          # Postgres 16, PgBouncer, Redis 7, api, nginx/SPA
+├── docs/
+│   ├── CODEBASE-MAP.md         # Authoritative file-by-file structural map
+│   ├── adr/                    # Architecture decision records
+│   ├── sso-and-scim.md         # OIDC SSO + SCIM operator guide
+│   └── disaster-recovery.md    # Restore runbook
+└── .gitea/
+    └── workflows/
+        ├── ci.yml              # Canonical CI pipeline (type-check + tests)
+        ├── build-production.yml
+        └── build-api.yml
+```
 
-**Services (`src/services/*`):**
-- Stateless integration adapters (`googleIntegrationService`, `gmailTokenRefresh`, etc.).
-- All Gmail token operations now go through n0crm-api `/gmail/*` routes (no Supabase Edge Functions).
+---
 
-**Data/infra (`supabase/*`):**
-- Legacy Edge Functions (email tracking, webhooks, public API) — deprecated, not called from frontend.
-- SQL migrations: historical reference only; PostgreSQL schema now managed via `api/migrations/` in n0crm-api monorepo subdirectory.
+## Backend surface (`api/src/`)
 
-### Core flows
+### Routes (`api/src/routes/`)
 
-**Auth + org scope:**
-1. `POST /auth/login` → HS256 JWT with `{ sub, org, role }`.
+| File | Area |
+|---|---|
+| `auth.ts` | Login, register, password reset, MFA (TOTP), OIDC SSO |
+| `scim.ts` | SCIM 2.0 Users CRUD + ServiceProviderConfig |
+| `contacts.ts` | Contacts CRUD |
+| `companies.ts` | Companies CRUD |
+| `deals.ts` | Deals CRUD |
+| `leads.ts` | Leads CRUD |
+| `activities.ts` | Activities CRUD |
+| `publicApi.ts` | `POST /api/public/v1/leads` (x-api-key, scope `leads:write`) |
+| `apiKeys.ts` | API key management; scope selector |
+| `gmail.ts` | `POST /gmail/oauth-start`, `POST /gmail/oauth-exchange`, thread sync |
+| `email.ts` | SMTP-based send, templates |
+| `sequences.ts` | Email sequences + wait steps |
+| `automations.ts` | Workflow automations |
+| `webhooks.ts` / `webhookSubscriptions.ts` | Outgoing webhook delivery |
+| `ai.ts` | AI agent, conversations, next-best-action, inbox summarize/draft |
+| `dataPrivacy.ts` | GDPR Art.15 export, Art.17 erasure/anonymize, Art.20 org export |
+| `audit.ts` | Security-event audit log |
+| `sso.ts` | OIDC SSO status · start · callback (PKCE S256, JWKS RS256, JIT) |
+| `orgs.ts` | Org settings, member lifecycle (`PATCH …/members/:id/role·status`) |
+| `pipelines.ts` | Pipeline configuration |
+| `analytics.ts` · `goals.ts` · `billing.ts` | Analytics, sales goals, billing |
+| `health.ts` | `/health`, `/health/ready`, `/health/live` |
+| `internal.ts` | `/metrics` (Prometheus, loopback / internal-key gated) |
+| `admin.ts` · `debug.ts` | Super-admin and debug endpoints |
+| Other | `calendar`, `products`, `customFields`, `slack`, `zoom`, `smtp`, `invitations`, `notifications`, `userPreferences`, `views`, `distributionLists`, `emailTracking`, `uxMetrics` |
+
+### Services (`api/src/services/`)
+
+| File / dir | Responsibility |
+|---|---|
+| `ai/providers.ts` | Multi-provider AI client (Gemini default / OpenAI / Anthropic) |
+| `ai/agent.ts` | Tool-using CRM agent loop |
+| `ai/tools.ts` | CRM tool definitions for the agent |
+| `ai/retention.ts` | `AI_MESSAGE_RETENTION_DAYS` purge job |
+| `permissions.ts` | `requirePermission` / `requireCrudPermission` RBAC helpers |
+| `oidc.ts` | OIDC discovery, JWKS fetch, token verification |
+| `totp.ts` | TOTP secret gen, AES-256-GCM encrypt/decrypt, RFC 6238 verify |
+| `securityEvents.ts` | `recordSecurityEvent` → `security_events` table |
+| `observability.ts` | `x-request-id` correlation, `captureException`, Sentry wiring |
+| `realtime.ts` | Socket.io org-scoped room broadcast via Redis |
+| `email.ts` | SMTP send abstraction |
+| `tokenCipher.ts` | AES-256-GCM token encryption (Gmail refresh tokens, etc.) |
+| `ssrfGuard.ts` | SSRF mitigation for outgoing HTTP |
+| `cookieAuth.ts` | Secure cookie helpers |
+| `metrics.ts` | Prometheus metric registration |
+
+### Migrations (`api/migrations/`)
+
+20 sequential SQL files (001–020). Selected highlights:
+
+- `001_schema.sql` — base schema (all core tables)
+- `010_webhooks.sql` — webhook_outbox, webhook_subscriptions
+- `013_org_branding_billing.sql` — org branding + billing fields
+- `018_ai.sql` — ai_conversations, ai_messages, org AI settings
+- `019_mfa.sql` — MFA TOTP secrets (AES-256-GCM encrypted)
+- `020_security_events.sql` — security_events audit table
+
+### Workers (`api/src/workers/`)
+
+`sequenceRunner.ts` — a 60-second polling loop that advances email sequences
+and wait steps via a `current_step` index. Scope is limited to those step
+types; it does not resolve flow_definition graphs, A/B variants,
+call/LinkedIn tasks, or expose Prometheus metrics.
+
+---
+
+## Frontend surface (`frontend/src/`)
+
+### Stores (`src/store/`)
+
+One Zustand store per domain. All mutations go through `src/lib/api.ts` REST
+calls to n0crm-api; optimistic updates where implemented.
+
+`activitiesStore`, `aiStore`, `attachmentsStore`, `auditStore`, `authStore`,
+`automationsStore`, `companiesStore`, `contactsStore`, `customFieldsStore`,
+`dealsStore`, `distributionListsStore`, `emailStore`, `goalsStore`,
+`leadsStore`, `navigationPrefsStore`, `notificationsStore`, `onboardingStore`,
+`pipelinesStore`, `productsStore`, `sequencesStore`, `settingsStore`,
+`templateStore`, `toastStore`, `viewsStore`
+
+### Pages (`src/pages/`)
+
+Route containers composing stores + domain components.
+
+| Page | Route area |
+|---|---|
+| `Login`, `Register`, `ForgotPassword`, `ResetPassword`, `AcceptInvite` | Auth |
+| `GmailCallback.tsx` | `{origin}/auth/gmail/callback` — postMessages to opener |
+| `Dashboard`, `ManagerDashboard`, `Forecast`, `Reports`, `SalesGoals` | Analytics & reporting |
+| `Contacts`, `ContactDetail`, `Companies`, `CompanyDetail` | CRM core |
+| `Deals` (subdir: kanban, list, filters, toolbar, quote builder) | Deals |
+| `Leads` | Lead capture |
+| `Activities`, `Calendar`, `FollowUps` | Activity management |
+| `Inbox` (subdir: thread list, reading pane, thread view, local email) | Gmail inbox |
+| `Sequences`, `EmailTemplates`, `Automations` | Sequences + email |
+| `Products` | Product catalog |
+| `Notifications` | Notification centre |
+| `Settings` (subdir: general, pipeline, email, branding, advanced, data, permissions, onboarding, navigation) | Org settings |
+| `SettingsIntegrations` | API keys + scope selector |
+| `TeamManagement` | Member lifecycle |
+| `AuditLog` | Security-event audit log viewer |
+| `Admin` | Super-admin panel |
+| `Landing`, `OrgSetup`, `OrgAccessRequired`, `UserProfile` | Onboarding + profile |
+| `PipelineTimeline` | Timeline view |
+
+### Components (`src/components/`)
+
+Subdirectory per domain:
+
+`activities`, `ai` (AiAssistant, AiInsight), `auth`, `brand`, `companies`,
+`contacts`, `deals`, `email`, `import`, `integrations`,
+`layout` (Sidebar, Topbar, Layout, ErrorBoundary, CommandPalette, EnvironmentBanner),
+`settings` (MFA, SSO/SCIM, integrations, webhooks, SMTP, pipelines panels),
+`shared`, `ui` (design-system primitives), `workflows`
+
+### Services (`src/services/`)
+
+Stateless integration adapters:
+
+- `googleIntegrationService.ts` — Google OAuth popup orchestration
+- `gmailService.ts` — Gmail thread fetch, sync
+- `gmailTokenRefresh.ts` — Access token refresh via `POST /gmail/oauth-exchange`
+- `calendarService.ts` — Calendar event operations
+- `emailProviders/` — SMTP provider adapters
+
+### Lib (`src/lib/`)
+
+`api.ts` (typed fetch wrapper, VITE_API_URL), `realtimeSubscriptions.ts`
+(Socket.io org room wiring → `__n0crmDbChange`), `sentry.ts`, `traceFetch.ts`,
+`routePreload.ts`, `uxMetrics.ts`, `emailTracking.ts`, `entityListFilters.ts`,
+`workflowTemplateCatalog.ts`, schema validators, theming helpers.
+
+### Hooks (`src/hooks/`)
+
+`useDataInit`, `useDateLocale`, `useGoogleOAuthPopup`, `useLocalStorage`,
+`usePresence`, `useSearch`
+
+---
+
+## Technology stack
+
+| Layer | Technology |
+|---|---|
+| Language | TypeScript 5.9 |
+| Backend runtime | Node.js 22 |
+| Backend framework | Fastify 5 |
+| Database | PostgreSQL 16 via postgres.js (`transform: postgres.camel`), PgBouncer (transaction pooling) |
+| Cache / pub-sub | Redis 7 (ioredis) |
+| Real-time | Socket.io 4 (org-scoped rooms, Redis adapter) |
+| Frontend framework | React 18 + React Router |
+| Build tool | Vite |
+| State management | Zustand |
+| Styling | Tailwind CSS + Lucide icons |
+| Forms / validation | React Hook Form + Zod |
+| Testing | Vitest + jsdom + Testing Library |
+| Observability | x-request-id correlation, Sentry (optional `SENTRY_DSN`), Prometheus + Grafana |
+| Package manager | npm (lockfile present) |
+
+Test counts (from vitest run): API = **85 tests** across **12 files**;
+frontend = **263 tests**. `npm audit` = **0 vulnerabilities**.
+
+---
+
+## Core flows
+
+### Auth + org scope
+
+1. `POST /auth/login` → HS256 JWT `{ sub, org, role, jti }`.
 2. `GET /auth/me` on mount restores session.
-3. Every n0crm-api route scopes queries with `WHERE organization_id = ${req.user.org}`.
+3. Every API route scopes queries `WHERE organization_id = $org`.
+4. MFA: optional TOTP second factor; setup via `POST /auth/mfa/setup·enable·disable`; login prompt on next `POST /auth/login` once enrolled.
+5. OIDC SSO: `GET /auth/sso/status` gates frontend SSO button; PKCE S256 flow; JIT user provisioning; `OIDC_DEFAULT_ROLE` env.
 
-**CRM CRUD:**
+### CRM CRUD
+
 1. UI dispatches store action.
 2. Store optimistically updates local state.
 3. `api.post/patch/delete` persists to n0crm-api.
 4. Socket.io `__n0crmDbChange` broadcasts table changes to other connected clients.
 
-**Gmail:**
-1. User connects via Google OAuth popup (PKCE).
-2. Code exchange via `POST /gmail/oauth-exchange` (n0crm-api — no Supabase dependency). Refresh token stored AES-256-GCM encrypted in `gmail_tokens`.
-3. Short-lived access tokens used client-side; inbox loads/syncs Gmail threads via `GET /gmail/threads`.
-4. Thread links pinned/unpinned and persisted in `gmail_thread_links` table.
+### Gmail
 
-### Cross-cutting concerns
+1. User connects via Google OAuth popup (`useGoogleOAuthPopup`).
+2. Code exchanged via `POST /gmail/oauth-exchange`; refresh token stored AES-256-GCM encrypted in `gmail_tokens`.
+3. Short-lived access tokens used client-side; inbox loads/syncs via `GET /gmail/threads`.
+4. Thread links persisted in `gmail_thread_links`. Callback is frontend route `{origin}/auth/gmail/callback` (`GmailCallback.tsx`), which postMessages to the opener.
 
-- **i18n:** localized UI strings live in `src/i18n/*` (do not mirror catalogs in Markdown).
-- **Security:** no browser-side refresh token storage; service-role logic isolated to Edge Functions.
-- **Accessibility:** icon-only controls require `aria-label`/`title`.
-- **Quality gates:** `npm run build` + `npm run test:run` must pass before release/merge.
+### Public API
 
-## Technology stack
+`POST /api/public/v1/leads` authenticated by header `x-api-key: <key>` (key
+prefix `n0crm_`, minted in Settings > Integrations with optional scopes).
+Requires scope `leads:write`; returns 403 `{error:"Insufficient API key scope", required:"leads:write"}` otherwise.
 
-**Source:** `.planning/codebase/STACK.md`  
-**Analysis date:** 2026-04-21
-
-### Languages
-
-- **Primary:** TypeScript 5.9
-- **Secondary:** SQL (Postgres), CSS (Tailwind)
-
-### Runtime / toolchain
-
-- **Runtime:** browser (SPA); Node.js for tooling only (Vite/tsc)
-- **Package manager:** npm (lockfile present)
-
-### Frameworks and libraries (high signal)
-
-- **React 18** + **React Router**
-- **Zustand** for global state
-- **Tailwind** + **Lucide**
-- **React Hook Form** + **Zod**
-- **Vitest** + Testing Library
-- **Vite** for dev/build
-- **Supabase JS** for DB/auth/realtime (when configured)
-
-## Codebase structure
-
-**Source:** `.planning/codebase/STRUCTURE.md`  
-**Analysis date:** 2026-04-22
-
-### Directory layout
-
-**Monorepo structure:** This frontend directory is part of the velo-crm monorepo. Root contains: `frontend/` (React SPA), `api/` (Fastify + PostgreSQL), `docker-compose.yml`, `privateprompt-app.json`.
-
-**UI layout conventions:** see `docs/master-design-ui.md` (`crm-page`, `crm-page-full`, shared empty states).
-
-```
-velo-crm/
-├── frontend/                   # This directory (React SPA)
-│   ├── .planning/              # Planning documents (this codebase map, requirements, roadmap, etc.)
-│   ├── public/                 # Static assets served as-is by Vite
-│   ├── src/
-│   │   ├── assets/             # Static assets imported by components
-│   │   ├── components/
-│   │   │   ├── activities/     # Activity-domain components (forms, list items)
-│   │   │   ├── auth/           # Route guard and permission gate components
-│   │   │   ├── companies/      # Company-domain components
-│   │   │   ├── contacts/       # Contact-domain components
-│   │   │   ├── deals/          # Deal-domain components (kanban, forms)
-│   │   │   ├── email/          # Email composer / inbox components
-│   │   │   ├── import/         # CSV/JSON import wizard components
-│   │   │   ├── layout/         # App shell (Sidebar, Topbar, Layout, ErrorBoundary, CommandPalette)
-│   │   │   ├── settings/       # Settings sub-panels (e.g. webhooks UI)
-│   │   │   ├── shared/         # Cross-domain reusable components
-│   │   │   └── ui/             # Primitive design-system components
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── i18n/               # Translations and language store
-│   │   ├── lib/                # External client setup (supabase.ts, database.types.ts)
-│   │   ├── pages/              # One file per route — full-page view components
-│   │   ├── services/           # Stateless external API callers
-│   │   ├── store/              # Zustand stores (one file per domain)
-│   │   ├── types/              # TypeScript interfaces and union types
-│   │   ├── utils/              # Pure helper functions and constants
-│   │   ├── App.tsx             # Router definition, app-level effects
-│   │   ├── main.tsx            # React DOM entry point
-│   │   └── index.css           # Global Tailwind CSS entry
-│   ├── supabase/               # Legacy Supabase schema and migrations (reference only)
-│   ├── index.html              # Vite HTML shell
-│   └── package.json
-├── api/                        # Fastify backend (Node.js 22 + PostgreSQL 16)
-│   ├── migrations/             # PostgreSQL schema migrations
-│   ├── src/
-│   │   ├── routes/             # API route handlers (auth, contacts, deals, gmail, etc.)
-│   │   ├── db/                 # Database utilities and pool
-│   │   └── ...
-│   ├── package.json
-│   └── Dockerfile
-├── docker-compose.yml          # Starts: postgres, redis, api, frontend (nginx)
-├── privateprompt-app.json      # Private Prompt deployment manifest
-└── .gitea/
-    └── workflows/
-        ├── ci.yml              # Frontend type check + tests
-        ├── build-production.yml # Frontend Docker image build
-        └── build-api.yml       # API Docker image build
-```
-
-### Directory purposes (selected)
-
-- **`src/pages/`**: one file per route (route-level containers)
-- **`src/store/`**: domain-specific Zustand stores (Supabase-backed when configured)
-- **`src/components/layout/`**: app chrome (Sidebar/Topbar/Layout/ErrorBoundary)
-- **`src/components/ui/`**: design system primitives only (no stores)
-- **`supabase/`**: schema/migrations/Edge Functions
+---
 
 ## Coding conventions
 
-**Source:** `.planning/codebase/CONVENTIONS.md`  
-**Analysis date:** 2026-04-21
-
-### Naming patterns (summary)
+### Naming patterns
 
 - Components: PascalCase `.tsx`
 - Stores: camelCase `*Store.ts`
 - Hooks: `useXxx`
 - Utilities: camelCase
 - Constants: `SCREAMING_SNAKE_CASE`
-- Types: PascalCase (`interface`/`type`)
+- Types/interfaces: PascalCase
 
-### TypeScript configuration (observed)
+### TypeScript configuration
 
 - Strict mode enabled
 - Module resolution: `bundler`
-- Path alias `@/*` exists but is not widely used (relative imports dominate)
+- Path alias `@/*` configured; relative imports dominate in practice
 
 ### UI/layout conventions
 
 - Canonical reference: `docs/master-design-ui.md`
+- Page layout class: `crm-page` / `crm-page-full`
 - Lucide icon sizes: prefer **13 · 14 · 16 · 18 · 22**
 
-## Testing patterns
+---
 
-**Source:** `.planning/codebase/TESTING.md`  
-**Analysis date:** 2026-04-21
+## Testing and quality gates
 
 - Vitest + jsdom + Testing Library
 - Source of truth: `npm run test:run`
-- Release/merge gates: `npm run test:run` + `npm run build`
+- Release / merge gates: `npm run test:run` + `npm run build` must both pass
+- CI: `.gitea/workflows/ci.yml` (Gitea is the authoritative remote)
 
-## External integrations (audit)
+---
 
-**Source:** `.planning/codebase/INTEGRATIONS.md`  
-**Analysis date:** 2026-04-22
+## Cross-cutting concerns
 
-### Outgoing webhooks (v1)
-
-- Outbox table: `webhook_outbox`
-- Worker: Edge `webhook-worker`
-- Signature header: **`X-n0CRM-Signature`** (HMAC-SHA256 hex of raw JSON body)
-- Terminal failure: **`dead`** (DLQ semantics) + replay tooling
-
-See `docs/master-pipedrive-velo-comparison.md` (product/parity) and `supabase/README.md` (operator runbook).
-
-### Public read API (phase 1)
-
-- Edge `crm-public-api` with org-scoped API keys (`organization_api_keys`, hash-only)
-- See `docs/public-api-phase1.md`
-
-## Codebase concerns
-
-**Source:** `.planning/codebase/CONCERNS.md`  
-**Analysis date:** 2026-04-21
-
-- Deployment hardening remains a release risk until Phase 10 hosting/env/smoke is fully closed.
-- Team directory had session-scoped risk; mitigated by RPC `list_organization_members_with_identity` + `authStore.fetchOrgUsers`.
-- Email tracking: server truth via `track-open` / `track-click`; org-wide rollups are future work.
-
-## Editability matrix
-
-**Source:** `.planning/codebase/EDITABILITY_MATRIX.md`  
-**Updated:** 2026-04-10
-
-The module matrix and permission list were folded into the Coding Conventions source; keep `docs/project-state.md#checkbox-ownership` as the owner/evidence guide for checklist closure.
+- **Security:** No browser-side refresh token storage. API keys are hash-only
+  server-side; scopes enforced via `requirePermission`.
+- **RBAC:** `requirePermission` / `requireCrudPermission` across all CRM,
+  member, API-key, and webhook routes. Roles: `owner`, `admin`, `manager`,
+  `sales_rep`, `viewer`.
+- **GDPR:** `/privacy` endpoints cover org export (Art. 20), subject export
+  (Art. 15), erasure / anonymize (Art. 17); owner/admin gated.
+- **Observability:** `x-request-id` correlation, `captureException`, `/health`
+  liveness/readiness probes, `/metrics` (Prometheus, internal-key gated).
+- **AI governance:** per-org kill switch (`settings.ai.enabled`),
+  `AI_MONTHLY_TOKEN_CAP`, `AI_MESSAGE_RETENTION_DAYS` purge, multi-provider
+  (Gemini free default / OpenAI / Anthropic).
+- **Accessibility:** icon-only controls require `aria-label` / `title`.
 
 ---
 
 ## Document control
 
-- **Status:** Active  
-- **Owner:** Engineering  
-- **Last updated:** 2026-05-18  
-- **Canonical:** Yes  
-
+- **Status:** Active
+- **Owner:** Engineering
+- **Last updated:** 2026-06-11
+- **Authoritative file map:** `../../docs/CODEBASE-MAP.md`

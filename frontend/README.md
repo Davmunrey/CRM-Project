@@ -1,11 +1,11 @@
 # n0CRM
 
-Internal B2B CRM — React 18 SPA backed by `api/` (Fastify + PostgreSQL). Part of the velo-crm monorepo.
+Internal B2B CRM — React 18 SPA backed by `api/` (Fastify + PostgreSQL). Part of the n0CRM self-hosted monorepo.
 
 ## Monorepo structure
 
 ```
-velo-crm/
+n0crm/
   frontend/     ← This directory (React 18 + TypeScript + Vite SPA)
   api/          ← Fastify 5 + Node.js 22 + PostgreSQL + Redis + Socket.io
   docker-compose.yml   ← Full-stack orchestration
@@ -48,8 +48,11 @@ Realtime: Socket.io from the same `api/` process; frontend subscribes to `__n0cr
 | Calendar | Google Calendar sync, event create/edit, month/week/day view, Meet link display |
 | Custom Fields | Per-entity (contact/company/deal/lead) definitions, values, multilingual labels |
 | Goals | Sales targets per rep, period tracking, current progress |
-| Audit Log | Org activity trail |
-| Settings | Team management, SMTP, Google OAuth integration guide, API keys, webhooks, language (en/es/pt/fr/de/it) |
+| Audit Log | Org activity trail (`security_events`-backed, owner/admin gated) |
+| Settings — General/Email/Data | Team management, SMTP, Google OAuth, API keys (scoped: `leads:write`, `scim`), webhooks, language (en/es/pt/fr/de/it) |
+| Settings — Security | **MFA** (TOTP enroll/disable); **OIDC SSO** (SSO button shown only when provider configured, PKCE S256); **SCIM 2.0** token management; permission profiles per role (owner/admin/manager/sales_rep/viewer) |
+| Settings — Integrations | Google Gmail + Contacts + Calendar OAuth cards; **Zoom** integration card; **Slack** integration card |
+| Admin | Super-admin panel: org/user listing, impersonation, org-level AI kill switch, export (orgs + users) |
 | Notifications | In-app feed, mark-read, bulk clear |
 | AI Assistant | Global drawer + floating launcher (tool-using agent); inline AI actions — next-best-action on Contact/Deal detail, thread summarize + draft-reply in the Inbox |
 
@@ -177,6 +180,8 @@ The JWT lives in an HttpOnly `auth_token` cookie set by the API — the SPA neve
 | Step | What happens |
 |------|-------------|
 | Login | `POST /auth/login` → API sets the HttpOnly `auth_token` cookie (`sub/org/role/jti`) |
+| MFA challenge | If MFA is enrolled, login returns `mfa_required: true`; the Login page prompts for a 6-digit TOTP code → `POST /auth/mfa/verify` |
+| OIDC SSO | SSO button (gated by `GET /auth/sso/status`) → `POST /auth/sso/start` (PKCE S256) → `GET /auth/sso/callback` → cookie issued (JIT provisioning) |
 | Register | `POST /auth/register` → cookie with `org: null` → redirect `/org-setup` |
 | Org setup | `POST /orgs` → API re-issues the cookie with the `org` claim |
 | Invite accept | `GET + POST /invitations/:token` → cookie issued |
@@ -189,7 +194,7 @@ The JWT lives in an HttpOnly `auth_token` cookie set by the API — the SPA neve
 
 ## Quality Gates
 
-The CI `ci` job (`.gitea/workflows/ci.yml`) runs these in order — run them before pushing:
+The CI `ci` job (`.gitea/workflows/ci.yml`) runs these in order — run them before pushing. Current counts: **263 frontend tests** and **85 API tests** (0 audit vulnerabilities).
 
 ```bash
 npm run ui:lint          # design token / color guardrails
@@ -227,4 +232,4 @@ Planning, phases, and requirement checkboxes under `.planning/`.
 
 ---
 
-*Last updated: 2026-06-10*
+*Last updated: 2026-06-11*

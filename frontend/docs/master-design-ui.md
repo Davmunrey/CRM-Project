@@ -188,14 +188,14 @@ Legacy filename `navigation-i18n-release-handoff.md` was removed (Apr 2026); poi
 
 - Status: Active
 - Owner: Frontend
-- Last updated: 2026-04-21
+- Last updated: 2026-06-11
 - Canonical: Yes
 
 ## Scope delivered
 
 - Settings sub-tabs with deep-link support.
 - Declarative and customizable left sidebar.
-- Per-user persisted navigation preferences in Supabase.
+- Per-user persisted navigation preferences via the n0CRM API.
 - i18n coverage for EN/ES/PT/FR/DE/IT in navigation-adjacent surfaces.
 
 ## Settings tabs
@@ -249,7 +249,11 @@ Core files updated:
 - `src/components/layout/Sidebar.tsx`
 - `src/pages/Settings.tsx`
 - `src/hooks/useDataInit.ts`
-- `supabase/schema.sql`
+
+Backend (API):
+
+- `api/src/routes/userPreferences.ts` — `GET /preferences/me`, `PATCH /preferences/me/navigation`.
+- `api/migrations/015_server_sync_stores.sql` — `user_preferences` table.
 
 ## Preference model
 
@@ -276,20 +280,20 @@ Store: `useNavigationPrefsStore`.
 Persistence strategy:
 
 - Optimistic local update (Zustand).
-- Supabase upsert to `navigation_preferences`.
-- Scoped by `(organization_id, user_id)`.
-- Local cache retained for quick startup UX.
+- `PATCH /preferences/me/navigation` upserts the `navigation` JSON for the current user.
+- Scoped per user: the API keys writes by `user_preferences.user_id` (from the JWT `sub`); there is no body-supplied scoping.
+- Local cache retained for quick startup UX (persisted under the `crm_settings_navigation_prefs` localStorage key).
 
-Initial load is triggered from `useDataInit()`.
+Initial load is triggered from `useDataInit()` via `loadPreferences()`, which calls `GET /preferences/me` and merges the result over `createDefaultNavigationPreferences()` through `sanitizeNavigationPreferences`.
 
-## Required database setup
+## Database table
 
-Expected table and policies:
+Provisioned by the API migrations — no manual setup beyond running migrations:
 
-- `public.navigation_preferences`
-- unique `(organization_id, user_id)`
-- read/write policy constrained to `auth.uid() = user_id`
-- `updated_at` trigger via `handle_updated_at()`
+- `user_preferences` (migration `015_server_sync_stores.sql`)
+- primary key `user_id` (`UUID REFERENCES users(id) ON DELETE CASCADE`)
+- `navigation` and `onboarding` are `JSONB` columns; `updated_at` is maintained by the upsert
+- per-user isolation is enforced in the route handler (writes keyed by the authenticated `user_id` from the JWT), consistent with app-layer org scoping elsewhere
 
 ## i18n coverage in this release
 
@@ -320,8 +324,8 @@ Surfaces covered:
 
 ## Deployment checklist
 
-1. Apply schema updates (including `navigation_preferences`).
-2. Validate RLS: a user cannot read or write another user's preferences.
+1. Run API migrations (including `015_server_sync_stores.sql` for `user_preferences`).
+2. Validate isolation: a user cannot read or write another user's preferences (the route keys all reads/writes by the JWT `user_id`).
 3. Test deep-link entry: `/settings?tab=navigation`.
 4. Reorder/hide items, refresh, and relogin to verify persistence.
 5. Switch languages (`en/es/pt/fr/de/it`) and validate navigation/settings copy.
@@ -370,7 +374,7 @@ Team register: what was implemented, how it works technically, what is covered f
 
 - Status: Active
 - Owner: Auth/Frontend
-- Last updated: 2026-04-21
+- Last updated: 2026-06-11
 - Canonical: Yes
 
 ---
@@ -379,43 +383,38 @@ Team register: what was implemented, how it works technically, what is covered f
 
 | Symptom | Root cause |
 |--------|------------|
-| After changing the name in the profile (e.g. **David** with correct casing or **JoseLuis**), **logging out and back in** showed something like **david** in lowercase. | With **Supabase**, the name shown at login comes from `auth.users` → **`user_metadata.full_name`**. If it is missing, the client falls back to the **email local-part** (often lowercase). |
-| Saving from the profile screen **did not persist** across sessions. | `updateUser` in the store only updated **Zustand** (in-memory / locally persisted state), **without** writing to Supabase Auth. |
+| After changing the name in the profile (e.g. **David** with correct casing or **JoseLuis**), **logging out and back in** showed a stale or lowercased name. | The displayed name comes from the persisted profile. If a name was never written back to the `users` table, the UI fell back to whatever was cached locally (often the email local-part). |
+| Saving from the profile screen **did not persist** across sessions. | `updateUser` in the store only updated **Zustand** (in-memory / locally persisted state), **without** writing the change back to the API. |
 
 ---
 
 ## 2. What is implemented (done)
 
-### 2.1 Persistence in Supabase Auth
+### 2.1 Persistence via the API
 
-- **File:** `src/store/authStore.ts` → `updateUser` action.
-- **Behavior:** When Supabase is active (`isSupabaseConfigured`), the edited user is the **current** user (`isSelf`), and the patch includes profile fields (`name`, `jobTitle`, `phone`, `avatar`), the app calls:
+- **File:** `src/store/authStore.ts` → `updateUser` action (called by `updateProfile` for the current user).
+- **Behavior:** The store optimistically updates the `users` array and `currentUser` in Zustand. When the edited id is the **current** user, it then calls `PATCH /auth/me` with the changed profile fields (`name`, `jobTitle`, `phone`, `avatar`).
+- **Backend:** `api/src/routes/auth.ts` → `PATCH /auth/me` validates the body (`name`, `jobTitle`, `phone`, `avatarUrl`) and `UPDATE`s the matching columns on the `users` row for the authenticated `sub`, returning the refreshed user.
 
-  `supabase.auth.updateUser({ data: { ... } })`
-
-- **Mapping to Supabase metadata (project convention):**
-
-  | App field (`AuthUser`) | `user_metadata` key |
-  |------------------------|---------------------|
-  | `name` | `full_name` |
+  | App field (`AuthUser`) | `users` column |
+  |------------------------|----------------|
+  | `name` | `name` |
   | `jobTitle` | `job_title` |
   | `phone` | `phone` |
   | `avatar` | `avatar_url` |
 
-- After a successful response, the store updates `users` and `currentUser` from Supabase (preferring server metadata).
-- On network or Auth errors, **`toast.error`** shows the returned message.
-- **`fetchOrgUsers(organizationId)`** runs (non-blocking) to align the in-memory team list.
+- On network or API errors, **`toast.error`** shows the returned message (and the error is logged via `devConsole`).
 
 ### 2.2 Reading the name at login
 
-- **File:** `src/store/authStore.ts` → `initSupabaseAuth` / `onAuthStateChange` → `setCurrentUser`.
-- **Name priority:** `user_metadata.full_name` → email local-part → `"User"`.
+- **File:** `src/store/authStore.ts` → `login` / `register` (from the `/auth/login` · `/auth/register` response) and session restore via `initAuth()` → `GET /auth/me` → `setCurrentUser`.
+- **Source of truth:** `currentUser.name` is the `users.name` column returned by the API. There is no email-local-part substitution on the read path.
 
-With `full_name` saved correctly, the header, account menu, and anything that reads `currentUser.name` show the **persisted** name.
+With the name saved correctly in `users`, the header, account menu, and anything that reads `currentUser.name` show the **persisted** name.
 
-### 2.3 Demo mode (no Supabase)
+### 2.3 Identity flows through the JWT, not a third-party auth provider
 
-- If Supabase is **not** configured, the profile still updates local state only (`applyLocal()`), consistent with mock/seed mode.
+- The authenticated identity comes from the n0CRM session JWT (HttpOnly cookie); the `sub` claim scopes the `users` row that `/auth/me` reads and `PATCH /auth/me` writes. There is no Supabase Auth involved.
 
 ---
 
@@ -423,10 +422,10 @@ With `full_name` saved correctly, the header, account menu, and anything that re
 
 | Area | Status | Notes |
 |------|--------|--------|
-| Change name / job title / phone / avatar in **My profile** (current user) with Supabase | **Yes** | Persists in Auth; new session respects `full_name` and other mapped keys. |
-| See name in header / account switcher after login | **Yes** | Depends on `user_metadata` as above. |
-| Team list (`fetchOrgUsers`) after saving profile | **Improved** | Explicit refresh after save; cached names may still merge with existing data. |
-| Edit **another** user (admin) via `updateUser` in production | **Partial / out of scope here** | Only the **signed-in** user can call `supabase.auth.updateUser` from the client. Changing another member’s data requires an **Edge Function**, **service role**, or the Supabase Dashboard (outside this change). |
+| Change name / job title / phone / avatar in **My profile** (current user) | **Yes** | Persists to the `users` row via `PATCH /auth/me`; a new session reads the saved values from `GET /auth/me`. |
+| See name in header / account switcher after login | **Yes** | Reads `currentUser.name`, sourced from `users.name`. |
+| Team list (`fetchOrgUsers`) after saving profile | **Yes** | Pulls members from `GET /orgs/me/members`; cached names may still merge with existing data until refreshed. |
+| Edit **another** user (admin) via the profile `updateUser` path | **Out of scope here** | The `PATCH /auth/me` sync only runs for the signed-in user. Member administration (role / active status) is a separate API surface (`PATCH /orgs/me/members/:id/...`). |
 
 ---
 
@@ -437,20 +436,20 @@ These items describe the gap until the product is fully consistent **everywhere*
 | Topic | Description | Suggested priority |
 |-------|-------------|-------------------|
 | **Historical values in CRM data** | Contacts, deals, activities, notifications, saved views, etc. may store **plain-text** old names (e.g. `assigned_to` as a label, or seeds like `"David Muñoz"`). Changing the profile **does not** rewrite those rows automatically. | Medium: propagation or one-off migration on rename. |
-| **Identifier vs label** | Where the **DB schema already uses UUID** (`assigned_to` → `auth.users`), the UI should always resolve **display name from current users**, not rely on stale strings. Where legacy fixtures still use plain strings, labels can drift. | High–medium term: single source of truth (user id + resolution in UI). |
+| **Identifier vs label** | Where the **DB schema already uses UUID** (`assigned_to` → `users`), the UI should always resolve **display name from current users**, not rely on stale strings. Where legacy fixtures still use plain strings, labels can drift. | High–medium term: single source of truth (user id + resolution in UI). |
 | **Saved filters keyed by name** | If a filter stored the exact previous name string, it may stop matching after a rename. | Low/medium depending on usage. |
 | **Real avatar (file upload)** | If the UI only stores a URL in metadata but there is no **Storage upload** flow, the avatar may stay empty or manual. | Per profile roadmap. |
-| **Error message i18n** | The `toast` may show a technical English message from Supabase. | Product polish. |
+| **Error message i18n** | The `toast` may show a technical English message returned by the API. | Product polish. |
 
 ---
 
 ## 5. Manual validation (checklist)
 
-1. With Supabase enabled, open **Profile**, set the name to something clearly different from the email local-part (e.g. `David` with capital D).
-2. Save and confirm the UI shows the new name without a full reload (local state).
+1. Open **Profile**, set the name to something clearly different from the email local-part (e.g. `David` with capital D).
+2. Save and confirm the UI shows the new name without a full reload (optimistic local state).
 3. **Log out** and **log back in**.
 4. Check header / menu: the **saved** name should appear, **not** the lowercase email local-part.
-5. (Optional) In Supabase Dashboard → Authentication → user → **User Metadata**: confirm `full_name` (and other keys if applicable).
+5. (Optional) Confirm the `users` row persisted: re-call `GET /auth/me` (e.g. on refresh) and verify the returned `name` matches.
 
 ---
 
@@ -458,10 +457,11 @@ These items describe the gap until the product is fully consistent **everywhere*
 
 | What | Where |
 |------|--------|
-| Profile save + `updateUser` + Supabase | `src/store/authStore.ts` |
+| Profile save + `updateUser` → `PATCH /auth/me` | `src/store/authStore.ts` |
 | Profile screen | `src/pages/UserProfile.tsx` |
-| Session bootstrap and `full_name` read | `src/store/authStore.ts` (`initSupabaseAuth`) |
-| Initial signup with `full_name` | `src/pages/Register.tsx` (`user_metadata` on signUp) |
+| Session bootstrap and name read (`GET /auth/me`) | `src/store/authStore.ts` (`initAuth`) |
+| Profile update endpoint | `api/src/routes/auth.ts` (`PATCH /auth/me`) |
+| Initial signup (name on register) | `src/pages/Register.tsx` → `POST /auth/register` |
 
 ---
 
@@ -469,10 +469,11 @@ These items describe the gap until the product is fully consistent **everywhere*
 
 | Date | Change |
 |------|--------|
+| 2026-06-11 | Navigation persistence and profile display-name sections rewritten for the post-Supabase API: navigation prefs via `GET /preferences/me` + `PATCH /preferences/me/navigation` (`user_preferences` table); profile via `PATCH /auth/me`; identity from the session JWT + `users` table. Removed Supabase Auth / `user_metadata` / RLS / Edge Function references. |
 | 2026-04-21 | EmptyState: canonical path `src/components/ui/EmptyState.tsx`, re-export note, body-copy guidance; document-control dates refreshed. |
-| 2026-04-13 | Initial register: profile persistence via `supabase.auth.updateUser`; scope and pending items documented. |
+| 2026-04-13 | Initial register: profile persistence documented; scope and pending items documented. |
 | 2026-04-13 | Full document translated to English. |
 
 ---
 
-*Technical content last aligned with `authStore` (`updateUser` action). If the profile flow changes, update sections 2 and 6.*
+*Technical content last aligned with `authStore` (`updateUser` action) and `api/src/routes/auth.ts` (`PATCH /auth/me`) on 2026-06-11. If the profile flow changes, update sections 2 and 6.*

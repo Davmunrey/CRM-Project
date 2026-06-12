@@ -69,12 +69,15 @@ flowchart LR
 
 - **AI assistant (shipped):** multi-provider AI in `api/src/services/ai/*` (Gemini free default, OpenAI, Anthropic) behind `/ai` routes. Frontend: a global AI Assistant drawer + floating launcher, `AiInsight` buttons (next-best-action on Contact/Deal detail; summarize + draft reply in the Inbox), `aiStore`, full i18n across all 6 locales. Gated by provider keys.
 - **AI governance (shipped):** per-org kill switch (`organizations.settings.ai.enabled=false`), monthly output-token spend cap (`AI_MONTHLY_TOKEN_CAP` env + per-org `settings.ai.monthlyTokenCap`; returns 429 when exceeded), and retention purge of `ai_*` data (`AI_MESSAGE_RETENTION_DAYS`, `0` = keep).
-- **Observability (browser):** Sentry initializes when `VITE_SENTRY_DSN` is set; UI error boundary captures exceptions (`src/lib/sentry.ts`). Backend error tracking / alerting / SLOs are still roadmap (see Enterprise gaps).
-- **MFA:** TOTP UI exists in Settings → Security (`src/components/settings/SettingsMfaPanel.tsx`); backend MFA enforcement via `api/` is **roadmap** (not implemented).
+- **Observability (browser):** Sentry initializes when `VITE_SENTRY_DSN` is set; UI error boundary captures exceptions (`src/lib/sentry.ts`). Backend observability is shipped — `x-request-id` correlation, `captureException` / optional `SENTRY_DSN`, `/health` · `/health/ready` · `/health/live`, and `/metrics` + Prometheus/Grafana (see Production hardening and the Enterprise readiness section).
+- **MFA (shipped):** TOTP (RFC 6238) end-to-end. Backend routes `POST /auth/mfa/setup·enable·disable` (AES-256-GCM secret at rest; migration `019_mfa.sql`); enrollment UI in Settings → Security (`src/components/settings/SettingsMfaPanel.tsx`); login prompts for a code when MFA is enabled (`src/pages/Login.tsx`).
+- **SSO / SCIM (shipped):** OIDC SSO (`/auth/sso` status·start·callback; PKCE S256, JWKS RS256 verify, JIT provisioning, `OIDC_DEFAULT_ROLE`; the SSO button in `src/pages/Login.tsx` is gated by `/auth/sso/status`). SCIM 2.0 user provisioning (`/scim/v2` Users CRUD + ServiceProviderConfig; Bearer api-key scoped `scim`; soft-deprovision + session revoke, last-active-owner protected, audit-logged). Setup: [`docs/sso-and-scim.md`](../../docs/sso-and-scim.md). SAML federation remains roadmap.
+- **GDPR data-subject requests (shipped):** `/privacy` routes — full org export (Art. 20), single-subject export (Art. 15), and subject erasure/anonymize (Art. 17); owner/admin gated (`api/src/routes/dataPrivacy.ts`).
+- **Security-event audit log (shipped):** `security_events` table + `recordSecurityEvent` (migration `020_security_events.sql`) records auth/SSO/admin-sensitive events.
 - **Soft delete + retention:** core tables carry `deleted_at`; retention/purge work (including AI data) runs in the `api/` background processing path.
 - **Outbound webhooks:** stored in `webhook_subscriptions` table; deliveries are outboxed in `webhook_events` with max retry limit before reaching terminal state.
-- **Public API versioning:** REST public API (`/public/v1/`) with API key auth; see `api/README.md` for endpoints and `docs/public-api-phase1.md` for design.
-- **Org roles:** custom roles logic can be extended via `api/src/routes/` — RLS is applied at the SQL migration layer.
+- **Public API + key scopes (shipped):** lead-capture endpoint `POST /api/public/v1/leads`, authenticated by an `x-api-key: <key>` header (key prefix `n0crm_`, minted in Settings → Integrations) and requiring the `leads:write` scope (`403 {error:"Insufficient API key scope", required:"leads:write"}` otherwise). The Settings → Integrations UI shows per-key scopes (`leads:write`, `scim`) via a scope selector. See `api/README.md` and `docs/public-api-phase1.md`.
+- **Org roles / RBAC (server-side enforced):** roles `owner / admin / manager / sales_rep / viewer` (`api/src/services/permissions.ts`). `requirePermission` / `requireCrudPermission` (`api/src/middleware/rbac.ts`) gate CRM CRUD and member / API-key / webhook management server-side — the granular permission set is enforced in the API, not just surfaced in the UI. Member lifecycle: `PATCH /orgs/me/members/:userId/role·status` with safety rules (e.g. last-active-owner protection).
 - **Email:** SMTP credentials encrypted at rest (AES-256-GCM); Resend integration optional. All sends routed through `api/` for security.
 
 <a id="gaps-not-fully-owned-by-a-single-master-today"></a>
@@ -209,9 +212,11 @@ Major infrastructure and database layer hardening for 500-tenant scale:
 ### New env vars (API `.env`)
 `GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `AI_DEFAULT_PROVIDER`, `AI_GEMINI_MODEL` / `AI_OPENAI_MODEL` / `AI_ANTHROPIC_MODEL`, `AI_AGENT_MAX_STEPS`, `AI_MONTHLY_TOKEN_CAP`, `AI_MESSAGE_RETENTION_DAYS`, `TRUST_PROXY` (nginx = 1; privateprompt edge + nginx = 2), `ALLOW_OPEN_REGISTRATION`, `REGISTRATION_ALLOWED_DOMAINS`. Frontend env is just `VITE_API_URL` (+ `VITE_APP_CHANNEL`); no Supabase env remains.
 
-### Enterprise gaps (still ROADMAP — do not claim as shipped)
-SSO/SAML/OIDC, SCIM, MFA/2FA enforcement, **server-side** RBAC enforcement (today RBAC is enforced inline by role; the granular permission UI is frontend-only), HA/DR (single Postgres/Redis), GDPR data-subject export/erasure (DSAR), full backend observability (error tracking / alerting / SLOs), and a real job queue (BullMQ declared but unused). See [`master-security-compliance.md`](./master-security-compliance.md).
+### Enterprise readiness — shipped vs still ROADMAP
+**Shipped (do not list as roadmap):** MFA (TOTP), OIDC SSO, SCIM 2.0 provisioning, **server-side** RBAC enforcement (`requirePermission` / `requireCrudPermission` across CRM CRUD + member / API-key / webhook management; roles owner/admin/manager/sales_rep/viewer) with member lifecycle controls, GDPR data-subject export/erasure (DSAR — Art. 15/17/20), security-event audit log, API-key scopes, and backend observability (x-request-id correlation, `captureException` / optional `SENTRY_DSN`, `/health` · `/health/ready` · `/health/live`, `/metrics` + Prometheus/Grafana).
+
+**Still ROADMAP (do not claim as shipped):** SAML federation; HA/DR automated failover (single Postgres/Redis today — restore runbook at [`docs/disaster-recovery.md`](../../docs/disaster-recovery.md)); broader SSO provider testing/diagnostics; field-level security; forecasting v2; AI v2; industry pipeline templates; formal certifications (SOC 2 / ISO audits); and a real background job queue (BullMQ present but unused). See [`master-security-compliance.md`](./master-security-compliance.md).
 
 ---
 
-*Last updated (git): **2026-06-10***
+*Last updated (git): **2026-06-11***

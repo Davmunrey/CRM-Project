@@ -1,362 +1,151 @@
-# Lead management & scoring (master)
+# 🎯 Lead management & scoring (master)
 
-> Consolidated **2026-04-15**. Lead score maintenance backend, ops dashboard, incident runbook, and data retention for telemetry.
+> Consolidated **2026-06-11**. The real lead backend — authenticated CRUD plus the public lead-capture endpoint — lead scoring, the SPA delete contract, and data-retention guidance for n0CRM.
 
-**Replaces:** lead-score-maintenance-backend, lead-maintenance-ops-dashboard, lead-maintenance-runbook, data-retention-runbook.
-
-**Public lead capture:** unauthenticated website forms using opaque tokens (`lct_…`) and the `lead-capture` Edge Function are documented in [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md) (spam honeypot, duplicate email behavior).
+**Public lead capture:** the unauthenticated/website-form path is the API-key-protected endpoint `POST /api/public/v1/leads`, documented below and in [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md).
 
 ## Table of contents
 
-- [Lead score maintenance — backend contract](#lead-score-maintenance-backend)
-- [Lead maintenance — Ops dashboard](#lead-maintenance-ops-dashboard)
-- [Lead maintenance — runbook](#lead-maintenance-runbook)
-- [Data retention runbook](#data-retention-runbook)
+- [Lead backend — CRUD contract](#lead-backend-crud)
+- [Lead events & scoring](#lead-events-scoring)
+- [Public lead capture](#public-lead-capture)
+- [SPA — lead row delete (UI)](#spa-lead-delete)
+- [Data retention guidance](#data-retention)
+- [Backlog / Proposed (not built)](#backlog-proposed)
 
 ---
 
 
-<a id="lead-score-maintenance-backend"></a>
-## Lead score maintenance — backend contract
+<a id="lead-backend-crud"></a>
+## 🗂️ Lead backend — CRUD contract
 
-This document defines how backend jobs can execute lead score maintenance without requiring an end-user session.
+Leads are a first-class CRM entity backed by the `leads` table (`api/migrations/001_schema.sql`). All lead routes live in `api/src/routes/leads.ts`, are registered under the `/leads` prefix, and require a user JWT (`app.authenticate`). The whole router is gated by `requireCrudPermission('leads')` — server-side RBAC decides read/write per role (owner/admin/manager/sales_rep/viewer). Every query is scoped by `organization_id` taken from the caller's token.
 
-## Document Control
+### Document Control
 
 - Status: Active
 - Owner: Backend
-- Last updated: 2026-05-18
+- Last updated: 2026-06-11
 - Canonical: Yes
 
-## Backend route
+### Endpoints
 
-- Route name: `lead-score-maintenance`
-- Path: `api/src/routes/leads.ts` (or similar backend route file)
+The frontend talks to the API under the `/api` base (`frontend/src/lib/api.ts`), so these resolve to `/api/leads/*` in the browser.
 
-## Auth modes
+| Method & path | Purpose |
+|---------------|---------|
+| `GET /leads` | List leads for the caller's org, ordered by `score DESC, created_at DESC`. |
+| `POST /leads` | Create a lead (validated by Zod). Returns `201` with the row. |
+| `PATCH /leads/:id` | Partial update; `COALESCE`-based so omitted fields are preserved. `404` if not in org. |
+| `DELETE /leads/:id` | Delete a lead scoped to the org. Returns `204`. |
+| `GET /leads/:id/events` | List a lead's activity events. |
+| `POST /leads/:id/events` | Append an activity event (`eventType` + `metadata`). |
+| `GET /leads/:id/score-snapshots` | Up to 30 score snapshots, oldest first. |
+| `POST /leads/:id/score-snapshots` | Persist a `{ score, reason }` snapshot. |
+| `GET /leads/scoring-rules` | List the org's scoring rules. |
+| `PATCH /leads/scoring-rules/:id` | Toggle `isEnabled` / adjust `points` on a rule. |
 
-- User mode (existing behavior):
-  - Requires `Authorization: Bearer <user_jwt>`
-  - Recomputes only the caller's active organization
-- System mode (scheduler-ready):
-  - Requires header `x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>`
-  - Secret value must match the backend env var `LEAD_MAINTENANCE_SECRET`
-  - Does not require user JWT
+### Lead fields
 
-## Request Body (System mode)
+Validated server-side (`leadBody` in `api/src/routes/leads.ts`):
 
-Use exactly one of:
+- `firstName`, `lastName`, `email` — required (`email` must be a valid address).
+- `phone`, `companyName`, `jobTitle`, `assignedTo`, `ownerUserId`, `notes`, `lastEngagedAt` — optional.
+- `source` — defaults to `website`.
+- `status` — one of `open | contacted | qualified | disqualified | converted` (default `open`).
+- `lifecycleStage` — one of `lead | mql | sql | opportunity | customer | evangelist` (default `lead`).
+- `score` — integer `0–100` (default `0`).
+- `tags` — string array (default `[]`).
+- `convertedContactId`, `convertedCompanyId`, `convertedDealId` — set when a lead is converted.
 
-- Single tenant run:
-  - `{ "organizationId": "<uuid>" }`
-- Global run (all tenants):
-  - `{ "runAllOrgs": true }`
+The `leads` table enforces a unique `(organization_id, lower(email))` constraint, so each org can hold one lead per email address.
 
-## Response
+---
 
-- Success: `{ "success": true, "processed": <number> }`
-- `processed` is the number of leads recomputed in this execution.
-- Includes `runId` when telemetry is persisted.
 
-## Health / Execution Status
+<a id="lead-events-scoring"></a>
+## 📈 Lead events & scoring
 
-- Endpoint: `POST /leads/maintenance?mode=health` (on your API server)
-- Auth: requires `x-maintenance-secret` header (system mode).
-- Optional filter:
-  - query `organizationId=<uuid>` or body `{ "organizationId": "<uuid>" }`
-- Returns latest execution rows from `public.lead_score_maintenance_runs`.
+Lead scoring is **computed in the SPA** and persisted back to the API as snapshots — there is no scheduled backend scoring job. The relevant pieces:
+
+- **Scoring rules** (`lead_scoring_rules`) — per-org rows of `{ key, points, is_enabled }`. Managed via `GET/PATCH /leads/scoring-rules`.
+- **Lead events** (`lead_events`) — activity signals (e.g. `email_open`, `email_reply`, `meeting_booked`, `form_submitted`). Appended via `POST /leads/:id/events`.
+- **Score snapshots** (`lead_score_snapshots`) — a `{ score, reason }` history row, where `reason` is a JSON blob describing the computation (computed vs persisted score, confidence, factors). Read for the score-history sparkline and confidence insight.
+
+The scoring math itself runs in `frontend/src/store/leadsStore.ts`:
+
+- `recomputeLeadScore` weights events by type and applies a **recency decay** (≤7d = 1.0, ≤30d = 0.7, ≤90d = 0.4, older = 0.2), clamps to `0–100`, and applies a **confidence gate** that demotes a "hot" lead (≥70) with no recent signals.
+- `addLeadEvent` ingests an event and recomputes unless `skipRecompute` is set.
+- `runScheduledScoreMaintenance` is a **client-side** convenience pass over the loaded leads. It uses a `localStorage` checkpoint (`crm_lead_decay_checkpoint_<orgId>`) with a 6-hour cooldown, recomputes each lead with decay allowed, and emits in-app notifications to admins/managers when a lead's confidence drops. It is **not** a backend cron, has no system-mode secret, and persists nothing beyond the normal snapshot writes.
+
+> Note: server-side recompute on a schedule is a [proposed backlog item](#backlog-proposed), not a shipped feature.
+
+---
+
+
+<a id="public-lead-capture"></a>
+## 🌐 Public lead capture
+
+External website forms create leads through the public API, not through the authenticated CRUD routes.
+
+- **Endpoint:** `POST /api/public/v1/leads` (`api/src/routes/publicApi.ts`, registered under prefix `/public/v1`).
+- **Auth:** header `x-api-key: <key>`. Keys are minted in **Settings → Integrations** (prefix `n0crm_`) and stored as a SHA-256 hash; the lookup rejects revoked or expired keys.
+- **Scope:** the key must carry the `leads:write` scope. Without it the endpoint returns `403 { "error": "Insufficient API key scope", "required": "leads:write" }`. (Legacy keys with no scopes set are treated as full access for back-compat.)
+- **Rate limit:** 20 requests/minute.
+- **Body:** `{ email, firstName?, lastName? }` (snake_case `first_name` / `last_name` also accepted). `email` is required and validated.
+- **Behavior:** upserts into the `contacts` table as a `lead`-type contact, keyed on `(email, organization_id)` — a repeated email simply bumps `updated_at`. Returns `201` with the contact row.
 
 Example:
 
 ```bash
-curl -X POST "http://localhost:3000/leads/maintenance?mode=health&organizationId=<org-id>" \
+curl -X POST "https://crm.example.com/api/public/v1/leads" \
   -H "Content-Type: application/json" \
-  -H "x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>" \
-  -d '{}'
+  -H "x-api-key: n0crm_xxxxxxxxxxxxxxxx" \
+  -d '{ "email": "prospect@acme.test", "firstName": "Pat", "lastName": "Lee" }'
 ```
 
-## SLA Guardrails
-
-- Endpoint: `POST /leads/maintenance?mode=sla`
-- Auth: requires `x-maintenance-secret` header (system mode).
-- Parameters (query or body):
-  - `thresholdHours` (default `8`): max age since last successful run per tenant
-  - `cooldownHours` (default `6`): notification cooldown to avoid alert spam
-  - `notifyManagers` (default `true`): send notification to `admin` and `manager` users in stale tenants
-- Returns stale tenants and number of alerts emitted.
-
-Example:
-
-```bash
-curl -X POST "http://localhost:3000/leads/maintenance?mode=sla" \
-  -H "Content-Type: application/json" \
-  -H "x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>" \
-  -d '{ "thresholdHours": 8, "cooldownHours": 6, "notifyManagers": true }'
-```
-
-## Example (Single Tenant)
-
-```bash
-curl -X POST "http://localhost:3000/leads/maintenance" \
-  -H "Content-Type: application/json" \
-  -H "x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>" \
-  -d '{ "organizationId": "00000000-0000-0000-0000-000000000000" }'
-```
-
-## Example (All Tenants)
-
-```bash
-curl -X POST "http://localhost:3000/leads/maintenance" \
-  -H "Content-Type: application/json" \
-  -H "x-maintenance-secret: <LEAD_MAINTENANCE_SECRET>" \
-  -d '{ "runAllOrgs": true }'
-```
-
-## What the route does
-
-- Recomputes lead scores with recency decay and confidence gate
-- Writes snapshots to `lead_score_snapshots`
-- Sends manager/admin notifications when score drops significantly
-- Persists job telemetry in `lead_score_maintenance_runs` with status, counts, and errors
-
-## Operations
-
-- Incident and on-call procedure: [#lead-maintenance-runbook](#lead-maintenance-runbook)
+This is a **write-only capture** endpoint. It is not a Bearer-token API, not a read API, and not backed by any Supabase Edge Function.
 
 ---
 
 
-<a id="lead-maintenance-ops-dashboard"></a>
-## Lead maintenance — Ops dashboard
+<a id="spa-lead-delete"></a>
+## 🗑️ SPA — lead row delete (UI)
 
-This document describes the operational dashboard added to `Settings` for lead score maintenance observability.
+The **Leads** page (`frontend/src/pages/Leads.tsx`) deletes through **`deleteLead`** in `frontend/src/store/leadsStore.ts`:
 
-## Document Control
-
-- Status: Active
-- Owner: Ops/Frontend
-- Last updated: 2026-05-18
-- Canonical: Yes
-
-## Goal
-
-Provide tenant-scoped operational visibility without requiring direct access to Supabase Dashboard.
-
-## UI Location
-
-- Page: `src/pages/Settings.tsx`
-- Section: **Lead Maintenance Ops**
-
-## What it shows
-
-- Last successful maintenance run age
-- SLA state (healthy/breached against 8h window)
-- Recent error count
-- Recent run list from `lead_score_maintenance_runs`:
-  - mode (`single_org` / `all_orgs`)
-  - status (`success` / `running` / `error`)
-  - processed lead count
-  - error message when available
-
-## Filters
-
-- Status filter buttons:
-  - all
-  - success
-  - running
-  - error
-
-## Data source
-
-- Table: `public.lead_score_maintenance_runs`
-- Query shape in UI:
-  - ordered by `started_at DESC`
-  - limited to latest 15 records
-- RLS ensures users only see records for their tenant.
-
-## i18n support
-
-The panel uses translation keys under `settings.*` and is fully wired for:
-
-- `en`
-- `es`
-- `pt`
-- `fr` / `de` / `it` (inherits base keys through spread from `en`)
-
-## Related backend pieces
-
-- Backend route:
-  - `api/src/routes/leads.ts` (lead score maintenance endpoint)
-- Telemetry table migration:
-  - `api/migrations/20260413152000_lead_score_maintenance_runs.sql`
-- Backend contract: [#lead-score-maintenance-backend](#lead-score-maintenance-backend)
+- The store **optimistically removes** the row from state, then `await`s `DELETE /api/leads/:id`.
+- On **success**, `deleteLead` returns `true` and the page shows a success toast (`t.common.delete`).
+- On **error** (network failure, RBAC denial, etc.), it shows `leads.deleteFailed` (i18n) plus the server message, then **refetches** `/leads` so the UI reconciles with the database — any row that "came back" was never deleted server-side. It returns `false` and the success toast is suppressed.
 
 ---
 
 
-<a id="lead-maintenance-runbook"></a>
-## Lead maintenance — runbook
+<a id="data-retention"></a>
+## ⏳ Data retention guidance
 
-This runbook is for on-call and operations teams maintaining lead score maintenance in production.
+Defines **how long** categories of lead/CRM data are kept and **how to enforce** reduction or deletion in a self-hosted n0CRM (PostgreSQL 16) deployment. Tune periods to your legal, contractual, and insurance requirements. Not legal advice.
 
-## Document Control
-
-- Status: Active
-- Owner: Ops
-- Last updated: 2026-05-18
-- Canonical: Yes
-
-## Scope
-
-- Backend route: `lead-score-maintenance` in `api/src/routes/leads.ts`
-- Telemetry table: `public.lead_score_maintenance_runs`
-- Scripts:
-  - `npm run maintenance:lead:org`
-  - `npm run maintenance:lead:all`
-  - `npm run maintenance:lead:health`
-  - `npm run maintenance:lead:sla`
-
-## Required Environment
-
-Set these variables in the scheduler/job environment:
-
-- `SUPABASE_FUNCTIONS_URL` (example: `https://<project-ref>.supabase.co/functions/v1`)
-- `SUPABASE_ANON_KEY`
-- `LEAD_MAINTENANCE_SECRET`
-- `LEAD_MAINTENANCE_ORG_ID` (only for single-tenant runs)
-- Optional SLA tuning:
-  - `LEAD_MAINTENANCE_SLA_HOURS` (default `8`)
-  - `LEAD_MAINTENANCE_SLA_COOLDOWN_HOURS` (default `6`)
-  - `LEAD_MAINTENANCE_SLA_NOTIFY_MANAGERS` (default `true`)
-
-## Normal Schedule
-
-Recommended:
-
-- Maintenance run (all tenants): every `30 minutes`
-- SLA guardrail check: every `30-60 minutes`
-- Health snapshot export/monitoring: every `15-30 minutes`
-
-## Health Check Procedure
-
-1. Run:
-   - `npm run maintenance:lead:health`
-2. Verify response:
-   - `success: true`
-   - recent runs show `status: success`
-   - `processed` is non-zero for orgs with active leads
-3. If needed, narrow by one tenant:
-   - set `LEAD_MAINTENANCE_ORG_ID`
-   - rerun health command
-
-## Incident Types and Actions
-
-### 1) No recent successful runs
-
-Symptoms:
-
-- SLA breach alert appears
-- health output has only `running`/`error` or stale success timestamps
-
-Actions:
-
-1. Run immediate global maintenance:
-   - `npm run maintenance:lead:all`
-2. Re-check health:
-   - `npm run maintenance:lead:health`
-3. Run SLA check:
-   - `npm run maintenance:lead:sla`
-4. If still failing, inspect latest `error_message` and continue with section "Execution failures".
-
-### 2) Execution failures (`status=error`)
-
-Symptoms:
-
-- New rows in telemetry table with `status: error`
-- `error_message` populated
-
-Actions:
-
-1. Capture error text from:
-   - Settings → Lead Maintenance Ops
-   - or `npm run maintenance:lead:health`
-2. Validate environment variables in scheduler:
-   - wrong/missing `LEAD_MAINTENANCE_SECRET`
-   - wrong `SUPABASE_FUNCTIONS_URL`
-3. Validate Supabase function deployment:
-   - redeploy function if needed
-4. Trigger single-tenant run for validation:
-   - set `LEAD_MAINTENANCE_ORG_ID`
-   - `npm run maintenance:lead:org`
-5. Confirm recovery with health + SLA checks.
-
-### 3) High stale tenant count in SLA mode
-
-Symptoms:
-
-- `maintenance:lead:sla` returns high `staleCount`
-
-Actions:
-
-1. Execute global run:
-   - `npm run maintenance:lead:all`
-2. Re-run SLA check.
-3. If stale remains high:
-   - confirm scheduler frequency and runtime stability
-   - temporarily reduce `LEAD_MAINTENANCE_SLA_HOURS` only if justified for detection
-   - review alert cooldown settings (`LEAD_MAINTENANCE_SLA_COOLDOWN_HOURS`).
-
-## Recovery Validation Checklist
-
-- [ ] `maintenance:lead:all` completes with `success: true`
-- [ ] `maintenance:lead:health` shows recent `success` rows
-- [ ] `maintenance:lead:sla` returns expected `staleCount` trend
-- [ ] Settings Ops panel shows healthy SLA for active tenants
-- [ ] No new burst of `status=error` rows in telemetry
-
-## Escalation Guidance
-
-Escalate to backend team when:
-
-- Repeated `status=error` persists after environment validation
-- Function works for some tenants but fails deterministically for specific tenants
-- `processed` counts collapse unexpectedly while lead volume is stable
-- Table/query permission issues appear after RLS or migration changes
-
-## Related Documentation
-
-- Contract/API: [#lead-score-maintenance-backend](#lead-score-maintenance-backend)
-- Settings panel behavior: [#lead-maintenance-ops-dashboard](#lead-maintenance-ops-dashboard)
-- Implementation timeline: [`master-implementation-history` — Part B](./master-implementation-history.md#implementation-history) (§14) + [Part A](./master-implementation-history.md#implementation-history-sections-01-12)
-
----
-
-
-<a id="data-retention-runbook"></a>
-## Data retention runbook
-
-Defines **how long** categories of data are kept and **how to enforce** reduction or deletion in a n0CRM + Supabase deployment. Tune periods to your legal, contractual, and insurance requirements. Not legal advice.
-
-**Doc hub:** [`README`](./README.md).
-
-## Categories
+### Categories
 
 | Category | Typical location | Default engineering suggestion | Owner |
 |----------|------------------|-------------------------------|--------|
-| **Auth sessions** | Supabase Auth / client storage | Managed by Supabase product defaults + your session policy | Security |
-| **Application audit trail** | Postgres `audit_log` (if enabled) | 90 days–24 months per risk appetite | Product/Ops |
-| **Lead maintenance telemetry** | `lead_score_maintenance_runs` (and related) | 30–180 days operational; archive aggregates longer if needed | Ops |
-| **Email content / metadata** | App tables + provider (Resend/Gmail) | Align with mail provider retention; minimize body storage | Product |
-| **Edge function logs** | Supabase / platform logging | Follow platform retention; export incidents to ticket | Ops |
-| **Backups / PITR** | Supabase project | Document restore window; deletion lag vs primary DB | Ops |
+| **Auth sessions / refresh tokens** | Postgres + client storage | Match your session/refresh-token policy; revoke on deprovision | Security |
+| **Lead records** | Postgres `leads` | Per pipeline/legal needs; convert or purge stale `disqualified` leads | Product/Ops |
+| **Lead activity events** | Postgres `lead_events` | 90 days–24 months per risk appetite; aggregate older signals if needed | Product/Ops |
+| **Lead score snapshots** | Postgres `lead_score_snapshots` | 30–180 days; the SPA reads at most the latest 30 per lead | Ops |
+| **Security-event audit log** | Postgres `security_events` (migration 020) | 90 days–24 months per risk appetite | Security |
+| **AI conversation history** | Postgres (migration 018) | Purged by `AI_MESSAGE_RETENTION_DAYS` | Product |
+| **Email content / metadata** | App tables + provider (Gmail / SMTP) | Align with mail provider retention; minimize body storage | Product |
+| **Backups / PITR** | Postgres backups (self-managed) | Document restore window; see [`docs/disaster-recovery.md`](../../docs/disaster-recovery.md) | Ops |
 
-## Annual review
+### Annual review
 
-- [ ] Table inventory updated (new features = new tables).
+- [ ] Table inventory updated (new features = new tables; cross-check [`docs/CODEBASE-MAP.md`](../../docs/CODEBASE-MAP.md)).
 - [ ] Retention periods still match privacy notice and customer DPAs.
 - [ ] Evidence: dated review note linked from [`master-security-compliance` — evidence index](./master-security-compliance.md#sell-ready-security-evidence-index).
 
-## Operational deletion
+### Operational deletion
 
 1. **Define scope**: tenant (`organization_id`) vs global housekeeping (e.g. stale invites).
 2. **Dry run**: `SELECT COUNT(*)` on affected predicates on a non-production clone when feasible.
@@ -364,18 +153,39 @@ Defines **how long** categories of data are kept and **how to enforce** reductio
 4. **Verify**: row counts zero or within expected residual (e.g. anonymized aggregates only).
 5. **Record**: ticket with SQL hash, time window, operator.
 
-## SPA — lead row delete (UI)
+### Subject-driven deletion (GDPR)
 
-The **Leads** inbox (`frontend/src/pages/Leads.tsx`) calls **`deleteLead`** in `frontend/src/store/leadsStore.ts`. As of May 2026:
+For data-subject requests, prefer the built-in privacy routes (`api/src/routes/dataPrivacy.ts`, owner/admin gated) over raw SQL:
 
-- The client **awaits** `DELETE` on `public.leads` when Supabase is configured.
-- On **error** (e.g. **RLS** denying delete, network failure), the store shows **`leads.deleteFailed`** (i18n) plus the server message, then **refetches** leads so the UI matches the database (rows that “came back” were never deleted server-side).
-- Success toasts run only when the delete completes without error.
+- `GET /api/privacy/export` — org export (Art. 20 portability).
+- `GET /api/privacy/subject/:contactId/export` — single-subject export (Art. 15).
+- `POST /api/privacy/subject/:contactId/erase` — erase/anonymize a subject's PII in place (Art. 17), audit-logged.
 
-Canonical narrative: [`master-implementation-history.md` §25](./master-implementation-history.md#implementation-history-section-25).
+---
+
+
+<a id="backlog-proposed"></a>
+## 🧪 Backlog / Proposed (not built)
+
+The items below are **ideas, not shipped code**. They are recorded here so the design intent isn't lost — none of these endpoints, tables, env vars, scripts, or dashboards exist today.
+
+- **Server-side scheduled score maintenance.** A backend job (or worker) that recomputes lead scores with recency decay across all tenants on a schedule, instead of relying on the SPA's `runScheduledScoreMaintenance` pass. Would need:
+  - a system-mode auth path (e.g. a maintenance secret) so a scheduler can invoke it without a user session;
+  - per-tenant and global ("all orgs") run modes;
+  - job telemetry (a runs table) capturing status, processed counts, and errors;
+  - SLA guardrails (alert when a tenant hasn't had a successful run within N hours) with notification cooldown.
+- **Lead-maintenance Ops dashboard.** A tenant-scoped Settings panel surfacing last-successful-run age, SLA state, and recent run/error history from the telemetry above.
+- **On-call runbook** for the scheduled job (health checks, incident actions, recovery validation).
+
+Until these are built, lead scoring remains a client-side computation persisted as snapshots, and there is no maintenance endpoint, no `lead_score_maintenance_runs` table, and no Ops dashboard.
+
+---
 
 ## References
 
-- [`master-security-compliance` — compliance mapping](./master-security-compliance.md#compliance-mapping) — GDPR-lite minimization mapping
+- [`master-security-compliance` — compliance mapping](./master-security-compliance.md#compliance-mapping) — GDPR minimization mapping
 - [`master-security-compliance` — DSAR](./master-security-compliance.md#dsar-playbook) — subject-driven deletion coordination
-- [`master-security-compliance` — Supabase checklist](./master-security-compliance.md#supabase-external-hardening-checklist) — backups and PITR evidence
+- [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md) — public capture endpoint detail
+- [`docs/CODEBASE-MAP.md`](../../docs/CODEBASE-MAP.md) — full structural map
+
+_Last updated: 2026-06-11._

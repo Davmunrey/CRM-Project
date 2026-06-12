@@ -37,9 +37,28 @@ Optional: `npm run build:analyze` — bundle stats in `dist/stats.html`.
 
 - Routes: `../api/src/routes/`
 - DB schema + migrations: `../api/migrations/`
-- New table → new migration file `00N_description.sql` (auto-applied by `npm run db:migrate`)
-- All routes authenticate via the HttpOnly `auth_token` cookie except `/auth/*` public endpoints and `GET /invitations/:token`
+- New table → new migration file `NNN_description.sql` (three-digit zero-padded, e.g. `018_ai.sql`, `019_mfa.sql`, `020_security_events.sql`); auto-applied by `npm run db:migrate`
+- Routes that do **not** require a JWT (no `authenticate` hook): `/auth/*`, `/auth/sso/*`, `/public/v1/*`, `/scim/v2/*`, `/webhooks/*`, and `GET /invitations/:token`. Every other route requires the HttpOnly `auth_token` cookie via `app.authenticate`.
 - AI routes live under `/ai` (status, summarize, draft-reply, next-best-action, search, agent)
+
+### Backend contributor conventions
+
+**RBAC — gating new routes:**
+
+- CRM resource routes (contacts, deals, companies, etc.) → add `requireCrudPermission('<resource>')` as a `preHandler` hook on the plugin. This derives the permission from the HTTP method (`read` / `write` / `delete`) automatically.
+- Sensitive one-off mutations (member role changes, API-key revocation, GDPR erasure, etc.) → use `requirePermission('<resource>:<action>')` directly on the route handler.
+- Both helpers live in `api/src/middleware/rbac.ts` and must run after `authenticate` so `req.user` is populated.
+
+**Audit logging — when to write:**
+
+- Org-scoped, actor-visible changes (member lifecycle, data export/erasure, settings changes) → `INSERT INTO audit_log` with `action`, `entity_type`, `entity_id`, `entity_name`, `details`, `user_id`, `organization_id`.
+- Security-relevant auth events (login, logout, password change, MFA toggle, impersonation) → call `recordSecurityEvent(req, type, opts)` from `api/src/services/securityEvents.ts`. This is fire-and-forget and must never throw or block the request.
+- Many actions need both: for example, MFA enable/disable writes to `audit_log` **and** calls `recordSecurityEvent`.
+
+**API-key scope enforcement:**
+
+- Routes reachable via `x-api-key` (i.e. under `/public/v1` or `/scim/v2`) must call `hasScope(req.apiKeyScopes, '<required-scope>')` before acting. Return `403 { error: 'Insufficient API key scope', required: '<scope>' }` on failure.
+- `hasScope` (exported from `api/src/routes/publicApi.ts`) is back-compat: a key with no scopes set is treated as full access so existing integrations keep working.
 
 ## AI Assistant
 
@@ -65,4 +84,4 @@ Docker image builds run from separate workflows (`build-production.yml` for the 
 
 ---
 
-*Last updated: 2026-06-10*
+*Last updated: 2026-06-11*

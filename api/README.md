@@ -13,7 +13,8 @@ Fastify REST API for n0CRM — self-hosted B2B CRM backend. This is the `api/` s
 | Validation | Zod on every route + on env (`config/env.ts`) |
 | Encryption | AES-256-GCM for OAuth tokens, SMTP passwords, webhook/Slack/Zoom secrets |
 | AI | Multi-provider (Google Gemini free default / OpenAI / Anthropic) — `services/ai/*`, routes under `/ai` |
-| Quality gates | ESLint flat config + `tsc --noEmit` + Vitest (26 tests) + `npm audit`, enforced by the `api` CI job |
+| Identity | MFA (TOTP, RFC 6238), OIDC SSO (PKCE + JWKS RS256, JIT provisioning), SCIM 2.0 user provisioning |
+| Quality gates | ESLint flat config + `tsc --noEmit` + Vitest (85 tests across 12 files) + `npm audit`, enforced by the `api` CI job |
 
 ---
 
@@ -104,17 +105,32 @@ All routes require `Authorization: Bearer <token>` unless marked `—`.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/auth/login` | — | Email + password → JWT |
+| POST | `/auth/login` | — | Email + password → JWT. When the account has MFA enabled, a valid `totp` code must also be sent; otherwise returns `401 { error, mfaRequired: true }`. |
 | POST | `/auth/register` | — | Create account (org: null) |
-| GET | `/auth/me` | ✓ | Restore session |
+| GET | `/auth/me` | ✓ | Restore session (includes `mfaEnabled`) |
 | PATCH | `/auth/me` | ✓ | Update profile (name, jobTitle, phone, avatarUrl) |
 | POST | `/auth/refresh` | ✓ | Rotate JWT — old jti revoked in Redis denylist |
 | PATCH | `/auth/password` | ✓ | Change password (requires current password) |
+| POST | `/auth/mfa/setup` | ✓ | Generate a TOTP secret + `otpauthUrl` (encrypted, not yet enabled). 503 if `TOKEN_ENCRYPTION_KEY` unset. |
+| POST | `/auth/mfa/enable` | ✓ | Confirm a 6-digit code → turn MFA on |
+| POST | `/auth/mfa/disable` | ✓ | Re-auth with current password → turn MFA off + clear the secret |
 | POST | `/auth/admin/reset-password` | ✓ owner/admin | Set another org member's password |
 | POST | `/auth/forgot-password` | — | Send password reset email (always 200) |
 | POST | `/auth/reset-password` | — | Verify token + update password |
 | POST | `/auth/logout` | ✓ | Revoke JWT + clear session |
 | GET | `/auth/resolve-org/:slug` | — | Resolve org slug → org metadata |
+
+TOTP secrets are stored AES-256-GCM encrypted (`mfa_secret_cipher`); `mfa_enabled` is only set true after a code is verified. Security-relevant auth events (login success/failure, MFA required/failed, enable/disable) are written to the `security_events` log.
+
+### SSO (OIDC)
+
+Provider-agnostic single sign-on (Entra / Okta / Auth0 / any OIDC IdP). Enabled only when `OIDC_ISSUER` + `OIDC_CLIENT_ID` + `OIDC_CLIENT_SECRET` are configured; otherwise the routes report disabled / 503. The ID token is verified by JWKS RS256 signature + `iss`/`aud`/`exp`/`nonce` before any account is touched, with PKCE (S256) on the authorize flow. The frontend SSO button is gated by `GET /auth/sso/status`.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/auth/sso/status` | — | `{ enabled, issuer }` — drives the UI's SSO button |
+| GET | `/auth/sso/start` | — | 302 to the IdP authorize URL (state + nonce + PKCE verifier stored in Redis) |
+| GET | `/auth/sso/callback` | — | Verify state + ID token, JIT-provision the user (role `OIDC_DEFAULT_ROLE`), set the auth cookie, redirect into the app |
 
 ### Core CRM
 
@@ -164,6 +180,10 @@ All routes require `Authorization: Bearer <token>` unless marked `—`.
 | GET | `/orgs/me` | ✓ | Current org details |
 | GET | `/orgs/me/members` | ✓ | All org members |
 | POST | `/orgs/me/invite` | ✓ | Invite by email + role (sends email) |
+| PATCH | `/orgs/me/members/:userId/role` | ✓ `members:manage` | Change a member's role. Only an owner may grant `owner`; the last active owner cannot be demoted; the member's sessions re-mint so the new role applies immediately. |
+| PATCH | `/orgs/me/members/:userId/status` | ✓ `members:manage` | Activate/deactivate a member (`{ isActive }`). Cannot deactivate yourself or the last active owner; deactivation revokes the member's sessions. |
+
+Member-management routes are guarded by `requirePermission('members:manage')` (see [Server-side RBAC](#server-side-rbac)).
 
 ### Invitations
 
@@ -247,10 +267,12 @@ All routes require `Authorization: Bearer <token>` unless marked `—`.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/integrations/api-keys` | ✓ | List org API keys |
-| POST | `/integrations/api-keys` | ✓ | Create (raw value returned once, stored as SHA-256) |
+| GET | `/integrations/api-keys` | ✓ | List org API keys (incl. their `scopes`) |
+| POST | `/integrations/api-keys` | ✓ | Create with optional `scopes` (raw value returned once, prefix `n0crm_`, stored as SHA-256) |
 | POST | `/integrations/api-keys/:id/rotate` | ✓ | Revoke + reissue |
 | DELETE | `/integrations/api-keys/:id` | ✓ | Revoke |
+
+**API-key scopes.** Keys are minted in **Settings → Integrations** with an optional scope allow-list (currently `leads:write` for the public lead API and `scim` for SCIM provisioning). The raw key (prefix `n0crm_`) is shown once and stored only as a SHA-256 hash. Scope enforcement is back-compat: a key with **no** scopes declared is treated as full access (legacy behavior); once a key declares explicit scopes it is restricted to them (`*`/`all` also grant everything). A request lacking the required scope returns `403 { error: "Insufficient API key scope", required: "<scope>" }`.
 | GET | `/integrations/lead-capture-tokens` | ✓ | List capture tokens |
 | POST | `/integrations/lead-capture-tokens` | ✓ | Create |
 | DELETE | `/integrations/lead-capture-tokens/:id` | ✓ | Delete |
@@ -259,7 +281,7 @@ All routes require `Authorization: Bearer <token>` unless marked `—`.
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/public/v1/leads` | `X-Api-Key` | Create lead from external form (upserts by email) |
+| POST | `/public/v1/leads` | `x-api-key` (scope `leads:write`) | Create lead from external form (upserts by email). Requires the `leads:write` scope; otherwise `403 { error: "Insufficient API key scope", required: "leads:write" }`. |
 
 ### Slack Integration
 
@@ -349,6 +371,43 @@ The field is returned as `linkedin_url` in all `GET /contacts` and `GET /contact
 ### Super-Admin (`/admin`)
 
 Platform-operator routes (super-admin role). Includes org stats/list/detail/update, suspend/unsuspend, subscription management, plans CRUD, user list/update, CSV exports, impersonation (`POST /admin/orgs/:id/impersonate`, `POST /admin/impersonate/exit` — sets `ended_at`), and `GET /admin/impersonation-logs`.
+
+### SCIM 2.0 (`/scim/v2`)
+
+System-for-Cross-domain-Identity-Management provisioning (RFC 7643/7644) so an IdP (Entra / Okta / OneLogin…) can provision and deprovision members. Auth is a **Bearer API key scoped `scim`** (created via `POST /integrations/api-keys` with `scopes: ["scim"]`); the key maps to the target organization. Bodies use `application/scim+json`. Deprovision is a **soft deactivate** + immediate session revocation — never a hard delete — and the **last active owner** can never be deactivated/deleted. Provision/deprovision are recorded in `audit_log`.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/scim/v2/ServiceProviderConfig` | Bearer (scope `scim`) | Discovery: declares `patch`, `filter`, bearer auth scheme |
+| GET | `/scim/v2/Users` | Bearer (scope `scim`) | List/search org users (`?filter=userName eq "x@y.com"`) |
+| GET | `/scim/v2/Users/:id` | Bearer (scope `scim`) | Fetch one user |
+| POST | `/scim/v2/Users` | Bearer (scope `scim`) | Provision a user (201; 409 if the email already exists) |
+| PATCH | `/scim/v2/Users/:id` | Bearer (scope `scim`) | Patch the `active` attribute (deprovision/reactivate) |
+| PUT | `/scim/v2/Users/:id` | Bearer (scope `scim`) | Replace `active` + name |
+| DELETE | `/scim/v2/Users/:id` | Bearer (scope `scim`) | Deprovision → deactivate (204) |
+
+### GDPR / Data-Subject Rights (`/privacy`)
+
+Org-scoped, **owner/admin only** (403 otherwise). Erasure anonymizes the contact's identifying fields in place (keeping the row so linked deals/activities stay referentially intact) and is recorded in `audit_log` as `gdpr_erasure`.
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/privacy/export` | ✓ owner/admin | Art. 20 — full org data export (contacts, companies, deals, activities, leads) as a downloadable JSON |
+| GET | `/privacy/subject/:contactId/export` | ✓ owner/admin | Art. 15 — one subject's data (contact + their activities + deals) |
+| POST | `/privacy/subject/:contactId/erase` | ✓ owner/admin | Art. 17 — erase/anonymize a subject's PII |
+
+### Server-side RBAC
+
+Authorization is enforced server-side via a permission matrix (`services/permissions.ts`) so it no longer depends on the frontend. Two preHandler factories in `middleware/rbac.ts` guard routes:
+
+- `requirePermission('<permission>')` — gate a single route on a named permission (e.g. `members:manage`).
+- `requireCrudPermission('<resource>')` — derive the permission from the HTTP method (`GET/HEAD → read`, `DELETE → delete`, else `write`), registered once per CRUD resource plugin so readers stay read-only while writes/deletes require the matching permission.
+
+Roles are **owner / admin / manager / sales_rep / viewer**. CRUD permission guards are wired across the core CRM resources (contacts, companies, deals, activities, leads), member management, API keys, and webhook subscriptions. A caller whose role lacks the permission gets `403 { error: "Insufficient permissions" }`.
+
+### Security-Event Audit Log
+
+Append-only authentication/account-security log (`security_events` table, migration 020) recorded by `recordSecurityEvent()` — fire-and-forget, so a logging failure never breaks the request it describes. Distinct from the org-scoped `audit_log`: security events can have **no** org/actor (e.g. a failed login for an unknown email), so those columns are nullable. Event types include `login_success`, `login_failed`, `login_mfa_required`, `login_mfa_failed`, `logout`, `register`, `password_changed`, `password_reset_requested`, `password_reset_completed`, `mfa_enabled`, `mfa_disabled`, `impersonation_started`, and `impersonation_ended`; each row captures client IP + user-agent.
 
 ### AI / Agentic Assistant
 
@@ -440,6 +499,8 @@ Migrations in `migrations/` — pure PostgreSQL, applied in filename order.
 | `016_admin_enhancements.sql` | Admin/impersonation enhancements |
 | `017_bootstrap_super_admin.sql` | Bootstrap super-admin |
 | `018_ai.sql` | `ai_conversations`, `ai_messages`, `ai_usage_log` (org-scoped, RLS-enabled, indexed) |
+| `019_mfa.sql` | `users.mfa_enabled`, `users.mfa_secret_cipher` (AES-256-GCM-encrypted TOTP secret) |
+| `020_security_events.sql` | `security_events` (append-only auth/account-security log; nullable org/actor; indexed by created_at/actor/org/type) |
 | `002_indexes_and_perf.sql` | pg_trgm trigram indexes (full-text search), 40+ B-tree indexes on FK hot paths, composite list-query indexes, RLS on 21 tables, `set_current_org()` SECURITY DEFINER function |
 
 ```bash
@@ -465,6 +526,7 @@ This mirrors [`.env.example`](.env.example), validated by Zod in [`src/config/en
 | `TOKEN_ENCRYPTION_KEY` | ✓* | — | 32-byte hex — AES-256-GCM key for OAuth tokens, SMTP/Slack/Zoom secrets, webhook secrets. *Required only to use those integrations. |
 | `INTERNAL_KEY` | ✓ (prod) | — | Min 16 chars — gates `/internal/*` routes and the `/metrics` cross-container path. When unset, `/internal/*` returns 503. |
 | `DEBUG_TOKEN` | | — | Min 16 chars — when set, enables `/_debug/*` routes gated by the `X-Debug-Token` header (`/_debug/sql` runs in a READ ONLY transaction). Unset = disabled. |
+| `SENTRY_DSN` | | — | Optional error-tracking DSN. When set, `captureException` is the hook to forward unhandled errors to an SDK; unset = structured-log only. |
 | `REDIS_URL` | | `redis://localhost:6379` | Rate-limit store + Socket.io adapter + JWT denylist + login-lockout counters |
 | `PORT` | | `3001` | HTTP listen port |
 | `CORS_ORIGIN` | | — | Allowed browser origin(s), comma-separated. **Must** be set (no `*`) in production or the process exits. |
@@ -494,6 +556,18 @@ This mirrors [`.env.example`](.env.example), validated by Zod in [`src/config/en
 | `GOOGLE_CLIENT_SECRET` | | — | Google OAuth secret |
 | `GOOGLE_REDIRECT_URI` | | — | Must match Google Cloud console (e.g. `http://localhost:5173/auth/gmail/callback`) |
 | `GOOGLE_CALENDAR_WEBHOOK_URL` | | — | Public HTTPS base URL for Google push notifications (production only) |
+
+### SSO (OIDC, optional)
+
+SSO activates only when issuer + client id + secret are all set; otherwise `/auth/sso/status` reports `enabled: false`. See [`docs/sso-and-scim.md`](../docs/sso-and-scim.md) for IdP setup.
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `OIDC_ISSUER` | | — | OIDC issuer URL (discovery base) |
+| `OIDC_CLIENT_ID` | | — | OIDC client id |
+| `OIDC_CLIENT_SECRET` | | — | OIDC client secret |
+| `OIDC_REDIRECT_URI` | | — | Registered callback (the API's `/auth/sso/callback`) |
+| `OIDC_DEFAULT_ROLE` | | `sales_rep` | Role granted to JIT-provisioned users (`admin` \| `manager` \| `sales_rep` \| `viewer`) |
 
 ### Stripe billing (optional)
 
@@ -551,13 +625,13 @@ The backend is gated in CI by the **`api` job** in [`.gitea/workflows/ci.yml`](.
 ```bash
 npx tsc --noEmit                 # type check (no emit)
 npm run lint                     # ESLint (flat config — eslint.config.js)
-npx vitest run                   # unit tests (26 tests across 5 files)
+npx vitest run                   # unit tests (85 tests across 12 files)
 npm run build                    # tsc → dist/
 npm audit --audit-level=critical # dependency audit (0 vulnerabilities expected)
 ```
 
 - **ESLint** uses a flat config (`eslint.config.js`): `@eslint/js` + `typescript-eslint` recommended. Unused vars are an error (underscore-prefixed args/vars ignored); `no-explicit-any` is a warning (off in tests); `no-empty` allows empty catch blocks.
-- **Vitest** suite (`*.test.ts`) covers the AI providers, agent loop, CRM tools, retention purge, and the Slack outbound allow-list — no DB or network required (providers/tools are injected as fakes).
+- **Vitest** suite (`*.test.ts`) covers the AI providers (`providers.test.ts`), agent loop (`agent.test.ts`), CRM tools (`tools.test.ts`), retention purge (`retention.test.ts`), the Slack outbound allow-list (`slack.test.ts`), TOTP (`totp.test.ts`), the RBAC permission matrix (`permissions.test.ts`) and guards (`rbac.test.ts`), OIDC claim/PKCE helpers (`oidc.test.ts`), SCIM helpers (`scim.test.ts`), public-API scope enforcement (`publicApi.scopes.test.ts`), and observability (`observability.test.ts`) — no DB or network required (collaborators are injected as fakes / pure helpers are tested directly).
 
 This `api` job is new: the backend previously had no lint/type/test gate. The frontend has its own job (ui:lint, i18n:lint, i18n:coverage, eslint with 0 warnings, tsc, vitest, build, ≤250KB gzip bundle budget, npm audit).
 
@@ -566,7 +640,12 @@ This `api` job is new: the backend previously had no lint/type/test gate. The fr
 ## Security Notes
 
 - **Auth & tokens:** JWTs are HS256, delivered as an HttpOnly `auth_token` cookie (not returned in the login body — XSS protection), and denied at request time via a Redis denylist (logout + rotation; `valid-after` per user invalidates older tokens on login).
-- **Tenant isolation:** every read filters and every PATCH/DELETE verifies `organization_id` ownership before mutation; cross-org FK ownership is checked on deals and on AI write tools. **Row-Level Security (RLS)** is enabled on 21+ tables (incl. the `ai_*` tables) via `set_current_org()`, as defense-in-depth behind app-layer filtering.
+- **MFA (TOTP):** optional per-user TOTP (RFC 6238); the base32 secret is AES-256-GCM encrypted at rest and `mfa_enabled` only flips true after a code is verified. Login requires the second factor when enabled.
+- **SSO (OIDC):** ID tokens are verified by JWKS RS256 signature + `iss`/`aud`/`exp`/`nonce`, with PKCE S256 and one-time `state` (CSRF/replay guard) before any account is provisioned.
+- **SCIM:** Bearer auth via an `scim`-scoped API key (SHA-256-hashed, mapped to an org); deprovision is a soft deactivate + session revocation; the last active owner is protected.
+- **Authorization (RBAC):** server-side permission matrix (owner/admin/manager/sales_rep/viewer) enforced by `requirePermission` / `requireCrudPermission` across CRM CRUD, member management, API keys, and webhook subscriptions — authorization no longer relies on the frontend.
+- **Security-event log:** authentication and account-security events are written append-only to `security_events` (best-effort, never blocks the request) with client IP + user-agent.
+- **Tenant isolation:** every read filters and every PATCH/DELETE verifies `organization_id` ownership before mutation; cross-org FK ownership is checked on deals and on AI write tools. App-layer org scoping is the authoritative control; **Row-Level Security (RLS)** is enabled on 21+ tables (incl. the `ai_*` tables) via `set_current_org()` as opt-in defense-in-depth (see `docs/adr/0001-tenant-isolation-and-rls.md`).
 - **Client-IP resolution:** Fastify `trustProxy` is set to `TRUST_PROXY` hops, so the rate limiter keys on the genuine `req.ip` and `X-Forwarded-For` can no longer be spoofed on auth routes.
 - **Account lockout:** after **10 failed logins within 15 minutes** per account (Redis counter), further attempts return 429 regardless of correctness — layered on top of the per-IP limit. bcrypt always runs (constant-time) to prevent user enumeration.
 - **Self-registration policy:** governed by `ALLOW_OPEN_REGISTRATION` (default open) and the optional `REGISTRATION_ALLOWED_DOMAINS` allow-list; the first user can always register to bootstrap a fresh install.
@@ -857,33 +936,38 @@ curl -X POST http://localhost:3001/internal/sequences/run \
 
 ## Monitoring
 
-The API exports Prometheus metrics and health checks to support observability at scale.
+The API exports Prometheus metrics, health checks, and request-correlation IDs to support observability at scale.
 
-### Health Check
+### Request correlation
 
-**Endpoint:** `GET /health` (public, no auth required)
+Every request carries a stable id: Fastify's `genReqId` continues a well-formed upstream `x-request-id` (trace continuity) or mints a UUID, and the same value is echoed back in the `x-request-id` response header and included on error responses (`{ error, requestId }`). Unhandled errors are sent through `captureException`, which emits a structured `unhandled_error` log; when `SENTRY_DSN` is set the same hook is the place to forward to an error-tracking SDK.
 
-Returns:
+### Health Checks
+
+| Endpoint | Auth | Description |
+|----------|------|-------------|
+| `GET /health` | — | Full readiness probe (DB + Redis). Kept for back-compat with container healthchecks. |
+| `GET /health/ready` | — | Same readiness probe — 200 `ok` / 503 `degraded`. |
+| `GET /health/live` | — | Liveness only — process is up, no dependency checks (won't restart-loop on a transient DB/Redis blip). |
+
+`/health` and `/health/ready` return:
 ```json
 {
-  "status": "ok|degraded|down",
-  "timestamp": "2026-05-25T10:00:00Z",
-  "db": "ok|down",
-  "redis": "ok|down",
-  "uptime": 12345.67
+  "status": "ok|degraded",
+  "timestamp": "2026-06-11T10:00:00Z",
+  "db": "ok|error",
+  "redis": "ok|error",
+  "uptime": 12345
 }
 ```
 
-Returns 503 Service Unavailable if either database or Redis is down.
+They return 503 Service Unavailable if either database or Redis is down. `/health/live` returns `{ "status": "ok", "uptime": <seconds> }`.
 
 ### Metrics
 
-**Endpoint:** `GET /metrics` (Prometheus format, restricted to localhost by default)
+**Endpoint:** `GET /metrics` (Prometheus format, gated)
 
-**Access control:**
-- Requests from `localhost` or `127.0.0.1`: returns 200 with metrics
-- Requests from external IPs: returns 403 Forbidden
-- Set `METRICS_ALLOWED_IPS=*` in `.env` to allow all IPs (not recommended in production)
+**Access control:** the endpoint is served only when the request **either** originates from a loopback peer (the raw socket `remoteAddress`, which cannot be spoofed via `X-Forwarded-For`) **or** presents a matching `x-internal-key` header (`INTERNAL_KEY` env). Cross-container scrapers such as Prometheus use the `x-internal-key` path; same-host curl/healthchecks use the loopback path. All other requests get 403.
 
 **Metrics exposed:**
 - `n0crm_http_requests_total` — Total HTTP requests by method/route/status
@@ -965,4 +1049,4 @@ If a migration partially applied, manually drop the incomplete table and re-run.
 
 ---
 
-*Last updated: 2026-06-10*
+*Last updated: 2026-06-11*
