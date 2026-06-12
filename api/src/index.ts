@@ -51,6 +51,7 @@ import { aiRoutes } from './routes/ai.js'
 import { dataPrivacyRoutes } from './routes/dataPrivacy.js'
 import { ssoRoutes } from './routes/sso.js'
 import { scimRoutes } from './routes/scim.js'
+import { updatesRoutes } from './routes/updates.js'
 import { authMiddleware } from './middleware/auth.js'
 import { resolveRequestId, captureException } from './services/observability.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
@@ -257,6 +258,7 @@ await app.register(stripeWebhookRoute)
 await app.register(internalRoutes, { prefix: '/internal' })
 await app.register(aiRoutes, { prefix: '/ai' })
 await app.register(dataPrivacyRoutes, { prefix: '/privacy' })
+await app.register(updatesRoutes, { prefix: '/updates' })
 
 // ---------------------------------------------------------------------------
 // Task 5: Prometheus /metrics endpoint
@@ -328,6 +330,7 @@ const ROUTE_TABLE_MAP: Record<string, string> = {
   '/calendar': 'calendar_events',
   '/audit': 'audit_log',
   '/orgs': 'organization_members',
+  '/updates': 'item_updates',
 }
 
 app.addHook('onResponse', async (req, reply) => {
