@@ -2030,4 +2030,20 @@ export interface Translations {
     postError: string
     mentionLabel: string
   }
+  dashboardWidgets: {
+    overview: string
+    custom: string
+    addWidget: string
+    empty: string
+    remove: string
+    contacts: string
+    companies: string
+    openDeals: string
+    pipelineValue: string
+    wonValue: string
+    leads: string
+    dealsByStage: string
+    pipelineFunnel: string
+    topDeals: string
+  }
 }

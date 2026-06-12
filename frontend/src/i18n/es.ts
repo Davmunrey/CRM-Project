@@ -2,6 +2,22 @@
 import { workflowLibraryEs } from './workflowLibrary/es'
 
 export const es: Translations = {
+  dashboardWidgets: {
+    overview: 'Resumen',
+    custom: 'Personalizado',
+    addWidget: 'Añadir widget',
+    empty: 'Aún no hay widgets: añade uno para crear tu panel.',
+    remove: 'Quitar widget',
+    contacts: 'Contactos',
+    companies: 'Empresas',
+    openDeals: 'Negocios abiertos',
+    pipelineValue: 'Valor del pipeline',
+    wonValue: 'Ganado este mes',
+    leads: 'Leads',
+    dealsByStage: 'Negocios por etapa',
+    pipelineFunnel: 'Embudo del pipeline',
+    topDeals: 'Mejores negocios',
+  },
   updates: {
     title: 'Novedades',
     composerPlaceholder: 'Escribe una novedad… usa @ para mencionar a un compañero',

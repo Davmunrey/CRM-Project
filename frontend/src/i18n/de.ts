@@ -4,6 +4,22 @@ import { workflowLibraryDe } from './workflowLibrary/de'
 
 export const de: Translations = {
   ...en,
+  dashboardWidgets: {
+    overview: 'Übersicht',
+    custom: 'Benutzerdefiniert',
+    addWidget: 'Widget hinzufügen',
+    empty: 'Noch keine Widgets – fügen Sie eines hinzu, um Ihr Dashboard zu erstellen.',
+    remove: 'Widget entfernen',
+    contacts: 'Kontakte',
+    companies: 'Unternehmen',
+    openDeals: 'Offene Deals',
+    pipelineValue: 'Pipeline-Wert',
+    wonValue: 'Diesen Monat gewonnen',
+    leads: 'Leads',
+    dealsByStage: 'Deals nach Phase',
+    pipelineFunnel: 'Pipeline-Funnel',
+    topDeals: 'Top-Deals',
+  },
   updates: {
     title: 'Updates',
     composerPlaceholder: 'Schreiben Sie ein Update… mit @ einen Teamkollegen erwähnen',
