@@ -142,6 +142,7 @@ Provider-agnostic single sign-on (Entra / Okta / Auth0 / any OIDC IdP). Enabled 
 | Activities | `/activities` | CRUD |
 | Notifications | `/notifications` | `POST /mark-all-read`, `DELETE /` (clear all for user) |
 | Updates | `/updates` | Threaded item Updates + @mentions — `GET /?entityType=&entityId=`, `POST /` (update or reply; parses `@[Name](uuid)` → mention notifications), `DELETE /:id` (soft-delete; author or owner/admin/manager) |
+| Tickets | `/tickets` | Help desk — `GET /` (list + status counts, `?status=`), `GET /:id`, `POST /`, `PATCH /:id` (status/priority/assignee; stamps `resolved_at`), `DELETE /:id`. RBAC `requireCrudPermission('tickets')` |
 | Audit Log | `/audit` | GET + POST — read requires admin/owner/manager role |
 
 ### Sales
@@ -514,6 +515,7 @@ Migrations in `migrations/` — pure PostgreSQL, applied in filename order.
 | `021_item_updates.sql` | `item_updates` (Monday-style threaded Updates on contacts/companies/deals/leads; `parent_id` replies, `mentions` jsonb, soft-delete; RLS-enabled) |
 | `022_user_dashboard.sql` | Adds `user_preferences.dashboard` jsonb (per-user composable dashboard widget layout; `PATCH /preferences/me/dashboard`) |
 | `023_lead_form_config.sql` | Adds `lead_capture_tokens.config` jsonb + `submission_count` (web-to-lead form definition + counter; public `/public/forms/:token`) |
+| `024_tickets.sql` | `tickets` (help desk: subject/description, status, priority, contact/company links, assignee, resolved_at; RLS) — RBAC resource `tickets` |
 | `002_indexes_and_perf.sql` | pg_trgm trigram indexes (full-text search), 40+ B-tree indexes on FK hot paths, composite list-query indexes, RLS on 21 tables, `set_current_org()` SECURITY DEFINER function |
 
 ```bash

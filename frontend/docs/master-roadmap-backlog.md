@@ -51,6 +51,7 @@ The 31-60 and 61-90 horizons below have substantially shipped. These tracks are 
 | **Automation recipe center** (Monday-style) | Shipped | Visual builder + searchable template library + starter templates + "when → then" recipe lines on rule/template cards (over the existing `automation_rules` backend) |
 | **Web-to-lead form builder** (HubSpot/Pipedrive-style) | Shipped | Public `GET/POST /public/forms/:token` (honeypot + rate limit) + hosted form `{origin}/forms/<token>` → leads (`source: web_form`); migration 023. Builder UI in Settings → Integrations: title/success/field toggles saved via `PATCH /integrations/lead-capture-tokens/:id`, plus form URL + iframe embed snippet. |
 | **Deal rotting + activity-based selling** (Pipedrive-style) | Shipped | Kanban flags: "Rotting" (open deal idle ≥ 14d) + "No next activity scheduled"; `utils/dealRot.ts` (computeDealRot, hasUpcomingActivity) |
+| **Help desk / tickets** (HubSpot Service / Zoho Desk-style) | Shipped | `tickets` entity (status/priority/assignee, contact/company links) + `/tickets` CRUD (RBAC `tickets` resource, migration 024) + Tickets page (status-filtered queue, inline edit, create slide-over) |
 
 > **Tenant isolation note:** app-layer org scoping is the authoritative control; RLS is opt-in defense-in-depth (see `docs/adr/0001-tenant-isolation-and-rls.md`).
 
