@@ -54,6 +54,8 @@ import { scimRoutes } from './routes/scim.js'
 import { updatesRoutes } from './routes/updates.js'
 import { leadFormsRoutes } from './routes/leadForms.js'
 import { ticketsRoutes } from './routes/tickets.js'
+import { bookingPagesRoutes } from './routes/bookingPages.js'
+import { publicBookingRoutes } from './routes/publicBooking.js'
 import { authMiddleware } from './middleware/auth.js'
 import { resolveRequestId, captureException } from './services/observability.js'
 import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
@@ -219,6 +221,8 @@ await app.register(publicApiRoutes, { prefix: '/public/v1' })
 // Public web-to-lead forms — token-in-path, no JWT/API-key (its own plugin so it
 // isn't caught by publicApiRoutes' x-api-key hook).
 await app.register(leadFormsRoutes, { prefix: '/public/forms' })
+// Public meeting booking — token-in-path, no JWT/API-key (own plugin).
+await app.register(publicBookingRoutes, { prefix: '/public/booking' })
 // SCIM 2.0 — authed via a Bearer api-key scoped `scim` (its own onRequest hook), not JWT.
 await app.register(scimRoutes, { prefix: '/scim/v2' })
 await app.register(webhookRoutes, { prefix: '/webhooks' })
@@ -265,6 +269,7 @@ await app.register(aiRoutes, { prefix: '/ai' })
 await app.register(dataPrivacyRoutes, { prefix: '/privacy' })
 await app.register(updatesRoutes, { prefix: '/updates' })
 await app.register(ticketsRoutes, { prefix: '/tickets' })
+await app.register(bookingPagesRoutes, { prefix: '/booking-pages' })
 
 // ---------------------------------------------------------------------------
 // Task 5: Prometheus /metrics endpoint
@@ -338,6 +343,7 @@ const ROUTE_TABLE_MAP: Record<string, string> = {
   '/orgs': 'organization_members',
   '/updates': 'item_updates',
   '/tickets': 'tickets',
+  '/booking-pages': 'booking_pages',
 }
 
 app.addHook('onResponse', async (req, reply) => {
