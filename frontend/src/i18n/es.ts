@@ -2,6 +2,21 @@
 import { workflowLibraryEs } from './workflowLibrary/es'
 
 export const es: Translations = {
+  updates: {
+    title: 'Novedades',
+    composerPlaceholder: 'Escribe una novedad… usa @ para mencionar a un compañero',
+    post: 'Publicar',
+    posting: 'Publicando…',
+    reply: 'Responder',
+    replyPlaceholder: 'Escribe una respuesta…',
+    cancel: 'Cancelar',
+    delete: 'Eliminar',
+    deleteConfirm: '¿Eliminar esta novedad? Esta acción no se puede deshacer.',
+    empty: 'Aún no hay novedades. Inicia la conversación.',
+    loadError: 'No se pudieron cargar las novedades.',
+    postError: 'No se pudo publicar tu novedad.',
+    mentionLabel: 'Mencionar a un compañero',
+  },
   // ─── Navigation ──────────────────────────────────────────────────────────────
   nav: {
     dashboard: 'Inicio',

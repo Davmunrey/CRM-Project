@@ -3,6 +3,21 @@ import { en } from './en'
 import { workflowLibraryPt } from './workflowLibrary/pt'
 
 export const pt: Translations = {
+  updates: {
+    title: 'Atualizações',
+    composerPlaceholder: 'Escreva uma atualização… use @ para mencionar um colega',
+    post: 'Publicar',
+    posting: 'Publicando…',
+    reply: 'Responder',
+    replyPlaceholder: 'Escreva uma resposta…',
+    cancel: 'Cancelar',
+    delete: 'Excluir',
+    deleteConfirm: 'Excluir esta atualização? Esta ação não pode ser desfeita.',
+    empty: 'Ainda não há atualizações. Inicie a conversa.',
+    loadError: 'Não foi possível carregar as atualizações.',
+    postError: 'Não foi possível publicar sua atualização.',
+    mentionLabel: 'Mencionar um colega',
+  },
   // ─── Navigation ──────────────────────────────────────────────────────────────
   nav: {
     dashboard: 'Painel',

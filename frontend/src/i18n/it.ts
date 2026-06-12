@@ -4,6 +4,21 @@ import { workflowLibraryIt } from './workflowLibrary/it'
 
 export const it: Translations = {
   ...en,
+  updates: {
+    title: 'Aggiornamenti',
+    composerPlaceholder: 'Scrivi un aggiornamento… usa @ per menzionare un collega',
+    post: 'Pubblica',
+    posting: 'Pubblicazione…',
+    reply: 'Rispondi',
+    replyPlaceholder: 'Scrivi una risposta…',
+    cancel: 'Annulla',
+    delete: 'Elimina',
+    deleteConfirm: 'Eliminare questo aggiornamento? Questa azione non può essere annullata.',
+    empty: 'Nessun aggiornamento ancora. Inizia la conversazione.',
+    loadError: 'Impossibile caricare gli aggiornamenti.',
+    postError: 'Impossibile pubblicare il tuo aggiornamento.',
+    mentionLabel: 'Menziona un collega',
+  },
   nav: {
     dashboard: 'Dashboard',
     leads: 'Lead',

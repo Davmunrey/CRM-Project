@@ -26,6 +26,7 @@ import { toast } from '../store/toastStore'
 import { formatDate, formatCurrency, formatRelativeDate } from '../utils/formatters'
 import type { Contact, DealStage, ActivityType } from '../types'
 import { CustomFieldsDisplay } from '../components/shared/CustomFieldRenderer'
+import { UpdatesPanel } from '../components/shared/UpdatesPanel'
 import { getTranslations, useTranslations } from '../i18n'
 import { useDateLocale } from '../hooks/useDateLocale'
 import { localizedActivity, localizedCompany, localizedContact, localizedCRMEmail, localizedDeal } from '../i18n/localizeSeed'
@@ -41,7 +42,7 @@ const STAGE_BADGE: Record<DealStage, BadgeVariant> = {
   closed_lost: 'danger',
 }
 
-type TabId = 'overview' | 'activities' | 'deals' | 'emails' | 'notes'
+type TabId = 'overview' | 'activities' | 'deals' | 'emails' | 'updates' | 'notes'
 
 const ACTIVITY_ICONS: Record<ActivityType, typeof Phone> = {
   call: Phone,
@@ -174,6 +175,7 @@ export function ContactDetail() {
     { id: 'activities', label: `${t.activities.title} (${contactActivities.length})` },
     { id: 'deals', label: `${t.deals.title} (${contactDeals.length})` },
     { id: 'emails', label: `${t.nav.inbox} (${contactEmails.length})` },
+    { id: 'updates', label: t.updates.title },
     { id: 'notes', label: t.common.notes },
   ]
 
@@ -489,6 +491,13 @@ export function ContactDetail() {
               </div>
             ))
           )}
+        </div>
+      )}
+
+      {/* Tab: Updates */}
+      {activeTab === 'updates' && (
+        <div className="glass border border-fg/8 rounded-xl p-6">
+          <UpdatesPanel entityType="contact" entityId={contactRaw.id} />
         </div>
       )}
 

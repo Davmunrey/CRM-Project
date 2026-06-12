@@ -4,6 +4,21 @@ import { workflowLibraryDe } from './workflowLibrary/de'
 
 export const de: Translations = {
   ...en,
+  updates: {
+    title: 'Updates',
+    composerPlaceholder: 'Schreiben Sie ein Update… mit @ einen Teamkollegen erwähnen',
+    post: 'Veröffentlichen',
+    posting: 'Wird veröffentlicht…',
+    reply: 'Antworten',
+    replyPlaceholder: 'Antwort schreiben…',
+    cancel: 'Abbrechen',
+    delete: 'Löschen',
+    deleteConfirm: 'Dieses Update löschen? Dies kann nicht rückgängig gemacht werden.',
+    empty: 'Noch keine Updates. Starten Sie die Unterhaltung.',
+    loadError: 'Updates konnten nicht geladen werden.',
+    postError: 'Ihr Update konnte nicht veröffentlicht werden.',
+    mentionLabel: 'Einen Teamkollegen erwähnen',
+  },
   nav: {
     dashboard: 'Dashboard',
     leads: 'Leads',

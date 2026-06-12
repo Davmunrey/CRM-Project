@@ -2015,4 +2015,19 @@ export interface Translations {
     invalidCode: string
     loginPrompt: string
   }
+  updates: {
+    title: string
+    composerPlaceholder: string
+    post: string
+    posting: string
+    reply: string
+    replyPlaceholder: string
+    cancel: string
+    delete: string
+    deleteConfirm: string
+    empty: string
+    loadError: string
+    postError: string
+    mentionLabel: string
+  }
 }

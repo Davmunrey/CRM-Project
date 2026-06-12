@@ -4,6 +4,21 @@ import { workflowLibraryFr } from './workflowLibrary/fr'
 
 export const fr: Translations = {
   ...en,
+  updates: {
+    title: 'Mises à jour',
+    composerPlaceholder: 'Écrivez une mise à jour… tapez @ pour mentionner un collègue',
+    post: 'Publier',
+    posting: 'Publication…',
+    reply: 'Répondre',
+    replyPlaceholder: 'Écrivez une réponse…',
+    cancel: 'Annuler',
+    delete: 'Supprimer',
+    deleteConfirm: 'Supprimer cette mise à jour ? Cette action est irréversible.',
+    empty: 'Aucune mise à jour pour le moment. Lancez la conversation.',
+    loadError: 'Impossible de charger les mises à jour.',
+    postError: 'Impossible de publier votre mise à jour.',
+    mentionLabel: 'Mentionner un collègue',
+  },
   nav: {
     dashboard: 'Accueil',
     leads: 'Leads',
