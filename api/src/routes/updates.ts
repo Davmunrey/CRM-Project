@@ -9,6 +9,7 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { db } from '../db/client.js'
+import { requirePermission } from '../middleware/rbac.js'
 
 const ENTITY_TYPES = ['contact', 'company', 'deal', 'lead'] as const
 
@@ -39,9 +40,13 @@ const listQuery = z.object({
 
 export async function updatesRoutes(app: FastifyInstance) {
   const auth = { onRequest: [app.authenticate] }
+  // Read needs updates:read (all roles incl. viewer); posting needs updates:write
+  // (viewer is read-only). Delete stays author-or-elevated (checked inline below).
+  const canRead = { onRequest: [app.authenticate], preHandler: [requirePermission('updates:read')] }
+  const canWrite = { onRequest: [app.authenticate], preHandler: [requirePermission('updates:write')] }
 
   // List updates for an item (flat, newest-first; the client nests replies by parentId).
-  app.get('/', auth, async (req, reply) => {
+  app.get('/', canRead, async (req, reply) => {
     const q = listQuery.safeParse(req.query)
     if (!q.success) return reply.code(400).send({ error: 'entityType and entityId are required' })
     const orgId = req.user.org
@@ -60,7 +65,7 @@ export async function updatesRoutes(app: FastifyInstance) {
   })
 
   // Post an update (or a reply) + notify mentioned org members.
-  app.post('/', auth, async (req, reply) => {
+  app.post('/', canWrite, async (req, reply) => {
     const parsed = createBody.safeParse(req.body)
     if (!parsed.success) return reply.code(400).send({ error: 'Invalid request' })
     const orgId = req.user.org

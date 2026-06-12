@@ -13,7 +13,7 @@
 export type Role = 'owner' | 'admin' | 'manager' | 'sales_rep' | 'viewer'
 
 // CRM record resources every selling role touches.
-const CRM = ['contacts', 'companies', 'deals', 'activities', 'leads', 'tickets'] as const
+const CRM = ['contacts', 'companies', 'deals', 'activities', 'leads', 'tickets', 'updates'] as const
 
 function crm(actions: string[]): string[] {
   return CRM.flatMap((r) => actions.map((a) => `${r}:${a}`))
