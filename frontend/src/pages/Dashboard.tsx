@@ -17,6 +17,7 @@ import { formatCurrency, formatRelativeDate } from '../utils/formatters'
 import { useAuthStore } from '../store/authStore'
 import { EMPTY_ORG_ONBOARDING, useOnboardingStore } from '../store/onboardingStore'
 import { useNotificationsStore } from '../store/notificationsStore'
+import { CustomDashboard } from '../components/dashboard/CustomDashboard'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import type { DealStage, CRMNotification } from '../types'
 import { subMonths, subWeeks, format, startOfMonth, endOfMonth, parseISO, isWithinInterval, differenceInDays, getDay, isAfter, isBefore } from 'date-fns'
@@ -55,6 +56,7 @@ export function Dashboard() {
   const activities = useActivitiesStore((s) => s.activities)
   const companies = useCompaniesStore((s) => s.companies)
   const organizationId = useAuthStore((s) => s.organizationId)
+  const [dashView, setDashView] = useState<'overview' | 'custom'>('overview')
   /** Slice ref is stable in the store; `getFlags()` returns a new object every call and breaks Zustand + React (infinite updates). */
   const onboardingSlice = useOnboardingStore(
     useCallback((s) => (organizationId ? s.byOrg[organizationId] : undefined), [organizationId]),
@@ -202,6 +204,29 @@ export function Dashboard() {
 
   return (
     <div className="crm-page space-y-6">
+      <div className="flex justify-end">
+        <div className="inline-flex overflow-hidden rounded-xl border border-fg/10 bg-fg/[0.05] text-sm">
+          <button
+            type="button"
+            onClick={() => setDashView('overview')}
+            className={`px-3 py-1.5 ${dashView === 'overview' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
+          >
+            {t.dashboardWidgets.overview}
+          </button>
+          <button
+            type="button"
+            onClick={() => setDashView('custom')}
+            className={`px-3 py-1.5 ${dashView === 'custom' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
+          >
+            {t.dashboardWidgets.custom}
+          </button>
+        </div>
+      </div>
+
+      {dashView === 'custom' ? (
+        <CustomDashboard />
+      ) : (
+        <>
       {showOnboardingBanner && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-accent-500/30 bg-accent-500/10 px-4 py-3">
           <div>
@@ -553,6 +578,8 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   )
 }
