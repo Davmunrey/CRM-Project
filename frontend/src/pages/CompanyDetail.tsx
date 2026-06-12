@@ -26,12 +26,13 @@ import { getIndustryLabel } from '../lib/industries'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import type { Company, Deal, Contact, Activity, CRMEmail, DealStage } from '../types'
 import { CustomFieldsDisplay } from '../components/shared/CustomFieldRenderer'
+import { UpdatesPanel } from '../components/shared/UpdatesPanel'
 import { StatCard } from '../components/ui/StatCard'
 import { useAuthStore } from '../store/authStore'
 import { usePresence } from '../hooks/usePresence'
 import { PresenceBadges } from '../components/shared/PresenceBadges'
 
-type TabId = 'overview' | 'contacts' | 'deals' | 'activities' | 'emails'
+type TabId = 'overview' | 'contacts' | 'deals' | 'activities' | 'emails' | 'updates'
 
 const STAGE_BADGE: Record<DealStage, BadgeVariant> = {
   lead: 'info',
@@ -140,6 +141,7 @@ export function CompanyDetail() {
     { id: 'deals', label: t.deals.title, count: deals.length },
     { id: 'activities', label: t.activities.title, count: companyActivities.length },
     { id: 'emails', label: t.nav.inbox, count: emails.length },
+    { id: 'updates', label: t.updates.title },
   ]
 
   return (
@@ -422,6 +424,12 @@ export function CompanyDetail() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'updates' && (
+        <div className="glass border border-fg/8 rounded-xl p-6">
+          <UpdatesPanel entityType="company" entityId={company.id} />
         </div>
       )}
 
