@@ -345,6 +345,7 @@ type AutomationRulePayload = Omit<AutomationRule, 'id' | 'executionCount' | 'cre
 function AutomationStarterLibrary({ onUseTemplate }: { onUseTemplate: (payload: AutomationRulePayload) => void }) {
   const t = useTranslations()
   const triggerLabels = getTriggerLabels(t)
+  const actionLabels = getActionLabels(t)
   return (
     <div className="glass rounded-xl border border-fg/6 p-4 space-y-3">
       <div className="flex items-start gap-2">
@@ -373,6 +374,16 @@ function AutomationStarterLibrary({ onUseTemplate }: { onUseTemplate: (payload: 
                     <span className="text-accent-400">
                       {t.deals.stageLabels[structural.trigger.toStage as keyof typeof t.deals.stageLabels] ?? structural.trigger.toStage}
                     </span>
+                  </>
+                )}
+                {structural.actions.length > 0 && (
+                  <>
+                    <ArrowRight size={10} className="text-fg-subtle flex-shrink-0" aria-hidden />
+                    {structural.actions.map((a, i) => (
+                      <span key={i} className="rounded border border-accent-500/20 bg-accent-500/10 px-1 py-0.5 text-accent-300">
+                        {actionLabels[a.type]}
+                      </span>
+                    ))}
                   </>
                 )}
               </div>
@@ -450,6 +461,28 @@ function RuleCard({ rule }: { rule: AutomationRule }) {
               {displayRule.description && (
                 <p className="text-xs text-fg-subtle mt-0.5 truncate">{displayRule.description}</p>
               )}
+              {/* Monday-style "When → then" recipe line */}
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+                <span className="rounded border border-fg/10 px-1.5 py-0.5 text-fg-muted">{triggerLabels[rule.trigger.type]}</span>
+                {rule.trigger.toStage && (
+                  <>
+                    <ArrowRight size={11} className="text-fg-subtle flex-shrink-0" aria-hidden />
+                    <span className="text-accent-400">
+                      {t.deals.stageLabels[rule.trigger.toStage as keyof typeof t.deals.stageLabels] ?? rule.trigger.toStage}
+                    </span>
+                  </>
+                )}
+                <ArrowRight size={11} className="text-fg-subtle flex-shrink-0" aria-hidden />
+                {displayRule.actions.length === 0 ? (
+                  <span className="text-fg-subtle">—</span>
+                ) : (
+                  displayRule.actions.map((a, i) => (
+                    <span key={i} className="rounded border border-accent-500/20 bg-accent-500/10 px-1.5 py-0.5 text-accent-300">
+                      {actionLabels[a.type]}
+                    </span>
+                  ))
+                )}
+              </div>
               <div className="flex items-center gap-3 mt-1.5">
                 {rule.executionCount > 0 ? (
                   <span className="text-[10px] text-fg-subtle flex items-center gap-1">
