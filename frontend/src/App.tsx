@@ -137,13 +137,13 @@ function AppRoutes() {
         {/* Home: landing for guests, dashboard for authenticated */}
         <Route path="/" element={<HomeRoute />} />
         <Route path="/contacts" element={<ProtectedPage title={t.nav.contacts} requiredPermission="contacts:read"><Contacts /></ProtectedPage>} />
-        <Route path="/leads" element={<ProtectedPage title={t.nav.leads} requiredPermission="contacts:read"><Leads /></ProtectedPage>} />
+        <Route path="/leads" element={<ProtectedPage title={t.nav.leads} requiredPermission="leads:read"><Leads /></ProtectedPage>} />
         <Route path="/contacts/:id" element={<ProtectedPage title={t.nav.contacts} requiredPermission="contacts:read"><ContactDetail /></ProtectedPage>} />
         <Route path="/companies" element={<ProtectedPage title={t.nav.companies} requiredPermission="companies:read"><Companies /></ProtectedPage>} />
         <Route path="/companies/:id" element={<ProtectedPage title={t.nav.companies} requiredPermission="companies:read"><CompanyDetail /></ProtectedPage>} />
         <Route path="/deals" element={<ProtectedPage title={t.nav.deals} requiredPermission="deals:read"><Deals /></ProtectedPage>} />
         <Route path="/activities" element={<ProtectedPage title={t.nav.activities} requiredPermission="activities:read"><Activities /></ProtectedPage>} />
-        <Route path="/tickets" element={<ProtectedPage title={t.nav.tickets} requiredPermission="contacts:read"><Tickets /></ProtectedPage>} />
+        <Route path="/tickets" element={<ProtectedPage title={t.nav.tickets} requiredPermission="tickets:read"><Tickets /></ProtectedPage>} />
         <Route
           path="/reports"
           element={

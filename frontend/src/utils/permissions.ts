@@ -64,12 +64,12 @@ export interface NavPermission {
 
 export const NAV_PERMISSIONS: NavPermission[] = [
   { path: '/', requiredPermission: 'contacts:read' },
-  { path: '/leads', requiredPermission: 'contacts:read' },
+  { path: '/leads', requiredPermission: 'leads:read' },
   { path: '/contacts', requiredPermission: 'contacts:read' },
   { path: '/companies', requiredPermission: 'companies:read' },
   { path: '/deals', requiredPermission: 'deals:read' },
   { path: '/activities', requiredPermission: 'activities:read' },
-  { path: '/tickets', requiredPermission: 'contacts:read' },
+  { path: '/tickets', requiredPermission: 'tickets:read' },
   { path: '/follow-ups', requiredPermission: 'contacts:read' },
   { path: '/goals', requiredPermission: 'goals:read' },
   { path: '/inbox', requiredPermission: 'email:read' },

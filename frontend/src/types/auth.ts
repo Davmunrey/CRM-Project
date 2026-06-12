@@ -13,6 +13,12 @@ export type Permission =
   | 'deals:read' | 'deals:create' | 'deals:update' | 'deals:delete' | 'deals:move'
   // Activities
   | 'activities:read' | 'activities:create' | 'activities:update' | 'activities:delete'
+  // Leads
+  | 'leads:read' | 'leads:create' | 'leads:update' | 'leads:delete'
+  // Tickets (help desk)
+  | 'tickets:read' | 'tickets:create' | 'tickets:update' | 'tickets:delete'
+  // Updates / @mentions
+  | 'updates:read' | 'updates:create' | 'updates:delete'
   // Email
   | 'email:read' | 'email:send' | 'email:update' | 'email:link'
   // Reports

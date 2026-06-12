@@ -18,6 +18,9 @@ export const ALL_PERMISSIONS: Permission[] = [
   'audit:read',
   'goals:read', 'goals:create', 'goals:update', 'goals:delete',
   'import:csv', 'import:json',
+  'leads:read', 'leads:create', 'leads:update', 'leads:delete',
+  'tickets:read', 'tickets:create', 'tickets:update', 'tickets:delete',
+  'updates:read', 'updates:create', 'updates:delete',
 ]
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -38,6 +41,9 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'users:read', 'users:create', 'users:update', 'users:delete', 'users:manage_roles', 'users:invite',
     'audit:read',
     'goals:read', 'goals:create', 'goals:update', 'goals:delete',
+    'leads:read', 'leads:create', 'leads:update', 'leads:delete',
+    'tickets:read', 'tickets:create', 'tickets:update', 'tickets:delete',
+    'updates:read', 'updates:create', 'updates:delete',
     'import:csv', 'import:json',
   ],
   manager: [
@@ -57,6 +63,9 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'users:read', 'users:invite',
     'audit:read',
     'goals:read', 'goals:create', 'goals:update', 'goals:delete',
+    'leads:read', 'leads:create', 'leads:update', 'leads:delete',
+    'tickets:read', 'tickets:create', 'tickets:update', 'tickets:delete',
+    'updates:read', 'updates:create', 'updates:delete',
     'import:csv', 'import:json',
   ],
   sales_rep: [
@@ -72,6 +81,9 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'sequences:read', 'sequences:enroll',
     'custom_fields:read',
     'ai:use',
+    'leads:read', 'leads:create', 'leads:update',
+    'tickets:read', 'tickets:create', 'tickets:update',
+    'updates:read', 'updates:create',
     'goals:read',
   ],
   viewer: [
@@ -86,6 +98,9 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'automations:read',
     'sequences:read',
     'custom_fields:read',
+    'leads:read',
+    'tickets:read',
+    'updates:read',
     'goals:read',
   ],
 }

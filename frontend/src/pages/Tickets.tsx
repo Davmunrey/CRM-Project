@@ -37,7 +37,7 @@ export function Tickets() {
   const currentUser = useAuthStore((s) => s.currentUser)
   const organizationId = useAuthStore((s) => s.organizationId)
   const fetchOrgUsers = useAuthStore((s) => s.fetchOrgUsers)
-  const canWrite = !!currentUser && hasPermission(currentUser.role, 'contacts:update')
+  const canWrite = !!currentUser && hasPermission(currentUser.role, 'tickets:update')
 
   const [filter, setFilter] = useState<TicketStatus | 'all'>('all')
   const [isCreateOpen, setCreateOpen] = useState(false)
