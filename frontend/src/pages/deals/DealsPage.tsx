@@ -30,7 +30,9 @@ import { useAiStore } from '../../store/aiStore'
 import { DealFilters } from './DealFilters'
 import { DealKanban } from './DealKanban'
 import { DealListView } from './DealListView'
-import { DealToolbar } from './DealToolbar'
+import { DealToolbar, type DealViewMode } from './DealToolbar'
+import { DealCalendarView } from './DealCalendarView'
+import { DealTimelineView } from './DealTimelineView'
 import { QuoteBuilder } from './QuoteBuilder'
 import { UpdatesPanel } from '../../components/shared/UpdatesPanel'
 
@@ -68,7 +70,7 @@ export function DealsPage() {
   const [priorityFilter, setPriorityFilter] = useState('')
   const [myDataOnly, setMyDataOnly] = useState(isSalesRep)
   const [showFilters, setShowFilters] = useState(false)
-  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban')
+  const [viewMode, setViewMode] = useState<DealViewMode>('kanban')
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [isActivityOpen, setIsActivityOpen] = useState(false)
@@ -289,6 +291,14 @@ export function DealsPage() {
           onBulkStageChange={handleBulkStageChange}
           onBulkDeleteRequest={() => setShowBulkDelete(true)}
         />
+      )}
+
+      {viewMode === 'calendar' && (
+        <DealCalendarView filtered={filtered} getStageLabel={getStageLabel} onDealClick={handleDealClick} />
+      )}
+
+      {viewMode === 'timeline' && (
+        <DealTimelineView filtered={filtered} getStageLabel={getStageLabel} onDealClick={handleDealClick} />
       )}
 
       {/* Create deal */}
