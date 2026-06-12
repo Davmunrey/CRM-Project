@@ -2046,4 +2046,9 @@ export interface Translations {
     pipelineFunnel: string
     topDeals: string
   }
+  dealRot: {
+    rotting: string
+    idleFor: string
+    noNextStep: string
+  }
 }

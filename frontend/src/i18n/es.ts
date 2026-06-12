@@ -2,6 +2,11 @@
 import { workflowLibraryEs } from './workflowLibrary/es'
 
 export const es: Translations = {
+  dealRot: {
+    rotting: 'Estancado',
+    idleFor: '{days}d sin actividad',
+    noNextStep: 'Sin próxima actividad',
+  },
   dashboardWidgets: {
     overview: 'Resumen',
     custom: 'Personalizado',

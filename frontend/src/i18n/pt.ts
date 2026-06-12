@@ -3,6 +3,11 @@ import { en } from './en'
 import { workflowLibraryPt } from './workflowLibrary/pt'
 
 export const pt: Translations = {
+  dealRot: {
+    rotting: 'Estagnado',
+    idleFor: '{days}d sem atividade',
+    noNextStep: 'Sem próxima atividade',
+  },
   dashboardWidgets: {
     overview: 'Visão geral',
     custom: 'Personalizado',

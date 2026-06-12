@@ -1951,4 +1951,9 @@ export const en: Translations = {
     pipelineFunnel: 'Pipeline funnel',
     topDeals: 'Top deals',
   },
+  dealRot: {
+    rotting: 'Rotting',
+    idleFor: '{days}d idle',
+    noNextStep: 'No next activity scheduled',
+  },
 }

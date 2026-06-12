@@ -10,7 +10,8 @@ import { useActivitiesStore } from '../../store/activitiesStore'
 import { getTranslations } from '../../i18n'
 import { localizedCompany, localizedContact, localizedDeal } from '../../i18n/localizeSeed'
 import { computeDealHealth, healthStatusColor, healthStatusBg } from '../../utils/dealHealth'
-import { CalendarDays } from 'lucide-react'
+import { computeDealRot, hasUpcomingActivity } from '../../utils/dealRot'
+import { CalendarDays, Flame, CalendarClock } from 'lucide-react'
 
 interface DealCardProps {
   deal: Deal
@@ -42,6 +43,10 @@ function DealCardInner({ deal, index, onClick }: DealCardProps) {
     [companyRaw],
   )
   const health = computeDealHealth(deal, activities)
+  const rot = computeDealRot(deal)
+  const dealActivities = useMemo(() => activities.filter((a) => a.dealId === deal.id), [activities, deal.id])
+  const needsNextStep = rot.isOpen && !hasUpcomingActivity(dealActivities)
+  const tr = getTranslations()
 
   const isOverdue = deal.expectedCloseDate < new Date().toISOString().split('T')[0]
     && deal.stage !== 'closed_won' && deal.stage !== 'closed_lost'
@@ -90,6 +95,28 @@ function DealCardInner({ deal, index, onClick }: DealCardProps) {
               <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${health.status === 'at_risk' ? 'bg-danger animate-pulse' : 'bg-warning'}`} />
               {health.status === 'at_risk' ? 'At risk' : 'Watch'}
             </span>
+          )}
+
+          {/* Pipedrive-style flags: rotting (idle) + no scheduled next step */}
+          {(rot.isRotting || needsNextStep) && (
+            <div className="flex flex-wrap items-center gap-1 mb-2">
+              {rot.isRotting && (
+                <span
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border border-danger/30 bg-danger/12 text-danger"
+                  title={tr.dealRot.idleFor.replace('{days}', String(rot.daysIdle))}
+                >
+                  <Flame size={10} /> {tr.dealRot.rotting}
+                </span>
+              )}
+              {needsNextStep && (
+                <span
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full border border-warning/30 bg-warning/12 text-warning"
+                  title={tr.dealRot.noNextStep}
+                >
+                  <CalendarClock size={10} /> {tr.dealRot.noNextStep}
+                </span>
+              )}
+            </div>
           )}
 
           {/* Company */}

@@ -4,6 +4,11 @@ import { workflowLibraryDe } from './workflowLibrary/de'
 
 export const de: Translations = {
   ...en,
+  dealRot: {
+    rotting: 'Überfällig',
+    idleFor: '{days}T inaktiv',
+    noNextStep: 'Keine nächste Aktivität geplant',
+  },
   dashboardWidgets: {
     overview: 'Übersicht',
     custom: 'Benutzerdefiniert',
