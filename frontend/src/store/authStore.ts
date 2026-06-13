@@ -324,14 +324,10 @@ export const useAuthStore = create<AuthState>()(
         const existing = state.users.find((u) => u.email.toLowerCase() === data.email.toLowerCase())
         if (existing) return { success: false, error: getTranslations().errors.emailAlreadyExists }
 
-        // Invite via API (async) — optimistic local add
-        void api.post('/orgs/me/invite', { email: data.email, role: data.role }).catch((e: unknown) => {
-          toast.error(e instanceof Error ? e.message : 'Invite failed')
-        })
-
         const now = new Date().toISOString()
+        const tempId = crypto.randomUUID()
         const user: AuthUser = {
-          id: crypto.randomUUID(),
+          id: tempId,
           email: data.email,
           name: data.name,
           role: data.role,
@@ -343,6 +339,20 @@ export const useAuthStore = create<AuthState>()(
           updatedAt: now,
         }
         set((s) => ({ users: [...s.users, user] }))
+        // Create the member server-side with the admin-set password (the form
+        // collected it); reconcile the optimistic row with the real one, or roll back.
+        void api
+          .post<{ id: string; email: string; name: string; role: UserRole; jobTitle?: string; phone?: string; isActive: boolean; createdAt: string; updatedAt: string }>(
+            '/orgs/me/members',
+            { email: data.email, name: data.name, password: data.password, role: data.role, jobTitle: data.jobTitle, phone: data.phone },
+          )
+          .then((real) => {
+            if (real?.id) set((s) => ({ users: s.users.map((u) => (u.id === tempId ? { ...user, ...real } : u)) }))
+          })
+          .catch((e: unknown) => {
+            set((s) => ({ users: s.users.filter((u) => u.id !== tempId) }))
+            toast.error(e instanceof Error ? e.message : 'Failed to create user')
+          })
         return { success: true, user }
       },
 
@@ -505,7 +515,7 @@ export function initAuth(): (() => void) | undefined {
   }
 
   // Attempt session restoration — cookie is sent automatically via credentials: include
-  api.get<{ user: { id: string; email: string; name: string; role: string; isSuperAdmin?: boolean; impersonatedBy?: string; organizationId: string | null } }>('/auth/me')
+  api.get<{ user: { id: string; email: string; name: string; role: string; isSuperAdmin?: boolean; impersonatedBy?: string; organizationId: string | null; hasPendingInvitation?: boolean } }>('/auth/me')
     .then((res) => {
       const u = res.user
       const now = new Date().toISOString()
@@ -525,6 +535,10 @@ export function initAuth(): (() => void) | undefined {
       useAuthStore.getState().setCurrentUser(authUser)
       if (u.organizationId) {
         void useAuthStore.getState().fetchOrgUsers(u.organizationId)
+      } else if (u.hasPendingInvitation) {
+        // Route to the access-required screen (accept via the emailed link) instead
+        // of pushing an invited user into creating a duplicate org.
+        useAuthStore.getState().setTenantResolution('needs_invitation')
       }
     })
     .catch(() => {

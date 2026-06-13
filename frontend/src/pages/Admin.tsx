@@ -183,6 +183,7 @@ function OrgDetailModal({ orgId, onClose, onRefresh }: { orgId: string; onClose:
   const [subStatus, setSubStatus] = useState<'trialing' | 'active' | 'past_due' | 'canceled' | 'expired'>('active')
   const [savingSub, setSavingSub] = useState(false)
   const [suspending, setSuspending] = useState(false)
+  const [plans, setPlans] = useState<Array<{ slug: string; name: string }>>([])
 
   useEffect(() => {
     setLoading(true)
@@ -191,6 +192,14 @@ function OrgDetailModal({ orgId, onClose, onRefresh }: { orgId: string; onClose:
       .catch(() => toast.error('Failed to load org'))
       .finally(() => setLoading(false))
   }, [orgId])
+
+  // Load real plan slugs so the subscription form is a dropdown, not free text
+  // (a typo'd slug 404'd with a generic "Failed to update subscription").
+  useEffect(() => {
+    api.get<{ data: Array<{ slug: string; name: string }> }>('/admin/plans')
+      .then((r) => setPlans(r?.data ?? []))
+      .catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     if (org) {
@@ -274,12 +283,12 @@ function OrgDetailModal({ orgId, onClose, onRefresh }: { orgId: string; onClose:
             <div className="border border-fg/8 rounded-xl p-4 space-y-3">
               <p className="text-xs font-semibold text-fg-muted uppercase tracking-widest">Subscription</p>
               <div className="flex gap-2 flex-wrap">
-                <Input
-                  label="Plan slug"
+                <Select
+                  label="Plan"
                   value={planSlug}
                   onChange={(e) => setPlanSlug(e.target.value)}
-                  placeholder="free / pro / enterprise"
-                  className="w-40"
+                  options={[{ value: '', label: 'Select a plan…' }, ...plans.map((p) => ({ value: p.slug, label: p.name }))]}
+                  className="w-44"
                 />
                 <Select
                   label="Status"

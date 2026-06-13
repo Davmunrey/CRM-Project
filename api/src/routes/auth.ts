@@ -217,6 +217,17 @@ export async function authRoutes(app: FastifyInstance) {
     const user = rows[0]
     if (!user || !user.isActive) return reply.code(401).send({ error: 'User not found or inactive' })
     const impersonatedBy = (req.user as Record<string, unknown>)['impersonated_by']
+    // For org-less users, flag a pending invitation so the client routes them to
+    // "ask an admin / use your invite link" instead of the create-a-new-org flow.
+    let hasPendingInvitation = false
+    if (!user.organizationId) {
+      const inv = await db`
+        SELECT 1 FROM invitations
+        WHERE email = ${user.email as string} AND status = 'pending' AND expires_at > now()
+        LIMIT 1
+      `
+      hasPendingInvitation = inv.length > 0
+    }
     return reply.send({
       user: {
         id: user.id,
@@ -228,6 +239,7 @@ export async function authRoutes(app: FastifyInstance) {
         organizationId: user.organizationId ?? null,
         orgName: user.orgName ?? null,
         orgSlug: user.orgSlug ?? null,
+        hasPendingInvitation,
         impersonatedBy: typeof impersonatedBy === 'string' ? impersonatedBy : undefined,
       },
     })

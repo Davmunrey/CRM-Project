@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import bcrypt from 'bcryptjs'
 import { randomBytes } from 'node:crypto'
 import { db } from '../db/client.js'
 import { env } from '../config/env.js'
@@ -294,5 +295,42 @@ export async function orgsRoutes(app: FastifyInstance) {
     }).catch((err) => console.error('[email] invite delivery failed:', err))
 
     return reply.code(201).send(invite)
+  })
+
+  // POST /orgs/me/members — admin-provision an ACTIVE member with a set password.
+  // (The "Add user" form collects a password/name/role; previously the store only
+  // sent an invite and dropped those, so no such user ever existed.) members:manage
+  // (owner/admin) only. The member should change their password on first login.
+  app.post('/me/members', { preHandler: [requirePermission('members:manage')] }, async (req, reply) => {
+    const orgId = req.user.org
+    if (!orgId) return reply.code(403).send({ error: 'No organization' })
+
+    const body = z.object({
+      email: z.string().email(),
+      name: z.string().min(1).max(200),
+      password: z.string().min(8).max(200),
+      role: z.enum(['admin', 'manager', 'sales_rep', 'viewer']).default('sales_rep'),
+      jobTitle: z.string().max(200).optional(),
+      phone: z.string().max(50).optional(),
+    }).safeParse(req.body)
+    if (!body.success) return reply.code(400).send({ error: 'Invalid request', details: body.error.flatten() })
+    const { email, name, password, role, jobTitle, phone } = body.data
+
+    // A user belongs to exactly one org — email is globally unique.
+    const existing = await db`SELECT id FROM users WHERE email = ${email} LIMIT 1`
+    if (existing.length > 0) return reply.code(409).send({ error: 'A user with this email already exists' })
+
+    const passwordHash = await bcrypt.hash(password, 12)
+    const now = new Date().toISOString()
+    const [user] = await db`
+      INSERT INTO users (email, password_hash, name, role, job_title, phone, organization_id, is_active, created_at, updated_at)
+      VALUES (${email}, ${passwordHash}, ${name}, ${role}, ${jobTitle ?? null}, ${phone ?? null}, ${orgId}, true, ${now}, ${now})
+      RETURNING id, email, name, role, job_title, phone, is_active, created_at, updated_at
+    `
+    await db`
+      INSERT INTO audit_log (organization_id, action, entity_type, entity_id, entity_name, details, user_id)
+      VALUES (${orgId}, 'member_created', 'user', ${user!['id'] as string}, ${name}, ${`role → ${role}`}, ${req.user.sub})
+    `
+    return reply.code(201).send(user)
   })
 }

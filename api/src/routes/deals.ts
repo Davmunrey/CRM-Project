@@ -181,6 +181,7 @@ export async function dealsRoutes(app: FastifyInstance) {
     if (d.currency !== undefined) updates.currency = d.currency
     if (d.stage !== undefined) {
       updates.stage = d.stage
+      updates.stage_changed_at = new Date().toISOString() // reset the stage-age clock
       // Keep status in sync with terminal stages
       if (d.stage === 'closed_won') updates.status = 'won'
       else if (d.stage === 'closed_lost') updates.status = 'lost'

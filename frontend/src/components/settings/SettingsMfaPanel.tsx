@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import { Shield, ShieldCheck, Copy, Check } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
@@ -14,6 +15,7 @@ export function SettingsMfaPanel() {
   const [enabled, setEnabled] = useState<boolean | null>(null) // null = loading
   const [phase, setPhase] = useState<Phase>('idle')
   const [secret, setSecret] = useState('')
+  const [qrDataUrl, setQrDataUrl] = useState('')
   const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -36,6 +38,12 @@ export function SettingsMfaPanel() {
     try {
       const res = await api.post<{ secret: string; otpauthUrl: string }>('/auth/mfa/setup')
       setSecret(res.secret)
+      // Render the otpauth URL as a scannable QR (falls back to manual secret entry on failure).
+      try {
+        setQrDataUrl(await QRCode.toDataURL(res.otpauthUrl, { width: 184, margin: 1 }))
+      } catch {
+        setQrDataUrl('')
+      }
       setPhase('setup')
     } catch (e) {
       toast.error(getErrorMessage(e))
@@ -119,6 +127,9 @@ export function SettingsMfaPanel() {
       {phase === 'setup' && (
         <div className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-2 p-4">
           <p className="text-sm text-fg-muted">{t.mfa.setupInstructions}</p>
+          {qrDataUrl && (
+            <img src={qrDataUrl} alt={t.mfa.secretLabel} width={184} height={184} className="self-center rounded-lg bg-white p-2" />
+          )}
           <div>
             <span className="block text-xs text-fg-subtle mb-1">{t.mfa.secretLabel}</span>
             <div className="flex items-center gap-2">
@@ -141,7 +152,7 @@ export function SettingsMfaPanel() {
             <Button variant="primary" size="sm" loading={busy} disabled={code.trim().length < 6} onClick={confirmEnable}>
               {t.mfa.confirmEnable}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => { setPhase('idle'); setSecret(''); setCode(''); setError('') }}>
+            <Button variant="ghost" size="sm" onClick={() => { setPhase('idle'); setSecret(''); setQrDataUrl(''); setCode(''); setError('') }}>
               {t.mfa.cancel}
             </Button>
           </div>

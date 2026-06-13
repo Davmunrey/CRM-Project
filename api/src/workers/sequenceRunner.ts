@@ -377,6 +377,10 @@ async function processEmailStep(
     )
   `
 
+  // Stamp the send time so reply-detection can match any inbound message from the
+  // contact after it (works regardless of SMTP vs Gmail transport — no thread id needed).
+  await tx`UPDATE sequence_enrollments SET last_sent_at = NOW() WHERE id = ${enrollment.id}`
+
   // Advance to next step
   await advanceEnrollment(tx, enrollment.id, stepIndex, steps)
 }

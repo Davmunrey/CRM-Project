@@ -144,6 +144,7 @@ function rowToEnrollment(r: ApiEnr): SequenceEnrollment {
     completedAt: ((r.completedAt ?? r.completed_at) as string) ?? undefined,
     lastSentThreadId: ((r.lastSentThreadId ?? r.last_sent_thread_id) as string) ?? null,
     lastSentMessageId: ((r.lastSentMessageId ?? r.last_sent_message_id) as string) ?? null,
+    lastSentAt: ((r.lastSentAt ?? r.last_sent_at) as string) ?? null,
   }
 }
 

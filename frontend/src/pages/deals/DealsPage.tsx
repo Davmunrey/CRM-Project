@@ -369,7 +369,7 @@ export function DealsPage() {
                   { label: t.common.assignedTo, value: selectedDeal.assignedTo },
                   { label: t.deals.company, value: getCompany(selectedDeal.companyId)?.name || '-' },
                   { label: t.deals.contact, value: (() => { const c = getContact(selectedDeal.contactId); return c ? `${c.firstName} ${c.lastName}` : '-' })() },
-                  { label: t.deals.daysInStage, value: `${getStageDurationDays(selectedDeal.updatedAt)} ${t.deals.aging} ${getStageLabel(selectedDeal.stage)}` },
+                  { label: t.deals.daysInStage, value: `${getStageDurationDays(selectedDeal.stageChangedAt ?? selectedDeal.updatedAt)} ${t.deals.aging} ${getStageLabel(selectedDeal.stage)}` },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <p className="text-xs text-fg-subtle">{label}</p>

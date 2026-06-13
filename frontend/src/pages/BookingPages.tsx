@@ -16,9 +16,8 @@ export function BookingPages() {
   const [loading, setLoading] = useState(true)
   const [newLink, setNewLink] = useState<string | null>(null)
   const [editId, setEditId] = useState<string | null>(null)
-  const [days, setDays] = useState<Set<number>>(new Set([1, 2, 3, 4, 5]))
-  const [start, setStart] = useState('09:00')
-  const [end, setEnd] = useState('17:00')
+  // Per-day availability windows; presence of a dow key = that weekday is enabled.
+  const [dayWindows, setDayWindows] = useState<Record<number, { start: string; end: string }>>({})
   const [duration, setDuration] = useState(30)
   const [saving, setSaving] = useState(false)
 
@@ -53,17 +52,28 @@ export function BookingPages() {
 
   const openEditor = (p: BookingPage) => {
     setEditId(p.id)
-    const av = p.availability ?? []
-    setDays(new Set(av.map((a) => a.dow)))
-    setStart(av[0]?.start ?? '09:00')
-    setEnd(av[0]?.end ?? '17:00')
+    const w: Record<number, { start: string; end: string }> = {}
+    for (const a of p.availability ?? []) w[a.dow] = { start: a.start, end: a.end }
+    setDayWindows(w)
     setDuration(p.durationMinutes ?? 30)
   }
+
+  const toggleDay = (dow: number) =>
+    setDayWindows((prev) => {
+      const next = { ...prev }
+      if (next[dow]) delete next[dow]
+      else next[dow] = { start: '09:00', end: '17:00' }
+      return next
+    })
+  const setDayField = (dow: number, field: 'start' | 'end', value: string) =>
+    setDayWindows((prev) => (prev[dow] ? { ...prev, [dow]: { ...prev[dow], [field]: value } } : prev))
 
   const saveEditor = async (p: BookingPage) => {
     setSaving(true)
     try {
-      const availability: AvailabilityRule[] = [...days].sort((a, b) => a - b).map((dow) => ({ dow, start, end }))
+      const availability: AvailabilityRule[] = Object.entries(dayWindows)
+        .map(([dow, w]) => ({ dow: Number(dow), start: w.start, end: w.end }))
+        .sort((a, b) => a.dow - b.dow)
       await bookingApi.update(p.id, { availability, durationMinutes: duration })
       setEditId(null)
       await load()
@@ -134,36 +144,40 @@ export function BookingPages() {
 
               {editId === p.id && (
                 <div className="space-y-3 rounded-lg bg-fg/[0.03] p-3">
-                  <div className="flex flex-wrap gap-1.5">
-                    {DOW_ORDER.map((dow) => (
-                      <button
-                        key={dow}
-                        type="button"
-                        onClick={() => setDays((prev) => { const n = new Set(prev); if (n.has(dow)) n.delete(dow); else n.add(dow); return n })}
-                        className={`rounded-full px-2.5 py-1 text-xs ${days.has(dow) ? 'bg-accent-600 text-fg' : 'bg-fg/6 text-fg-muted'}`}
-                      >
-                        {weekdayLabel(dow)}
-                      </button>
-                    ))}
+                  {/* Per-day windows — each weekday keeps its own start/end (no longer flattened to one shared window). */}
+                  <div className="space-y-1.5">
+                    {DOW_ORDER.map((dow) => {
+                      const win = dayWindows[dow]
+                      return (
+                        <div key={dow} className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleDay(dow)}
+                            className={`w-14 shrink-0 rounded-full px-2.5 py-1 text-xs ${win ? 'bg-accent-600 text-fg' : 'bg-fg/6 text-fg-muted'}`}
+                          >
+                            {weekdayLabel(dow)}
+                          </button>
+                          {win ? (
+                            <>
+                              <input type="time" className={selectCls} value={win.start} onChange={(e) => setDayField(dow, 'start', e.target.value)} />
+                              <span className="text-xs text-fg-subtle">–</span>
+                              <input type="time" className={selectCls} value={win.end} onChange={(e) => setDayField(dow, 'end', e.target.value)} />
+                            </>
+                          ) : (
+                            <span className="text-xs text-fg-subtle">{t.common.inactive}</span>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
-                  <div className="flex flex-wrap items-end gap-3">
-                    <label className="text-xs text-fg-muted">
-                      {t.booking.startTime}
-                      <input type="time" className={`${selectCls} block mt-1`} value={start} onChange={(e) => setStart(e.target.value)} />
-                    </label>
-                    <label className="text-xs text-fg-muted">
-                      {t.booking.endTime}
-                      <input type="time" className={`${selectCls} block mt-1`} value={end} onChange={(e) => setEnd(e.target.value)} />
-                    </label>
-                    <label className="text-xs text-fg-muted">
-                      {t.booking.durationMinutes}
-                      <select className={`${selectCls} block mt-1`} value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
-                        {[15, 30, 45, 60].map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
-                    </label>
-                  </div>
+                  <label className="block text-xs text-fg-muted">
+                    {t.booking.durationMinutes}
+                    <select className={`${selectCls} block mt-1`} value={duration} onChange={(e) => setDuration(Number(e.target.value))}>
+                      {[15, 30, 45, 60].map((d) => (
+                        <option key={d} value={d}>{d}</option>
+                      ))}
+                    </select>
+                  </label>
                   <Button type="button" size="sm" onClick={() => void saveEditor(p)} loading={saving}>
                     {t.common.save}
                   </Button>

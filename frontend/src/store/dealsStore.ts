@@ -44,6 +44,7 @@ function mapDeal(row: Record<string, unknown>): Deal {
     quoteItems: (row.quoteItems ?? row.quote_items) as QuoteItem[] | undefined,
     createdAt: (row.createdAt ?? row.created_at ?? '') as string,
     updatedAt: (row.updatedAt ?? row.updated_at ?? '') as string,
+    stageChangedAt: (row.stageChangedAt ?? row.stage_changed_at ?? row.updatedAt ?? row.updated_at ?? '') as string,
   }
 }
 
@@ -155,9 +156,10 @@ export const useDealsStore = create<DealsState>()(
     moveDeal: (id, newStage) => {
       const oldDeal = get().getById(id)
       const prev = get().deals
+      const movedAt = new Date().toISOString()
       set((state) => ({
         deals: state.deals.map((d) =>
-          d.id === id ? { ...d, stage: newStage, updatedAt: new Date().toISOString() } : d
+          d.id === id ? { ...d, stage: newStage, updatedAt: movedAt, stageChangedAt: movedAt } : d
         ),
       }))
 

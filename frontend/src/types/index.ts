@@ -107,6 +107,7 @@ export interface Deal {
   quoteItems?: QuoteItem[]
   createdAt: string
   updatedAt: string
+  stageChangedAt?: string
 }
 
 // ─── Activity ────────────────────────────────────────────────────────────────
@@ -629,6 +630,8 @@ export interface SequenceEnrollment {
   lastSentThreadId?: string | null
   /** Provider message id after last automated send (In-Reply-To / References). */
   lastSentMessageId?: string | null
+  /** Time of the last automated step send — reply detection matches inbound mail after this. */
+  lastSentAt?: string | null
 }
 
 // ─── Automations ─────────────────────────────────────────────────────────────
