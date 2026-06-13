@@ -5,7 +5,7 @@ import {
   Activity, BarChart3, Settings, ChevronLeft, ChevronRight,
   Mail, UserCheck, FileText, ScrollText, Target, UsersRound, BellRing, GanttChart,
   LineChart, ListOrdered, Workflow, Package, FunnelPlus,
-  Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays, LayoutGrid, Crown, LifeBuoy,
+  Bookmark, Flame, Handshake, Cloud, TrendingUp, CalendarDays, LayoutGrid, Crown, LifeBuoy, CalendarClock,
 } from 'lucide-react'
 import { Logo } from '../brand/Logo'
 import { useViewsStore } from '../../store/viewsStore'
@@ -50,6 +50,7 @@ function buildMainItems(t: Translations): NavItem[] {
 function buildSalesItems(t: Translations): NavItem[] {
   return [
     { id: 'calendar', to: '/calendar', icon: <CalendarDays size={18} />, label: t.nav.calendar },
+    { id: 'booking', to: '/booking', icon: <CalendarClock size={18} />, label: t.nav.booking },
     { id: 'activities', to: '/activities', icon: <Activity size={18} />, label: t.nav.activities },
     { id: 'followUps', to: '/follow-ups', icon: <UserCheck size={18} />, label: t.nav.followUps },
     { id: 'goals', to: '/goals', icon: <Target size={18} />, label: t.nav.goals },

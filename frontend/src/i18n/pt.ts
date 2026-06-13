@@ -3,6 +3,18 @@ import { en } from './en'
 import { workflowLibraryPt } from './workflowLibrary/pt'
 
 export const pt: Translations = {
+  booking: {
+    title: 'Links de agendamento',
+    newPage: 'Novo link de agendamento',
+    availability: 'Disponibilidade',
+    durationMinutes: 'Duração (minutos)',
+    startTime: 'Início',
+    endTime: 'Fim',
+    copyLink: 'Copiar link público',
+    publicLink: 'Link público',
+    empty: 'Ainda não há links de agendamento.',
+    created: 'Link de agendamento criado',
+  },
   tickets: {
     title: 'Tickets',
     newTicket: 'Novo ticket',
@@ -86,6 +98,7 @@ export const pt: Translations = {
     integrations: 'Integrações',
     audit: 'Auditoria',
     tickets: 'Tickets',
+    booking: 'Agendamentos',
     collapse: 'Recolher',
     expand: 'Expandir',
     collapseSidebar: 'Recolher barra lateral',

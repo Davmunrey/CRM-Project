@@ -86,6 +86,7 @@ export const NAV_PERMISSIONS: NavPermission[] = [
   { path: '/sequences', requiredPermission: 'sequences:read' },
   { path: '/automations', requiredPermission: 'automations:read' },
   { path: '/calendar', requiredPermission: 'activities:read' },
+  { path: '/booking', requiredPermission: 'activities:read' },
   { path: '/products', requiredPermission: 'products:read' },
 ]
 

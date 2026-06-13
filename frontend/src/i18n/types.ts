@@ -77,6 +77,7 @@ export interface Translations {
     integrations: string
     audit: string
     tickets: string
+    booking: string
     collapse: string
     expand: string
     collapseSidebar: string
@@ -2070,5 +2071,17 @@ export interface Translations {
     deleteConfirm: string
     statusLabels: { open: string; pending: string; resolved: string; closed: string }
     priorityLabels: { low: string; medium: string; high: string; urgent: string }
+  }
+  booking: {
+    title: string
+    newPage: string
+    availability: string
+    durationMinutes: string
+    startTime: string
+    endTime: string
+    copyLink: string
+    publicLink: string
+    empty: string
+    created: string
   }
 }

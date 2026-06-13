@@ -4,6 +4,18 @@ import { workflowLibraryIt } from './workflowLibrary/it'
 
 export const it: Translations = {
   ...en,
+  booking: {
+    title: 'Link di prenotazione',
+    newPage: 'Nuovo link di prenotazione',
+    availability: 'Disponibilità',
+    durationMinutes: 'Durata (minuti)',
+    startTime: 'Inizio',
+    endTime: 'Fine',
+    copyLink: 'Copia link pubblico',
+    publicLink: 'Link pubblico',
+    empty: 'Nessun link di prenotazione ancora.',
+    created: 'Link di prenotazione creato',
+  },
   tickets: {
     title: 'Ticket',
     newTicket: 'Nuovo ticket',
@@ -86,6 +98,7 @@ export const it: Translations = {
     integrations: 'Integrazioni',
     audit: 'Registro di audit',
     tickets: 'Ticket',
+    booking: 'Prenotazioni',
     collapse: 'Comprimi',
     expand: 'Espandi',
     collapseSidebar: 'Comprimi barra laterale',

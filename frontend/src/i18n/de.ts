@@ -4,6 +4,18 @@ import { workflowLibraryDe } from './workflowLibrary/de'
 
 export const de: Translations = {
   ...en,
+  booking: {
+    title: 'Buchungslinks',
+    newPage: 'Neuer Buchungslink',
+    availability: 'Verfügbarkeit',
+    durationMinutes: 'Dauer (Minuten)',
+    startTime: 'Beginn',
+    endTime: 'Ende',
+    copyLink: 'Öffentlichen Link kopieren',
+    publicLink: 'Öffentlicher Link',
+    empty: 'Noch keine Buchungslinks.',
+    created: 'Buchungslink erstellt',
+  },
   tickets: {
     title: 'Tickets',
     newTicket: 'Neues Ticket',
@@ -86,6 +98,7 @@ export const de: Translations = {
     integrations: 'Integrationen',
     audit: 'Audit-Protokoll',
     tickets: 'Tickets',
+    booking: 'Terminbuchung',
     collapse: 'Einklappen',
     expand: 'Ausklappen',
     collapseSidebar: 'Seitenleiste einklappen',

@@ -52,6 +52,8 @@ const Automations = lazy(() => import('./pages/Automations').then((m) => ({ defa
 const Products = lazy(() => import('./pages/Products').then((m) => ({ default: m.Products })))
 const GmailCallback = lazy(() => import('./pages/GmailCallback').then((m) => ({ default: m.GmailCallback })))
 const PublicLeadForm = lazy(() => import('./pages/PublicLeadForm').then((m) => ({ default: m.PublicLeadForm })))
+const PublicBooking = lazy(() => import('./pages/PublicBooking').then((m) => ({ default: m.PublicBooking })))
+const BookingPages = lazy(() => import('./pages/BookingPages').then((m) => ({ default: m.BookingPages })))
 const Landing = lazy(() => import('./pages/Landing').then((m) => ({ default: m.Landing })))
 const Admin = lazy(() => import('./pages/Admin').then((m) => ({ default: m.Admin })))
 
@@ -133,6 +135,7 @@ function AppRoutes() {
         <Route path="/accept-invite" element={<AcceptInvite />} />
         <Route path="/auth/gmail/callback" element={<GmailCallback />} />
         <Route path="/forms/:token" element={<PublicLeadForm />} />
+        <Route path="/book/:token" element={<PublicBooking />} />
 
         {/* Home: landing for guests, dashboard for authenticated */}
         <Route path="/" element={<HomeRoute />} />
@@ -237,6 +240,7 @@ function AppRoutes() {
         <Route path="/automations" element={<ProtectedPage title={t.nav.automations} requiredPermission="automations:read"><Automations /></ProtectedPage>} />
         <Route path="/products" element={<ProtectedPage title={t.nav.products} requiredPermission="products:read"><Products /></ProtectedPage>} />
         <Route path="/calendar" element={<ProtectedPage title={t.nav.calendar} requiredPermission="activities:read"><Calendar /></ProtectedPage>} />
+        <Route path="/booking" element={<ProtectedPage title={t.nav.booking} requiredPermission="activities:read"><BookingPages /></ProtectedPage>} />
         <Route path="/profile" element={<ProtectedPage title={t.auth.profile}><UserProfile /></ProtectedPage>} />
         <Route path="/admin" element={<ProtectedPage title="Super Admin" requiredPermission="admin:access"><Admin /></ProtectedPage>} />
 
