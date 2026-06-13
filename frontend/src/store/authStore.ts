@@ -93,7 +93,7 @@ export interface AuthState {
   deactivateUser: (id: string) => void
   reactivateUser: (id: string) => void
   changePassword: (userId: string, currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>
-  resetPassword: (userId: string, newPassword: string) => Promise<void>
+  resetPassword: (userId: string, newPassword: string) => Promise<boolean>
 
   createInvitation: (email: string, role: UserRole) => Invitation
   acceptInvitation: (invitationId: string, name: string, password: string) => { success: boolean; error?: string }
@@ -363,6 +363,8 @@ export const useAuthStore = create<AuthState>()(
 
       changeUserRole: (id, role) => {
         const target = get().users.find((u) => u.id === id)
+        const prevUsers = get().users
+        const prevCurrent = get().currentUser
         set((state) => ({
           users: state.users.map((u) => u.id === id ? { ...u, role, updatedAt: new Date().toISOString() } : u),
           currentUser: state.currentUser?.id === id ? { ...state.currentUser, role, updatedAt: new Date().toISOString() } : state.currentUser,
@@ -372,14 +374,29 @@ export const useAuthStore = create<AuthState>()(
           const roleLabel = (tr.team.roleLabels as Record<string, string>)[role] ?? role
           useAuditStore.getState().logAction('user_role_changed', 'user', target.id, target.name, tr.auditMessages.roleChangedTo.replace('{role}', roleLabel))
         }
+        // Persist server-side (members:manage RBAC + last-owner safety rules apply); roll back on failure.
+        void api.patch(`/orgs/me/members/${id}/role`, { role }).catch((e: unknown) => {
+          set({ users: prevUsers, currentUser: prevCurrent })
+          toast.error(e instanceof Error ? e.message : 'Failed to change role')
+        })
       },
 
       deactivateUser: (id) => {
+        const prevUsers = get().users
         set((s) => ({ users: s.users.map((u) => u.id === id ? { ...u, isActive: false, updatedAt: new Date().toISOString() } : u) }))
+        void api.patch(`/orgs/me/members/${id}/status`, { isActive: false }).catch((e: unknown) => {
+          set({ users: prevUsers })
+          toast.error(e instanceof Error ? e.message : 'Failed to deactivate member')
+        })
       },
 
       reactivateUser: (id) => {
+        const prevUsers = get().users
         set((s) => ({ users: s.users.map((u) => u.id === id ? { ...u, isActive: true, updatedAt: new Date().toISOString() } : u) }))
+        void api.patch(`/orgs/me/members/${id}/status`, { isActive: true }).catch((e: unknown) => {
+          set({ users: prevUsers })
+          toast.error(e instanceof Error ? e.message : 'Failed to reactivate member')
+        })
       },
 
       changePassword: async (_userId, currentPassword, newPassword) => {
@@ -394,8 +411,10 @@ export const useAuthStore = create<AuthState>()(
       resetPassword: async (userId, newPassword) => {
         try {
           await api.post('/auth/admin/reset-password', { userId, newPassword })
+          return true
         } catch (err) {
           toast.error(err instanceof Error ? err.message : 'Password reset failed')
+          return false
         }
       },
 

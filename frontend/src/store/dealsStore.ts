@@ -133,6 +133,7 @@ export const useDealsStore = create<DealsState>()(
     },
 
     updateDeal: (id, updates) => {
+      const prev = get().deals
       set((state) => ({
         deals: state.deals.map((d) =>
           d.id === id ? { ...d, ...updates, updatedAt: new Date().toISOString() } : d
@@ -140,18 +141,20 @@ export const useDealsStore = create<DealsState>()(
       }))
       const deal = get().getById(id)
       useAuditStore.getState().logAction('deal_updated', 'deal', id, deal?.title ?? '', getTranslations().auditMessages.dealUpdated)
-      api.patch(`/deals/${id}`, updates).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.patch(`/deals/${id}`, updates).catch((e: unknown) => set({ deals: prev, error: getErrorMessage(e) }))
     },
 
     deleteDeal: (id) => {
+      const prev = get().deals
       const deal = get().getById(id)
       set((state) => ({ deals: state.deals.filter((d) => d.id !== id) }))
       useAuditStore.getState().logAction('deal_deleted', 'deal', id, deal?.title ?? '', getTranslations().auditMessages.dealDeleted)
-      api.delete(`/deals/${id}`).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.delete(`/deals/${id}`).catch((e: unknown) => set({ deals: prev, error: getErrorMessage(e) }))
     },
 
     moveDeal: (id, newStage) => {
       const oldDeal = get().getById(id)
+      const prev = get().deals
       set((state) => ({
         deals: state.deals.map((d) =>
           d.id === id ? { ...d, stage: newStage, updatedAt: new Date().toISOString() } : d
@@ -198,16 +201,17 @@ export const useDealsStore = create<DealsState>()(
         })
       }
 
-      api.patch(`/deals/${id}`, { stage: newStage }).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.patch(`/deals/${id}`, { stage: newStage }).catch((e: unknown) => set({ deals: prev, error: getErrorMessage(e) }))
     },
 
     updateQuote: (dealId, items) => {
+      const prev = get().deals
       set((state) => ({
         deals: state.deals.map((d) =>
           d.id === dealId ? { ...d, quoteItems: items, updatedAt: new Date().toISOString() } : d
         ),
       }))
-      api.patch(`/deals/${dealId}`, { quoteItems: items }).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.patch(`/deals/${dealId}`, { quoteItems: items }).catch((e: unknown) => set({ deals: prev, error: getErrorMessage(e) }))
     },
 
     setFilter: (key, value) => {

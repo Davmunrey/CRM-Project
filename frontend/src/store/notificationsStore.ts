@@ -90,36 +90,45 @@ export const useNotificationsStore = create<NotificationsStore>()(
         isRead: false,
         createdAt: new Date().toISOString(),
       }
-      set((state) => ({
-        notifications: [notification, ...state.notifications].slice(0, MAX_NOTIFICATIONS),
-      }))
+      // Only surface locally when the recipient is the current viewer; otherwise a
+      // notification addressed to another user (e.g. manager-targeted maintenance
+      // alerts) would pollute this feed and inflate the unread badge until refetch.
+      if (notification.userId === (currentUser?.id ?? 'system')) {
+        set((state) => ({
+          notifications: [notification, ...state.notifications].slice(0, MAX_NOTIFICATIONS),
+        }))
+      }
       api.post('/notifications', notification).catch(() => {})
     },
 
     markAsRead: (id) => {
+      const prev = get().notifications
       set((state) => ({
         notifications: state.notifications.map((n) => n.id === id ? { ...n, isRead: true } : n),
       }))
-      api.patch(`/notifications/${id}`, { isRead: true }).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.patch(`/notifications/${id}`, { isRead: true }).catch((e: unknown) => set({ notifications: prev, error: getErrorMessage(e) }))
     },
 
     markAllAsRead: () => {
+      const prev = get().notifications
       set((state) => ({
         notifications: state.notifications.map((n) => ({ ...n, isRead: true })),
       }))
-      api.post('/notifications/mark-all-read', {}).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.post('/notifications/mark-all-read', {}).catch((e: unknown) => set({ notifications: prev, error: getErrorMessage(e) }))
     },
 
     deleteNotification: (id) => {
+      const prev = get().notifications
       set((state) => ({
         notifications: state.notifications.filter((n) => n.id !== id),
       }))
-      api.delete(`/notifications/${id}`).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.delete(`/notifications/${id}`).catch((e: unknown) => set({ notifications: prev, error: getErrorMessage(e) }))
     },
 
     clearAll: () => {
+      const prev = get().notifications
       set({ notifications: [] })
-      api.delete('/notifications').catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.delete('/notifications').catch((e: unknown) => set({ notifications: prev, error: getErrorMessage(e) }))
     },
 
     getUnreadCount: () => get().notifications.filter((n) => !n.isRead).length,

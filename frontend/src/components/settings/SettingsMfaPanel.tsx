@@ -51,8 +51,10 @@ export function SettingsMfaPanel() {
       setSecret('')
       setCode('')
       toast.success(t.mfa.statusEnabled)
-    } catch {
-      setError(t.mfa.invalidCode)
+    } catch (e) {
+      // Surface the real server message (e.g. "Run MFA setup first", a 500, or a
+      // network error) instead of always blaming the code.
+      setError(getErrorMessage(e))
     } finally {
       setBusy(false)
     }

@@ -289,6 +289,9 @@ export function SalesGoals() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {goals.map((goal) => {
           const cfg = GOAL_TYPE_CONFIG[goal.type]
+          // Backend accepts goal types (calls_made/meetings_held/…) the UI doesn't
+          // configure; skip rather than dereferencing an undefined cfg and crashing the grid.
+          if (!cfg) return null
           const current = computeCurrentForGoal(goal)
           const pct = Math.min(Math.round((current / goal.target) * 100), 100)
           const isCompleted = current >= goal.target

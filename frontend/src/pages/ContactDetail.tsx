@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { PermissionGate } from '../components/auth/PermissionGate'
 import {
@@ -73,6 +73,11 @@ export function ContactDetail() {
   const [notesSaved, setNotesSaved] = useState(false)
 
   const contactRaw = useContactsStore((s) => (id ? s.contacts.find((c) => c.id === id) : undefined))
+  // Reset the notes draft when the viewed contact changes (the /contacts/:id route
+  // reuses this component instance), so notes don't leak between contacts. Keyed on
+  // id only — re-syncing on notes would clobber an in-progress edit.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setNotes(contactRaw?.notes ?? '') }, [contactRaw?.id])
   const { updateContact } = useContactsStore()
   const companies = useCompaniesStore((s) => s.companies)
   const deals = useDealsStore((s) => s.deals)
@@ -506,7 +511,7 @@ export function ContactDetail() {
         <div className="glass border border-fg/8 rounded-xl p-6 space-y-4">
           <Textarea
             label={t.common.notes}
-            value={notes || contactRaw.notes}
+            value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={8}
             placeholder={t.common.notes}

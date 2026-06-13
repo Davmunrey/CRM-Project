@@ -95,25 +95,28 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
   },
 
   updateRule: (id, updates) => {
+    const prev = get().rules
     set((s) => ({
       rules: s.rules.map((r) => r.id === id ? { ...r, ...updates, updatedAt: new Date().toISOString() } : r),
     }))
-    api.patch(`/automations/${id}`, updates).catch(() => {})
+    api.patch(`/automations/${id}`, updates).catch((e: unknown) => set({ rules: prev, error: (e as Error).message }))
   },
 
   deleteRule: (id) => {
+    const prev = get().rules
     set((s) => ({ rules: s.rules.filter((r) => r.id !== id) }))
-    api.delete(`/automations/${id}`).catch(() => {})
+    api.delete(`/automations/${id}`).catch((e: unknown) => set({ rules: prev, error: (e as Error).message }))
   },
 
   toggleRule: (id) => {
     const rule = get().rules.find((r) => r.id === id)
     if (!rule) return
+    const prev = get().rules
     const newActive = !rule.isActive
     set((s) => ({
       rules: s.rules.map((r) => r.id === id ? { ...r, isActive: newActive, updatedAt: new Date().toISOString() } : r),
     }))
-    api.patch(`/automations/${id}`, { isActive: newActive }).catch(() => {})
+    api.patch(`/automations/${id}`, { isActive: newActive }).catch((e: unknown) => set({ rules: prev, error: (e as Error).message }))
   },
 
   executeRulesForTrigger: async (triggerType, context) => {
@@ -154,7 +157,9 @@ export const useAutomationsStore = create<AutomationsStore>()((set, get) => ({
             )
             executedActions += 1
           } else if (action.type === 'update_deal_stage' && deal && action.newStage) {
-            useDealsStore.getState().moveDeal(deal.id, action.newStage)
+            // Use updateDeal (plain stage PATCH), NOT moveDeal — moveDeal re-posts
+            // /automations/trigger, which would re-enter rule evaluation for this same change.
+            useDealsStore.getState().updateDeal(deal.id, { stage: action.newStage })
             executedActions += 1
           } else if (action.type === 'assign_to_user' && deal && action.userId) {
             useDealsStore.getState().updateDeal(deal.id, { assignedTo: action.userId })

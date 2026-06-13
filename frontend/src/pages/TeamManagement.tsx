@@ -137,7 +137,8 @@ export function TeamManagement() {
       toast.error(formatPasswordStrengthIssues(strengthIssues, passwordIssueLabels))
       return
     }
-    await resetPassword(userId, newPw)
+    const ok = await resetPassword(userId, newPw)
+    if (!ok) return // resetPassword already surfaced the error toast
     toast.success(t.team.toastPasswordReset)
     setResetPwUser(null)
     setNewPw('')

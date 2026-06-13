@@ -235,7 +235,7 @@ export function AuditLog() {
           filtered.map((entry, index) => {
             const category = getActionCategory(entry.action)
             const colors = ACTION_COLORS[category]
-            const Icon = ENTITY_ICONS[entry.entityType]
+            const Icon = ENTITY_ICONS[entry.entityType] ?? Activity
 
             return (
               <div key={entry.id} className="flex gap-4">
@@ -257,13 +257,13 @@ export function AuditLog() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${colors.bg} ${colors.text}`}>
-                            {ACTION_LABELS[entry.action]}
+                            {ACTION_LABELS[entry.action] ?? entry.action}
                           </span>
                           <span className="text-fg-subtle text-xs">
-                            {ENTITY_LABELS[entry.entityType]}
+                            {ENTITY_LABELS[entry.entityType] ?? entry.entityType}
                           </span>
                         </div>
-                        <p className="text-fg text-sm">{`${ACTION_LABELS[entry.action]}: ${entry.entityName}`}</p>
+                        <p className="text-fg text-sm">{`${ACTION_LABELS[entry.action] ?? entry.action}: ${entry.entityName}`}</p>
                         <p className="text-fg font-medium text-sm mt-1">{entry.entityName}</p>
                       </div>
                     </div>

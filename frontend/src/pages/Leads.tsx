@@ -119,7 +119,11 @@ export function Leads() {
   const [expandedScoreLeadId, setExpandedScoreLeadId] = useState<string | null>(null)
   const [expandedUpdatesLeadId, setExpandedUpdatesLeadId] = useState<string | null>(null)
 
-  const filtered = useMemo(() => getFilteredLeads(), [getFilteredLeads])
+  const leads = useLeadsStore((s) => s.leads)
+  // Recompute when leads or any filter changes — getFilteredLeads reads them from
+  // the store, so without these deps the memo froze on its first (empty) result.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const filtered = useMemo(() => getFilteredLeads(), [leads, search, stageFilter, scoreFilter])
   const stageLabels = t.leads.stageLabels
 
   const hotCount = filtered.filter((lead) => lead.score >= 70).length

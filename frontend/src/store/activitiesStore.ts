@@ -115,20 +115,23 @@ export const useActivitiesStore = create<ActivitiesState>()(
     },
 
     updateActivity: (id, updates) => {
+      const prev = get().activities
       set((state) => ({
         activities: state.activities.map((a) => a.id === id ? { ...a, ...updates } : a),
       }))
-      api.patch(`/activities/${id}`, updates).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.patch(`/activities/${id}`, updates).catch((e: unknown) => set({ activities: prev, error: getErrorMessage(e) }))
     },
 
     deleteActivity: (id) => {
+      const prev = get().activities
       const activity = get().getById(id)
       set((state) => ({ activities: state.activities.filter((a) => a.id !== id) }))
       useAuditStore.getState().logAction('activity_deleted', 'activity', id, activity?.subject ?? '', getTranslations().auditMessages.activityDeleted)
-      api.delete(`/activities/${id}`).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.delete(`/activities/${id}`).catch((e: unknown) => set({ activities: prev, error: getErrorMessage(e) }))
     },
 
     completeActivity: (id, outcome) => {
+      const prev = get().activities
       const now = new Date().toISOString()
       set((state) => ({
         activities: state.activities.map((a) =>
@@ -141,7 +144,7 @@ export const useActivitiesStore = create<ActivitiesState>()(
       useAuditStore.getState().logAction('activity_completed', 'activity', id, activity?.subject ?? '', getTranslations().auditMessages.activityCompleted)
       const patch: Record<string, unknown> = { status: 'completed', completedAt: now }
       if (outcome) patch.outcome = outcome
-      api.patch(`/activities/${id}`, patch).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.patch(`/activities/${id}`, patch).catch((e: unknown) => set({ activities: prev, error: getErrorMessage(e) }))
     },
 
     setFilter: (key, value) => {

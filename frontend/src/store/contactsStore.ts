@@ -105,19 +105,21 @@ export const useContactsStore = create<ContactsState>()(
     },
 
     updateContact: (id, updates) => {
+      const prev = get().contacts
       set((state) => ({
         contacts: state.contacts.map((c) =>
           c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c
         ),
       }))
       useAuditStore.getState().logAction('contact_updated', 'contact', id, '', getTranslations().auditMessages.contactUpdated)
-      api.patch(`/contacts/${id}`, updates).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.patch(`/contacts/${id}`, updates).catch((e: unknown) => set({ contacts: prev, error: getErrorMessage(e) }))
     },
 
     deleteContact: (id) => {
+      const prev = get().contacts
       set((state) => ({ contacts: state.contacts.filter((c) => c.id !== id) }))
       useAuditStore.getState().logAction('contact_deleted', 'contact', id, '', getTranslations().auditMessages.contactDeleted)
-      api.delete(`/contacts/${id}`).catch((e: unknown) => set({ error: getErrorMessage(e) }))
+      api.delete(`/contacts/${id}`).catch((e: unknown) => set({ contacts: prev, error: getErrorMessage(e) }))
     },
 
     bulkDelete: (ids) => {

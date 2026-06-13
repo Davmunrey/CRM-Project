@@ -69,13 +69,15 @@ export const useGoalsStore = create<GoalsState>()((set, get) => ({
   },
 
   updateGoal: (id, updates) => {
+    const prev = get().goals
     set((s) => ({ goals: s.goals.map((g) => g.id === id ? { ...g, ...updates } : g) }))
-    api.patch(`/goals/${id}`, updates).catch(() => {})
+    api.patch(`/goals/${id}`, updates).catch((e: unknown) => set({ goals: prev, error: (e as Error).message }))
   },
 
   deleteGoal: (id) => {
+    const prev = get().goals
     set((s) => ({ goals: s.goals.filter((g) => g.id !== id) }))
-    api.delete(`/goals/${id}`).catch(() => {})
+    api.delete(`/goals/${id}`).catch((e: unknown) => set({ goals: prev, error: (e as Error).message }))
   },
 
   getActiveGoals: () => {

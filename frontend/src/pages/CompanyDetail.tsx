@@ -235,7 +235,7 @@ export function CompanyDetail() {
           <div className="grid grid-cols-2 gap-x-8 gap-y-4">
             {[
               { label: t.common.name, value: company.name },
-              { label: t.companies.website, value: company.domain || '\u2014' },
+              { label: t.companies.website, value: company.website || company.domain || '\u2014' },
               { label: t.companies.industry, value: getIndustryLabel(company.industry, uiLang) },
               { label: t.companies.size, value: company.size || '\u2014' },
               { label: t.companies.country, value: company.country || '\u2014' },

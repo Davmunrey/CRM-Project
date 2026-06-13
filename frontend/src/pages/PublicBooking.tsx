@@ -59,6 +59,7 @@ export function PublicBooking() {
     if (!token || status !== 'ready') return
     setSlotsLoading(true)
     setPicked(null)
+    setErrMsg(null)
     fetch(`${API_BASE}/public/booking/${encodeURIComponent(token)}/slots?date=${date}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error('slots'))))
       .then((d: { slots: string[] }) => setSlots(d.slots ?? []))
