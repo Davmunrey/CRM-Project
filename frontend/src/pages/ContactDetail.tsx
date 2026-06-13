@@ -220,6 +220,7 @@ export function ContactDetail() {
                   loadingLabel={t.ai.analyzing}
                   resultTitle={t.ai.nextBestActionTitle}
                   run={() => useAiStore.getState().nextBestAction({ contactId: displayContact.id })}
+                  resetKey={displayContact.id}
                 />
                 <PermissionGate permission="contacts:update">
                   <Button variant="secondary" size="sm" leftIcon={<Edit2 size={14} />} onClick={() => setIsEditOpen(true)}>

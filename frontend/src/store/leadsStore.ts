@@ -197,11 +197,14 @@ export const useLeadsStore = create<LeadsState>()((set, get) => ({
   },
 
   updateLead: (id, updates) => {
+    const prev = get().leads
     set((s) => ({
       leads: s.leads.map((lead) => (lead.id === id ? { ...lead, ...updates, updatedAt: new Date().toISOString() } : lead)),
     }))
+    // Roll back on failure so a rejected change (e.g. a lead conversion the server
+    // refuses) doesn't leave the row falsely marked converted/updated.
     api.patch(`/leads/${id}`, updates).catch((err: Error) => {
-      set({ error: err.message })
+      set({ leads: prev, error: err.message })
     })
   },
 

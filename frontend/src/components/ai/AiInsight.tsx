@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { Sparkles, Copy, Check, X } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { useTranslations } from '../../i18n'
@@ -21,6 +21,9 @@ interface AiInsightProps {
   icon?: ReactNode
   size?: 'xs' | 'sm' | 'md'
   variant?: 'primary' | 'secondary' | 'ghost'
+  /** When this changes, the produced result is cleared — pass the record id so a
+   *  result computed for one record doesn't linger when a persistent drawer switches. */
+  resetKey?: string | number | undefined
 }
 
 /**
@@ -38,12 +41,20 @@ export function AiInsight({
   icon,
   size = 'sm',
   variant = 'secondary',
+  resetKey,
 }: AiInsightProps) {
   const t = useTranslations()
   const status = useAiStore((s) => s.status)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // Clear the produced result when the target record changes (e.g. a persistent
+  // detail drawer switches deals) so the previous record's insight doesn't linger.
+  useEffect(() => {
+    setResult(null)
+    setCopied(false)
+  }, [resetKey])
 
   // Hide entirely when we know AI is off; show optimistically while unknown.
   if (status && !status.enabled) return null

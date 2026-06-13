@@ -346,6 +346,7 @@ export function DealsPage() {
                 loadingLabel={t.ai.analyzing}
                 resultTitle={t.ai.nextBestActionTitle}
                 run={() => useAiStore.getState().nextBestAction({ dealId: selectedDeal.id })}
+                resetKey={selectedDeal.id}
               />
               <PermissionGate permission="deals:delete">
                 <Button size="sm" variant="ghost" leftIcon={<Trash2 size={14} />}
