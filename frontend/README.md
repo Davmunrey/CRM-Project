@@ -33,13 +33,13 @@ Realtime: Socket.io from the same `api/` process; frontend subscribes to `__n0cr
 
 | Module | Key features |
 |--------|-------------|
-| Dashboard | KPI cards, revenue chart, deal funnel, top deals, activity heatmap, onboarding checklist |
+| Dashboard | KPI cards, revenue chart, deal funnel, top deals, activity heatmap, onboarding checklist, composable drag-and-drop widgets |
 | Contacts | Table/grid, CSV export, duplicate detection, bulk actions, smart views, distribution lists, LinkedIn URL enrichment |
 | Companies | Industry/status/size filters, domain dedup, revenue tracking |
-| Deals | Kanban + list, multi-pipeline, stage auto-resolve, quote builder (save/export/email) |
+| Deals | Kanban + list + Calendar + Timeline (Gantt) board views, multi-pipeline, stage auto-resolve, quote builder (save/export/email), deal-rotting flags + activity reminders |
 | Activities | Unified feed, overdue highlighting, quick complete/delete |
 | Leads | Scoring engine (configurable rules), score snapshots, events timeline |
-| Automations | Rule builder (trigger/condition/action), execution log |
+| Automations | Rule builder (trigger/condition/action), execution log, no-code automation recipe center |
 | Sequences | Email sequences with A/B variants, enrollment management, step scheduling |
 | Products | Product catalog for deal line items and quotes |
 | Reports | Revenue by month, Won/Lost donut, activities by type, conversion funnel, email open/click stats |
@@ -54,6 +54,10 @@ Realtime: Socket.io from the same `api/` process; frontend subscribes to `__n0cr
 | Settings — Integrations | Google Gmail + Contacts + Calendar OAuth cards; **Zoom** integration card; **Slack** integration card |
 | Admin | Super-admin panel: org/user listing, impersonation, org-level AI kill switch, export (orgs + users) |
 | Notifications | In-app feed, mark-read, bulk clear |
+| Updates | Threaded activity updates, @mentions, teammate notifications on contacts/companies/deals/leads |
+| Tickets | Help-desk ticket queue (status/priority/assignee, contact/company links), status-filtered view |
+| Booking Links | Calendly-style meeting scheduler, public `/book/:token` page, per-user calendar availability |
+| Lead Forms | Web-to-lead form builder, public `/forms/:token` capture page (honeypot + rate-limited) |
 | AI Assistant | Global drawer + floating launcher (tool-using agent); inline AI actions — next-best-action on Contact/Deal detail, thread summarize + draft-reply in the Inbox |
 
 ---
@@ -194,7 +198,7 @@ The JWT lives in an HttpOnly `auth_token` cookie set by the API — the SPA neve
 
 ## Quality Gates
 
-The CI `ci` job (`.gitea/workflows/ci.yml`) runs these in order — run them before pushing. Current counts: **263 frontend tests** and **85 API tests** (0 audit vulnerabilities).
+The CI `ci` job (`.gitea/workflows/ci.yml`) runs these in order — run them before pushing. Current counts: **273 frontend tests** and **105 API tests** (0 audit vulnerabilities).
 
 ```bash
 npm run ui:lint          # design token / color guardrails

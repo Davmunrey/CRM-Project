@@ -348,7 +348,7 @@ Use after changes to **Dashboard**, **Settings → Getting started**, or [`onboa
 
 - `npm run test:run -- tests/utils/permissions.test.ts tests/utils/formatters.test.ts`
 - Result: `2 files passed`, `52 tests passed` (scoped subset only — not the full suite)
-- Full regression: `npm run test:run` (Vitest — last verified **43** files / **263** frontend tests, 0 failures, exit 0; API: **12** files / **85** tests, 0 failures)
+- Full regression: `npm run test:run` (Vitest — last verified **44** files / **273** frontend tests, 0 failures, exit 0; API: **16** files / **105** tests, 0 failures)
 - Lint diagnostics on modified files: no errors
 
 ## Defects

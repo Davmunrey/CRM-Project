@@ -14,7 +14,7 @@ Fastify REST API for n0CRM — self-hosted B2B CRM backend. This is the `api/` s
 | Encryption | AES-256-GCM for OAuth tokens, SMTP passwords, webhook/Slack/Zoom secrets |
 | AI | Multi-provider (Google Gemini free default / OpenAI / Anthropic) — `services/ai/*`, routes under `/ai` |
 | Identity | MFA (TOTP, RFC 6238), OIDC SSO (PKCE + JWKS RS256, JIT provisioning), SCIM 2.0 user provisioning |
-| Quality gates | ESLint flat config + `tsc --noEmit` + Vitest (85 tests across 12 files) + `npm audit`, enforced by the `api` CI job |
+| Quality gates | ESLint flat config + `tsc --noEmit` + Vitest (105 tests across 16 files) + `npm audit`, enforced by the `api` CI job |
 
 ---
 
@@ -640,13 +640,13 @@ The backend is gated in CI by the **`api` job** in [`.gitea/workflows/ci.yml`](.
 ```bash
 npx tsc --noEmit                 # type check (no emit)
 npm run lint                     # ESLint (flat config — eslint.config.js)
-npx vitest run                   # unit tests (85 tests across 12 files)
+npx vitest run                   # unit tests (105 tests across 16 files)
 npm run build                    # tsc → dist/
 npm audit --audit-level=critical # dependency audit (0 vulnerabilities expected)
 ```
 
 - **ESLint** uses a flat config (`eslint.config.js`): `@eslint/js` + `typescript-eslint` recommended. Unused vars are an error (underscore-prefixed args/vars ignored); `no-explicit-any` is a warning (off in tests); `no-empty` allows empty catch blocks.
-- **Vitest** suite (`*.test.ts`) covers the AI providers (`providers.test.ts`), agent loop (`agent.test.ts`), CRM tools (`tools.test.ts`), retention purge (`retention.test.ts`), the Slack outbound allow-list (`slack.test.ts`), TOTP (`totp.test.ts`), the RBAC permission matrix (`permissions.test.ts`) and guards (`rbac.test.ts`), OIDC claim/PKCE helpers (`oidc.test.ts`), SCIM helpers (`scim.test.ts`), public-API scope enforcement (`publicApi.scopes.test.ts`), and observability (`observability.test.ts`) — no DB or network required (collaborators are injected as fakes / pure helpers are tested directly).
+- **Vitest** suite (`*.test.ts`) covers the AI providers (`providers.test.ts`), agent loop (`agent.test.ts`), CRM tools (`tools.test.ts`), retention purge (`retention.test.ts`), the Slack outbound allow-list (`slack.test.ts`), TOTP (`totp.test.ts`), the RBAC permission matrix (`permissions.test.ts`) and guards (`rbac.test.ts`), OIDC claim/PKCE helpers (`oidc.test.ts`), SCIM helpers (`scim.test.ts`), public-API scope enforcement (`publicApi.scopes.test.ts`), observability (`observability.test.ts`), threaded Updates/mentions (`updates.test.ts`), web-to-lead forms (`leadForms.test.ts`), help-desk tickets (`tickets.test.ts`), and meeting-scheduler booking slots (`bookingSlots.test.ts`) — no DB or network required (collaborators are injected as fakes / pure helpers are tested directly).
 
 This `api` job is new: the backend previously had no lint/type/test gate. The frontend has its own job (ui:lint, i18n:lint, i18n:coverage, eslint with 0 warnings, tsc, vitest, build, ≤250KB gzip bundle budget, npm audit).
 

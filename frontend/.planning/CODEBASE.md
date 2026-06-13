@@ -262,8 +262,8 @@ Stateless integration adapters:
 | Observability | x-request-id correlation, Sentry (optional `SENTRY_DSN`), Prometheus + Grafana |
 | Package manager | npm (lockfile present) |
 
-Test counts (from vitest run): API = **85 tests** across **12 files**;
-frontend = **263 tests**. `npm audit` = **0 vulnerabilities**.
+Test counts (from vitest run): API = **105 tests** across **16 files**;
+frontend = **273 tests** across **44 files**. `npm audit` = **0 vulnerabilities**.
 
 ---
 

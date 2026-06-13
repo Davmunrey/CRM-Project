@@ -115,7 +115,7 @@ See: .planning/PROJECT.md
 
 **Deployment ready:**
 - Google OAuth verification (restricted scopes) pending: 4–6 week Google review for production users (dev/test mode works for approved test accounts)
-- Build: `npm run build` + `npm run test:run` green (API: 85 tests / 12 files; frontend: 263 tests; 0 npm audit vulnerabilities)
+- Build: `npm run build` + `npm run test:run` green (API: 105 tests / 16 files; frontend: 273 tests; 0 npm audit vulnerabilities)
 - Docker images: `docker build` for frontend (nginx), `docker build` for api (Node.js)
 
 ---

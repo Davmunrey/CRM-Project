@@ -138,7 +138,7 @@ The AI / agentic feature (`api/src/services/ai/*`, routes under `/ai`) is **mult
 
 This matrix tracks production hardening posture across security, reliability, operations, and governance.
 
-**Snapshot (2026-06-11):** Enterprise identity controls shipped on top of the API security and infrastructure hardening: **OIDC SSO** (PKCE S256, JWKS RS256 verify, JIT provisioning), **SCIM 2.0** user lifecycle (scoped Bearer api-key, soft-deprovision + session revoke, last-active-owner protection), **MFA (TOTP)** (AES-256-GCM secret at rest, login prompt), **server-side RBAC** (`requirePermission`/`requireCrudPermission` across CRM CRUD + member/API-key/webhook management; roles owner/admin/manager/sales_rep/viewer), **GDPR export/erasure** endpoints (`/privacy`), and an append-only **`security_events`** log (migration 020). API-key **scopes** are now enforced (`leads:write`, `scim`) with a Settings → Integrations scope selector. Prior API hardening: trustProxy hop-count (XFF no longer spoofable on auth routes), account lockout (10 / 15 min → 429), self-registration policy, `/metrics` gated on the raw socket peer + `x-internal-key`, `/_debug/sql` running in a **READ ONLY** transaction, Socket.io handshake re-checking `users.is_active` + org, Slack outbound re-asserting the `hooks.slack.com` allow-list at send, cross-org FK ownership checks on deals, and the sequence runner claiming rows `FOR UPDATE SKIP LOCKED`. `npm audit` reports **0 vulnerabilities** on api and frontend. CI gate (`.gitea/workflows/ci.yml`): the `api` job runs tsc → eslint → vitest → build → npm audit; the API vitest suite is **85 tests across 12 files**; the frontend suite is **263 tests**. Prior (2026-05-25): RLS on 21 tables with `set_current_org()`, 40+ indexes, PgBouncer (transaction mode, 25 server conn / 500 max clients), Prometheus/Grafana, per-org 500 req/min + per-IP 20 req/min auth limits, Socket.io Redis adapter, pg_dump backups (6h / 7-day retention), service health checks. Rows below stay open until **external** sign-offs (RLS review, DR drill calendar, secret rotation log) are attached as evidence.
+**Snapshot (2026-06-11):** Enterprise identity controls shipped on top of the API security and infrastructure hardening: **OIDC SSO** (PKCE S256, JWKS RS256 verify, JIT provisioning), **SCIM 2.0** user lifecycle (scoped Bearer api-key, soft-deprovision + session revoke, last-active-owner protection), **MFA (TOTP)** (AES-256-GCM secret at rest, login prompt), **server-side RBAC** (`requirePermission`/`requireCrudPermission` across CRM CRUD + member/API-key/webhook management; roles owner/admin/manager/sales_rep/viewer), **GDPR export/erasure** endpoints (`/privacy`), and an append-only **`security_events`** log (migration 020). API-key **scopes** are now enforced (`leads:write`, `scim`) with a Settings → Integrations scope selector. Prior API hardening: trustProxy hop-count (XFF no longer spoofable on auth routes), account lockout (10 / 15 min → 429), self-registration policy, `/metrics` gated on the raw socket peer + `x-internal-key`, `/_debug/sql` running in a **READ ONLY** transaction, Socket.io handshake re-checking `users.is_active` + org, Slack outbound re-asserting the `hooks.slack.com` allow-list at send, cross-org FK ownership checks on deals, and the sequence runner claiming rows `FOR UPDATE SKIP LOCKED`. `npm audit` reports **0 vulnerabilities** on api and frontend. CI gate (`.gitea/workflows/ci.yml`): the `api` job runs tsc → eslint → vitest → build → npm audit; the API vitest suite is **105 tests across 16 files**; the frontend suite is **273 tests**. Prior (2026-05-25): RLS on 21 tables with `set_current_org()`, 40+ indexes, PgBouncer (transaction mode, 25 server conn / 500 max clients), Prometheus/Grafana, per-org 500 req/min + per-IP 20 req/min auth limits, Socket.io Redis adapter, pg_dump backups (6h / 7-day retention), service health checks. Rows below stay open until **external** sign-offs (RLS review, DR drill calendar, secret rotation log) are attached as evidence.
 
 ## Document Control
 
@@ -286,7 +286,29 @@ Use this checklist when validating a **production** deployment. The live backend
 
 - [x] App-layer org scoping is the **authoritative** isolation control; all org-scoped routes assert `req.user.org`; cross-org **FK ownership checks** on deals prevent attaching another tenant's records.
 - [x] RLS **enabled** on 21 tenant/user tables with `set_current_org()` SECURITY DEFINER + claim helpers (`get_org_id`, `get_user_role`) as **defense-in-depth** (opt-in; see `docs/adr/0001-tenant-isolation-and-rls.md`). Do **not** represent RLS as the sole enforcement on every table.
-- [x] **Server-side RBAC** enforced via `requirePermission`/`requireCrudPermission` (`api/src/middleware/rbac.ts`, matrix in `services/permissions.ts`) across CRM CRUD (contacts/companies/deals/activities/leads) + member, API-key, and webhook management. Roles: owner/admin/manager/sales_rep/viewer (viewer is read-only). Member lifecycle: `PATCH /orgs/me/members/:id/role|status` with safety rules.
+- [x] **Server-side RBAC** enforced via `requirePermission`/`requireCrudPermission` (`api/src/middleware/rbac.ts`, matrix in `services/permissions.ts`) across CRM CRUD (contacts/companies/deals/activities/leads/**tickets**/**updates**) + member, API-key, automation, and webhook management. Roles: owner/admin/manager/sales_rep/viewer (viewer is read-only). Member lifecycle: `PATCH /orgs/me/members/:id/role|status` with safety rules.
+
+### Role capability matrix
+
+Authoritative source: `api/src/services/permissions.ts` (`resource:action` permissions, enforced server-side; `owner` implicitly holds every permission). Roles in privilege order: **owner → admin → manager → sales_rep → viewer**. The CRM record resources — **contacts, companies, deals, activities, leads, tickets, updates** — all share one read/write/delete pattern, so the recently shipped **Tickets / help desk** and **Updates & @mentions** features inherit the same gates as the rest of the CRM.
+
+| Capability | Owner | Admin | Manager | Sales rep | Viewer |
+|---|:--:|:--:|:--:|:--:|:--:|
+| CRM records — **read** (contacts · companies · deals · activities · leads · **tickets** · **updates**) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| CRM records — **create / edit** | ✓ | ✓ | ✓ | ✓ | — |
+| CRM records — **delete** | ✓ | ✓ | ✓ | — | — |
+| Reports | ✓ | ✓ | ✓ | ✓ | ✓ |
+| AI assistant (`ai:use`) | ✓ | ✓ | ✓ | ✓ | — |
+| Automations — manage recipes | ✓ | ✓ | ✓ | — | — |
+| Settings — read | ✓ | ✓ | ✓ | — | — |
+| Settings — manage | ✓ | ✓ | — | — | — |
+| Members — read | ✓ | ✓ | ✓ | — | — |
+| Members — manage (role / status) | ✓ | ✓ | — | — | — |
+| API keys — manage | ✓ | ✓ | — | — | — |
+| Webhooks — manage | ✓ | ✓ | — | — | — |
+| Billing — manage | ✓ | ✓ | — | — | — |
+
+**Per-user–owned features** (not role-gated — every authenticated member manages their own): **booking links** (`/booking-pages`, scoped to `user_id`) for the meeting scheduler, plus their personal **web-to-lead forms**. **Public, no-account surfaces** (token-in-path, honeypot + rate-limited): `/book/:token` (meeting scheduler) and `/forms/:token` (web-to-lead capture). Calendar/Timeline board views and composable dashboard widgets are UI layers over `deals`/`activities` data and are governed by those resources' **read** permission.
 - [x] `SECURITY DEFINER` functions reviewed; search-path hardening migration applied.
 - [x] Indexes exist on columns referenced in policies / hot paths (40+ indexes; avoids full-table scans at scale).
 - [ ] Run tenant-isolation smoke in CI: User A cannot read/update User B org rows (automate — see Immediate Actions).
@@ -339,7 +361,7 @@ Use this checklist when validating a **production** deployment. The live backend
 ## CI/CD and Secrets
 
 - [x] CI gates run per package: `.gitea/workflows/ci.yml` has an **`api`** job (`npm ci → tsc → eslint → vitest → build → npm audit`) and a **`ci`** job for `frontend/` (ui:lint, i18n:lint, i18n parity, eslint, tsc, vitest, build, bundle budget, npm audit). Gitea is the authoritative remote; `.github/workflows/` mirrors may exist but cite the Gitea pipeline.
-- [x] API test suite: **85 tests across 12 files** (vitest). Frontend suite: **263 tests**.
+- [x] API test suite: **105 tests across 16 files** (vitest). Frontend suite: **273 tests**.
 - [ ] E2E secrets use n0crm-api endpoints: `E2E_API_URL`, `E2E_USER_EMAIL`, `E2E_USER_PASSWORD`.
 - [x] `npm audit` reports **0 vulnerabilities** on api and frontend.
 - [ ] No secrets committed; all environment variables set in CI/CD platform. Provider keys (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`), `OIDC_*`, and `TOKEN_ENCRYPTION_KEY` belong in the API runtime, not the client bundle or CI logs.
@@ -389,7 +411,7 @@ It is a pragmatic engineering mapping (not legal advice and not a formal certifi
 | SOC2 - Security (provisioning) | Controlled user lifecycle | SCIM 2.0 provision/deprovision (soft-deactivate + session revoke, last-owner protection); member role/status PATCH | `routes/scim.ts` (+ `scim.test.ts`), `routes/orgs.ts` | Automate IdP↔SCIM reconciliation | Backend |
 | SOC2 - Availability | Detect and respond to processing disruptions | `lead-score-maintenance` telemetry + SLA mode + notifications; health probes (`/health`, `/health/ready`, `/health/live`) | LM (score backend, runbook), `routes/health.ts` | External paging + uptime SLO dashboard (backend SLOs open) | Ops |
 | SOC2 - Processing Integrity | Ensure scoring jobs run correctly and are observable | `lead_score_maintenance_runs` status/error history + Settings Ops dashboard | LM (ops dashboard) | Add anomaly thresholds and automated weekly report | Backend/Ops |
-| SOC2 - Change Management | Controlled release readiness | Production handoff checklist + **CI gates** on both packages (api: tsc/eslint/vitest/build/audit, 85 tests; frontend: full guardrail suite, 263 tests) | RQA, `.gitea/workflows/ci.yml` | Enforce required status checks on `master`; add regression tests | Engineering |
+| SOC2 - Change Management | Controlled release readiness | Production handoff checklist + **CI gates** on both packages (api: tsc/eslint/vitest/build/audit, 105 tests; frontend: full guardrail suite, 273 tests) | RQA, `.gitea/workflows/ci.yml` | Enforce required status checks on `master`; add regression tests | Engineering |
 | SOC2 - Confidentiality | Protect secrets and auth paths | JWT HS256 pinned + `jti` denylist, bcrypt cost 12, account lockout, MFA/SMTP secrets AES-256-GCM at rest (`TOKEN_ENCRYPTION_KEY`), env validated at startup | sec (auth handoff, external checklist) | Define secret rotation cadence and audit log | Ops/Security |
 | SOC2 - Security (monitoring) | Detect/limit abuse + retain security events | trustProxy-keyed per-IP + per-org rate limits, account lockout, append-only `security_events` log, `/metrics`+`/_debug` surface gating, SSRF allow-lists (Slack/webhooks) | sec (external checklist), `services/securityEvents.ts`, migration 020 | Wire alerting on lockout/error-rate spikes; SIEM forwarding (alerting open) | Backend/Ops |
 | AI Governance | Bound AI cost, scope, and data lifetime | Per-org kill switch, monthly output-token cap (429), org-scoped + audited agent tools, `AI_MESSAGE_RETENTION_DAYS` purge, egress allow-list | [#ai-governance](#ai-governance), `018_ai.sql` | Per-org AI spend dashboards + alerting | Backend/AI |

@@ -286,7 +286,7 @@ TEST-01, TEST-02, TEST-03, TEST-04, TEST-05
 
 ### Done When
 
-- [x] `npm test` exits 0 — 263 frontend tests passing (authoritative from vitest run); API suite: 85 tests across 12 files
+- [x] `npm test` exits 0 — 273 frontend tests passing (authoritative from vitest run); API suite: 105 tests across 16 files
 - [x] `npm run test:coverage` shows coverage report
 - [ ] Gitea CI triggers on MR and shows test + type check results (operator task — requires Gitea runner setup)
 - [ ] Deliberate type error causes CI `tsc --noEmit` to fail (operator task)
@@ -479,3 +479,4 @@ Each item will graduate to its own numbered phase when scoped and scheduled.
 
 *Roadmap created: 2026-03-31*
 *Last updated: 2026-06-11 — Restructured phase list to eliminate duplicate Phase 11; renumbered production deployment to Phase 12; added Phase 11 (Enterprise Hardening, completed 2026-06-11) covering MFA/OIDC SSO/SCIM/RBAC/GDPR/AI/security-events/observability; added Phase 13 for genuinely-open future work; removed all Supabase references from plan text; corrected test counts to authoritative figures (263 frontend, 85 API); updated phase count to 13.*
+*Updated 2026-06-13 — shipped a Monday-style collaboration + CRM-competitive wave (Updates & @mentions, Calendar + Timeline board views, composable dashboard widgets, no-code automation recipe center, web-to-lead forms, deal rotting + activity reminders, tickets / help desk, meeting scheduler / booking links); refreshed authoritative test counts to 273 frontend / 44 files and 105 API / 16 files.*

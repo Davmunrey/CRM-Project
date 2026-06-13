@@ -15,7 +15,7 @@
 - All CRM delete operations use REST API. Team invite de-duplicated.
 - Transactional emails (password reset, invitations) wired via nodemailer/Resend in n0crm-api.
 - i18n: 6 languages (`en`, `es`, `pt`, `fr`, `de`, `it`), parity verified.
-- **Test suite: API 85 passing across 12 files; frontend 263 passing. 0 audit vulnerabilities.** CI: Gitea — `.gitea/workflows/ci.yml` (canonical), `build-api.yml`, `build-production.yml`.
+- **Test suite: API 105 passing across 16 files; frontend 273 passing across 44 files. 0 audit vulnerabilities.** CI: Gitea — `.gitea/workflows/ci.yml` (canonical), `build-api.yml`, `build-production.yml`.
 - **Multi-provider AI delivered:** Gemini free default / OpenAI / Anthropic. Tool-using CRM agent, persisted conversations, assistant drawer (`AiAssistant.tsx` embedded in layout), per-contact/deal/inbox `AiInsight` next-best-action widget, Inbox summarize + draft-reply. Governance: per-org kill switch (`settings.ai.enabled`), `AI_MONTHLY_TOKEN_CAP`, `AI_MESSAGE_RETENTION_DAYS` purge cron (migration 018).
 - **Enterprise features shipped:** MFA (TOTP, RFC 6238; migration 019), OIDC SSO (PKCE S256, JWKS RS256, JIT provisioning; migration 019/020), SCIM 2.0 (RFC 7643/7644; scim-scoped Bearer key), server-side RBAC (`requirePermission` / `requireCrudPermission`; roles: `owner / admin / manager / sales_rep / viewer`), member lifecycle (role + status PATCH with safety rules), GDPR API routes (Art. 15/17/20), security-event audit log (migration 020).
 - Public API: `POST /api/public/v1/leads` authenticated by header `x-api-key: <key>` (prefix `n0crm_`); requires scope `leads:write`; minted in Settings > Integrations. API-key scope selector UI shows scopes per key (`leads:write`, `scim`).
@@ -176,7 +176,7 @@
 - [x] **TEST-02**: Unit tests for `leadScoring.ts` (`computeLeadScore`, `calculateLeadScore`)
 - [x] **TEST-03**: Unit tests for Zustand stores (contact CRUD, deal stage transitions) with API mocked
 - [x] **TEST-04**: Unit tests for Zod schemas in form validation
-- [x] **TEST-05**: CI (`ci.yml`) runs `vitest run` + `tsc --noEmit` on every push. API: 85 tests across 12 files; frontend: 263 tests. `npm audit` = 0 vulnerabilities.
+- [x] **TEST-05**: CI (`ci.yml`) runs `vitest run` + `tsc --noEmit` on every push. API: 105 tests across 16 files; frontend: 273 tests. `npm audit` = 0 vulnerabilities.
 
 ### Deployment
 

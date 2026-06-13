@@ -7,7 +7,7 @@
 ## Table of contents
 
 - [Part A — Sections 1–12 (foundation)](#implementation-history-sections-01-12)
-- [Part B — Sections 13–28 (recent waves)](#implementation-history)
+- [Part B — Sections 13–35 (recent waves)](#implementation-history)
 - [Chronological index (oldest → newest)](#chronological-index-oldest--newest)
 
 ---
@@ -15,7 +15,7 @@
 <a id="chronological-index-oldest--newest"></a>
 ## Chronological index (oldest → newest)
 
-Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part A, 13–30 in Part B) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
+Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part A, 13–35 in Part B) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
 
 | Date | Section | Summary |
 |------|---------|---------|
@@ -42,6 +42,7 @@ Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part
 | 2026-06-02 | [§32](#implementation-history-section-32) | **Multi-provider AI + tool agent + governance:** Gemini (free default) / OpenAI / Anthropic, tool-using CRM agent, persisted conversations, assistant drawer, next-best-action, Inbox summarize + draft-reply; per-org kill switch, monthly token cap, retention purge (migration 018). |
 | 2026-06-11 | [§33](#implementation-history-section-33) | **Enterprise wave:** MFA (TOTP, migration 019), OIDC SSO + frontend SSO button, SCIM 2.0, server-side RBAC + member lifecycle, GDPR export/erasure, security-event audit log (migration 020), observability/health/metrics, API-key scopes + Settings UI. |
 | 2026-06-11 | [§34](#implementation-history-section-34) | **Structural reference:** `docs/CODEBASE-MAP.md` (full 403-file map) and identity setup doc `docs/sso-and-scim.md`; tenant-isolation ADR `docs/adr/0001`. |
+| 2026-06-13 | [§35](#implementation-history-section-35) | **Monday-style collaboration + CRM-competitive wave:** Updates & @mentions (migration 021), Calendar + Timeline board views, composable dashboard widgets (022), no-code automation recipe center, web-to-lead forms (023), deal rotting + activity reminders, tickets / help desk (024), meeting scheduler / booking links (025). |
 
 ---
 
@@ -49,7 +50,7 @@ Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part
 <a id="implementation-history-sections-01-12"></a>
 ## Part A — Sections 1–12 (foundation)
 
-Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–30).
+Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–35).
 
 ## Document control
 
@@ -219,9 +220,9 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 
 
 <a id="implementation-history"></a>
-## Part B — Sections 13–30 (recent waves)
+## Part B — Sections 13–35 (recent waves)
 
-**Part B** is the active delivery narrative (sections 13–30). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
+**Part B** is the active delivery narrative (sections 13–35). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
 
 ## Document control
 
@@ -237,7 +238,7 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 | **A** | [Anchor `#implementation-history-sections-01-12`](#implementation-history-sections-01-12) | 1–12: platform, tenancy, auth, org setup, security, email tracking, **leads**, i18n, UI, SSO, tests, ops notes |
 | **B** | *below in this section* | 13–34 |
 
-Cross-references elsewhere in the repo to **”section 19”**, **”section 21”**, etc. mean **Part B** in this file. References to **section 7** (leads baseline) mean **Part A** above. Section 34 (structural reference docs, 2026-06-11) is the most recent addition to Part B; the 2026-06 enterprise wave is sections 31–34.
+Cross-references elsewhere in the repo to **”section 19”**, **”section 21”**, etc. mean **Part B** in this file. References to **section 7** (leads baseline) mean **Part A** above. Section 35 (Monday-style collaboration + CRM-competitive wave, 2026-06-13) is the most recent addition to Part B; the 2026-06 enterprise wave is sections 31–34 and the collaboration/CRM-parity wave is section 35.
 
 <a id="implementation-history-section-13"></a>
 ## 13) Current status summary
@@ -753,4 +754,25 @@ These remain **not shipped**: SAML federation; HA/DR automated failover (a resto
 
 ---
 
-> **Last updated:** 2026-06-11. Sections 31–34 document the post-Supabase, AI, and enterprise-identity waves; sections 1–30 are preserved as written.
+<a id="implementation-history-section-35"></a>
+## 35) Monday-style collaboration + CRM-competitive wave (June 2026)
+
+Two feature waves shipped on top of the enterprise-identity base, each in small verified increments (tsc → eslint → i18n coverage → full vitest → build, then commit + push to Gitea).
+
+**Monday-style collaboration & views**
+- **Updates & @mentions** — threaded `item_updates` on contacts/companies/deals/leads with `@[Name](uuid)` mention parsing → notifications; replies + author-or-elevated soft-delete; `/updates` gated by a dedicated `updates` RBAC resource (a viewer-could-post gap was found and closed during this wave) (migration 021).
+- **Calendar + Timeline board views** — the Deals board gains a month-Calendar (by `expectedCloseDate`) and a Gantt-Timeline view mode alongside Kanban/List, stage-colour-coded.
+- **Composable dashboard widgets** — Overview/Custom toggle with drag-and-drop number/bar/funnel/list widgets computed from stores; per-user layout via `PATCH /preferences/me/dashboard` (migration 022).
+- **No-code automation recipe center** — visual builder + searchable template library + "when → then" recipe lines over the existing `automation_rules` backend.
+
+**CRM-competitive parity (HubSpot / Zoho / Pipedrive / Calendly)**
+- **Web-to-lead form builder** — public `GET/POST /public/forms/:token` (honeypot + rate-limited) + hosted `{origin}/forms/<token>`; builder UI in Settings → Integrations (migration 023).
+- **Deal rotting + activity-based selling** — Kanban "Rotting" (open deal idle ≥ 14d) and "No next activity scheduled" flags via `utils/dealRot.ts`.
+- **Help desk / tickets** — `tickets` entity (status/priority/assignee, contact/company links) + `/tickets` CRUD (RBAC `tickets` resource) + Tickets page with a status-filtered queue (migration 024).
+- **Meeting scheduler / booking links** — Calendly-style public `GET/POST /public/booking/:token` + hosted `{origin}/book/<token>`; per-user `booking_pages`/`bookings`, a pure slot engine (`services/bookingSlots.ts`), and a confirmed booking auto-creates a calendar event + activity (+ optional lead) with an invitee self-cancel link; managed at `/booking-pages` (BookingPages.tsx) (migration 025).
+
+**RBAC & docs.** The `tickets` and `updates` resources joined the CRM permission matrix (`api/src/services/permissions.ts`) and inherit the read/write/delete pattern across owner/admin/manager/sales_rep/viewer — see the [Role capability matrix](master-security-compliance.md#role-capability-matrix). Test suites grew to **105 API tests / 16 files** and **273 frontend tests / 44 files**; all `.md` current-state docs were refreshed to match.
+
+---
+
+> **Last updated:** 2026-06-13. Sections 31–34 document the post-Supabase, AI, and enterprise-identity waves; section 35 documents the Monday-style collaboration + CRM-competitive wave; sections 1–30 are preserved as written.

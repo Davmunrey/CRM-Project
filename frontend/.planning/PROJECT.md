@@ -35,6 +35,14 @@ A sales team can be onboarded, invite colleagues, and manage their entire pipeli
 - ✓ Leaderboard and team performance metrics — existing
 - ✓ Sales Goals tracking — existing
 - ✓ Pipeline Timeline view — existing
+- ✓ Calendar + Timeline board views (Deals) — existing
+- ✓ Updates & @mentions (collaboration) — existing
+- ✓ Composable dashboard widgets — existing
+- ✓ No-code automation recipe center — existing
+- ✓ Web-to-lead form builder (public /forms/:token) — existing
+- ✓ Deal rotting + activity reminders — existing
+- ✓ Tickets / help desk — existing
+- ✓ Meeting scheduler / booking links (public /book/:token) — existing
 - ✓ Email Templates library — existing
 - ✓ Products catalog — existing
 - ✓ Notifications system — existing
@@ -89,7 +97,7 @@ A sales team can be onboarded, invite colleagues, and manage their entire pipeli
 
 ## Context
 
-**Current state (2026-06-11):** Monorepo complete (`frontend/` + `api/` + `docker-compose.yml` at root). 20 migrations. All CRM modules backed by n0crm-api (Fastify 5, Node.js 22, PostgreSQL 16). Auth: JWT HS256, no Supabase Auth. Real-time via Socket.io. Gmail fully self-hosted via `/gmail/*`. Enterprise controls shipped: MFA (TOTP), OIDC SSO, SCIM 2.0, server-side RBAC, GDPR privacy endpoints, security-event audit log, multi-provider AI (Gemini/OpenAI/Anthropic) with governance. API: 85 tests across 12 files; frontend: 263 tests; npm audit: 0 vulnerabilities. CI on Gitea (`.gitea/workflows/ci.yml`). Seed admin: `admin@n0crm.local`.
+**Current state (2026-06-13):** Monorepo complete (`frontend/` + `api/` + `docker-compose.yml` at root). 25 migrations. All CRM modules backed by n0crm-api (Fastify 5, Node.js 22, PostgreSQL 16). Auth: JWT HS256, no Supabase Auth. Real-time via Socket.io. Gmail fully self-hosted via `/gmail/*`. Enterprise controls shipped: MFA (TOTP), OIDC SSO, SCIM 2.0, server-side RBAC, GDPR privacy endpoints, security-event audit log, multi-provider AI (Gemini/OpenAI/Anthropic) with governance. CRM-competitive + Monday-style features shipped: Updates & @mentions, Calendar + Timeline board views, composable dashboard widgets, no-code automation recipe center, web-to-lead forms, deal rotting + activity reminders, tickets / help desk, meeting scheduler / booking links. API: 105 tests across 16 files; frontend: 273 tests; npm audit: 0 vulnerabilities. CI on Gitea (`.gitea/workflows/ci.yml`). Seed admin: `admin@n0crm.local`.
 
 **Known issues (current):**
 - Production deploy not yet executed (DEPLOY-01–05 operator tasks)

@@ -9,7 +9,7 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 <br/>
 
 [![CI](https://img.shields.io/badge/CI-tsc·eslint·vitest·build·audit-2ea44f?style=flat-square)](.gitea/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-API%2085%20·%20Web%20263-2ea44f?style=flat-square)](#-quality-gates)
+[![Tests](https://img.shields.io/badge/tests-API%20105%20·%20Web%20273-2ea44f?style=flat-square)](#-quality-gates)
 [![Vulnerabilities](https://img.shields.io/badge/npm%20audit-0%20vulnerabilities-2ea44f?style=flat-square)](#-security-at-a-glance)
 [![License](https://img.shields.io/badge/license-Internal-555?style=flat-square)](#)
 [![Maintained by Clovr Labs](https://img.shields.io/badge/by-Clovr%20Labs-4f46e5?style=flat-square)](#)
@@ -59,6 +59,7 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 - 🧲 **Web-to-lead form builder** — HubSpot/Pipedrive-style public lead forms backed by a revocable `lct_` token: configure title/fields/success in Settings, grab the hosted-form URL `{origin}/forms/<token>` or iframe embed (honeypot + rate-limited), and leads drop straight into the CRM.
 - 🔥 **Deal rotting & activity-based selling** — Pipedrive-style flags on deal cards for idle/"rotting" deals and deals with **no next activity scheduled**, alongside the existing deal-health scoring.
 - 🎫 **Help desk / tickets** — HubSpot Service / Zoho Desk-style support tickets (status, priority, assignee, contact/company links) with a status-filtered queue — CRM **+ service** in one place.
+- 📆 **Meeting scheduler / booking links** — Calendly-style public booking pages backed by a revocable `bkg_` token: publish per-user availability (weekday / time window / duration), share `{origin}/book/<token>`, and each confirmed booking auto-creates a calendar event + activity (+ optional lead). Honeypot + rate-limited; invitees get a self-serve cancel link.
 - 🤖 **AI / agentic capability** — multi-provider (`Gemini` free default / `OpenAI` / `Anthropic`), a tool-using CRM agent with persisted conversations, in-app assistant drawer, next-best-action on Contact/Deal detail, and Inbox summarize + draft-reply.
 - 🛡️ **AI governance** — per-tenant kill switch, monthly token spend cap, and retention purge of AI transcripts.
 - 🔑 **MFA (TOTP)** — RFC-6238, end-to-end (enroll in Settings → Security, code prompt at login).
@@ -66,7 +67,7 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 - 👮 **Server-side RBAC** — permission matrix + `requirePermission` middleware, wired into member-lifecycle, API-key and webhook management.
 - 🧾 **Compliance** — security-event audit log (login/MFA/role changes/impersonation) + GDPR export & erasure endpoints.
 - 🔭 **Observability** — request-correlation IDs (`x-request-id`), central error capture, liveness/readiness probes.
-- ✅ **Backend CI gate** — the API gained ESLint + an 85-test Vitest suite + a CI job (it previously had *none*).
+- ✅ **Backend CI gate** — the API gained ESLint + a 105-test Vitest suite + a CI job (it previously had *none*).
 
 ---
 
@@ -99,12 +100,12 @@ Browser (React SPA)
   │
   ├── REST API   ──→  Fastify 5  (Node 22)
   │   │                 ├─ /auth  /contacts /deals /companies /activities
-  │   │                 ├─ /leads /sequences /automations /products
-  │   │                 ├─ /reports /forecast /inbox /calendar
+  │   │                 ├─ /leads /tickets /updates /sequences /automations /products
+  │   │                 ├─ /reports /forecast /inbox /calendar /booking-pages
   │   │                 ├─ /ai (status · summarize · draft-reply · next-best-action · search · agent)
   │   │                 ├─ /privacy (GDPR export · erasure)   /custom-fields /goals /audit /webhooks
   │   │                 ├─ /health(/live·/ready)  /metrics  /internal/*
-  │   │                 └─ /admin  /public/v1
+  │   │                 └─ /admin  /public/v1  /public/forms/<token>  /public/booking/<token>
   │   │
   │   ├── Realtime   ──→  Socket.io 4 (Redis adapter) — org-scoped rooms, JWT + is_active verified
   │   └── Background ──→  sequence runner (FOR UPDATE SKIP LOCKED) · AI retention purge
@@ -121,13 +122,16 @@ Browser (React SPA)
 
 | Module | Description |
 |--------|-------------|
-| 📊 **Dashboard** | KPI cards, revenue chart, deal funnel, activity heatmap, onboarding checklist |
+| 📊 **Dashboard** | KPI cards, revenue chart, deal funnel, activity heatmap, onboarding checklist, composable drag-and-drop widgets (number/chart/funnel/list, saved per user) |
 | 👤 **Contacts** | Table/grid, CSV export, duplicate detection, bulk actions, smart views, distribution lists, LinkedIn enrichment |
 | 🏢 **Companies** | Industry/status/size filters, domain dedup, revenue tracking |
-| 💼 **Deals** | Kanban + list, multi-pipeline, stage auto-resolve, quote builder (save/export/email) |
+| 💼 **Deals** | Kanban + list + Calendar + Timeline (Gantt) board views, multi-pipeline, stage auto-resolve, quote builder (save/export/email), deal-rotting flags + activity reminders |
 | ✅ **Activities** | Unified feed, overdue highlighting, quick complete/delete |
-| 🎯 **Leads** | Configurable scoring engine, score snapshots, events timeline |
-| ⚙️ **Automations** | Rule builder (trigger → condition → action), execution log |
+| 🎯 **Leads** | Configurable scoring engine, score snapshots, events timeline, **web-to-lead public forms** |
+| 🎫 **Tickets / Help desk** | Support queue with status / priority / assignee, contact & company links, status-filtered views |
+| 📆 **Booking links** | Calendly-style public scheduling pages with per-user availability; confirmed bookings create calendar events + activities |
+| 💬 **Updates & @mentions** | Threaded activity updates with teammate @mentions on contacts / companies / deals / leads |
+| ⚙️ **Automations** | No-code recipe center — rule builder (trigger → condition → action), template library, execution log |
 | ✉️ **Sequences** | Email sequences with A/B variants, enrollment management, step scheduling |
 | 🤖 **AI Assistant** | Multi-provider agent drawer · next-best-action on Contact/Deal · Inbox summarize + draft reply · graceful no-key fallback |
 | 📥 **Inbox** | Gmail OAuth, thread sync, send/reply/compose, attachments, record linking, AI assist |
@@ -227,7 +231,7 @@ The API auto-runs pending migrations on boot.
 
 ## 🔌 API Overview
 
-Routes are served under `/api` (nginx proxy) and require the auth cookie unless noted. Key prefixes: `/auth` · `/contacts` · `/companies` · `/deals` · `/activities` · `/leads` · `/sequences` · `/automations` · `/products` · `/reports` · `/forecast` · `/inbox` · `/calendar` · `/custom-fields` · `/goals` · `/audit` · `/webhooks` · `/notifications` · `/admin` · `/public/v1`.
+Routes are served under `/api` (nginx proxy) and require the auth cookie unless noted. Key prefixes: `/auth` · `/contacts` · `/companies` · `/deals` · `/activities` · `/leads` · `/tickets` · `/updates` · `/sequences` · `/automations` · `/products` · `/reports` · `/forecast` · `/inbox` · `/calendar` · `/booking-pages` · `/custom-fields` · `/goals` · `/audit` · `/webhooks` · `/notifications` · `/admin` · `/public/v1`. Public (no auth, token-in-path): `/public/forms/<token>` (web-to-lead) · `/public/booking/<token>` (meeting scheduler).
 
 | Prefix | Highlights |
 |--------|-----------|
@@ -274,7 +278,7 @@ cd frontend && npm run ui:lint && npm run i18n:lint && npm run i18n:coverage \
   && npm run lint:ci && npx tsc --noEmit && npm run test:run && npm run build && npm run bundle:check
 ```
 
-**Status:** API 85 tests (12 files; migrations 018 AI · 019 MFA · 020 security_events) · Frontend 263 tests · 0 ESLint warnings · bundle 125 KB / 250 KB cap · 0 npm vulnerabilities.
+**Status:** API 105 tests (16 files; latest migrations 024 tickets · 025 booking_pages) · Frontend 273 tests · 0 ESLint warnings · bundle 125 KB / 250 KB cap · 0 npm vulnerabilities.
 
 ---
 
@@ -311,6 +315,6 @@ Fully translated UI in **6 locales** (en · es · pt · fr · de · it). `en` is
 
 <div align="center">
 
-**Internal tool — built & maintained by Clovr Labs** · _Last updated: 2026-06-11_
+**Internal tool — built & maintained by Clovr Labs** · _Last updated: 2026-06-13_
 
 </div>

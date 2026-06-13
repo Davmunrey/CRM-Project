@@ -2646,7 +2646,7 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
 - **[`README.md`](README.md)** — Top-level project README — architecture overview, quick-start, feature matrix, quality gates
   - Stack badges: TypeScript, React 18, Vite, Tailwind, Fastify 5, Node 22, PostgreSQL 16, Redis 7, Socket.io, Gemini/OpenAI/Anthropic, Docker
   - CI badge referencing .gitea/workflows/ci.yml
-  - Test counts: API 60, Web 263
+  - Test counts: API 105, Web 273
   - npm audit 0 vulnerabilities badge
   - Maintained by Clovr Labs
 - **[`SECURITY-AUDIT.md`](SECURITY-AUDIT.md)** — Security audit and pen-test results document — all findings resolved
