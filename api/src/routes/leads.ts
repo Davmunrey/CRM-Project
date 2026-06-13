@@ -140,10 +140,14 @@ export async function leadsRoutes(app: FastifyInstance) {
   app.get('/:id/score-snapshots', auth, async (req) => {
     const { id } = req.params as { id: string }
     const orgId = req.user.org
+    // Return the 30 NEWEST snapshots, ordered oldest→newest so the client's
+    // "latest = last element" assumption and the history sparkline both hold.
     return db`
-      SELECT score, reason, created_at FROM lead_score_snapshots
-      WHERE lead_id = ${id} AND organization_id = ${orgId}
-      ORDER BY created_at ASC LIMIT 30
+      SELECT score, reason, created_at FROM (
+        SELECT score, reason, created_at FROM lead_score_snapshots
+        WHERE lead_id = ${id} AND organization_id = ${orgId}
+        ORDER BY created_at DESC LIMIT 30
+      ) s ORDER BY created_at ASC
     `
   })
 

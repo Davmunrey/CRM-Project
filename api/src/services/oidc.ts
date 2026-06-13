@@ -53,6 +53,9 @@ export function validateIdTokenClaims(
   if (typeof claims.exp !== 'number' || claims.exp + skew < now) return 'token expired'
   if (!claims.nonce || claims.nonce !== opts.nonce) return 'nonce mismatch'
   if (!claims.email) return 'no email in token'
+  // Reject an email the IdP explicitly marks unverified (don't auto-link/JIT it).
+  // We tolerate the claim being absent (some IdPs omit it) but never accept false.
+  if (claims.email_verified === false) return 'email not verified'
   return null
 }
 
@@ -64,14 +67,17 @@ interface OidcConfig {
   jwks_uri: string
 }
 let cachedConfig: OidcConfig | null = null
+let cachedConfigAt = 0
+const DISCOVERY_TTL_MS = 60 * 60 * 1000 // re-resolve hourly so rotated IdP endpoints/JWKS aren't pinned for the process lifetime
 
 export async function discover(): Promise<OidcConfig> {
-  if (cachedConfig) return cachedConfig
+  if (cachedConfig && Date.now() - cachedConfigAt < DISCOVERY_TTL_MS) return cachedConfig
   const url = `${env.OIDC_ISSUER!.replace(/\/$/, '')}/.well-known/openid-configuration`
   const res = await fetch(url)
   if (!res.ok) throw new Error(`OIDC discovery failed (${res.status})`)
   const cfg = (await res.json()) as OidcConfig
   cachedConfig = cfg
+  cachedConfigAt = Date.now()
   return cfg
 }
 

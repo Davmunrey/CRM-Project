@@ -58,9 +58,11 @@ export async function notificationsRoutes(app: FastifyInstance) {
   app.post('/mark-all-read', auth, async (req) => {
     const orgId = req.user.org
     const userId = req.user.sub
+    // Cover shared org-wide 'system' rows too — GET returns them to every user,
+    // so mark-all-read must clear them or the unread badge reverts on refetch.
     await db`
       UPDATE notifications SET is_read = true
-      WHERE organization_id = ${orgId} AND user_id = ${userId} AND is_read = false
+      WHERE organization_id = ${orgId} AND (user_id = ${userId} OR user_id = 'system') AND is_read = false
     `
     return { ok: true }
   })

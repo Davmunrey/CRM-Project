@@ -111,38 +111,43 @@ export async function publicBookingRoutes(app: FastifyInstance) {
     const orgId = p.organizationId
     const now = new Date().toISOString()
 
-    let contactId: string | null = null
-    if (p.createLead) {
-      const [c] = await db`
-        INSERT INTO contacts (first_name, last_name, email, type, source, organization_id, created_at, updated_at)
-        VALUES (${d.name ?? ''}, '', ${d.email}, 'lead', 'booking', ${orgId}, ${now}, ${now})
-        ON CONFLICT (email, organization_id) DO UPDATE SET updated_at = ${now}
-        RETURNING id
-      `
-      contactId = (c?.['id'] as string) ?? null
-    }
-
-    const [ev] = await db`
-      INSERT INTO calendar_events (organization_id, user_id, google_event_id, title, description, start_at, end_at, status, contact_id, organizer_email)
-      VALUES (${orgId}, ${p.userId}, ${'booking_' + randomBytes(8).toString('hex')}, ${p.title}, ${d.notes ?? ''}, ${startIso}, ${endIso}, 'confirmed', ${contactId}, ${d.email})
-      RETURNING id
-    `
-    const [act] = await db`
-      INSERT INTO activities (organization_id, type, subject, description, status, due_date, contact_id, created_by, created_at, updated_at)
-      VALUES (${orgId}, 'meeting', ${`Booking: ${d.name ?? d.email}`}, ${d.notes ?? ''}, 'pending', ${startIso}, ${contactId}, 'booking', ${now}, ${now})
-      RETURNING id
-    `
-
     const cancelToken = randomBytes(24).toString('base64url')
+    // Single transaction: if the unique-slot guard (uq_bookings_slot) trips on a
+    // concurrent double-book, the contact/calendar_events/activities inserts roll
+    // back too — no orphan calendar event or activity left behind.
     try {
-      await db`
-        INSERT INTO bookings (booking_page_id, organization_id, start_at, end_at, invitee_name, invitee_email, invitee_notes, status, calendar_event_id, contact_id, activity_id, cancel_token)
-        VALUES (${p.id}, ${orgId}, ${startIso}, ${endIso}, ${d.name ?? ''}, ${d.email}, ${d.notes ?? null}, 'confirmed', ${(ev?.['id'] as string) ?? null}, ${contactId}, ${(act?.['id'] as string) ?? null}, ${cancelToken})
-      `
-    } catch {
-      return reply.code(409).send({ error: 'Slot no longer available' }) // unique-slot guard tripped
+      await db.begin(async (tx) => {
+        let contactId: string | null = null
+        if (p.createLead) {
+          const [c] = await tx`
+            INSERT INTO contacts (first_name, last_name, email, type, source, organization_id, created_at, updated_at)
+            VALUES (${d.name ?? ''}, '', ${d.email}, 'lead', 'booking', ${orgId}, ${now}, ${now})
+            ON CONFLICT (email, organization_id) DO UPDATE SET updated_at = ${now}
+            RETURNING id
+          `
+          contactId = (c?.['id'] as string) ?? null
+        }
+
+        const [ev] = await tx`
+          INSERT INTO calendar_events (organization_id, user_id, google_event_id, title, description, start_at, end_at, status, contact_id, organizer_email)
+          VALUES (${orgId}, ${p.userId}, ${'booking_' + randomBytes(8).toString('hex')}, ${p.title}, ${d.notes ?? ''}, ${startIso}, ${endIso}, 'confirmed', ${contactId}, ${d.email})
+          RETURNING id
+        `
+        const [act] = await tx`
+          INSERT INTO activities (organization_id, type, subject, description, status, due_date, contact_id, created_by, created_at, updated_at)
+          VALUES (${orgId}, 'meeting', ${`Booking: ${d.name ?? d.email}`}, ${d.notes ?? ''}, 'pending', ${startIso}, ${contactId}, 'booking', ${now}, ${now})
+          RETURNING id
+        `
+        await tx`
+          INSERT INTO bookings (booking_page_id, organization_id, start_at, end_at, invitee_name, invitee_email, invitee_notes, status, calendar_event_id, contact_id, activity_id, cancel_token)
+          VALUES (${p.id}, ${orgId}, ${startIso}, ${endIso}, ${d.name ?? ''}, ${d.email}, ${d.notes ?? null}, 'confirmed', ${(ev?.['id'] as string) ?? null}, ${contactId}, ${(act?.['id'] as string) ?? null}, ${cancelToken})
+        `
+        await tx`UPDATE booking_pages SET booking_count = booking_count + 1, updated_at = ${now} WHERE id = ${p.id}`
+      })
+    } catch (e) {
+      if ((e as { code?: string }).code === '23505') return reply.code(409).send({ error: 'Slot no longer available' }) // unique-slot guard tripped
+      throw e
     }
-    await db`UPDATE booking_pages SET booking_count = booking_count + 1, updated_at = ${now} WHERE id = ${p.id}`
     return reply.code(201).send({ ok: true, cancelToken, startAt: startIso, endAt: endIso })
   })
 

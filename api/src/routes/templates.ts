@@ -6,7 +6,12 @@ const templateBody = z.object({
   name: z.string().min(1),
   subject: z.string().min(1),
   body: z.string(),
-  category: z.enum(['outreach', 'follow_up', 'proposal', 'onboarding', 'general']).default('general'),
+  // Union of the legacy backend categories and the frontend's category set so
+  // templates created from the UI ('intro'/'closing'/'nurture'/'custom') persist
+  // while existing rows ('outreach'/'onboarding'/'general') stay valid (migration 027).
+  category: z
+    .enum(['outreach', 'follow_up', 'proposal', 'onboarding', 'general', 'intro', 'closing', 'nurture', 'custom'])
+    .default('general'),
   variables: z.array(z.string()).default([]),
 })
 

@@ -17,8 +17,8 @@ const defaultStages = [
   { id: 'qualified', name: 'Qualified', color: '#8b5cf6', order: 1, probability: 25 },
   { id: 'proposal', name: 'Proposal', color: '#f59e0b', order: 2, probability: 50 },
   { id: 'negotiation', name: 'Negotiation', color: '#f97316', order: 3, probability: 75 },
-  { id: 'won', name: 'Won', color: '#10b981', order: 4, probability: 100 },
-  { id: 'lost', name: 'Lost', color: '#ef4444', order: 5, probability: 0 },
+  { id: 'closed_won', name: 'Won', color: '#10b981', order: 4, probability: 100 },
+  { id: 'closed_lost', name: 'Lost', color: '#ef4444', order: 5, probability: 0 },
 ]
 
 /** Returns true when the user can access a pipeline (ignores archive for member check). */

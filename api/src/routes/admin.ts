@@ -63,7 +63,7 @@ export async function adminRoutes(app: FastifyInstance) {
 
     const rows = await db`
       SELECT
-        o.id, o.name, o.slug, o.domain, o.plan, o.logo_url, o.primary_color,
+        o.id, o.name, o.slug, o.domain, o.plan, o.status, o.logo_url, o.primary_color,
         o.billing_email, o.billing_country, o.currency, o.timezone,
         o.custom_domain, o.created_at, o.updated_at,
         COUNT(DISTINCT u.id) FILTER (WHERE u.is_active = true) AS user_count,
@@ -442,7 +442,7 @@ export async function adminRoutes(app: FastifyInstance) {
       SELECT
         il.id, il.impersonated_at, il.ended_at,
         u.email AS super_admin_email, u.name AS super_admin_name,
-        o.name AS org_name, o.id AS org_id,
+        o.name AS target_org_name, o.id AS org_id,
         tu.email AS target_user_email, tu.name AS target_user_name
       FROM impersonation_logs il
       JOIN users u ON u.id = il.super_admin_id

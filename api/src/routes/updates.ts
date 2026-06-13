@@ -97,6 +97,11 @@ export async function updatesRoutes(app: FastifyInstance) {
       RETURNING id, entity_type, entity_id, parent_id, author_id, body, mentions, created_at, updated_at
     `
 
+    // Resolve the author's display name once — reused for the response and so
+    // mention notifications show a name (not a raw UUID) in triggered_by.
+    const [author] = await db`SELECT name AS author_name, avatar_url AS author_avatar FROM users WHERE id = ${req.user.sub} LIMIT 1`
+    const authorName = (author?.['authorName'] as string | undefined) ?? null
+
     // Fan out a notification to each mentioned member (except the author).
     const recipients = validMentions.filter((id) => id !== req.user.sub)
     if (recipients.length > 0) {
@@ -104,13 +109,12 @@ export async function updatesRoutes(app: FastifyInstance) {
       for (const userId of recipients) {
         await db`
           INSERT INTO notifications (type, title, message, entity_type, entity_id, user_id, triggered_by, is_read, organization_id)
-          VALUES ('mention', 'You were mentioned', ${snippet}, ${entityType}, ${entityId}, ${userId}, ${req.user.sub}, false, ${orgId})
+          VALUES ('mention', 'You were mentioned', ${snippet}, ${entityType}, ${entityId}, ${userId}, ${authorName}, false, ${orgId})
         `
       }
     }
 
-    const [author] = await db`SELECT name AS author_name, avatar_url AS author_avatar FROM users WHERE id = ${req.user.sub} LIMIT 1`
-    return reply.code(201).send({ ...row, authorName: author?.['authorName'] ?? null, authorAvatar: author?.['authorAvatar'] ?? null })
+    return reply.code(201).send({ ...row, authorName, authorAvatar: author?.['authorAvatar'] ?? null })
   })
 
   // Soft-delete an update — author, or an elevated role (owner/admin/manager).

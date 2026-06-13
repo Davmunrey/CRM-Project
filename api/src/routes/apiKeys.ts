@@ -65,7 +65,7 @@ export async function apiKeysRoutes(app: FastifyInstance) {
     const { id } = req.params as { id: string }
 
     const existing = await db`
-      SELECT id, name, expires_at FROM api_keys WHERE id = ${id} AND organization_id = ${orgId} AND revoked_at IS NULL LIMIT 1
+      SELECT id, name, scopes, expires_at FROM api_keys WHERE id = ${id} AND organization_id = ${orgId} AND revoked_at IS NULL LIMIT 1
     `
     if (existing.length === 0) return reply.code(404).send({ error: 'API key not found' })
 
@@ -78,9 +78,9 @@ export async function apiKeysRoutes(app: FastifyInstance) {
     const now = new Date().toISOString()
 
     const [row] = await db`
-      INSERT INTO api_keys (organization_id, name, key_prefix, key_hash, expires_at, created_at, updated_at)
-      VALUES (${orgId}, ${old.name}, ${keyPrefix}, ${keyHash}, ${old.expiresAt ?? null}, ${now}, ${now})
-      RETURNING id, name, key_prefix, expires_at, created_at
+      INSERT INTO api_keys (organization_id, name, key_prefix, key_hash, scopes, expires_at, created_at, updated_at)
+      VALUES (${orgId}, ${old.name}, ${keyPrefix}, ${keyHash}, ${db.json(old.scopes ?? [])}, ${old.expiresAt ?? null}, ${now}, ${now})
+      RETURNING id, name, key_prefix, scopes, expires_at, created_at
     `
 
     return reply.send({ key: row, apiKey: rawKey })

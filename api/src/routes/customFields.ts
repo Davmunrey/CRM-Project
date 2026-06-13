@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { db } from '../db/client.js'
 
 const ALLOWED_ENTITY_TYPES = ['contact', 'company', 'deal', 'lead'] as const
-const ALLOWED_FIELD_TYPES = ['text', 'number', 'date', 'boolean', 'select', 'multiselect', 'url', 'email'] as const
+const ALLOWED_FIELD_TYPES = ['text', 'number', 'date', 'boolean', 'select', 'multiselect', 'url', 'email', 'checkbox', 'currency', 'textarea'] as const
 
 const defBody = z.object({
   entityType: z.enum(ALLOWED_ENTITY_TYPES),
