@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import { MailWarning, LogOut } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useTranslations } from '../i18n'
@@ -19,13 +18,9 @@ export function OrgAccessRequired() {
         <p className="text-sm text-fg-muted mb-6">
           {message ?? t.errors.noPermissionDescription}
         </p>
+        {/* No tokenless "Accept" link — an invite can only be opened from its emailed
+            link (which carries ?token=). A bare /accept-invite always errored. */}
         <div className="flex items-center justify-center gap-2 flex-wrap">
-          <Link
-            to="/accept-invite"
-            className="inline-flex items-center px-4 py-2 rounded-lg bg-accent-600 hover:bg-accent-500 text-fg text-sm font-medium transition-colors"
-          >
-            {t.acceptInvite.acceptCta}
-          </Link>
           <button
             type="button"
             onClick={() => {

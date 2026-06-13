@@ -608,7 +608,7 @@ export interface EmailSequence {
   enrollmentStartDelayDays?: number
 }
 
-export type EnrollmentStatus = 'active' | 'completed' | 'paused' | 'replied' | 'unsubscribed'
+export type EnrollmentStatus = 'active' | 'completed' | 'paused' | 'replied' | 'unenrolled'
 
 export interface SequenceEnrollment {
   id: string

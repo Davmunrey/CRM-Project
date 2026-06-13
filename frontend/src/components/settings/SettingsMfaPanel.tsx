@@ -24,7 +24,10 @@ export function SettingsMfaPanel() {
     api
       .get<{ user: { mfaEnabled?: boolean } }>('/auth/me')
       .then((r) => setEnabled(r.user.mfaEnabled === true))
-      .catch(() => setEnabled(false))
+      // Leave `enabled` as null (loading) on a transient /auth/me failure rather
+      // than flipping to false, which would falsely offer "Enable 2FA" to an
+      // account that already has it on.
+      .catch(() => undefined)
   }, [])
 
   const startSetup = async () => {

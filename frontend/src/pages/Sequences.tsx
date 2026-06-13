@@ -34,7 +34,7 @@ function getEnrollmentStatusLabels(t: ReturnType<typeof useTranslations>): Recor
     completed: t.activities.completed,
     paused: t.sequences.paused,
     replied: t.sequences.enrollmentStatusReplied,
-    unsubscribed: t.common.inactive,
+    unenrolled: t.common.inactive,
   }
 }
 
@@ -43,7 +43,7 @@ const ENROLLMENT_STATUS_COLORS: Record<EnrollmentStatus, string> = {
   completed: 'bg-info/20 text-info',
   paused: 'bg-warning/20 text-warning',
   replied: 'bg-accent-500/20 text-accent-400',
-  unsubscribed: 'bg-surface-2/20 text-fg-muted',
+  unenrolled: 'bg-surface-2/20 text-fg-muted',
 }
 
 // ─── Enroll Modal ────────────────────────────────────────────────────────────

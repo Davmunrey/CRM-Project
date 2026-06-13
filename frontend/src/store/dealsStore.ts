@@ -195,6 +195,10 @@ export const useDealsStore = create<DealsState>()(
         api.post('/automations/trigger', {
           triggerType,
           context: { dealId: deal.id, dealTitle: deal.title, fromStage: oldDeal?.stage, toStage: newStage },
+        }).then(() => {
+          // Refresh rules + log so the execution count / recent log reflect the server run.
+          void useAutomationsStore.getState().fetchRules()
+          void useAutomationsStore.getState().fetchRecentExecutions()
         }).catch(() => {
           // Fallback to client-side execution if server is unreachable
           useAutomationsStore.getState().executeRulesForTrigger(triggerType, { deal, fromStage: oldDeal?.stage, toStage: newStage })

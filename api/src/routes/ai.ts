@@ -380,6 +380,11 @@ export async function aiRoutes(app: FastifyInstance) {
         provider: provider.id,
       })
     } catch (err) {
+      // If we opened a fresh conversation for this turn but the agent failed before
+      // any messages were saved, drop the empty row so it doesn't pile up in the list.
+      if (!body.data.conversationId && conversationId) {
+        void db`DELETE FROM ai_conversations WHERE id = ${conversationId} AND organization_id = ${orgId}`.catch(() => {})
+      }
       return aiErrorReply(reply, err)
     }
   })

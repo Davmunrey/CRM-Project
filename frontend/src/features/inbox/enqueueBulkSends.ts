@@ -26,18 +26,16 @@ export async function enqueueBulkEmailJobs(
 
   if (!recipients.length) return { enqueued: 0, skipped }
 
-  for (let i = 0; i < recipients.length; i++) {
-    if (i > 0 && payload.staggerSeconds > 0) {
-      await new Promise((r) => setTimeout(r, payload.staggerSeconds * 1000))
-    }
-    const c = recipients[i]!
-    await api.post('/email/send', {
-      to: c.email,
-      subject: payload.subject,
-      body: payload.body,
-      htmlBody: payload.htmlBody,
-    })
-  }
+  // Hand the whole batch to the server, which staggers + sends in the background.
+  // (Previously this loop ran in the browser and was lost if the user navigated
+  // away or closed the tab between sends.)
+  await api.post('/email/bulk-send', {
+    recipients: recipients.map((c) => c.email),
+    subject: payload.subject,
+    body: payload.body,
+    htmlBody: payload.htmlBody,
+    staggerSeconds: payload.staggerSeconds,
+  })
 
   return { enqueued: recipients.length, skipped }
 }
