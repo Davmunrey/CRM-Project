@@ -41,6 +41,7 @@ const updateBody = z.object({
 })
 
 export async function ticketsRoutes(app: FastifyInstance) {
+  app.addHook('onRequest', app.authenticate)
   app.addHook('preHandler', requireCrudPermission('tickets'))
 
   app.get('/', async (req, reply) => {
