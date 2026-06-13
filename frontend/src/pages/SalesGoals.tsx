@@ -85,26 +85,33 @@ export function SalesGoals() {
   const deals = useDealsStore((s) => s.deals)
   const activities = useActivitiesStore((s) => s.activities)
   const contacts = useContactsStore((s) => s.contacts)
+  const orgUsers = useAuthStore((s) => s.users)
 
   const computeCurrentForGoal = (goal: SalesGoal): number => {
     const start = goal.startDate
     const end = goal.endDate
+    const inRange = (ts: string) => ts >= start && ts <= end + 'T23:59:59'
+    // Goals are per-user (goal.userId). Owner is tracked by display name across the
+    // app, so resolve the id→name and scope to that owner; if it can't be resolved,
+    // fall back to org-wide totals rather than showing nothing.
+    const ownerName = orgUsers.find((u) => u.id === goal.userId)?.name
+    const ownedBy = (who: string | null | undefined) => !ownerName || who === ownerName
     switch (goal.type) {
       case 'revenue':
         return deals
-          .filter((d) => d.stage === 'closed_won' && d.updatedAt >= start && d.updatedAt <= end + 'T23:59:59')
+          .filter((d) => d.stage === 'closed_won' && inRange(d.updatedAt) && ownedBy(d.assignedTo))
           .reduce((sum, d) => sum + d.value, 0)
       case 'deals_closed':
         return deals
-          .filter((d) => d.stage === 'closed_won' && d.updatedAt >= start && d.updatedAt <= end + 'T23:59:59')
+          .filter((d) => d.stage === 'closed_won' && inRange(d.updatedAt) && ownedBy(d.assignedTo))
           .length
       case 'activities':
         return activities
-          .filter((a) => a.createdAt >= start && a.createdAt <= end + 'T23:59:59')
+          .filter((a) => inRange(a.createdAt) && ownedBy(a.createdBy))
           .length
       case 'contacts_added':
         return contacts
-          .filter((c) => c.createdAt >= start && c.createdAt <= end + 'T23:59:59')
+          .filter((c) => inRange(c.createdAt) && ownedBy(c.assignedTo))
           .length
       default:
         return goal.current

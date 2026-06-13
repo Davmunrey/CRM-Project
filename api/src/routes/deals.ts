@@ -154,7 +154,7 @@ export async function dealsRoutes(app: FastifyInstance) {
       pipelineId: z.string().uuid().nullable().optional(),
       contactId: z.string().uuid().nullable().optional(),
       companyId: z.string().uuid().nullable().optional(),
-      assignedTo: z.string().uuid().nullable().optional(),
+      assignedTo: z.string().max(200).nullable().optional(), // owner display name, not a user-id FK (migration 028)
       expectedCloseDate: z.string().nullable().optional(),
       status: z.enum(['open', 'won', 'lost']).optional(),
       notes: z.string().nullable().optional(),
@@ -172,8 +172,8 @@ export async function dealsRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: 'Invalid companyId' })
     if (d.pipelineId && !(await ownedInOrg('pipelines', d.pipelineId, orgId)))
       return reply.code(400).send({ error: 'Invalid pipelineId' })
-    if (d.assignedTo && !(await ownedInOrg('users', d.assignedTo, orgId)))
-      return reply.code(400).send({ error: 'Invalid assignedTo' })
+    // assignedTo is a display-name string (not a user-id FK), so there is no
+    // cross-org reference to validate here — see migration 028.
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
     if (d.title !== undefined) updates.title = d.title

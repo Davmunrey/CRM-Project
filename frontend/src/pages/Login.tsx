@@ -106,7 +106,10 @@ export function Login() {
     }
 
     trackUxAction('auth_login_success')
-    navigate('/')
+    // Honor a returnUrl (e.g. an invite-accept page that bounced here when logged
+    // out). Only same-site relative paths, to avoid an open redirect.
+    const returnUrl = new URLSearchParams(window.location.search).get('returnUrl')
+    navigate(returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : '/')
   }
 
   const footerLinks =

@@ -23,7 +23,9 @@ const contactBody = z.object({
   source: z.string().optional().nullable(),
   tags: z.array(z.string()).optional(),
   notes: z.string().optional().nullable(),
-  assignedTo: z.string().uuid().optional().nullable(),
+  // Owner is a display name string across the app (forms/list/filter are all
+  // name-based, like leads.assigned_to) — not a user-id FK. See migration 028.
+  assignedTo: z.string().max(200).optional().nullable(),
   lastContactedAt: z.string().optional().nullable(),
   status: z.enum(['prospect', 'active', 'inactive', 'customer', 'churned']).optional(),
   linkedinUrl: z.string().url().optional().nullable(),
