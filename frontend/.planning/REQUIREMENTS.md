@@ -267,3 +267,4 @@ Check **`DEPLOY-*`** only after the work exists on the **target** environment (n
 ---
 
 *Last updated (git): **2026-06-11***
+*2026-06-14 — full end-to-end product audit + ~41 fixes (migrations 026–029); test counts unchanged (API 105 / 16 files, frontend 273 / 44 files). See implementation-history §36.*

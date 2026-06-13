@@ -7,7 +7,7 @@
 ## Table of contents
 
 - [Part A — Sections 1–12 (foundation)](#implementation-history-sections-01-12)
-- [Part B — Sections 13–35 (recent waves)](#implementation-history)
+- [Part B — Sections 13–36 (recent waves)](#implementation-history)
 - [Chronological index (oldest → newest)](#chronological-index-oldest--newest)
 
 ---
@@ -15,7 +15,7 @@
 <a id="chronological-index-oldest--newest"></a>
 ## Chronological index (oldest → newest)
 
-Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part A, 13–35 in Part B) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
+Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part A, 13–36 in Part B) stay the canonical reading order** in the body below; this table only supports time-based discovery (anchors match Part B ids where present).
 
 | Date | Section | Summary |
 |------|---------|---------|
@@ -43,6 +43,7 @@ Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part
 | 2026-06-11 | [§33](#implementation-history-section-33) | **Enterprise wave:** MFA (TOTP, migration 019), OIDC SSO + frontend SSO button, SCIM 2.0, server-side RBAC + member lifecycle, GDPR export/erasure, security-event audit log (migration 020), observability/health/metrics, API-key scopes + Settings UI. |
 | 2026-06-11 | [§34](#implementation-history-section-34) | **Structural reference:** `docs/CODEBASE-MAP.md` (full 403-file map) and identity setup doc `docs/sso-and-scim.md`; tenant-isolation ADR `docs/adr/0001`. |
 | 2026-06-13 | [§35](#implementation-history-section-35) | **Monday-style collaboration + CRM-competitive wave:** Updates & @mentions (migration 021), Calendar + Timeline board views, composable dashboard widgets (022), no-code automation recipe center, web-to-lead forms (023), deal rotting + activity reminders, tickets / help desk (024), meeting scheduler / booking links (025). |
+| 2026-06-14 | [§36](#implementation-history-section-36) | **Full product audit + fix waves:** ~41 fixes across 7 commits (migrations 026–029) — tickets-auth, deal stage-id alignment, owner-name model, server-side bulk email, create-member endpoint, sequence reply-detection rework, MFA QR, per-day booking availability, + store-rollback / UI-crash / contract fixes. |
 
 ---
 
@@ -50,7 +51,7 @@ Approximate delivery dates for quick scanning. **Section numbers (1–12 in Part
 <a id="implementation-history-sections-01-12"></a>
 ## Part A — Sections 1–12 (foundation)
 
-Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–35).
+Foundation through operational notes (platform, tenancy, auth, tracking, leads, i18n, SSO, tests, ops). **Companion:** [Part B in this same file](#implementation-history) (sections 13–36).
 
 ## Document control
 
@@ -220,9 +221,9 @@ This file is an **archive-stable** slice: it should change rarely. Prefer editin
 
 
 <a id="implementation-history"></a>
-## Part B — Sections 13–35 (recent waves)
+## Part B — Sections 13–36 (recent waves)
 
-**Part B** is the active delivery narrative (sections 13–35). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
+**Part B** is the active delivery narrative (sections 13–36). **Part A** (sections 1–12, including leads section 7) is [above in this same document](#implementation-history-sections-01-12).
 
 ## Document control
 
@@ -775,4 +776,22 @@ Two feature waves shipped on top of the enterprise-identity base, each in small 
 
 ---
 
-> **Last updated:** 2026-06-13. Sections 31–34 document the post-Supabase, AI, and enterprise-identity waves; section 35 documents the Monday-style collaboration + CRM-competitive wave; sections 1–30 are preserved as written.
+<a id="implementation-history-section-36"></a>
+## 36) Full product audit + fix waves (June 2026)
+
+A whole-product end-to-end audit (route-wiring diff + per-route auth sweep + two lean per-domain logic workflows, every high/critical finding re-verified against source) triaged **51 findings** and fixed ~41 across 7 commits — all gate-green (API 105 tests, frontend 273). Migrations **026–029**.
+
+**Critical**
+- **Tickets returned 403 for everyone** — `tickets.ts` applied `requireCrudPermission` but never `app.authenticate`, so `req.user` was undefined. Added the `onRequest` authenticate hook.
+- **Deal won/lost broken end-to-end** — the default pipeline seeded stage ids `won`/`lost` but the app keys off `closed_won`/`closed_lost` (cards vanished, no win/loss notifications/automations, analytics read 0, status never synced). Aligned the seed; migration **026** realigns existing `deals.stage` + `pipelines.stages`.
+- **Contact/deal owner never persisted** — `assigned_to` was `uuid REFERENCES users(id)` but every form submits a user *name* and the whole UI is name-based, so create/edit with an owner 400'd. Relaxed validators; migration **028** converts `contacts/deals/leads.assigned_to` to `text` (display-name model, matching the existing `leads` behavior).
+
+**High / Medium (selected)** — team role/activate/deactivate now persist (`PATCH /orgs/me/members/...`); frozen Leads filters; notification feed-pollution; per-user goal progress; AuditLog crash + label fallbacks; booking double-book wrapped in a transaction; email-template categories (migration **027**); API-key rotate preserves scopes; optimistic-rollback across 7 stores; **server-side bulk email** (`POST /email/bulk-send`); OIDC `email_verified` + discovery TTL; invite `returnUrl`.
+
+**Reworks (finished)** — admin **create-member** endpoint (`POST /orgs/me/members`, bcrypt) so the Add-User form's password is used; **sequence "stop on reply"** reworked transport-independently (`sequence_enrollments.last_sent_at`, migration **029**, + inbox scan by contact email/time — no Gmail thread id needed); **`deals.stage_changed_at`** (029) so "days in stage" survives unrelated edits; **MFA enrollment QR** (`qrcode`); **per-day booking availability** editor; Admin **plan-slug dropdown**; `/auth/me` returns `hasPendingInvitation` to route org-less invitees to the access-required screen.
+
+**Owner model note:** `assigned_to` is intentionally a display-name string, not a user-id FK — a future "owner-by-id" model would move the frontend to submit ids + resolve id→name for display (deliberately deferred). The bulk-email loop is in-process (a restart mid-batch drops the remainder); BullMQ (already a dep) would make it durable.
+
+---
+
+> **Last updated:** 2026-06-14. Sections 31–34 = post-Supabase / AI / enterprise-identity waves; §35 = Monday-style + CRM-competitive wave; §36 = full product audit + fixes; sections 1–30 preserved as written.

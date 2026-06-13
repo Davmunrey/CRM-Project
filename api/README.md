@@ -182,6 +182,7 @@ Provider-agnostic single sign-on (Entra / Okta / Auth0 / any OIDC IdP). Enabled 
 | GET | `/orgs/me` | ✓ | Current org details |
 | GET | `/orgs/me/members` | ✓ | All org members |
 | POST | `/orgs/me/invite` | ✓ | Invite by email + role (sends email) |
+| POST | `/orgs/me/members` | ✓ `members:manage` | Admin-provision an **active** member with a set password (bcrypt; globally-unique email; audit-logged). The member should change their password on first login. |
 | PATCH | `/orgs/me/members/:userId/role` | ✓ `members:manage` | Change a member's role. Only an owner may grant `owner`; the last active owner cannot be demoted; the member's sessions re-mint so the new role applies immediately. |
 | PATCH | `/orgs/me/members/:userId/status` | ✓ `members:manage` | Activate/deactivate a member (`{ isActive }`). Cannot deactivate yourself or the last active owner; deactivation revokes the member's sessions. |
 
@@ -367,6 +368,7 @@ The field is returned as `linkedin_url` in all `GET /contacts` and `GET /contact
 |--------|------|------|-------------|
 | GET/POST/PATCH/DELETE | `/views` | ✓ | Saved filter/view CRUD (server-synced) |
 | GET/POST/PATCH/DELETE | `/email/inbox` | ✓ | Email inbox store; `POST /email/send` sends (60/min) |
+| POST | `/email/bulk-send` | ✓ (not viewer) | Staggered fan-out to ≤500 recipients (5/min); responds immediately and sends server-side so the batch survives the sender navigating away |
 | GET/POST/PATCH/DELETE | `/distribution-lists` | ✓ | Distribution-list CRUD |
 | GET | `/preferences/me` | ✓ | User prefs; `PATCH /preferences/me/navigation`, `PATCH /preferences/me/onboarding` |
 

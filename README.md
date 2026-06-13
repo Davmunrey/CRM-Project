@@ -240,7 +240,7 @@ Routes are served under `/api` (nginx proxy) and require the auth cookie unless 
 | `/scim/v2` | **SCIM 2.0** — `Users` CRUD + `ServiceProviderConfig` (Bearer api-key scoped `scim`; deprovision = deactivate + session revoke) |
 | `/ai` | `status` · `summarize` · `draft-reply` · `next-best-action` · `search` · tool-using `agent` (persisted conversations) |
 | `/privacy` | GDPR — org export, per-subject export, erasure/anonymization |
-| `/orgs/me/members` | member lifecycle — change role / activate-deactivate (RBAC + safety rules) |
+| `/orgs/me/members` | member lifecycle — **create** (admin-provision w/ password), change role, activate/deactivate (RBAC + safety rules) |
 | `/admin` | org management, impersonation, **security-events** log |
 
 Full reference: [`api/README.md`](api/README.md). Enterprise identity setup: [`docs/sso-and-scim.md`](docs/sso-and-scim.md).
@@ -278,7 +278,7 @@ cd frontend && npm run ui:lint && npm run i18n:lint && npm run i18n:coverage \
   && npm run lint:ci && npx tsc --noEmit && npm run test:run && npm run build && npm run bundle:check
 ```
 
-**Status:** API 105 tests (16 files; latest migrations 024 tickets · 025 booking_pages) · Frontend 273 tests · 0 ESLint warnings · bundle 125 KB / 250 KB cap · 0 npm vulnerabilities.
+**Status:** API 105 tests (16 files; 29 migrations — latest `026`–`029` from the product audit: deal-stage alignment, template categories, owner-name model, stage-age + sequence reply-detection) · Frontend 273 tests · 0 ESLint warnings · bundle 125 KB / 250 KB cap · 0 npm vulnerabilities.
 
 ---
 
@@ -315,6 +315,6 @@ Fully translated UI in **6 locales** (en · es · pt · fr · de · it). `en` is
 
 <div align="center">
 
-**Internal tool — built & maintained by Clovr Labs** · _Last updated: 2026-06-13_
+**Internal tool — built & maintained by Clovr Labs** · _Last updated: 2026-06-14_
 
 </div>

@@ -355,5 +355,5 @@ Requires scope `leads:write`; returns 403 `{error:"Insufficient API key scope", 
 
 - **Status:** Active
 - **Owner:** Engineering
-- **Last updated:** 2026-06-11
+- **Last updated:** 2026-06-14 (full product audit + ~41 fixes; migrations 026–029; owner is now a name-string column — see implementation-history §36)
 - **Authoritative file map:** `../../docs/CODEBASE-MAP.md`

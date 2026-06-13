@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Enterprise P0 Complete — Docs Audit In Progress
-last_updated: "2026-06-11T00:00:00.000Z"
+last_updated: "2026-06-14T00:00:00.000Z"
 progress:
   total_phases: 10
   completed_phases: 10
@@ -18,7 +18,7 @@ progress:
 See: .planning/PROJECT.md
 
 **Core value:** A sales team can sign up, invite their colleagues, and manage their entire pipeline in real-time, with data persisted in PostgreSQL via self-hosted Fastify API (`n0crm-api`) in a monorepo alongside the React frontend.
-**Current focus:** Enterprise P0 hardening complete (MFA, OIDC SSO, SCIM 2.0, RBAC, GDPR, security-event audit log, multi-provider AI). Latest pushed work: docs audit.
+**Current focus:** Enterprise P0 hardening complete (MFA, OIDC SSO, SCIM 2.0, RBAC, GDPR, security-event audit log, multi-provider AI). Latest pushed work: full end-to-end product audit + ~41 fixes (migrations 026–029) — see implementation-history §36.
 
 ## Current Status
 
