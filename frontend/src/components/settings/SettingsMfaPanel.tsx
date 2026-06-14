@@ -40,7 +40,7 @@ export function SettingsMfaPanel() {
       setSecret(res.secret)
       // Render the otpauth URL as a scannable QR (falls back to manual secret entry on failure).
       try {
-        setQrDataUrl(await QRCode.toDataURL(res.otpauthUrl, { width: 184, margin: 1 }))
+        setQrDataUrl(await QRCode.toDataURL(res.otpauthUrl, { width: 184, margin: 2, color: { light: '#ffffff', dark: '#000000' } }))
       } catch {
         setQrDataUrl('')
       }
@@ -128,7 +128,7 @@ export function SettingsMfaPanel() {
         <div className="flex flex-col gap-3 rounded-xl border border-border-subtle bg-surface-2 p-4">
           <p className="text-sm text-fg-muted">{t.mfa.setupInstructions}</p>
           {qrDataUrl && (
-            <img src={qrDataUrl} alt={t.mfa.secretLabel} width={184} height={184} className="self-center rounded-lg bg-white p-2" />
+            <img src={qrDataUrl} alt={t.mfa.secretLabel} width={184} height={184} className="self-center rounded-lg bg-surface-1 p-2" />
           )}
           <div>
             <span className="block text-xs text-fg-subtle mb-1">{t.mfa.secretLabel}</span>

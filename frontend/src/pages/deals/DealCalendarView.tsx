@@ -11,7 +11,7 @@ const STAGE_BG: Record<DealStage, string> = {
   lead: 'bg-info',
   qualified: 'bg-warning',
   proposal: 'bg-accent-500',
-  negotiation: 'bg-orange-500',
+  negotiation: 'bg-warning',
   closed_won: 'bg-success',
   closed_lost: 'bg-danger',
 }
@@ -111,7 +111,7 @@ export function DealCalendarView({
               key={dayKey(day)}
               className={`min-h-[92px] rounded-lg border p-1.5 ${inMonth ? 'border-fg/8 bg-surface-1' : 'border-transparent bg-fg/[0.02]'}`}
             >
-              <div className={`text-[11px] mb-1 ${isToday ? 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-500 text-white font-semibold' : inMonth ? 'text-fg-muted' : 'text-fg-subtle'}`}>
+              <div className={`text-[11px] mb-1 ${isToday ? 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-accent-500 text-fg font-semibold' : inMonth ? 'text-fg-muted' : 'text-fg-subtle'}`}>
                 {day.getDate()}
               </div>
               <div className="space-y-1">

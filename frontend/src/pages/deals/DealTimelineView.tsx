@@ -9,7 +9,7 @@ const STAGE_BG: Record<DealStage, string> = {
   lead: 'bg-info',
   qualified: 'bg-warning',
   proposal: 'bg-accent-500',
-  negotiation: 'bg-orange-500',
+  negotiation: 'bg-warning',
   closed_won: 'bg-success',
   closed_lost: 'bg-danger',
 }
