@@ -16,8 +16,8 @@
   "services": {
     "postgres": {
       "image": "postgres:16-alpine",
-      "memory_mb": 256,
-      "cpu": 0.5,
+      "memory_mb": 512,
+      "cpu": 0.75,
       "volume": "n0crm-postgres-data",
       "env": {
         "POSTGRES_DB":       { "secret": false, "generate": false, "label": "Database name",     "default": "n0crm" },
@@ -34,8 +34,13 @@
     },
     "redis": {
       "image": "redis:7-alpine",
-      "memory_mb": 64,
+      "memory_mb": 128,
       "cpu": 0.25,
+      "comment": "AOF persistence so the JWT jti denylist, account-lockout counters and sessions-valid-after survive a Redis restart (without it, revoked tokens become replayable until expiry).",
+      "command": ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"],
+      "volumes": [
+        { "name": "n0crm-redis-data", "mount": "/data" }
+      ],
       "healthcheck": {
         "test": ["CMD", "redis-cli", "ping"],
         "interval": "5s",
@@ -47,8 +52,8 @@
     "api": {
       "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:latest",
       "port": 3001,
-      "memory_mb": 256,
-      "cpu": 0.75,
+      "memory_mb": 512,
+      "cpu": 1.25,
       "volumes": [
         { "name": "n0crm-backups", "mount": "/backups" }
       ],
@@ -61,7 +66,12 @@
         "OPENAI_API_KEY":         { "secret": true,  "generate": false, "label": "OpenAI API Key (optional AI provider)", "default": "" },
         "ANTHROPIC_API_KEY":      { "secret": true,  "generate": false, "label": "Anthropic API Key (optional AI provider)", "default": "" },
         "AI_DEFAULT_PROVIDER":    { "secret": false, "generate": false, "label": "Default AI provider", "default": "gemini" },
-        "TRUST_PROXY":            { "secret": false, "generate": false, "label": "Trusted proxy hops (platform edge + nginx = 2)", "default": "2" }
+        "TRUST_PROXY":            { "secret": false, "generate": false, "label": "Trusted proxy hops (platform edge + nginx = 2)", "default": "2" },
+        "REDIS_URL":              { "secret": false, "generate": false, "label": "Redis URL (internal service)", "default": "redis://redis:6379" },
+        "APP_URL":                { "secret": false, "generate": false, "label": "Public app URL — used in password-reset / invite / booking email links (set to your domain)", "default": "https://n0crm.apps.privateprompt.tech" },
+        "CORS_ORIGIN":            { "secret": false, "generate": false, "label": "Allowed CORS origin(s), comma-separated — no '*' in prod (set to your domain)", "default": "https://n0crm.apps.privateprompt.tech" },
+        "EMAIL_FROM":             { "secret": false, "generate": false, "label": "Email From address", "default": "noreply@n0crm.com" },
+        "RESEND_API_KEY":         { "secret": true,  "generate": false, "label": "Resend API Key (outbound email)", "default": "" }
       },
       "healthcheck": {
         "test": ["CMD", "wget", "-qO-", "http://localhost:3001/health"],
@@ -74,15 +84,10 @@
     "web": {
       "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:web",
       "port": 80,
-      "memory_mb": 832,
-      "cpu": 1.75,
+      "memory_mb": 256,
+      "cpu": 1.0,
+      "comment": "Static nginx SPA + reverse proxy to the API. Needs ONLY N0CRM_API_URL — DB/JWT/encryption/email secrets removed (nginx never reads them; they only widened the secret blast radius).",
       "env": {
-        "POSTGRES_PASSWORD": { "secret": true,  "generate": false, "label": "DB Password (shared with postgres)" },
-        "JWT_SECRET":        { "secret": true,  "generate": true,  "label": "JWT Secret" },
-        "TOKEN_ENCRYPTION_KEY": { "secret": true, "generate": true, "label": "Encryption Key" },
-        "EMAIL_FROM":        { "secret": false, "generate": false, "label": "Email From", "default": "noreply@n0crm.com" },
-        "RESEND_API_KEY":    { "secret": true,  "generate": false, "label": "Resend API Key", "default": "" },
-        "ANTHROPIC_API_KEY": { "secret": true,  "generate": false, "label": "Anthropic API Key", "default": "" },
         "N0CRM_API_URL":     { "secret": false, "generate": false, "label": "Internal API URL", "default": "http://api:3001" }
       },
       "healthcheck": {
