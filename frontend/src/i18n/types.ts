@@ -1931,18 +1931,12 @@ export interface Translations {
   // ─── Landing page ─────────────────────────────────────────────────────────
   landing: {
     navFeatures: string
-    navStack: string
     navLogin: string
-    badge: string
     heroHeadline: string
     heroHeadlineAccent: string
     heroSubtitle: string
     heroCta: string
     heroCtaSecondary: string
-    stat1Label: string
-    stat2Label: string
-    stat3Label: string
-    stat4Label: string
     featuresTitle: string
     featuresSubtitle: string
     f1Title: string; f1Desc: string
@@ -1954,20 +1948,9 @@ export interface Translations {
     f7Title: string; f7Desc: string
     f8Title: string; f8Desc: string
     f9Title: string; f9Desc: string
-    selfHostTitle: string
-    selfHostTitleAccent: string
-    selfHostSubtitle: string
-    selfHostItem1: string
-    selfHostItem2: string
-    selfHostItem3: string
-    selfHostItem4: string
-    codeComment1: string
-    codeComment2: string
-    codeSuccess: string
     ctaTitle: string
     ctaSubtitle: string
     ctaButton: string
-    footerTagline: string
   }
   ai: {
     assistantTitle: string
