@@ -15,6 +15,7 @@ This report covers a gray-box review, the `/security-pen-testing` and
 | Low      | 3 | 3 | 0 |
 | Moderate (deps) | 3 | 3 | 0 |
 | Hardening (round 3) | 5 | 5 | 0 |
+| Audit waves (2026-06-14) | 5 | 5 | 0 |
 
 `npm audit` reports **0 vulnerabilities** on both `api/` and `frontend/` (was 1 critical + several moderate).
 
@@ -28,6 +29,13 @@ This report covers a gray-box review, the `/security-pen-testing` and
 > tenant governance (kill switch + spend cap + retention purge), and removal of an
 > orphan passwordless-DB entrypoint + public Adminer service. See
 > [Hardening round 3](#hardening-round-3-2026-06-10).
+>
+> **Audit waves (2026-06-14).** A full end-to-end product audit (~41 fixes,
+> migrations 026–029) closed five **security-relevant** correctness gaps — a
+> missing authentication hook on `/tickets`, an API-key rotation that silently
+> dropped scopes, an OIDC `email_verified:false` acceptance, an unauthenticated
+> path to admin member-creation, and an uncapped bulk-email relay. See
+> [Audit waves](#audit-hardening-2026-06-14).
 
 ---
 
@@ -147,3 +155,46 @@ discovered exploitable findings), shipped after the second pass. All are **FIXED
 - **Where:** `docker-compose.yml` (and `pg_hba`-style config it referenced).
 - **Impact (before):** an unused/orphan entrypoint trusted DB connections without a password (`trust` auth) and a publicly reachable Adminer container exposed a direct DB admin console — either could have given an attacker unauthenticated database access if reachable.
 - **Fix:** both were removed from the compose topology. The remaining `TRUST_PROXY` env in `docker-compose.yml` is the unrelated client-IP hop-count setting from round 2, not DB trust auth. Verified absent: no `adminer`, `pg_hba`, or `POSTGRES_HOST_AUTH_METHOD=trust` remains.
+
+---
+
+## Audit hardening (2026-06-14)
+
+A full end-to-end product audit fixed ~41 issues across the API and frontend
+(migrations `026`–`029`). Most were correctness/UX; the five items below are the
+**security-relevant** subset and are all **FIXED**. The same set is summarised in
+the hardening matrix of [`master-security-compliance.md`](frontend/docs/master-security-compliance.md#hardening-matrix).
+
+### HIGH — `/tickets` missing `authenticate` hook (broken access control) → **FIXED**
+- **Where:** `api/src/routes/tickets.ts`.
+- **Impact:** the help-desk routes registered the RBAC `requirePermission` hook but **not** `app.authenticate`, so `req.user` was undefined — the RBAC check then failed for everyone and every ticket call returned **403**. A fail-closed bug rather than an exposure, but it left a shipped feature unusable and the access-control chain mis-wired.
+- **Fix:** added the missing `app.authenticate` preHandler so `req.user` is populated before `requirePermission` runs; tickets now enforce the same CRM read/write/delete RBAC as the other record resources. Covered by `api/src/routes/tickets.test.ts`.
+
+### MEDIUM — API-key rotation silently dropped scopes (privilege change) → **FIXED**
+- **Where:** `api/src/routes/apiKeys.ts` (rotate).
+- **Impact:** rotating a **scoped** key (e.g. `leads:write`) re-minted it **without** scopes, and a scopeless key is treated as legacy full-access for back-compat — so a routine rotation silently *widened* the key's privilege.
+- **Fix:** rotation now preserves the original key's scope set; a scoped key stays scoped after rotation.
+
+### MEDIUM — OIDC accepted `email_verified:false` assertions → **FIXED**
+- **Where:** `api/src/services/oidc.ts` (JIT match/create).
+- **Impact:** an ID token asserting an **unverified** email could be matched to (or provision) an account, enabling account takeover via an unverified address at a misconfigured/loose IdP.
+- **Fix:** an explicit `email_verified:false` claim is now rejected before any JIT match-or-create. The discovery document is also re-resolved hourly so rotated IdP metadata/JWKS is picked up without a restart.
+
+### MEDIUM — admin member-creation reachability → **FIXED**
+- **Where:** `api/src/routes/orgs.ts` (`POST /orgs/me/members`).
+- **Impact:** admin-provisioned member creation needed to be firmly behind the member-management permission, with the supplied password hashed at rest.
+- **Fix:** the endpoint is `members:manage`-gated (owner/admin only) and bcrypt-hashes the provided password; provisioning is RBAC-checked like the rest of the member lifecycle.
+
+### MEDIUM — `/email/bulk-send` open-relay / abuse surface → **FIXED**
+- **Where:** `api/src/routes/email.ts` (`POST /email/bulk-send`).
+- **Impact:** without a role gate and batch caps, bulk send was an abuse/relay vector.
+- **Fix:** `viewer` is rejected and batches are capped (≤500 recipients, 5/min per org), matching the single-send `From`-forcing and per-org cap from round 2.
+
+### Data-model note (not a vulnerability)
+Record owner (`assigned_to`) became a display-name `text` column, not a `uuid` FK
+(migration `028`). The app validates/filters/searches owners by name throughout;
+moving to an owner-by-id model is a separate frontend refactor, tracked as open.
+
+---
+
+*Last updated: **2026-06-14** — added the 2026-06-14 audit-wave security items (migrations 026–029). Prior passes: 2026-06-10 (rounds 2 & 3), initial gray-box + pen-test session.*

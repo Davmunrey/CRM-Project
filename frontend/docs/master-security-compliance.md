@@ -6,6 +6,7 @@
 
 ## Table of contents
 
+- [**Security Review Pack** (start here for a security review)](#security-review-pack)
 - [Client password policy and Zustand selectors](#client-password-policy-and-zustand-selectors)
 - [Auth / SSO / SCIM backend](#auth-sso-backend-handoff)
 - [AI governance and safety](#ai-governance)
@@ -146,7 +147,7 @@ This matrix tracks production hardening posture across security, reliability, op
 
 - Status: Active
 - Owner: Security/Ops/Backend
-- Last updated: 2026-06-11
+- Last updated: 2026-06-14 (audit-wave security items — migrations 026–029 — folded in; mirrored in [`SECURITY-AUDIT.md`](../../SECURITY-AUDIT.md#audit-hardening-2026-06-14)). Prior: 2026-06-11.
 - Canonical: Yes
 
 ## Scoring Legend
@@ -615,4 +616,201 @@ For honesty in buyer/security conversations: the following are **not** implement
 
 ---
 
-*Last updated: **2026-06-11** — Enterprise identity shipped and marked delivered: OIDC SSO (PKCE + JWKS RS256), SCIM 2.0, MFA (TOTP), server-side RBAC, GDPR export/erasure, and the `security_events` audit log — each verified against `api/src`. Genuinely-open gaps kept honest: SAML, HA/DR automated failover, backend SLOs/alerting, real job queue (BullMQ unused), field-level security, and formal certifications.*
+
+<a id="security-review-pack"></a>
+## Security Review Pack
+
+> **Purpose.** A single, self-contained pass for a security reviewer: every control we
+> claim, *where it lives in code*, the *evidence* to attach, and an honest read of what's
+> open. Work it **top-to-bottom**. It does not replace the detail above — it indexes it.
+> Anything marked **Open/Partial** is restated faithfully from [Enterprise gaps](#enterprise-gaps);
+> do not represent Partial as Done.
+
+### Document control
+
+- Status: Active · Owner: Security/Backend · Canonical: Yes
+- Last updated: 2026-06-14 (initial pack: control inventory + SOC 2 / OWASP ASVS / ISO 27001 Annex A crosswalk + live-evidence slot).
+- Scope: live Fastify API (`api/`), React SPA (`frontend/`), the AI feature, and the deploy manifests. **Not** a certification.
+
+### How to use
+
+1. For each control below, open the cited code anchor and confirm the behaviour, then attach the **evidence** (test output, screenshot, SQL/log excerpt, or config line) to your review ticket.
+2. Use the [framework crosswalk](#framework-crosswalk) to answer SOC 2 / ISO 27001 / ASVS / vendor-questionnaire items.
+3. Treat the [live-evidence snapshot](#live-evidence-snapshot) as the proof behind the "tests / 0-vuln" claims — re-run before sign-off.
+4. Read [open gaps](#review-pack-open-gaps) before signing; they are the honest limits of this build.
+
+### A. Control inventory
+
+Status legend: ✅ shipped & code-verified · 🟡 partial (works, with a stated limit) · ⛔ open.
+
+#### A.1 Identity & authentication
+
+| Control | Implementation (code anchor) | Evidence | Status |
+|---|---|---|---|
+| Password hashing | bcrypt cost 12, constant-time compare | `api/src/routes/auth.ts` | ✅ |
+| JWT integrity | HS256 **alg-pinned** (no `alg:none`), `JWT_SECRET` ≥32 enforced at boot | `api/src/config/env.ts`, `api/src/routes/auth.ts` | ✅ |
+| Per-token revocation | `jti` denylist in Redis with TTL; checked every request; logout/refresh revoke | `api/src/db/redis.ts` | ✅ |
+| Session transport | JWT in **HttpOnly** cookie (XSS-safe), not response body | `api/src/services/cookieAuth.ts` | ✅ |
+| MFA (TOTP) | RFC 6238; secret **AES-256-GCM** at rest; login prompt on `mfaRequired` | `api/src/services/totp.ts` (+`totp.test.ts`), migration `019` | ✅ |
+| SSO (OIDC) | PKCE S256 + JWKS RS256 verify (iss/aud/exp/nonce) + one-time state + JIT; rejects `email_verified:false` | `api/src/services/oidc.ts` (+`oidc.test.ts`), `api/src/routes/sso.ts` | ✅ |
+| Account lockout | 10 fails / 15 min per account → 429; clears on success | `api/src/db/redis.ts` | ✅ |
+| Registration policy | `ALLOW_OPEN_REGISTRATION` + `REGISTRATION_ALLOWED_DOMAINS`; first user bootstraps | `api/src/routes/auth.ts`, `env.ts` | ✅ |
+| Reset-token safety | SHA-256 at rest, 1h TTL, single-use; forgot-password always 200 (no enumeration) | `api/src/routes/auth.ts` | ✅ |
+| Org-wide mandatory MFA | per-user opt-in only | — | 🟡 |
+| SAML federation | OIDC only | — | ⛔ |
+
+#### A.2 Authorization & tenant isolation
+
+| Control | Implementation | Evidence | Status |
+|---|---|---|---|
+| Server-side RBAC | `requirePermission`/`requireCrudPermission`, matrix in `permissions.ts`; 5 roles | `api/src/middleware/rbac.ts` (+`rbac.test.ts`), `api/src/services/permissions.ts` (+`permissions.test.ts`) | ✅ |
+| Tenant isolation (authoritative) | every query scoped to JWT `organization_id`; cross-org **FK ownership** checks on writes | `api/src/routes/deals.ts` (`ownedInOrg`) | ✅ |
+| RLS (defense-in-depth) | 21 tables + `set_current_org()`; opt-in, not sole control | [ADR 0001](../../docs/adr/0001-tenant-isolation-and-rls.md) | ✅ |
+| Identity lifecycle | SCIM 2.0 deprovision = soft-deactivate + session revoke; last-owner protected | `api/src/routes/scim.ts` (+`scim.test.ts`) | ✅ |
+| Privileged access | owner/admin gates; impersonation audited (`ended_at` set on exit) | `api/src/routes/admin.ts` | ✅ |
+| Field-level security | RBAC is resource/action-level only | — | ⛔ |
+
+#### A.3 Data protection & privacy
+
+| Control | Implementation | Evidence | Status |
+|---|---|---|---|
+| Field encryption | AES-256-GCM for MFA seeds, OAuth & SMTP tokens (`TOKEN_ENCRYPTION_KEY`) | `api/src/services/tokenCipher.ts` | ✅ |
+| GDPR data-subject rights | `/privacy`: org export (Art. 20), subject export (Art. 15), erasure/anonymize (Art. 17), audit-logged | `api/src/routes/dataPrivacy.ts` | ✅ |
+| AI data retention | `AI_MESSAGE_RETENTION_DAYS` purge of `ai_*` | `api/src/services/ai/retention.ts` (+`retention.test.ts`) | ✅ |
+| Secrets in client bundle | none — SPA holds only `VITE_API_URL`/`VITE_APP_CHANNEL` | `frontend/vite.config.ts`, `frontend/src/lib/api.ts` | ✅ |
+| Self-service/automated DSAR | admin-run endpoints only | — | 🟡 |
+
+#### A.4 Application & API surface
+
+| Control | Implementation | Evidence | Status |
+|---|---|---|---|
+| Input validation | Zod schemas; `postgres.js` tagged templates (parameterized) | `api/src/config/env.ts`, route handlers | ✅ |
+| Rate limiting | per-org 500/min + per-IP 20/min auth (Redis); nginx `limit_req` 20r/s | `api/src/index.ts`, [`frontend/nginx.conf.template`](../nginx.conf.template) | ✅ |
+| Proxy/IP trust | `TRUST_PROXY` hop-count; rate limits key on resolved `req.ip` (XFF not spoofable) | `api/src/index.ts`, `env.ts` | ✅ |
+| API-key scopes | `leads:write`, `scim` enforced; rotation preserves scopes | `api/src/routes/apiKeys.ts`, `publicApi.ts` (+`publicApi.scopes.test.ts`) | ✅ |
+| CORS | comma-separated allow-list; `*` rejected in prod | `api/src/index.ts` | ✅ |
+| SSRF (webhooks) | resolve + IP-pin + header allow-list before `fetch` | `api/src/services/ssrfGuard.ts`, `webhookSubscriptions.ts` | ✅ |
+| SSRF (Slack/AI egress) | fixed host allow-lists re-asserted at send | `api/src/routes/slack.ts` (+`slack.test.ts`), `api/src/services/ai/providers.ts` | ✅ |
+| Debug surface | `/_debug/sql` runs in a READ ONLY tx; gated by `DEBUG_TOKEN` | `api/src/routes/debug.ts` | ✅ |
+| Metrics surface | `/metrics` gated on raw socket peer + `x-internal-key` | `api/src/index.ts`, `api/src/services/metrics.ts` | ✅ |
+| Concurrency safety | sequence runner claims rows `FOR UPDATE SKIP LOCKED` | `api/src/workers/sequenceRunner.ts` | ✅ |
+| Security headers (nginx) | X-Frame/nosniff/Referrer/Permissions present; **CSP, HSTS, COOP missing** on the nginx image | [`frontend/nginx.conf.template`](../nginx.conf.template) | 🟡 |
+
+#### A.5 AI governance
+
+| Control | Implementation | Evidence | Status |
+|---|---|---|---|
+| Per-org kill switch | `settings.ai.enabled=false` short-circuits | `api/src/routes/ai.ts` | ✅ |
+| Spend cap | `AI_MONTHLY_TOKEN_CAP` + per-org cap → 429 | `api/src/routes/ai.ts` | ✅ |
+| Tool tenant isolation + write gating | tools org-scoped; writes need `allowWrites` + audit row | `api/src/services/ai/tools.ts` (+`tools.test.ts`) | ✅ |
+| Step bound | `AI_AGENT_MAX_STEPS` (default 8) | `api/src/services/ai/agent.ts` (+`agent.test.ts`) | ✅ |
+
+#### A.6 Logging, monitoring, supply chain, BC/DR
+
+| Control | Implementation | Evidence | Status |
+|---|---|---|---|
+| Security-event log | append-only `security_events` (login/MFA/role/impersonation) | `api/src/services/securityEvents.ts`, migration `020` | ✅ |
+| Business audit log | org-scoped `audit_log` (incl. AI writes, SCIM, GDPR erasure) | `api/src/routes/audit.ts` | ✅ |
+| Correlation/health | `x-request-id`, `captureException`, `/health{,/live,/ready}` | `api/src/services/observability.ts` (+test), `api/src/routes/health.ts` | ✅ |
+| Supply chain | `npm audit --audit-level=critical` in CI on both packages | [`.gitea/workflows/ci.yml`](../../.gitea/workflows/ci.yml) | ✅ |
+| Backups | API runs scheduled `pg_dump\|gzip` (6h, keep 10) to `/backups` | `api/src/routes/debug.ts`, [DR runbook](../../docs/disaster-recovery.md) | ✅ |
+| Off-site backup / measured RTO-RPO / restore-drill calendar | runbook exists; not yet exercised on a schedule | [DR runbook §3,§5](../../docs/disaster-recovery.md) | 🟡 |
+| Backend SLOs + automated paging | Prometheus/Grafana/Sentry exist; no SLO alerting | — | 🟡 |
+| HA / automated failover | single Postgres + single Redis | — | ⛔ |
+
+<a id="framework-crosswalk"></a>
+### B. Framework crosswalk
+
+Pragmatic engineering mapping, **not** a certification. Detail per area: [Compliance mapping](#compliance-mapping), [ASVS (informal)](#sell-ready-security-evidence-index).
+
+#### B.1 SOC 2 (Trust Services Criteria) — *extends the existing [Control Mapping Table](#compliance-mapping)*
+
+| TSC | Covered by (inventory ref) | Status |
+|---|---|---|
+| CC6.1 Logical access | A.2 RBAC + tenant isolation + RLS | ✅ |
+| CC6.1 Authentication | A.1 bcrypt/MFA/OIDC/lockout | ✅ |
+| CC6.2/6.3 Provisioning & lifecycle | A.2 SCIM + member lifecycle | ✅ |
+| CC6.6 Boundary protection | A.4 rate limits, CORS, SSRF, debug/metrics gating | ✅ |
+| CC6.7 Data in transit/at rest | A.3 AES-256-GCM + TLS | ✅ |
+| CC7.1/7.2 Monitoring & anomaly | A.6 security_events; **alerting open** | 🟡 |
+| CC7.3/7.4 Incident response | runbook + `security_events` | 🟡 |
+| CC8.1 Change management | A.6 CI gates; required status checks to enforce | ✅ |
+| A1.2 Availability / backup | A.6 backups; **HA/DR failover open** | 🟡 |
+| C1/P-series Confidentiality & privacy | A.3 GDPR endpoints + retention | ✅ |
+
+#### B.2 OWASP ASVS L1–L2 (formalized)
+
+| Chapter | Evidence | Status |
+|---|---|---|
+| V1 Architecture | tenant model + [ADR 0001](../../docs/adr/0001-tenant-isolation-and-rls.md) | ✅ |
+| V2 Authentication | A.1 (bcrypt12, MFA, lockout, OIDC, `jti` denylist) | ✅ |
+| V3 Session management | HttpOnly cookie JWT, `jti` revocation, sessions-valid-after | ✅ |
+| V4 Access control | A.2 (RBAC + org gates + FK ownership) | ✅ |
+| V5 Validation/encoding | Zod + parameterized SQL + DOMPurify | ✅ |
+| V7 Errors & logging | `security_events` + `audit_log` + `x-request-id` | ✅ |
+| V8 Data protection | A.3 (isolation, GDPR, AES-256-GCM) | ✅ |
+| V9 Communications | TLS + SSRF allow-lists | ✅ |
+| V11 Business logic | rate limits, AI step bound, `SKIP LOCKED` | ✅ |
+| V13 API/web service | A.4 (key scopes, rate limits, CORS) | ✅ |
+| V14 Configuration | env validation + fail-fast + no client secrets; **CSP/HSTS gap on nginx** | 🟡 |
+
+#### B.3 ISO/IEC 27001:2022 Annex A (net-new)
+
+Technological theme (A.8) plus the directly-relevant organizational controls. Process/people/physical controls (most of A.5–A.7) are **outside application scope** and belong to your ISMS, not this codebase.
+
+| Annex A control | Covered by (inventory ref) | Status |
+|---|---|---|
+| A.5.15 Access control | A.2 RBAC | ✅ |
+| A.5.16 Identity management | A.2 SCIM lifecycle | ✅ |
+| A.5.17 Authentication information | A.1 secret storage + MFA | ✅ |
+| A.5.18 Access rights | A.2 RBAC + SCIM deprovision | ✅ |
+| A.5.30 ICT readiness for BC | A.6 DR runbook (no failover) | 🟡 |
+| A.8.2 Privileged access rights | A.2 owner/admin + impersonation audit | ✅ |
+| A.8.3 Information access restriction | A.2 org scoping + FK ownership | ✅ |
+| A.8.5 Secure authentication | A.1 MFA/OIDC/lockout | ✅ |
+| A.8.7 Protection against malware (supply chain) | A.6 `npm audit` in CI | ✅ |
+| A.8.9 Configuration management | A.4 env validation + fail-fast | ✅ |
+| A.8.12 Data leakage prevention | A.3 isolation + no client secrets | ✅ |
+| A.8.13 Information backup | A.6 scheduled `pg_dump` | ✅ |
+| A.8.15 Logging | A.6 security_events + audit_log | ✅ |
+| A.8.16 Monitoring activities | A.6 Prometheus/Sentry; **alerting open** | 🟡 |
+| A.8.23 Web filtering / egress control | A.4 SSRF allow-lists | ✅ |
+| A.8.24 Use of cryptography | A.1/A.3 AES-256-GCM + TLS + pinned HS256 | ✅ |
+| A.8.25 Secure development lifecycle | A.6 CI gates (tsc/eslint/vitest/audit) | ✅ |
+| A.8.26 Application security requirements | B.2 ASVS map | ✅ |
+| A.8.28 Secure coding | eslint + parameterized SQL + typed env | ✅ |
+
+<a id="live-evidence-snapshot"></a>
+### C. Live-evidence snapshot
+
+Re-run before sign-off and stamp the date + result. Commands: [Quality Gates in the root README](../../README.md#-quality-gates).
+
+| Gate | Package | Command | Result | Date |
+|---|---|---|---|---|
+| Type-check | api | `npx tsc --noEmit` | ✅ pass (exit 0) | 2026-06-16 |
+| Lint | api | `npm run lint` | ✅ pass (0 errors) | 2026-06-16 |
+| Unit tests | api | `npx vitest run` | ✅ **105 passed / 16 files** (1.4s) | 2026-06-16 |
+| Supply chain | api | `npm audit --audit-level=critical` | ✅ gate passes (0 critical) — ⚠️ **6 at default: 5 high + 1 moderate** (`ws` ← `engine.io`/`socket.io-adapter`) | 2026-06-16 |
+| Type-check | frontend | `npx tsc --noEmit` | ✅ pass (exit 0) | 2026-06-16 |
+| Lint | frontend | `npm run lint:ci` | ✅ pass (≤200 warns) | 2026-06-16 |
+| Unit tests | frontend | `npm run test:run` | ✅ **273 passed, 1 skipped / 44 files** (34s) | 2026-06-16 |
+| Supply chain | frontend | `npm audit --audit-level=critical` | ✅ gate passes (0 critical) — ⚠️ **6 at default: 3 high + 2 moderate + 1 low** (`ws` ← `engine.io-client`) | 2026-06-16 |
+
+> **Test counts verified** against the committed figures (API 105/16, frontend 273). **Supply-chain claim is now stale:** the CI gate is `--audit-level=critical` and still passes (0 critical), but a fresh `npm ci` resolves new advisories in the transitive **`ws`** dependency (pulled via Socket.io) — **6 vulnerabilities on each package at the default level**, none critical. The "0 npm vulnerabilities" wording elsewhere in the docs/README predates these advisories. `npm audit fix` is offered on both packages; re-stamp this row and the `0-vuln` claims after applying it.
+
+<a id="review-pack-open-gaps"></a>
+### D. Open gaps (consolidated)
+
+Single source of truth is [Enterprise gaps](#enterprise-gaps). Highest-impact for a security sign-off:
+
+1. **HA/DR** — single Postgres + Redis SPOF; no automated failover, no measured RTO/RPO, no scheduled restore drill.
+2. **Backend SLOs & alerting** — telemetry exists; no automated paging on lockout spikes / error-rate / AI-spend.
+3. **nginx security headers** — production nginx image omits **CSP, HSTS, COOP** (present only in the Vercel `_headers`/`vercel.json` static-host path).
+4. **Deploy/architecture drift** — `privateprompt-app.json` ships without PgBouncer / the monitoring stack and (per manifest) without `APP_URL`/`CORS_ORIGIN`; confirm platform injection. *(Infra finding — track in [`project-state.md`](./project-state.md), not a code control.)*
+5. **Identity** — SAML and org-wide mandatory MFA not implemented.
+6. **DSAR** — admin-run only; no subject self-service.
+7. **Certifications** — none held; this pack is an engineering evidence map.
+
+---
+
+*Last updated: **2026-06-14** — added the [Security Review Pack](#security-review-pack) (control inventory + SOC 2 / OWASP ASVS / ISO 27001 Annex A crosswalk + live-evidence slot) and folded in the 2026-06-14 audit-wave items. Prior: **2026-06-11** — Enterprise identity shipped and marked delivered: OIDC SSO (PKCE + JWKS RS256), SCIM 2.0, MFA (TOTP), server-side RBAC, GDPR export/erasure, and the `security_events` audit log — each verified against `api/src`. Genuinely-open gaps kept honest: SAML, HA/DR automated failover, backend SLOs/alerting, real job queue (BullMQ unused), field-level security, and formal certifications.*
