@@ -13,7 +13,6 @@ import {
   Bot,
   Webhook,
   Sparkles,
-  Quote,
   Star,
   Database,
   Clock,
@@ -647,6 +646,176 @@ function Eyebrow({ children }: { children: ReactNode }) {
   )
 }
 
+// ─── Pinned horizontal product tour (scroll down → panels pan sideways) ───────
+
+interface ProductPanel {
+  n: string
+  Mock: () => ReactNode
+  title: string
+  accent: string
+  body: string
+  bullets: string[]
+}
+
+const PRODUCT_PANELS: ProductPanel[] = [
+  {
+    n: '01',
+    Mock: KanbanMockup,
+    title: 'Your entire pipeline,',
+    accent: 'always in view.',
+    body: 'Drag-and-drop Kanban, deal values, close probability and a real-time forecast — all in one place.',
+    bullets: ['Drag-and-drop Kanban with custom stages', 'Revenue forecast updated in real time', 'Deal-aging alerts & stale-pipeline detection', 'Manager dashboard with team-level view'],
+  },
+  {
+    n: '02',
+    Mock: InboxMockup,
+    title: 'Reply to leads',
+    accent: 'without switching tabs.',
+    body: 'Native Gmail sync brings every conversation into n0CRM — read, reply and track opens, tied to the right deal automatically.',
+    bullets: ['Native Gmail + SMTP sync', 'Open & click tracking per email', 'Threads auto-linked to contacts & deals', 'Reply detection pauses sequences'],
+  },
+  {
+    n: '03',
+    Mock: SequenceMockup,
+    title: 'Cadences that',
+    accent: 'stop when they reply.',
+    body: 'Email steps, LinkedIn touchpoints and wait conditions — the CRM advances the deal automatically when a lead responds.',
+    bullets: ['Email + LinkedIn multi-channel cadences', 'Conditional logic on lead behaviour', 'Auto-advance deals on reply', 'Open / click / reply rate per step'],
+  },
+]
+
+function ProductPanelContent({ p }: { p: ProductPanel }) {
+  const { Mock } = p
+  return (
+    <div className="grid lg:grid-cols-2 gap-12 xl:gap-16 items-center w-full">
+      <div>
+        <div className="font-mono text-xs mb-4" style={{ color: C.indigo, letterSpacing: '0.18em' }}>{p.n} / 03</div>
+        <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-5 leading-[1.06]" style={{ color: C.ink }}>
+          {p.title}<br /><span className="text-gradient-brand">{p.accent}</span>
+        </h2>
+        <p className="mb-7 leading-relaxed max-w-md" style={{ color: C.body }}>{p.body}</p>
+        <ul className="space-y-3">
+          {p.bullets.map((b) => (
+            <li key={b} className="flex items-start gap-3 text-sm" style={{ color: C.body }}>
+              <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: C.indigo }} />
+              {b}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="relative">
+        <div className="absolute pointer-events-none" style={{ inset: -30, background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.16) 0%, transparent 70%)', filter: 'blur(30px)' }} />
+        <div className="relative"><Mock /></div>
+      </div>
+    </div>
+  )
+}
+
+function ProductPan() {
+  // Pan only on wide screens with motion allowed; otherwise a clean vertical stack.
+  const [pan, setPan] = useState(
+    () =>
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(min-width: 1024px)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  )
+  const sectionRef = useRef<HTMLElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const progressRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return
+    const wide = window.matchMedia('(min-width: 1024px)')
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const update = () => setPan(wide.matches && !reduce.matches)
+    wide.addEventListener('change', update)
+    reduce.addEventListener('change', update)
+    return () => {
+      wide.removeEventListener('change', update)
+      reduce.removeEventListener('change', update)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!pan) return
+    const section = sectionRef.current
+    const track = trackRef.current
+    if (!section || !track) return
+    let raf = 0
+    let running = false
+    // rAF loop reads the section's viewport position each frame and pans the
+    // track. Driven by an IntersectionObserver (runs only while the section is
+    // on screen) so it works regardless of which element is the scroll container.
+    const render = () => {
+      const total = section.offsetHeight - window.innerHeight
+      if (total > 0) {
+        const progress = Math.min(1, Math.max(0, -section.getBoundingClientRect().top / total))
+        const maxX = track.scrollWidth - window.innerWidth
+        track.style.transform = `translate3d(${-(progress * maxX)}px, 0, 0)`
+        if (progressRef.current) progressRef.current.style.width = `${progress * 100}%`
+      }
+      if (running) raf = requestAnimationFrame(render)
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        const e = entries[0]
+        if (!e) return
+        if (e.isIntersecting && !running) {
+          running = true
+          raf = requestAnimationFrame(render)
+        } else if (!e.isIntersecting && running) {
+          running = false
+          cancelAnimationFrame(raf)
+        }
+      },
+      { rootMargin: '120px 0px' },
+    )
+    io.observe(section)
+    return () => {
+      running = false
+      cancelAnimationFrame(raf)
+      io.disconnect()
+    }
+  }, [pan])
+
+  if (!pan) {
+    return (
+      <div>
+        {PRODUCT_PANELS.map((p) => (
+          <section key={p.n} className="max-w-6xl mx-auto px-6 py-20" style={{ borderTop: `1px solid ${C.line}` }}>
+            <Reveal><ProductPanelContent p={p} /></Reveal>
+          </section>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <section
+      ref={sectionRef}
+      aria-label="Product tour"
+      className="relative"
+      style={{ height: `${PRODUCT_PANELS.length * 100}vh`, background: C.soft, borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}` }}
+    >
+      <div className="sticky top-0 h-screen overflow-hidden">
+        <div ref={trackRef} className="flex h-full items-center will-change-transform" style={{ transform: 'translate3d(0,0,0)' }}>
+          {PRODUCT_PANELS.map((p) => (
+            <div key={p.n} className="shrink-0 w-screen h-full flex items-center px-[8vw]">
+              <div className="mx-auto w-full max-w-6xl"><ProductPanelContent p={p} /></div>
+            </div>
+          ))}
+        </div>
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-10 flex items-center gap-3">
+          <span className="font-mono text-[11px]" style={{ color: C.muted, letterSpacing: '0.18em' }}>SCROLL</span>
+          <div className="w-40 h-[3px] rounded-full overflow-hidden" style={{ background: C.line }}>
+            <div ref={progressRef} className="h-full rounded-full" style={{ width: '0%', background: 'linear-gradient(90deg, #4f46e5, #7c3aed)' }} />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Main landing page ───────────────────────────────────────────────────────
 
 export function Landing() {
@@ -699,8 +868,17 @@ export function Landing() {
 
   const trustChips = ['Connect Gmail in 1 click', 'Live in minutes', 'Enterprise security included']
 
+  const TESTIMONIALS = [
+    { quote: 'We replaced three tools with n0CRM and finally own our pipeline data. The forecast is actually trusted now.', name: 'Sales lead', role: 'B2B SaaS · team of 12', initial: 'S' },
+    { quote: 'Reps reply from one inbox and sequences pause themselves on reply. Our follow-up discipline went up overnight.', name: 'Head of Sales', role: 'Agency · team of 8', initial: 'H' },
+    { quote: 'Setup took an afternoon — Gmail and Calendar connected in a click and the data just flowed in.', name: 'RevOps manager', role: 'Fintech · team of 20', initial: 'R' },
+    { quote: 'The AI assistant drafts replies and surfaces the next best action. It feels like an extra SDR on the team.', name: 'Founder', role: 'Dev tools · team of 5', initial: 'F' },
+    { quote: 'SSO, SCIM and audit logs out of the box made our security review painless.', name: 'IT lead', role: 'Healthcare · team of 30', initial: 'I' },
+    { quote: 'Pipeline, sequences and reporting in one place. We cut our stack — and our bill — in half.', name: 'Sales ops', role: 'Logistics · team of 15', initial: 'O' },
+  ]
+
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: C.page, color: C.ink }}>
+    <div className="min-h-screen overflow-x-clip" style={{ backgroundColor: C.page, color: C.ink }}>
 
       {/* ── Nav ─────────────────────────────────────────────────────────────── */}
       <header
@@ -853,100 +1031,8 @@ export function Landing() {
         </div>
       </section>
 
-      {/* ── Feature spotlight 1: Pipeline ───────────────────────────────────── */}
-      <section className="max-w-6xl mx-auto px-6 py-28">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <Reveal>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-5 leading-tight" style={{ color: C.ink }}>
-              Your entire pipeline,<br />
-              <span className="text-gradient-brand">always in view.</span>
-            </h2>
-            <p className="mb-8 leading-relaxed" style={{ color: C.body }}>
-              Drag-and-drop Kanban, deal values, close probability, and real-time forecast — all in one place. Managers get the full picture; reps stay focused on closing.
-            </p>
-            <ul className="space-y-3">
-              {['Drag-and-drop Kanban with custom stages', 'Revenue forecast updated in real time', 'Deal aging alerts and stale pipeline detection', 'Manager dashboard with team-level view'].map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm" style={{ color: C.body }}>
-                  <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: C.indigo }} />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-          <Reveal delay={120}>
-            <div className="relative">
-              <div className="absolute pointer-events-none" style={{ inset: -30, background: 'radial-gradient(ellipse at center, rgba(99,102,241,0.18) 0%, transparent 70%)', filter: 'blur(28px)' }} />
-              <div className="relative">
-                <KanbanMockup />
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── Feature spotlight 2: Inbox ──────────────────────────────────────── */}
-      <section style={{ borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}`, background: C.soft }}>
-        <div className="max-w-6xl mx-auto px-6 py-28">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <Reveal delay={120} className="order-2 lg:order-1">
-              <div className="relative">
-                <div className="absolute pointer-events-none" style={{ inset: -30, background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.18) 0%, transparent 70%)', filter: 'blur(28px)' }} />
-                <div className="relative">
-                  <InboxMockup />
-                </div>
-              </div>
-            </Reveal>
-            <Reveal className="order-1 lg:order-2">
-              <h2 className="font-display text-3xl sm:text-4xl font-bold mb-5 leading-tight" style={{ color: C.ink }}>
-                Reply to leads without<br />
-                <span className="text-gradient-brand">switching tabs.</span>
-              </h2>
-              <p className="mb-8 leading-relaxed" style={{ color: C.body }}>
-                Native Gmail sync brings every conversation into n0CRM. Read, reply, track opens and clicks — all tied to the right deal and contact, automatically.
-              </p>
-              <ul className="space-y-3">
-                {['Native Gmail + SMTP sync', 'Open and click tracking per email', 'Threads auto-linked to contacts and deals', 'Reply detection to pause sequences automatically'].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm" style={{ color: C.body }}>
-                    <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: C.indigo }} />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Feature spotlight 3: Sequences ─────────────────────────────────── */}
-      <section className="max-w-6xl mx-auto px-6 py-28">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <Reveal>
-            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-5 leading-tight" style={{ color: C.ink }}>
-              Multi-step cadences that<br />
-              <span className="text-gradient-brand">stop when they reply.</span>
-            </h2>
-            <p className="mb-8 leading-relaxed" style={{ color: C.body }}>
-              Build sequences with email steps, LinkedIn touchpoints, and wait conditions. The CRM advances the deal automatically when a lead responds — no manual work.
-            </p>
-            <ul className="space-y-3">
-              {['Email + LinkedIn multi-channel cadences', 'Conditional logic based on lead behaviour', 'Auto-advance deals on reply', 'Open rate, click rate and reply rate per step'].map((item) => (
-                <li key={item} className="flex items-start gap-3 text-sm" style={{ color: C.body }}>
-                  <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: C.indigo }} />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-          <Reveal delay={120}>
-            <div className="relative">
-              <div className="absolute pointer-events-none" style={{ inset: -30, background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.16) 0%, transparent 70%)', filter: 'blur(28px)' }} />
-              <div className="relative">
-                <SequenceMockup />
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      {/* ── Product tour: scroll down → product panels pan sideways (desktop) ── */}
+      <ProductPan />
 
       {/* ── Features grid ───────────────────────────────────────────────────── */}
       <section id="features" style={{ borderTop: `1px solid ${C.line}`, background: C.soft }}>
@@ -979,28 +1065,34 @@ export function Landing() {
       </section>
 
       {/* ── Testimonial ─────────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-6 py-28">
+      <section className="py-28" style={{ borderTop: `1px solid ${C.line}` }}>
         <Reveal>
-          <div className="rounded-3xl px-8 py-12 sm:px-14 sm:py-14 text-center relative overflow-hidden" style={{ background: '#ffffff', border: `1px solid ${C.line}`, boxShadow: '0 30px 80px -40px rgba(15,23,42,0.3)' }}>
-            <div className="absolute pointer-events-none" style={{ top: -60, left: '50%', transform: 'translateX(-50%)', width: 420, height: 200, background: 'radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(36px)' }} />
-            <Quote className="w-9 h-9 mx-auto mb-5" style={{ color: 'rgba(99,102,241,0.5)' }} />
-            <div className="flex items-center justify-center gap-1 mb-5">
-              {[0, 1, 2, 3, 4].map((s) => (
-                <Star key={s} className="w-4 h-4" style={{ color: '#f59e0b', fill: '#f59e0b' }} />
-              ))}
-            </div>
-            <p className="font-display text-xl sm:text-2xl font-semibold leading-snug mb-7 relative" style={{ color: C.ink }}>
-              “We replaced three tools with n0CRM and finally own our pipeline data. Reps reply from one inbox, sequences pause themselves, and our forecast is actually trusted.”
-            </p>
-            <div className="flex items-center justify-center gap-3">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', color: '#fff' }}>S</div>
-              <div className="text-left">
-                <p className="text-sm font-semibold" style={{ color: C.ink }}>Sales lead</p>
-                <p className="text-xs" style={{ color: C.muted }}>B2B SaaS · outbound team of 12</p>
-              </div>
-            </div>
+          <div className="text-center mb-12 px-6">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4" style={{ color: C.ink }}>Loved by outbound teams.</h2>
+            <p className="max-w-xl mx-auto" style={{ color: C.muted }}>What sales leaders say after switching to n0CRM.</p>
           </div>
         </Reveal>
+        <div className="marquee-mask overflow-hidden" style={{ maskImage: 'linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent)' }}>
+          <div className="marquee-track flex gap-5" style={{ width: 'max-content' }}>
+            {[...TESTIMONIALS, ...TESTIMONIALS].map((tt, i) => (
+              <figure key={i} className="shrink-0 w-[340px] rounded-2xl p-6 flex flex-col" style={{ background: '#ffffff', border: `1px solid ${C.line}`, boxShadow: '0 14px 36px -26px rgba(15,23,42,0.35)' }}>
+                <div className="flex items-center gap-1 mb-3">
+                  {[0, 1, 2, 3, 4].map((s) => (
+                    <Star key={s} className="w-3.5 h-3.5" style={{ color: '#f59e0b', fill: '#f59e0b' }} />
+                  ))}
+                </div>
+                <blockquote className="text-sm leading-relaxed mb-5 flex-1" style={{ color: C.body }}>&ldquo;{tt.quote}&rdquo;</blockquote>
+                <figcaption className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', color: '#fff' }}>{tt.initial}</div>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: C.ink }}>{tt.name}</p>
+                    <p className="text-xs" style={{ color: C.muted }}>{tt.role}</p>
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ── Security as trust ───────────────────────────────────────────────── */}
