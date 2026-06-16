@@ -8,7 +8,7 @@ Fastify REST API for n0CRM — the connected, AI-native B2B CRM backend. This is
 | Framework | Fastify 5 (`trustProxy` = `TRUST_PROXY` hops) |
 | Database | PostgreSQL 16 via `postgres.js` (camelCase transform), through PgBouncer in production |
 | Auth | HS256 JWT — `{ sub, org, role, jti }` claims; HttpOnly `auth_token` cookie; per-user/per-token Redis denylist |
-| Queues | Redis (ioredis); BullMQ is a declared dependency but the live sequence runner is a polling worker, not a BullMQ queue |
+| Queues | **BullMQ** (Redis-backed, ioredis); the sequence runner is a repeatable BullMQ job + worker (`src/workers/sequenceQueue.ts`), scheduled in Redis so it dedupes across replicas |
 | Realtime | Socket.io — org-scoped rooms, JWT-verified handshake (re-checks `is_active` + org) |
 | Validation | Zod on every route + on env (`config/env.ts`) |
 | Encryption | AES-256-GCM for OAuth tokens, SMTP passwords, webhook/Slack/Zoom secrets |

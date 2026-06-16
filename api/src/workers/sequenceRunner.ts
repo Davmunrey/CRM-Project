@@ -422,36 +422,6 @@ async function advanceEnrollment(
   `
 }
 
-// ---------------------------------------------------------------------------
-// Lifecycle management
-// ---------------------------------------------------------------------------
-
-let intervalHandle: ReturnType<typeof setInterval> | null = null
-const TICK_MS = 60_000
-
-export function startSequenceRunner(): void {
-  if (intervalHandle !== null) {
-    console.warn('[sequenceRunner] Already running — ignoring duplicate start')
-    return
-  }
-
-  console.log('[sequenceRunner] Starting (tick every 60s)')
-
-  // Fire once immediately on startup so the first run doesn't wait a full minute.
-  void runSequenceCycle().catch((err) => {
-    console.error('[sequenceRunner] Initial tick error:', err)
-  })
-
-  intervalHandle = setInterval(() => {
-    void runSequenceCycle().catch((err) => {
-      console.error('[sequenceRunner] Tick error:', err)
-    })
-  }, TICK_MS)
-}
-
-export function stopSequenceRunner(): void {
-  if (intervalHandle === null) return
-  clearInterval(intervalHandle)
-  intervalHandle = null
-  console.log('[sequenceRunner] Stopped')
-}
+// The runner is scheduled by BullMQ — see ./sequenceQueue.ts, which calls
+// runSequenceCycle() on a repeatable 60s tick. The /internal/sequences/run
+// route also calls runSequenceCycle() directly for manual triggering.

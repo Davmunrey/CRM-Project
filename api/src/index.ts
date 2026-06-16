@@ -58,7 +58,7 @@ import { bookingPagesRoutes } from './routes/bookingPages.js'
 import { publicBookingRoutes } from './routes/publicBooking.js'
 import { authMiddleware } from './middleware/auth.js'
 import { resolveRequestId, captureException } from './services/observability.js'
-import { startSequenceRunner, stopSequenceRunner } from './workers/sequenceRunner.js'
+import { startSequenceQueue, stopSequenceQueue } from './workers/sequenceQueue.js'
 import { startAiRetention, stopAiRetention } from './services/ai/retention.js'
 import { registerRealtimeHandlers, broadcastDbChange } from './services/realtime.js'
 import {
@@ -405,19 +405,19 @@ try {
   await app.listen({ port: env.PORT, host: '0.0.0.0' })
   app.log.info(`n0CRM API running on port ${env.PORT}`)
 
-  // Start the background sequence runner after the server is up and DB is ready.
-  startSequenceRunner()
+  // Start the BullMQ sequence runner after the server is up and DB is ready.
+  await startSequenceQueue()
 
   // Start the AI data-retention purge (no-op unless AI_MESSAGE_RETENTION_DAYS > 0).
   startAiRetention(app.log)
 
   // Graceful shutdown — stop background work before the process exits.
-  const shutdown = (): void => {
-    stopSequenceRunner()
+  const shutdown = async (): Promise<void> => {
+    await stopSequenceQueue()
     stopAiRetention()
   }
-  process.once('SIGTERM', shutdown)
-  process.once('SIGINT', shutdown)
+  process.once('SIGTERM', () => void shutdown())
+  process.once('SIGINT', () => void shutdown())
 } catch (err) {
   app.log.error(err)
   process.exit(1)

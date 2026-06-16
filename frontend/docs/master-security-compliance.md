@@ -607,7 +607,6 @@ For honesty in buyer/security conversations: the following are **not** implement
 | **HA / DR automated failover** | Open | Single Postgres + single Redis; no multi-AZ/replica failover. Automated backups exist (pg_dump 6h / 7-day) and a restore **runbook** exists at [`docs/disaster-recovery.md`](../../docs/disaster-recovery.md), but there is no automated failover, no documented RTO/RPO, and no recorded restore-drill calendar. |
 | **Backend SLOs & alerting** | Partial | Prometheus/Grafana + health probes + request-id correlation + optional Sentry exist; **backend error-rate SLOs and automated paging/alerting** are not in place. |
 | **Self-service / automated DSAR** | Partial | Export/erasure are delivered as owner/admin API endpoints ([#dsar-playbook](#dsar-playbook)); a subject-initiated self-service flow with automated SLA tracking is not. |
-| **Real background job queue** | Open | BullMQ is declared but **unused**; background work (e.g. the sequence runner) runs on a 60s in-process poller. |
 | **Field-level security** | Open | RBAC is resource/action-level; per-field redaction/access is not implemented. |
 | **Industry pipeline templates / Forecasting v2 / AI v2** | Open | Product roadmap items, not security controls. |
 | **Compliance certifications** | None | No SOC 2 / ISO 27001 / HIPAA / GDPR certification. This file is an engineering evidence map, not an audit artifact. |
