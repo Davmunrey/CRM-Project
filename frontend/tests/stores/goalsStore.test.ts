@@ -22,7 +22,7 @@ describe('goalsStore', () => {
     mockPost.mockReset()
   })
 
-  it('creates a goal via velo-api', async () => {
+  it('creates a goal via n0crm-api', async () => {
     const created = {
       id: 'goal-123',
       userId: 'u-test',

@@ -14,7 +14,7 @@ describe('Settings users sync', () => {
       settings: {
         ...defaultAppSettings,
         users: [
-          { id: 'seed-1', name: 'Seed User', email: 'seed@velo.es', role: 'Sales Manager' },
+          { id: 'seed-1', name: 'Seed User', email: 'seed@n0crm.es', role: 'Sales Manager' },
         ],
       },
     })
@@ -43,6 +43,6 @@ describe('Settings users sync', () => {
     )
 
     expect(screen.getByText(/david@clovrlabs\.com/i)).toBeInTheDocument()
-    expect(screen.queryByText(/seed@velo\.es/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/seed@n0crm\.es/i)).not.toBeInTheDocument()
   })
 })

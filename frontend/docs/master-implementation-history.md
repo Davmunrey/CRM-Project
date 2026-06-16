@@ -530,7 +530,7 @@ Narrative layout and tokens: [`master-design-ui.md`](./master-design-ui.md#main-
 
 - **SQL:** `supabase/migrations/20260424120000_webhook_delete_payload_api_keys_lead_capture.sql` — DELETE webhook events enqueue JSON `null` for `data` (via `'null'::jsonb`) and prior row in `previous`; new tables `organization_api_keys`, `lead_capture_tokens`; index on failed outbox by org.
 - **Edge:** `webhook-subscriptions` extended with `listFailedOutbox` and `replayOutbox` (JWT + org admin).
-- **Docs:** [`public-api-phase1.md`](./public-api-phase1.md), [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md), updates to [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md), [`project-state.md`](./project-state.md), [`supabase/README.md`](../supabase/README.md).
+- **Docs:** [`public-api-phase1.md`](./public-api-phase1.md), [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md), updates to [`master-pipedrive-comparison.md`](./master-pipedrive-comparison.md), [`project-state.md`](./project-state.md), [`supabase/README.md`](../supabase/README.md).
 - **Shipped in repo:** Edge Function sources under `supabase/functions/`, `config.toml` (`verify_jwt = false` for `crm-public-api` and `lead-capture`), Settings UI + i18n, `database.types.ts`, deploy scripts in `package.json`.
 
 <a id="implementation-history-section-27"></a>

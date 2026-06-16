@@ -6,10 +6,10 @@ const jwtB = process.env.RLS_TEST_JWT_B ?? ''
 
 /**
  * When `RLS_TEST_JWT_A` / `RLS_TEST_JWT_B` and `E2E_API_URL` are set, verifies
- * two org sessions cannot read each other's contacts via velo-api (spot-check).
+ * two org sessions cannot read each other's contacts via n0crm-api (spot-check).
  * Otherwise skipped.
  */
-describe('Tenant isolation (velo-api org scoping)', () => {
+describe('Tenant isolation (n0crm-api org scoping)', () => {
   it.skipIf(!apiUrl || !jwtA || !jwtB)('contacts: org A JWT cannot list org B rows', async () => {
     const headers = (jwt: string) => ({
       Authorization: `Bearer ${jwt}`,

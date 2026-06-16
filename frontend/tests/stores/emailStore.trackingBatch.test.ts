@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-// Mock the velo-api client
+// Mock the n0crm-api client
 const getMock = vi.fn()
 
 vi.mock('../../src/lib/api', () => ({
@@ -10,7 +10,7 @@ vi.mock('../../src/lib/api', () => ({
   clearToken: vi.fn(),
   decodeToken: vi.fn(),
   isTokenExpired: vi.fn().mockReturnValue(false),
-  TOKEN_KEY: 'velo_token',
+  TOKEN_KEY: 'n0crm_token',
 }))
 
 
@@ -26,7 +26,7 @@ vi.mock('../../src/store/leadsStore', () => ({
   },
 }))
 
-describe('emailStore tracking metrics (velo-api)', () => {
+describe('emailStore tracking metrics (n0crm-api)', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     const { useEmailStore } = await import('../../src/store/emailStore')

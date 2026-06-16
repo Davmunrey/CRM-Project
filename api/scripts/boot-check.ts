@@ -40,17 +40,17 @@ async function testConnection(url: string): Promise<boolean> {
 async function main() {
   const url = process.env.DATABASE_URL || ''
 
-  if (!url || url === 'postgres://velo:@postgres:5432/velo') {
-    console.error('[velo-api] ERROR: DATABASE_URL is empty or invalid.')
+  if (!url || url === 'postgres://n0crm:@postgres:5432/n0crm') {
+    console.error('[n0crm-api] ERROR: DATABASE_URL is empty or invalid.')
     console.error('  Set DATABASE_URL manually, e.g.:')
-    console.error('    postgres://velo:<password>@postgres:5432/velo')
+    console.error('    postgres://n0crm:<password>@postgres:5432/n0crm')
     console.error('  Or set POSTGRES_PASSWORD so the entrypoint builds it automatically.')
     process.exit(1)
   }
 
   const host = hostFromUrl(url)
   const pass = passwordFromUrl(url)
-  console.log(`[velo-api] Checking database connection to ${host}...`)
+  console.log(`[n0crm-api] Checking database connection to ${host}...`)
 
   // Wait up to 60s for postgres to become available
   let attempts = 0
@@ -59,14 +59,14 @@ async function main() {
     attempts++
     const ok = await testConnection(url)
     if (ok) {
-      console.log(`[velo-api] Database connected successfully.`)
+      console.log(`[n0crm-api] Database connected successfully.`)
       return
     }
-    console.log(`[velo-api] Attempt ${attempts}/${maxAttempts} — postgres not ready, retrying in 2s...`)
+    console.log(`[n0crm-api] Attempt ${attempts}/${maxAttempts} — postgres not ready, retrying in 2s...`)
     await new Promise((r) => setTimeout(r, 2000))
   }
 
-  console.error(`[velo-api] ERROR: Could not connect to database after ${maxAttempts} attempts.`)
+  console.error(`[n0crm-api] ERROR: Could not connect to database after ${maxAttempts} attempts.`)
   console.error(`  DATABASE_URL: ${url.replace(pass || '', '***')}`)
   console.error(`  Host: ${host}`)
   console.error(`  Possible causes:`)

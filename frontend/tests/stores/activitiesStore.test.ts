@@ -18,7 +18,7 @@ vi.mock('../../src/lib/api', () => ({
   clearToken: vi.fn(),
   decodeToken: vi.fn().mockReturnValue(null),
   isTokenExpired: vi.fn().mockReturnValue(true),
-  TOKEN_KEY: 'velo_token',
+  TOKEN_KEY: 'n0crm_token',
 }))
 
 vi.mock('../../src/store/auditStore', () => ({

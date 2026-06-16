@@ -16,7 +16,7 @@
 | Stand up **enterprise SSO / SCIM** for an IdP (Entra / Okta / OneLogin) | [`../../docs/sso-and-scim.md`](../../docs/sso-and-scim.md) |
 | Run **production smoke** after deploy | [`smoke-checklist-production.md`](./smoke-checklist-production.md) |
 | Own **roadmap / backlog** (30–60–90, GTM matrix) | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
-| Compare **Pipedrive vs n0CRM**, webhooks parity, group priorities | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) |
+| Compare **Pipedrive vs n0CRM**, webhooks parity, group priorities | [`master-pipedrive-comparison.md`](./master-pipedrive-comparison.md) |
 | Need **what shipped** (chronological handoff) | [`master-implementation-history.md`](./master-implementation-history.md) |
 | Understand the **tenant-isolation / RLS** decision | [`../../docs/adr/0001-tenant-isolation-and-rls.md`](../../docs/adr/0001-tenant-isolation-and-rls.md) |
 
@@ -37,14 +37,14 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 | Public REST API (phase 1) | [`public-api-phase1.md`](./public-api-phase1.md) | `POST /public/v1/leads` · `x-api-key` header (`leads:write` scope) |
 | Public lead capture | [`lead-capture-public-endpoint.md`](./lead-capture-public-endpoint.md) | `POST /public/v1/leads`, `x-api-key`, honeypot, duplicate handling |
 | Roadmap 30/60/90 + execution backlog | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) | Horizon roadmap · execution backlog (legacy section IDs, not the old product name) |
-| Competitive / integration parity (Pipedrive, webhooks, API) | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) | Benchmark tables · Webhooks spec · Top gaps · Executive summary (n0CRM vs Pipedrive) |
+| Competitive / integration parity (Pipedrive, webhooks, API) | [`master-pipedrive-comparison.md`](./master-pipedrive-comparison.md) | Benchmark tables · Webhooks spec · Top gaps · Executive summary (n0CRM vs Pipedrive) |
 | Manager `/manager` KPI definitions (MQL/SQL, aging, first-touch) | [`master-implementation-history.md` §23 + data contract](./master-implementation-history.md#manager-dashboard-data-contract) | Section 23 narrative; [subsection](./master-implementation-history.md#manager-dashboard-data-contract) for tables, i18n keys, tests |
 
 ---
 
 ## By role (quick paths)
 
-- **Product / PM** — [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) · [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) · [`project-state.md`](./project-state.md#gaps-not-fully-owned-by-a-single-master-today)
+- **Product / PM** — [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) · [`master-pipedrive-comparison.md`](./master-pipedrive-comparison.md) · [`.planning/REQUIREMENTS.md`](../.planning/REQUIREMENTS.md) · [`project-state.md`](./project-state.md#gaps-not-fully-owned-by-a-single-master-today)
 - **Engineering (feature work)** — [`master-implementation-history.md`](./master-implementation-history.md) Part B · [`master-design-ui.md`](./master-design-ui.md#design-system-and-layout) · [`../../docs/CODEBASE-MAP.md`](../../docs/CODEBASE-MAP.md) · [`.planning/CODEBASE.md` (Conventions)](../.planning/CODEBASE.md#coding-conventions)
 - **Ops / SRE / release** — [`master-release-qa.md`](./master-release-qa.md#production-handoff-checklist) · [`../../docs/disaster-recovery.md`](../../docs/disaster-recovery.md) · [`master-lead-management.md`](./master-lead-management.md)
 - **Security / buyer reviews** — [`master-security-compliance.md`](./master-security-compliance.md) · [`../../docs/sso-and-scim.md`](../../docs/sso-and-scim.md) · [`master-email-operations.md`](./master-email-operations.md#email-deliverability)
@@ -62,7 +62,7 @@ Verify consolidated `docs/` layout (no legacy split sources; masters present; **
 | Release, QA, go/no-go, production handoff | Gates and evidence | [`master-release-qa.md`](./master-release-qa.md) |
 | Implementation history (full handoff) | Part A + Part B (§1–12 + §13–31+) | [`master-implementation-history.md`](./master-implementation-history.md) |
 | Roadmap 30/60/90 + execution backlog | Forward plan | [`master-roadmap-backlog.md`](./master-roadmap-backlog.md) |
-| Pipedrive comparison, webhooks/API parity | Active narrative | [`master-pipedrive-velo-comparison.md`](./master-pipedrive-velo-comparison.md) |
+| Pipedrive comparison, webhooks/API parity | Active narrative | [`master-pipedrive-comparison.md`](./master-pipedrive-comparison.md) |
 | v1 milestone + deploy IDs + bridge / gaps | Tracker + explainer | [`.planning/`](../.planning/) · [`project-state.md`](./project-state.md) |
 
 ---

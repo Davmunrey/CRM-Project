@@ -27,7 +27,7 @@ export function AdvancedSection({ formatAgo }: AdvancedSectionProps) {
   const [maintenanceStatusFilter, setMaintenanceStatusFilter] = useState<'all' | 'success' | 'running' | 'error'>('all')
 
   const loadMaintenanceRuns = async () => {
-    // lead_score_maintenance_runs is not available in velo-api
+    // lead_score_maintenance_runs is not available in the n0CRM API
     setLoadingMaintenanceRuns(false)
   }
 

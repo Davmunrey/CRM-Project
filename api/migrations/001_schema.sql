@@ -1,5 +1,5 @@
--- Velo CRM — Standalone PostgreSQL Schema
--- No Supabase dependencies. All auth handled by velo-api JWT.
+-- n0CRM — Standalone PostgreSQL Schema
+-- No Supabase dependencies. All auth handled by n0CRM API JWT.
 -- Run via: npm run db:migrate
 
 -- ─── Organizations ────────────────────────────────────────────────────────────

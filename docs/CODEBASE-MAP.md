@@ -1772,7 +1772,7 @@ The frontend pages layer is a React 18 + Vite SPA using React Router v6. Every p
 
 ## Frontend — Components
 
-React 18 + TypeScript component layer for the n0CRM (Velo) frontend, organized by domain: activities, ai, auth, brand, companies, contacts, deals, email (+ email/composer), import, integrations, layout, settings, shared, ui (design-system primitives), and workflows. Domain forms (Contact/Company/Deal/Activity) all use react-hook-form + zodResolver with i18n-derived schemas (createXSchema(t)) and compose the ui/ primitives (Input, Select, Textarea, Button). The ui/ folder is the design system: token-based Tailwind primitives (no raw palette — uses bg-surface-*, text-fg*, accent-*, semantic success/warning/danger/info), with Select delegating to a portal-based SearchableSelect, Modal/SlideOver/ConfirmDialog sharing focus-trap logic, and a SlideOver-based global AiAssistant. All copy is internationalized via useTranslations()/getTranslations() from ../../i18n, and most stateful pieces read Zustand stores (often via manual subscribe() to avoid Zustand v5 + StrictMode getSnapshot issues, notably in Topbar/Sidebar/SmartViewBar/AttachmentsList). Integration cards and settings panels talk to the Fastify API via lib/api (camelCase responses per postgres.camel).
+React 18 + TypeScript component layer for the n0CRM frontend, organized by domain: activities, ai, auth, brand, companies, contacts, deals, email (+ email/composer), import, integrations, layout, settings, shared, ui (design-system primitives), and workflows. Domain forms (Contact/Company/Deal/Activity) all use react-hook-form + zodResolver with i18n-derived schemas (createXSchema(t)) and compose the ui/ primitives (Input, Select, Textarea, Button). The ui/ folder is the design system: token-based Tailwind primitives (no raw palette — uses bg-surface-*, text-fg*, accent-*, semantic success/warning/danger/info), with Select delegating to a portal-based SearchableSelect, Modal/SlideOver/ConfirmDialog sharing focus-trap logic, and a SlideOver-based global AiAssistant. All copy is internationalized via useTranslations()/getTranslations() from ../../i18n, and most stateful pieces read Zustand stores (often via manual subscribe() to avoid Zustand v5 + StrictMode getSnapshot issues, notably in Topbar/Sidebar/SmartViewBar/AttachmentsList). Integration cards and settings panels talk to the Fastify API via lib/api (camelCase responses per postgres.camel).
 
 **Files (83):**
 
@@ -2385,7 +2385,7 @@ Frontend support layer for the React 18 SPA: the HTTP client, validation schemas
   - refreshGmailAccessToken(setToken) (GET /gmail/refresh-token)
   - withGmailToken(currentToken, setToken, fn) (retries once on GmailApiError 401)
 - **[`frontend/src/services/googleIntegrationService.ts`](frontend/src/services/googleIntegrationService.ts)** — Google integration status/OAuth-start/disconnect API client + scope label helpers.
-  - GOOGLE_OAUTH_MESSAGE_SOURCE='velo-google-oauth'
+  - GOOGLE_OAUTH_MESSAGE_SOURCE='n0crm-google-oauth'
   - type GoogleOAuthBundle (primary|calendar|contacts)
   - fetchGoogleOAuthConfigStatus, fetchGoogleOAuthStartUrl (POST /gmail/oauth-start), fetchGoogleIntegrationStatus (GET /gmail/integration-status)
   - syncGoogleContacts (POST /gmail/sync-contacts), disconnectGoogleIntegration (POST /gmail/disconnect)

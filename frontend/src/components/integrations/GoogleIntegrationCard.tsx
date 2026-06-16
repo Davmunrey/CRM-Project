@@ -99,7 +99,7 @@ function GoogleOAuthSetupGuide({ redirectUri }: { redirectUri: string }) {
     },
     {
       n: 5,
-      title: 'Add credentials to velo-api/.env',
+      title: 'Add credentials to n0crm-api/.env',
       body: (
         <div className="font-mono text-[11px] bg-surface-2 rounded-lg px-3 py-2 border border-border whitespace-pre select-all">
           {`GOOGLE_CLIENT_ID=<your-client-id>.apps.googleusercontent.com\nGOOGLE_CLIENT_SECRET=<your-client-secret>\nGOOGLE_REDIRECT_URI=${redirectUri}`}
@@ -111,7 +111,7 @@ function GoogleOAuthSetupGuide({ redirectUri }: { redirectUri: string }) {
       title: 'Restart the API',
       body: (
         <div className="font-mono text-[11px] bg-surface-2 rounded-lg px-3 py-2 border border-border select-all">
-          {`# In your terminal, in the velo-api directory:\nnpm run dev`}
+          {`# In your terminal, in the n0crm-api directory:\nnpm run dev`}
         </div>
       ),
     },
@@ -136,7 +136,7 @@ function GoogleOAuthSetupGuide({ redirectUri }: { redirectUri: string }) {
       {open && (
         <div className="px-4 pb-4 space-y-4 border-t border-warning/20 pt-4">
           <p className="text-xs text-fg-muted">
-            Velo needs a Google Cloud OAuth app to connect Gmail and Calendar.
+            n0CRM needs a Google Cloud OAuth app to connect Gmail and Calendar.
             Follow these steps, then refresh this page.
           </p>
           {steps.map((s) => (

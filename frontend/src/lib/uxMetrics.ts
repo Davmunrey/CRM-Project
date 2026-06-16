@@ -64,7 +64,7 @@ export function getUxActionCount(action: UxActionName): number {
   return getUxEvents().reduce((acc, event) => acc + (event.action === action ? 1 : 0), 0)
 }
 
-/** Post queued UX events to velo-api and clear local queue on success. */
+/** Post queued UX events to the n0CRM API and clear local queue on success. */
 export async function flushUxMetricsToServer(): Promise<void> {
   const events = getUxEvents()
   if (events.length === 0) return

@@ -4,11 +4,11 @@ import bcrypt from 'bcryptjs'
 
 const db = postgres(process.env['DATABASE_URL']!)
 
-const ADMIN_EMAIL = process.env['SEED_ADMIN_EMAIL'] ?? 'admin@velo.local'
+const ADMIN_EMAIL = process.env['SEED_ADMIN_EMAIL'] ?? 'admin@n0crm.local'
 const ADMIN_PASSWORD = process.env['SEED_ADMIN_PASSWORD'] ?? 'Admin1234!'
 const ADMIN_NAME = process.env['SEED_ADMIN_NAME'] ?? 'Admin'
-const ORG_NAME = process.env['SEED_ORG_NAME'] ?? 'Velo Demo'
-const ORG_SLUG = process.env['SEED_ORG_SLUG'] ?? 'velo-demo'
+const ORG_NAME = process.env['SEED_ORG_NAME'] ?? 'n0CRM Demo'
+const ORG_SLUG = process.env['SEED_ORG_SLUG'] ?? 'n0crm-demo'
 
 // ── Organization ──────────────────────────────────────────────────────────────
 const existingOrg = await db`SELECT id FROM organizations WHERE slug = ${ORG_SLUG} LIMIT 1`

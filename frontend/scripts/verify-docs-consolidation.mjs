@@ -53,7 +53,7 @@ const MASTERS = [
   'master-release-qa.md',
   'master-implementation-history.md',
   'master-roadmap-backlog.md',
-  'master-pipedrive-velo-comparison.md',
+  'master-pipedrive-comparison.md',
 ]
 
 /** Non-master Markdown allowed under docs/ (index, bridge, certified runbooks, engineering reference). */

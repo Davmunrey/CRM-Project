@@ -11,7 +11,7 @@ N0CRM_API_URL="${N0CRM_API_URL%/}"
 export N0CRM_API_URL
 
 # Derive the API hostname for SNI and the upstream Host header.
-# Example: https://velo-api.apps.privateprompt.tech → velo-api.apps.privateprompt.tech
+# Example: https://n0crm-api.apps.privateprompt.tech → n0crm-api.apps.privateprompt.tech
 API_HOST=$(echo "${N0CRM_API_URL}" | sed -E 's|^https?://||; s|/.*$||; s|:.*$||')
 if [ -z "${API_HOST}" ]; then
   echo "ERROR: could not derive API_HOST from N0CRM_API_URL='${N0CRM_API_URL}'"

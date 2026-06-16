@@ -86,7 +86,7 @@ export function UserProfile() {
             <Camera size={14} />
           </button>
         </div>
-        <h2 className="text-xl font-bold velo-profile-card-title">{currentUser.name}</h2>
+        <h2 className="text-xl font-bold n0crm-profile-card-title">{currentUser.name}</h2>
         <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{currentUser.jobTitle}</p>
         <div className="flex items-center justify-center gap-2 mt-3">
           <span className={`text-xs font-semibold px-3 py-1 rounded-full ${colors.bg} ${colors.text}`}>
@@ -98,7 +98,7 @@ export function UserProfile() {
       {/* Profile info */}
       <div className="glass rounded-2xl border-fg/8 p-6">
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-sm font-semibold velo-profile-card-title">{t.auth.profile}</h3>
+          <h3 className="text-sm font-semibold n0crm-profile-card-title">{t.auth.profile}</h3>
           {!editing ? (
             <button
               type="button"
@@ -122,9 +122,9 @@ export function UserProfile() {
         {editing ? (
           <div className="space-y-4">
             <div>
-              <label className="velo-form-label">{t.common.name}</label>
+              <label className="n0crm-form-label">{t.common.name}</label>
               <div className="relative">
-                <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 velo-input-icon pointer-events-none" />
+                <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 n0crm-input-icon pointer-events-none" />
                 <input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -134,9 +134,9 @@ export function UserProfile() {
               </div>
             </div>
             <div>
-              <label className="velo-form-label">{t.contacts.jobTitle}</label>
+              <label className="n0crm-form-label">{t.contacts.jobTitle}</label>
               <div className="relative">
-                <Briefcase size={14} className="absolute left-3 top-1/2 -translate-y-1/2 velo-input-icon pointer-events-none" />
+                <Briefcase size={14} className="absolute left-3 top-1/2 -translate-y-1/2 n0crm-input-icon pointer-events-none" />
                 <input
                   value={form.jobTitle}
                   onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
@@ -146,9 +146,9 @@ export function UserProfile() {
               </div>
             </div>
             <div>
-              <label className="velo-form-label">{t.common.phone}</label>
+              <label className="n0crm-form-label">{t.common.phone}</label>
               <div className="relative">
-                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 velo-input-icon pointer-events-none" />
+                <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 n0crm-input-icon pointer-events-none" />
                 <input
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -168,10 +168,10 @@ export function UserProfile() {
               { icon: <Shield size={14} />, label: t.team.role, value: t.team.roleLabels[currentUser.role] },
             ].map(({ icon, label, value }) => (
               <div key={label} className="flex items-center gap-3">
-                <span className="velo-input-icon shrink-0">{icon}</span>
+                <span className="n0crm-input-icon shrink-0">{icon}</span>
                 <div>
-                  <p className="text-[10px] uppercase tracking-wider velo-form-label !mb-0">{label}</p>
-                  <p className="text-sm velo-profile-value">{value}</p>
+                  <p className="text-[10px] uppercase tracking-wider n0crm-form-label !mb-0">{label}</p>
+                  <p className="text-sm n0crm-profile-value">{value}</p>
                 </div>
               </div>
             ))}
@@ -182,8 +182,8 @@ export function UserProfile() {
       {/* Change password */}
       <div className="glass rounded-2xl border-fg/8 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold velo-profile-card-title flex items-center gap-2">
-            <Lock size={14} className="velo-input-icon" />
+          <h3 className="text-sm font-semibold n0crm-profile-card-title flex items-center gap-2">
+            <Lock size={14} className="n0crm-input-icon" />
             {t.auth.password}
           </h3>
           {!changingPw && (
@@ -200,7 +200,7 @@ export function UserProfile() {
         {changingPw ? (
           <div className="space-y-3">
             <div>
-              <label className="velo-form-label">{t.auth.currentPassword}</label>
+              <label className="n0crm-form-label">{t.auth.currentPassword}</label>
               <div className="relative">
                 <input
                   type={showCurrentPw ? 'text' : 'password'}
@@ -212,7 +212,7 @@ export function UserProfile() {
                 <button
                   type="button"
                   onClick={() => setShowCurrentPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 velo-input-icon hover:opacity-80"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 n0crm-input-icon hover:opacity-80"
                   aria-label={showCurrentPw ? t.common.close : t.common.view}
                 >
                   {showCurrentPw ? <EyeOff size={14} /> : <Eye size={14} />}

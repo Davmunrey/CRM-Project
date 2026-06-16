@@ -207,7 +207,7 @@ export async function sendGmailEmail(
   accessToken: string,
 ): Promise<{ id: string; threadId: string }> {
   const buildMultipartMimeMessage = () => {
-    const boundary = `velo-${crypto.randomUUID()}`
+    const boundary = `n0crm-${crypto.randomUUID()}`
     const sanitizeHeader = (value: string) => value.replace(/[\r\n]+/g, ' ').trim()
     const sanitizeList = (values: string[]) => values.map(sanitizeHeader).filter(Boolean)
     const to = sanitizeList(params.to)

@@ -32,7 +32,7 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
     return <Navigate to="/login" replace />
   }
 
-  // AUTH-06: Authenticated users without an org must create one before accessing Velo.
+  // AUTH-06: Authenticated users without an org must create one before accessing n0CRM.
   if (isAuthenticated && !organizationId) {
     if (tenantResolutionStatus === 'needs_invitation') {
       return <Navigate to="/org-access-required" replace />

@@ -19,7 +19,7 @@ vi.mock('../../src/lib/api', () => ({
   clearToken: vi.fn(),
   decodeToken: vi.fn().mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 }),
   isTokenExpired: vi.fn().mockReturnValue(false),
-  TOKEN_KEY: 'velo_token',
+  TOKEN_KEY: 'n0crm_token',
 }))
 
 const fakeToken = 'header.eyJzdWIiOiJ1MSIsIm9yZyI6Im9yZy0xIiwicm9sZSI6ImFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.sig'

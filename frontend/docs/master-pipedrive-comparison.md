@@ -7,7 +7,7 @@ This master document compares **Pipedrive** (the group’s reference CRM) with *
 ## Executive summary
 
 - **Pipedrive’s moat for integrators** is a mature **push model** (webhooks v2 with retries, meta payloads, visibility-aware delivery) alongside a **pull model** (documented REST API, marketplace). Teams that run ERP, billing, or RevOps stacks around the CRM depend on that contract.
-- **n0CRM** is a **self-hosted monorepo** — a Fastify 5 / Node 22 API (`api/`) over PostgreSQL 16 (postgres.js, `transform: postgres.camel`, behind PgBouncer) with Redis 7 and Socket.io, plus a React 18 + Vite + Zustand + Tailwind SPA (`frontend/`). It ships a strong **in-app** sales stack (deals, contacts, companies, activities, Gmail inbox links, automations, sequences, reports, products/quotes, audit) with **app-layer org scoping** as the authoritative tenant control (RLS is opt-in defense-in-depth — see [`../../docs/adr/0001-tenant-isolation-and-rls.md`](../../docs/adr/0001-tenant-isolation-and-rls.md))—see [`../README.md`](../README.md) and [§ n0CRM capability map](#velo-capability-map).
+- **n0CRM** is a **self-hosted monorepo** — a Fastify 5 / Node 22 API (`api/`) over PostgreSQL 16 (postgres.js, `transform: postgres.camel`, behind PgBouncer) with Redis 7 and Socket.io, plus a React 18 + Vite + Zustand + Tailwind SPA (`frontend/`). It ships a strong **in-app** sales stack (deals, contacts, companies, activities, Gmail inbox links, automations, sequences, reports, products/quotes, audit) with **app-layer org scoping** as the authoritative tenant control (RLS is opt-in defense-in-depth — see [`../../docs/adr/0001-tenant-isolation-and-rls.md`](../../docs/adr/0001-tenant-isolation-and-rls.md))—see [`../README.md`](../README.md) and [§ n0CRM capability map](#capability-map).
 - The integration surface that used to be the **largest structural gap** has since shipped: **outbound webhook subscriptions** (org-scoped CRUD + HMAC-SHA256 signing + test delivery + secret rotation, `api/src/routes/webhookSubscriptions.ts`), a **public REST write endpoint** (`POST /public/v1/leads`, API-key + scopes, `api/src/routes/publicApi.ts`), and **enterprise identity** (OIDC **SSO** and **SCIM 2.0** provisioning). What remains genuinely open is **event-driven outbound delivery** (an outbox/worker/DLQ pipeline that pushes CRM mutations to subscribers automatically) and a documented **read** REST surface — both tracked in [`./master-roadmap-backlog.md`](./master-roadmap-backlog.md).
 - **Recommended remaining lift:** (1) **Event-driven delivery fabric** — an outbox + worker + dead-letter/replay path so deal/contact/company/activity mutations fan out to the existing subscriptions automatically; (2) **read REST + idempotency** to complement the lead-capture write endpoint; (3) **governance v2** (field-level visibility, retention automation) on top of the shipped RBAC, SSO, SCIM, and audit.
 
@@ -35,7 +35,7 @@ Use this as **acceptance-criteria style benchmarks** for n0CRM design—not a co
 
 ### REST API (pull)
 
-Pipedrive exposes broad CRUD and filtering via REST. n0CRM is a **self-hosted Fastify + PostgreSQL** app whose internal CRM routes are JWT-authenticated for the SPA. The **public** product surface for external integrators is currently a **single write endpoint** — `POST /public/v1/leads`, authenticated with `x-api-key` and gated by the `leads:write` scope (see [§ n0CRM capability map](#velo-capability-map)). A broader **read** REST surface (list/get CRUD over deals, contacts, companies, activities) is still open — treat **read REST + keys/scopes** as the remaining Step 2 in [§ Three-step maturity ladder](#three-step-maturity-ladder).
+Pipedrive exposes broad CRUD and filtering via REST. n0CRM is a **self-hosted Fastify + PostgreSQL** app whose internal CRM routes are JWT-authenticated for the SPA. The **public** product surface for external integrators is currently a **single write endpoint** — `POST /public/v1/leads`, authenticated with `x-api-key` and gated by the `leads:write` scope (see [§ n0CRM capability map](#capability-map)). A broader **read** REST surface (list/get CRUD over deals, contacts, companies, activities) is still open — treat **read REST + keys/scopes** as the remaining Step 2 in [§ Three-step maturity ladder](#three-step-maturity-ladder).
 
 ---
 
@@ -134,7 +134,7 @@ Record architecture, migrations, and worker/route details in [`./master-implemen
 
 ---
 
-<a id="velo-capability-map"></a>
+<a id="capability-map"></a>
 ## n0CRM — capability map
 
 Aligned to [`../README.md`](../README.md) feature table and [`.planning/CODEBASE.md` — Codebase structure](../.planning/CODEBASE.md#codebase-structure).

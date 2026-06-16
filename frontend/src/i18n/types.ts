@@ -93,7 +93,7 @@ export interface Translations {
     config: string
   }
 
-  /** Product identity (Velo). `productName` is the commercial proper noun. */
+  /** Product identity (n0CRM). `productName` is the commercial proper noun. */
   brand: {
     productName: string
     defaultAppName: string

@@ -15,7 +15,7 @@ export async function fetchGoogleOAuthConfigStatus(): Promise<GoogleOAuthConfigS
   }
 }
 
-export const GOOGLE_OAUTH_MESSAGE_SOURCE = 'velo-google-oauth' as const
+export const GOOGLE_OAUTH_MESSAGE_SOURCE = 'n0crm-google-oauth' as const
 
 export type GoogleOAuthBundle = 'primary' | 'calendar' | 'contacts'
 

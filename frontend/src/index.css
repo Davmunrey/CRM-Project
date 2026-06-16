@@ -419,7 +419,7 @@
     box-shadow: 0 0 0 2px rgb(var(--color-ring) / 0.22);
   }
 
-  .velo-form-label {
+  .n0crm-form-label {
     display: block;
     font-size: 0.75rem;
     line-height: 1rem;
@@ -427,15 +427,15 @@
     color: var(--text-muted);
   }
 
-  .velo-input-icon {
+  .n0crm-input-icon {
     color: var(--text-muted);
   }
 
-  .velo-profile-card-title {
+  .n0crm-profile-card-title {
     color: var(--text-main);
   }
 
-  .velo-profile-value {
+  .n0crm-profile-value {
     color: var(--text-main);
   }
 }

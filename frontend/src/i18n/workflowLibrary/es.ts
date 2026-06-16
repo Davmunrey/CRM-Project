@@ -32,7 +32,7 @@ export const workflowLibraryEs: WorkflowLibraryCatalog = {
     'auto-seed-6': {
       name: 'Debrief de deal perdido',
       description: 'Cuando se pierde un deal, crea una tarea para capturar motivos y actualizar el pipeline.',
-      createActivitySubject: 'Debrief win/loss - actualizar Velo',
+      createActivitySubject: 'Debrief win/loss - actualizar n0CRM',
     },
     'auto-seed-7': {
       name: 'Alerta a manager - deal perdido',

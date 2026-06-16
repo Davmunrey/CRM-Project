@@ -1566,7 +1566,7 @@ export const pt: Translations = {
     orgNameLabel: 'Nome da organização',
     orgNamePlaceholder: 'Acme Sales Team',
     slugLabel: 'Slug (identificador único)',
-    slugPrefix: 'velo.app/',
+    slugPrefix: 'n0crm.com/',
     slugPlaceholder: 'acme-sales',
     slugHint: 'Apenas letras minúsculas, números e hífens',
     legalCompanyName: 'Razão social',
