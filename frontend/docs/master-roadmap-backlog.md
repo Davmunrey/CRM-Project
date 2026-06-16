@@ -57,6 +57,43 @@ The 31-60 and 61-90 horizons below have substantially shipped. These tracks are 
 
 > **Tenant isolation note:** app-layer org scoping is the authoritative control; RLS is opt-in defense-in-depth (see `docs/adr/0001-tenant-isolation-and-rls.md`).
 
+<a id="custom-objects-plan"></a>
+## Custom objects — phased plan (architectural, ~4–6 weeks)
+
+**Goal.** User-defined **objects** (entities) beyond the fixed contacts / companies / deals / activities — with fields, relations, list/detail/forms, saved views, RBAC, API, webhooks, and AI/MCP exposure. This is the headline differentiator of Twenty 2.0. n0CRM already ships custom **fields** (`api/src/routes/customFields.ts`, `customFieldsStore`); this adds custom **objects** on top. **Plan only — not yet implemented.**
+
+### Storage decision (decide first, in an ADR)
+
+| Option | Verdict |
+|---|---|
+| Per-object physical tables (runtime DDL) | ❌ Twenty's model, but runtime DDL = lock/migration risk + schema sprawl in a shared multi-tenant DB. |
+| EAV (entity-attribute-value) | ❌ Flexible but poor query performance and painful to query. |
+| **Generic JSONB rows** (`custom_records(org_id, object_id, data jsonb)` + GIN) | ✅ **Recommended.** No runtime DDL, org-scoped, matches n0CRM's `postgres.js` + existing JSONB custom-fields style; GIN + per-field expression indexes cover query needs at this scale. |
+
+### Reuse leverage (don't rebuild)
+
+Custom-field **type system** · `entityListFilters.ts` + `viewsStore`/SmartView (lists, filters, saved views) · UI primitives (Input/Select/SearchableSelect + zodResolver forms) · **RBAC** (`permissions.ts`) · webhooks · audit log · **AI tool registry** (`CRM_TOOLS`) — dynamic per-object tools flow automatically into the new **MCP server**.
+
+### Phases (each ships independently)
+
+| Phase | Scope | Est. |
+|---|---|---|
+| **0 · Design + ADR** | Lock storage (JSONB), relation model, RBAC integration, slugs/reserved-names, per-org caps. | 1–2 d |
+| **1 · Metadata backend** | Migrations `custom_object_definitions` + `custom_object_fields`; admin/RBAC-gated CRUD to define objects + fields; Zod validation; field-type registry reused from custom fields; caps + audit. | 3–5 d |
+| **2 · Records API** | `custom_records` (JSONB + GIN); generic CRUD `/custom/:slug` (list/get/create/update/delete), org-scoped, **dynamic Zod** built from field defs, JSONB filter/sort/paginate, FK-ownership on relation fields. | 3–5 d |
+| **3 · Frontend** | Object-manager UI (Settings); generic list (reuse table + SmartView + filters), generic record/detail page, generic create/edit form built from field metadata; dynamic sidebar entries. | 5–8 d |
+| **4 · Relations + rollups** | Relation field type (to custom + built-in objects), reverse lookups, related-records panels; optional count/rollup fields. | 3–5 d |
+| **5 · Integrate everywhere** | RBAC per custom object, saved views, webhooks on record change, **public API + AI/MCP tools** (dynamic tool generation), automations triggers, GDPR export/erasure, command-palette/search indexing. | 3–5 d |
+| **6 · Polish + hardening** | Quotas, hot-field indexes, rename/migration safety, import/export, unit + e2e tests, docs. | 2–3 d |
+
+### Risks / constraints
+
+JSONB query perf at scale → GIN + expression indexes on hot fields, hard list limits · dynamic validation/UI genericity vs polish · permission-model surface area · **i18n boundary** — object/field *names are user data* (only the manager chrome is translated).
+
+### v1 cut line
+
+Phases 0–3 = a usable custom-objects MVP (define an object + fields, full CRUD, generic list/detail/form). Phases 4–6 are fast-follow. Recommend an **ADR + Phase 1 spike** before committing the full estimate.
+
 ## 0-30 days (Revenue + execution fundamentals)
 
 ### Objective
