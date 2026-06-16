@@ -181,6 +181,11 @@ export default {
         base: '200ms',
         slow: '500ms',
       },
+      transitionTimingFunction: {
+        /** Strong custom curves — the built-in CSS easings lack punch. */
+        'out-strong': 'cubic-bezier(0.23, 1, 0.32, 1)',
+        drawer: 'cubic-bezier(0.32, 0.72, 0, 1)',
+      },
       width: {
         'icon-sm': 'var(--icon-size-sm)',
         'icon-md': 'var(--icon-size-md)',
@@ -215,9 +220,9 @@ export default {
         },
       },
       animation: {
-        'scale-in': 'scale-in 180ms ease-out',
-        'fade-in': 'fade-in 180ms ease-out',
-        'slide-in': 'slide-in 180ms ease-out',
+        'scale-in': 'scale-in 180ms cubic-bezier(0.23, 1, 0.32, 1)',
+        'fade-in': 'fade-in 180ms cubic-bezier(0.23, 1, 0.32, 1)',
+        'slide-in': 'slide-in 240ms cubic-bezier(0.32, 0.72, 0, 1)',
       },
     },
   },

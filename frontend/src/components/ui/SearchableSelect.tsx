@@ -155,7 +155,7 @@ export function SearchableSelect({
             focus-ring relative w-full flex items-center justify-between gap-2 rounded-xl border bg-surface-2 text-left text-sm
             focus-visible:border-accent-500/50
             disabled:opacity-50 disabled:cursor-not-allowed
-            transition-all duration-base pl-3 pr-8 py-2 min-h-control hover:border-border-strong
+            transition duration-base pl-3 pr-8 py-2 min-h-control hover:border-border-strong
             ${error ? 'border-danger/50 focus-visible:ring-danger/30' : 'border-border-subtle'}
           `}
         >
@@ -176,7 +176,7 @@ export function SearchableSelect({
                 onClick={() => setOpen(false)}
               />
               <div
-                className="fixed z-dropdown flex min-h-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-surface-1 shadow-lg pointer-events-auto"
+                className="fixed z-dropdown flex min-h-0 flex-col overflow-hidden rounded-xl border border-border-subtle bg-surface-1 shadow-lg pointer-events-auto animate-scale-in origin-top"
                 style={{
                   top: panelRect.top,
                   left: panelRect.left,

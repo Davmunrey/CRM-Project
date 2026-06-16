@@ -310,7 +310,7 @@
       rgb(var(--color-accent-800)) 100%
     );
     box-shadow: 0 0 20px rgb(var(--color-accent-600) / 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition: all 150ms ease;
+    transition: box-shadow 150ms var(--ease-out), transform 150ms var(--ease-out);
   }
 
   .btn-gradient:hover {
@@ -318,8 +318,9 @@
     transform: translateY(-1px);
   }
 
+  /* Tactile press feedback (Emil): scale down on press — covers Button primary + landing CTAs. */
   .btn-gradient:active {
-    transform: translateY(0);
+    transform: scale(0.97);
     box-shadow: 0 0 15px rgb(var(--color-accent-600) / 0.35);
   }
 

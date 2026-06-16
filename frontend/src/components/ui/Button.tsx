@@ -53,8 +53,8 @@ export function Button({
       disabled={disabled || loading}
       className={`
         inline-flex items-center justify-center font-medium
-        transition-all duration-base ease-out
-        ${isLink ? '' : 'focus-ring'}
+        transition duration-base ease-out-strong
+        ${isLink ? '' : 'focus-ring active:scale-[0.97]'}
         disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none
         ${variantClasses[variant]}
         ${sizeClasses[size]}
