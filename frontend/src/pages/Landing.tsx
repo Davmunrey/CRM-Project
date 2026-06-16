@@ -694,7 +694,7 @@ export function Landing() {
 
   const PRICING = [
     { name: 'Free', price: '$0', per: '', tagline: 'For getting started.', featured: false, cta: 'Start free', ctaTo: '/register', items: ['Up to 3 users', '1,000 contacts · 500 deals', 'Pipeline, inbox & activities', 'Gmail & Calendar sync'] },
-    { name: 'Pro', price: '$29', per: '/user / mo', tagline: 'For growing outbound teams.', featured: true, cta: 'Start free trial', ctaTo: '/register', items: ['Unlimited contacts & deals', 'AI assistant & sequences', 'All integrations + webhooks', 'Public API access'] },
+    { name: 'Pro', price: '$39', per: '/user / mo', tagline: 'For growing outbound teams.', featured: true, cta: 'Start free trial', ctaTo: '/register', items: ['Unlimited contacts & deals', 'AI assistant & sequences', 'All integrations + webhooks', 'Public API access'] },
     { name: 'Enterprise', price: "Let's talk", per: '', tagline: 'For security-led orgs.', featured: false, cta: 'Book a demo', ctaTo: '/register', items: ['SSO (OIDC) + SCIM provisioning', 'Advanced RBAC & audit log', 'Priority support + SLA', 'Onboarding & migration help'] },
   ]
 
@@ -1086,7 +1086,7 @@ export function Landing() {
             </Reveal>
           ))}
         </div>
-        <p className="text-center text-xs mt-6" style={{ color: C.faint }}>Prices are placeholders — confirm final tiers before launch.</p>
+        <p className="text-center text-xs mt-6" style={{ color: C.faint }}>Billed per active user · 14-day free trial · cancel anytime.</p>
       </section>
 
       {/* ── Bottom CTA ──────────────────────────────────────────────────────── */}
