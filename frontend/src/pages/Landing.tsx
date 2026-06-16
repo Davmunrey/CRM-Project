@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
-  Zap,
   Mail,
   Users,
   BarChart3,
@@ -747,8 +746,7 @@ export function Landing() {
           WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%)',
         }} />
         {/* Color blobs */}
-        <div className="absolute pointer-events-none" style={{ top: '-12%', left: '-6%', width: 560, height: 560, background: 'radial-gradient(circle, rgba(99,102,241,0.16) 0%, transparent 66%)', filter: 'blur(40px)' }} />
-        <div className="absolute pointer-events-none" style={{ top: '-8%', right: '-8%', width: 520, height: 520, background: 'radial-gradient(circle, rgba(139,92,246,0.14) 0%, transparent 66%)', filter: 'blur(48px)' }} />
+        <div className="absolute pointer-events-none" style={{ top: '-14%', left: '-4%', width: 600, height: 600, background: 'radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 68%)', filter: 'blur(56px)' }} />
 
         <div className="max-w-5xl mx-auto px-6 pt-20 sm:pt-24 text-center relative z-10">
           {/* Social-proof badge */}
@@ -759,7 +757,7 @@ export function Landing() {
             </div>
           </div>
 
-          <h1 className="landing-hero-in font-display font-bold tracking-tight mb-6 leading-none" style={{ fontSize: 'clamp(2.7rem, 6.6vw, 5.2rem)', color: C.ink, animationDelay: '70ms' }}>
+          <h1 className="landing-hero-in font-display font-bold tracking-tight mb-6 leading-[1.04] pb-1" style={{ fontSize: 'clamp(2.9rem, 6.8vw, 5.4rem)', color: C.ink, animationDelay: '70ms' }}>
             {t.landing.heroHeadline}{' '}
             <span className="text-gradient-brand">{t.landing.heroHeadlineAccent}</span>
           </h1>
@@ -791,7 +789,7 @@ export function Landing() {
 
           {/* Product screenshot */}
           <div className="relative landing-hero-in" style={{ animationDelay: '340ms' }}>
-            <div className="absolute pointer-events-none" style={{ bottom: -50, left: '50%', transform: 'translateX(-50%)', width: '78%', height: 150, background: 'radial-gradient(ellipse, rgba(99,102,241,0.28) 0%, transparent 70%)', filter: 'blur(44px)' }} />
+            <div className="absolute pointer-events-none" style={{ bottom: -50, left: '50%', transform: 'translateX(-50%)', width: '74%', height: 150, background: 'radial-gradient(ellipse, rgba(99,102,241,0.16) 0%, transparent 72%)', filter: 'blur(52px)' }} />
             <div className="landing-float">
               <HeroMockup />
             </div>
@@ -801,7 +799,7 @@ export function Landing() {
 
       {/* ── Connections showcase ────────────────────────────────────────────── */}
       <section id="connections" style={{ borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}`, background: C.soft }}>
-        <div className="max-w-6xl mx-auto px-6 py-20">
+        <div className="max-w-6xl mx-auto px-6 py-24">
           <Reveal>
             <div className="text-center mb-12">
               <div className="flex justify-center"><Eyebrow><Plug className="w-3.5 h-3.5" /> Connections</Eyebrow></div>
@@ -856,10 +854,9 @@ export function Landing() {
       </section>
 
       {/* ── Feature spotlight 1: Pipeline ───────────────────────────────────── */}
-      <section className="max-w-6xl mx-auto px-6 py-24">
+      <section className="max-w-6xl mx-auto px-6 py-28">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <Reveal>
-            <Eyebrow><GitBranch className="w-3.5 h-3.5" /> Pipeline &amp; Forecast</Eyebrow>
             <h2 className="font-display text-3xl sm:text-4xl font-bold mb-5 leading-tight" style={{ color: C.ink }}>
               Your entire pipeline,<br />
               <span className="text-gradient-brand">always in view.</span>
@@ -889,7 +886,7 @@ export function Landing() {
 
       {/* ── Feature spotlight 2: Inbox ──────────────────────────────────────── */}
       <section style={{ borderTop: `1px solid ${C.line}`, borderBottom: `1px solid ${C.line}`, background: C.soft }}>
-        <div className="max-w-6xl mx-auto px-6 py-24">
+        <div className="max-w-6xl mx-auto px-6 py-28">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <Reveal delay={120} className="order-2 lg:order-1">
               <div className="relative">
@@ -900,7 +897,6 @@ export function Landing() {
               </div>
             </Reveal>
             <Reveal className="order-1 lg:order-2">
-              <Eyebrow><Inbox className="w-3.5 h-3.5" /> Unified Inbox</Eyebrow>
               <h2 className="font-display text-3xl sm:text-4xl font-bold mb-5 leading-tight" style={{ color: C.ink }}>
                 Reply to leads without<br />
                 <span className="text-gradient-brand">switching tabs.</span>
@@ -922,10 +918,9 @@ export function Landing() {
       </section>
 
       {/* ── Feature spotlight 3: Sequences ─────────────────────────────────── */}
-      <section className="max-w-6xl mx-auto px-6 py-24">
+      <section className="max-w-6xl mx-auto px-6 py-28">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <Reveal>
-            <Eyebrow><Zap className="w-3.5 h-3.5" /> Automated Sequences</Eyebrow>
             <h2 className="font-display text-3xl sm:text-4xl font-bold mb-5 leading-tight" style={{ color: C.ink }}>
               Multi-step cadences that<br />
               <span className="text-gradient-brand">stop when they reply.</span>
@@ -955,7 +950,7 @@ export function Landing() {
 
       {/* ── Features grid ───────────────────────────────────────────────────── */}
       <section id="features" style={{ borderTop: `1px solid ${C.line}`, background: C.soft }}>
-        <div className="max-w-6xl mx-auto px-6 py-24">
+        <div className="max-w-6xl mx-auto px-6 py-28">
           <Reveal>
             <div className="text-center mb-16">
               <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4" style={{ color: C.ink }}>{t.landing.featuresTitle}</h2>
@@ -984,7 +979,7 @@ export function Landing() {
       </section>
 
       {/* ── Testimonial ─────────────────────────────────────────────────────── */}
-      <section className="max-w-4xl mx-auto px-6 py-24">
+      <section className="max-w-4xl mx-auto px-6 py-28">
         <Reveal>
           <div className="rounded-3xl px-8 py-12 sm:px-14 sm:py-14 text-center relative overflow-hidden" style={{ background: '#ffffff', border: `1px solid ${C.line}`, boxShadow: '0 30px 80px -40px rgba(15,23,42,0.3)' }}>
             <div className="absolute pointer-events-none" style={{ top: -60, left: '50%', transform: 'translateX(-50%)', width: 420, height: 200, background: 'radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%)', filter: 'blur(36px)' }} />
@@ -1010,10 +1005,9 @@ export function Landing() {
 
       {/* ── Security as trust ───────────────────────────────────────────────── */}
       <section style={{ borderTop: `1px solid ${C.line}`, background: C.soft }}>
-        <div className="max-w-6xl mx-auto px-6 py-20">
+        <div className="max-w-6xl mx-auto px-6 py-24">
           <Reveal>
             <div className="text-center mb-12">
-              <div className="flex justify-center"><Eyebrow><ShieldCheck className="w-3.5 h-3.5" /> Security &amp; privacy</Eyebrow></div>
               <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4" style={{ color: C.ink }}>
                 We run it. <span className="text-gradient-brand">Your data stays protected.</span>
               </h2>
@@ -1039,10 +1033,9 @@ export function Landing() {
       </section>
 
       {/* ── Pricing ─────────────────────────────────────────────────────────── */}
-      <section id="pricing" className="max-w-6xl mx-auto px-6 py-24">
+      <section id="pricing" className="max-w-6xl mx-auto px-6 py-28">
         <Reveal>
           <div className="text-center mb-14">
-            <div className="flex justify-center"><Eyebrow><Sparkles className="w-3.5 h-3.5" /> Pricing</Eyebrow></div>
             <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4" style={{ color: C.ink }}>Simple, per-seat pricing.</h2>
             <p className="max-w-xl mx-auto" style={{ color: C.muted }}>Start free. Upgrade when your team grows. Cancel anytime.</p>
           </div>
