@@ -66,6 +66,14 @@ server {
     add_header Referrer-Policy          "strict-origin-when-cross-origin" always;
     add_header X-XSS-Protection         "1; mode=block"                   always;
     add_header Permissions-Policy       "camera=(), microphone=(), geolocation=(), payment=()" always;
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+    # HSTS: TLS is terminated at the platform edge; the browser always sees HTTPS.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    # CSP: SPA talks same-origin to /api and /api/socket.io (covered by 'self'); https:/wss:
+    # left open for the optional Sentry ingest + WebSocket. 'unsafe-inline' is required by the
+    # current bundle (inline styles + Vite runtime). Tighten connect-src once external
+    # endpoints are enumerated.
+    add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: https: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https: wss:; worker-src 'self' blob:; upgrade-insecure-requests" always;
 
     # ── Compression ───────────────────────────────────────────────────────────
     gzip on;
@@ -100,6 +108,9 @@ server {
         add_header Referrer-Policy          "strict-origin-when-cross-origin" always;
         add_header X-XSS-Protection         "1; mode=block"                   always;
         add_header Permissions-Policy       "camera=(), microphone=(), geolocation=(), payment=()" always;
+        add_header Cross-Origin-Opener-Policy "same-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: https: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https: wss:; worker-src 'self' blob:; upgrade-insecure-requests" always;
         try_files $uri =404;
     }
 }
