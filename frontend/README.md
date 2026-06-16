@@ -1,6 +1,6 @@
 # n0CRM
 
-Internal B2B CRM — React 18 SPA backed by `api/` (Fastify + PostgreSQL). Part of the n0CRM self-hosted monorepo.
+n0CRM — the connected, AI-native B2B CRM. React 18 SPA backed by `api/` (Fastify + PostgreSQL), part of the n0CRM monorepo.
 
 ## Monorepo structure
 

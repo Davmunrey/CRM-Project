@@ -2,7 +2,7 @@
 
 # ⚡ n0CRM
 
-### Outbound-native CRM for high-velocity sales teams — *your infrastructure, your data, zero lock-in.*
+### The connected, AI-native CRM for outbound sales teams — *fully managed, enterprise-secure, your data protected.*
 
 Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · Automations · Lead scoring · Reports — **plus a multi-provider, tool-using AI sales assistant.**
 
@@ -41,7 +41,7 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 | 🔐 **Security-first** | MFA (TOTP), account lockout, HttpOnly-cookie JWT with revocation, AES-256-GCM field encryption, SSRF-hardened webhooks, tamper-evident security-event log, GDPR data-subject export & erasure. **0 npm vulnerabilities.** |
 | 📬 **Outbound-native** | Gmail thread sync + send/reply, Google Calendar, A/B email sequences, lead scoring, automations, multi-pipeline deals with a quote builder. |
 | 🌍 **6 languages** | Full UI i18n: English · Español · Português · Français · Deutsch · Italiano. |
-| 🛠️ **Yours to run** | Docker Compose or Private Prompt. Postgres + Fastify + Redis + nginx. No BaaS, no lock-in, no surprise bills. |
+| 🔌 **Connected** | Native **Gmail & Calendar**, **Slack**, **Stripe**, **LinkedIn**, signed **webhooks**, a scoped **public API**, and **multi-provider AI** — connect your stack in a few clicks, fully managed. |
 
 ---
 
@@ -144,6 +144,8 @@ Browser (React SPA)
 ---
 
 ## 🚀 Quick Start
+
+> **n0CRM is delivered as a fully-managed product** — connect your stack and go, nothing to install. The steps below are for **local development** and self-managed deployments.
 
 > **Requirements:** Node 22+, PostgreSQL 16, Redis 7.
 
@@ -315,6 +317,6 @@ Fully translated UI in **6 locales** (en · es · pt · fr · de · it). `en` is
 
 <div align="center">
 
-**Internal tool — built & maintained by Clovr Labs** · _Last updated: 2026-06-14_
+**A Clovr Labs product** · _Last updated: 2026-06-16_
 
 </div>

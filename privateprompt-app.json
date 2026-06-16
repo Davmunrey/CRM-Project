@@ -1,7 +1,7 @@
 {
   "name": "n0CRM",
   "slug": "n0crm",
-  "description": "Outbound-native CRM — contacts, deals, pipelines, email sequences, Gmail sync, automations, lead scoring, and reports. Your infrastructure, your data, zero lock-in. Includes API (Fastify + PostgreSQL + Redis) and frontend (nginx SPA) in a single deployment.",
+  "description": "The connected, AI-native CRM for outbound sales teams — contacts, deals, pipelines, email sequences, Gmail & Calendar sync, automations, lead scoring, reports, and a multi-provider AI assistant. Fully managed and enterprise-secure (MFA, SSO/SCIM, RBAC, encryption, GDPR). API (Fastify + PostgreSQL + Redis) + frontend (nginx SPA) in a single deployment.",
   "badge": "Internal",
   "icon": {
     "letter": "n",

@@ -1,6 +1,6 @@
 # api/
 
-Fastify REST API for n0CRM — self-hosted B2B CRM backend. This is the `api/` subdirectory of the **n0CRM monorepo** (see parent [`../README.md`](../README.md) for monorepo structure).
+Fastify REST API for n0CRM — the connected, AI-native B2B CRM backend. This is the `api/` subdirectory of the **n0CRM monorepo** (see parent [`../README.md`](../README.md) for monorepo structure).
 
 | Layer | Tech |
 |-------|------|
