@@ -951,6 +951,39 @@ curl -X POST http://localhost:3001/internal/sequences/run \
 
 ---
 
+## MCP server
+
+n0CRM ships a **Model Context Protocol** server (`src/mcp/server.ts`) so MCP
+clients (Claude Desktop, Cursor, ChatGPT, …) can read and write the CRM in plain
+language. It reuses the agent's org-scoped, write-gated tool registry
+(`CRM_TOOLS`), so the MCP surface is exactly as safe as the in-app AI assistant:
+every read filters on `organization_id`, every write verifies FK ownership.
+
+- **Auth:** a n0CRM API key via `N0CRM_API_KEY`, resolved to an org + scopes with
+  the same sha256 lookup the public REST API uses. **Writes** are enabled only
+  when the key grants the `crm:write` scope (a full, unscoped key = full access).
+- **Transport:** stdio. It's a **server-side** MCP — it shares the API's
+  environment/DB, so run it co-located with the API (same env, incl. `DATABASE_URL`).
+- **Run:** `npm run build && N0CRM_API_KEY=<key> npm run mcp` (or `npm run mcp:dev`).
+
+Claude Desktop / Cursor config:
+```json
+{
+  "mcpServers": {
+    "n0crm": {
+      "command": "node",
+      "args": ["/path/to/n0CRM/api/dist/mcp/server.js"],
+      "env": { "N0CRM_API_KEY": "<key>", "DATABASE_URL": "postgres://…" }
+    }
+  }
+}
+```
+
+> Roadmap: an HTTP/SSE transport for fully remote use (key sent per request) so
+> clients don't need DB/env co-location.
+
+---
+
 ## Monitoring
 
 The API exports Prometheus metrics, health checks, and request-correlation IDs to support observability at scale.
