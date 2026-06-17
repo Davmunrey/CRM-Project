@@ -357,7 +357,7 @@ export function CSVImport({ isOpen, onClose }: CSVImportProps) {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={handleDrop}
                 onClick={() => fileRef.current?.click()}
-                className="border-2 border-dashed border-fg/10 rounded-2xl p-12 text-center cursor-pointer hover:border-accent-500/30 hover:bg-fg/2 transition-all"
+                className="border-2 border-dashed border-fg/10 rounded-2xl p-12 text-center cursor-pointer hover:border-accent-500/30 hover:bg-fg/2 transition"
               >
                 <Upload size={36} className="mx-auto text-fg-subtle mb-3" />
                 <p className="text-sm text-fg-muted font-medium">{t.csvImport.dropTitle}</p>

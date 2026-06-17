@@ -124,7 +124,7 @@ export function AcceptInvite() {
           <p className="text-sm text-fg-subtle mb-6 leading-relaxed">{errorMsg}</p>
           <Link
             to="/login"
-            className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl btn-gradient text-fg text-sm font-semibold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+            className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl btn-gradient text-fg text-sm font-semibold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
           >
             {t.acceptInvite.loginCta}
           </Link>

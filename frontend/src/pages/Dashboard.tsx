@@ -374,7 +374,7 @@ export function Dashboard() {
             </div>
             <div className="w-full h-3 bg-surface-2/90 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full transition-all duration-slow"
+                className="h-full rounded-full transition-[width] duration-slow"
                 style={{
                   width: `${quotaProgress.percentage}%`,
                   background: `linear-gradient(90deg, ${chart.seriesPalette[0]}, ${chart.seriesPalette[1]}, ${chart.seriesPalette[2]})`,

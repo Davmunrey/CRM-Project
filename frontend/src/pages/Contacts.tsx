@@ -610,7 +610,7 @@ export function Contacts() {
             : filtered.map(({ contact }) => (
             <div
               key={contact.id}
-              className="glass p-4 hover:border-fg/12 cursor-pointer transition-all relative"
+              className="glass p-4 hover:border-fg/12 cursor-pointer transition relative"
               onClick={() => navigate(`/contacts/${contact.id}`)}
             >
               <div className="flex items-start gap-3 mb-3">

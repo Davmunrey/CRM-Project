@@ -30,7 +30,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             placeholder:text-fg-muted/80
             focus-visible:border-accent-500/50
             disabled:opacity-50 disabled:cursor-not-allowed
-            transition-all duration-base p-3 resize-none
+            transition duration-base p-3 resize-none
             ${error ? 'border-danger/50' : 'border-border-subtle hover:border-border-strong'}
             ${className}
           `}

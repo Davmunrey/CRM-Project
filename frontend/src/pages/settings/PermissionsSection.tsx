@@ -168,7 +168,7 @@ export function PermissionsSection() {
               <button type="button"
                 key={type}
                 onClick={() => toggleType(type)}
-                className={`focus-ring flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                className={`focus-ring flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm font-medium transition ${
                   enabled
                     ? 'bg-accent-500/10 border-accent-500/30 text-fg'
                     : 'bg-fg/3 border-fg/8 text-fg-subtle hover:text-fg-muted'

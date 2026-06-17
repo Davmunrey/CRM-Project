@@ -202,7 +202,7 @@ export function SalesGoals() {
         </div>
         <div className="h-3 rounded-full bg-fg/6 overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all duration-slow ${overallProgress >= 75 ? 'bg-success' : overallProgress >= 50 ? 'bg-warning' : 'bg-danger'}`}
+            className={`h-full rounded-full transition-[width] duration-slow ${overallProgress >= 75 ? 'bg-success' : overallProgress >= 50 ? 'bg-warning' : 'bg-danger'}`}
             style={{ width: `${Math.min(overallProgress, 100)}%` }}
           />
         </div>
@@ -348,7 +348,7 @@ export function SalesGoals() {
 
               <div className="h-2.5 rounded-full bg-fg/6 overflow-hidden mb-2">
                 <div
-                  className={`h-full rounded-full transition-all duration-slow ${isCompleted ? 'bg-success' : pct >= 50 ? 'bg-accent-500' : 'bg-danger'}`}
+                  className={`h-full rounded-full transition-[width] duration-slow ${isCompleted ? 'bg-success' : pct >= 50 ? 'bg-accent-500' : 'bg-danger'}`}
                   style={{ width: `${pct}%` }}
                 />
               </div>

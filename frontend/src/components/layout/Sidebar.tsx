@@ -129,7 +129,7 @@ function SidebarNavItem({ item, collapsed, nested = false }: SidebarNavItemProps
         title={collapsed ? item.label : undefined}
         className={({ isActive }) => `
           flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium
-          transition-all duration-fast group relative
+          transition duration-fast ease-out-strong active:scale-[0.97] group relative
           ${isActive
             ? 'nav-active sidebar-active text-fg'
             : 'sidebar-inactive text-fg-subtle hover:text-fg hover:bg-fg/5 border-l-2 border-transparent'
@@ -361,7 +361,7 @@ export function Sidebar() {
     <aside
       className={`
         app-sidebar flex flex-col h-screen bg-surface-1 border-r border-fg/6
-        transition-all duration-base ease-out flex-shrink-0
+        transition-[width] duration-base ease-out-strong flex-shrink-0
         ${collapsed ? 'w-[60px]' : 'w-[220px]'}
       `}
     >
@@ -399,7 +399,7 @@ export function Sidebar() {
             to="/admin"
             className={({ isActive }) => `
               flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium
-              transition-all duration-fast
+              transition duration-fast ease-out-strong active:scale-[0.97]
               ${isActive
                 ? 'nav-active sidebar-active text-fg'
                 : 'sidebar-inactive text-fg-subtle hover:text-fg hover:bg-fg/5 border-l-2 border-transparent'
@@ -422,7 +422,7 @@ export function Sidebar() {
           aria-label={collapsed ? t.nav.expandSidebar : t.nav.collapseSidebar}
           className={`
             w-full flex items-center gap-2 px-2 py-2 rounded-xl text-fg-subtle
-            hover:text-fg-muted hover:bg-fg/5 transition-all duration-fast text-xs font-medium
+            hover:text-fg-muted hover:bg-fg/5 transition duration-fast ease-out-strong active:scale-[0.97] text-xs font-medium
             ${collapsed ? 'justify-center' : ''}
           `}
         >

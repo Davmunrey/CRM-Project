@@ -665,7 +665,7 @@ export function Sequences() {
                             onClick={(e) => { e.stopPropagation(); handleDelete(seq.id) }}
                             title={t.common.delete}
                             aria-label={t.common.delete}
-                            className="p-1 text-fg-subtle hover:text-danger opacity-0 group-hover:opacity-100 transition-all"
+                            className="p-1 text-fg-subtle hover:text-danger opacity-0 group-hover:opacity-100 transition"
                           >
                             <Trash2 size={13} />
                           </button>

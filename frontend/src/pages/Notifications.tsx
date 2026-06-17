@@ -177,7 +177,7 @@ export function Notifications() {
         <button
           type="button"
           onClick={() => setFilter('all')}
-          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'all' ? 'ring-1 ring-accent-500/50 bg-accent-500/5' : 'hover:bg-fg/4'}`}
+          className={`glass rounded-xl p-3 text-left transition ${filter === 'all' ? 'ring-1 ring-accent-500/50 bg-accent-500/5' : 'hover:bg-fg/4'}`}
         >
           <p className="text-2xl font-bold text-fg">{notifications.length}</p>
           <p className="text-[10px] text-fg-subtle uppercase tracking-wider font-semibold">{t.common.total}</p>
@@ -185,7 +185,7 @@ export function Notifications() {
         <button
           type="button"
           onClick={() => setFilter('unread')}
-          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'unread' ? 'ring-1 ring-accent-500/50 bg-accent-500/5' : 'hover:bg-fg/4'}`}
+          className={`glass rounded-xl p-3 text-left transition ${filter === 'unread' ? 'ring-1 ring-accent-500/50 bg-accent-500/5' : 'hover:bg-fg/4'}`}
         >
           <p className="text-2xl font-bold text-accent-400">{unreadCount}</p>
           <p className="text-[10px] text-fg-subtle uppercase tracking-wider font-semibold">{t.common.selected}</p>
@@ -193,7 +193,7 @@ export function Notifications() {
         <button
           type="button"
           onClick={() => setFilter('deal_won')}
-          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'deal_won' ? 'ring-1 ring-success/50 bg-success/5' : 'hover:bg-fg/4'}`}
+          className={`glass rounded-xl p-3 text-left transition ${filter === 'deal_won' ? 'ring-1 ring-success/50 bg-success/5' : 'hover:bg-fg/4'}`}
         >
           <p className="text-2xl font-bold text-success">{typeGroups.deal_won || 0}</p>
           <p className="text-[10px] text-fg-subtle uppercase tracking-wider font-semibold">{t.deals.won}</p>
@@ -201,7 +201,7 @@ export function Notifications() {
         <button
           type="button"
           onClick={() => setFilter('activity_overdue')}
-          className={`glass rounded-xl p-3 text-left transition-all ${filter === 'activity_overdue' ? 'ring-1 ring-warning/50 bg-warning/5' : 'hover:bg-fg/4'}`}
+          className={`glass rounded-xl p-3 text-left transition ${filter === 'activity_overdue' ? 'ring-1 ring-warning/50 bg-warning/5' : 'hover:bg-fg/4'}`}
         >
           <p className="text-2xl font-bold text-warning">{typeGroups.activity_overdue || 0}</p>
           <p className="text-[10px] text-fg-subtle uppercase tracking-wider font-semibold">{t.activities.overdue}</p>

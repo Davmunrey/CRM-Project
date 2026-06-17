@@ -64,7 +64,7 @@ function DealCardInner({ deal, index, onClick }: DealCardProps) {
           onClick={onClick}
           className={`
             bg-surface-1 border rounded-xl p-3 cursor-pointer
-            transition-all duration-fast select-none
+            transition duration-fast select-none
             ${snapshot.isDragging
               ? 'border-indigo-500 shadow-xl shadow-indigo-500/10 rotate-1'
               : 'border-fg/8 hover:border-fg/16'

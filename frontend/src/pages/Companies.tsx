@@ -485,7 +485,7 @@ export function Companies() {
                     key={company.id}
                     role="button"
                     tabIndex={0}
-                    className="glass p-4 hover:border-fg/12 cursor-pointer transition-all relative"
+                    className="glass p-4 hover:border-fg/12 cursor-pointer transition relative"
                     onClick={() => navigate(`/companies/${company.id}`)}
                     onKeyDown={(e) =>
                       rowActivationKeyDown(e, () => navigate(`/companies/${company.id}`))

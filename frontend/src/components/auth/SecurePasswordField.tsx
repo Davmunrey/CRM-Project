@@ -148,7 +148,7 @@ export function SecurePasswordField({
           {...(enforceStrongPasswordMinLength ? { minLength: STRONG_PASSWORD_MIN_LENGTH } : {})}
           className="focus-ring w-full rounded-xl border border-border-subtle bg-surface-2 text-fg text-sm
             placeholder:text-fg-muted/80 focus-visible:border-accent-500/50 hover:border-border-strong
-            disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-base min-h-control
+            disabled:opacity-50 disabled:cursor-not-allowed transition duration-base min-h-control
             pl-9 pr-10 py-2"
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-1">

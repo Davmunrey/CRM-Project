@@ -27,9 +27,9 @@ export function IconButton({
       type={type}
       className={`
         inline-flex items-center justify-center rounded-lg p-2
-        transition-colors duration-base ease-out
-        focus-ring
-        disabled:opacity-40 disabled:cursor-not-allowed
+        transition duration-base ease-out-strong
+        focus-ring active:scale-[0.97]
+        disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100
         ${variantClasses[variant]}
         ${className}
       `}

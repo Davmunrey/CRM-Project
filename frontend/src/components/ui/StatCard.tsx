@@ -35,7 +35,7 @@ export function StatCard({
   const ac = accentMap[accent]
   return (
     <div
-      className={`glass rounded-2xl border border-border-subtle p-5 glass-hover group cursor-default transition-all duration-base ${ac.glow}`}
+      className={`glass rounded-2xl border border-border-subtle p-5 glass-hover group cursor-default transition duration-base ${ac.glow}`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">

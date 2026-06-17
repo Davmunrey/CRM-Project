@@ -169,7 +169,7 @@ export function TeamManagement() {
               <button
                 type="button"
                 onClick={() => setShowInvite(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-2 border border-fg/10 text-fg-muted hover:text-fg hover:bg-fg/8 text-sm font-medium transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-surface-2 border border-fg/10 text-fg-muted hover:text-fg hover:bg-fg/8 text-sm font-medium transition active:scale-[0.97]"
               >
                 <Mail size={15} />
                 {t.team.invite}
@@ -515,7 +515,7 @@ export function TeamManagement() {
           <div className="flex items-center gap-2">
             <div className="flex-1 h-1.5 rounded-full bg-fg/6 overflow-hidden">
               <div
-                className={`h-full rounded-full bg-accent-500 transition-all ${usageWidthClass}`}
+                className={`h-full rounded-full bg-accent-500 transition-[width] ${usageWidthClass}`}
               />
             </div>
             <span className="text-[10px] text-fg-subtle">{activeUsers.length}/{displayOrganization.maxUsers}</span>

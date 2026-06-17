@@ -272,7 +272,7 @@ export function CompanyDetail() {
                         <div className="flex items-center gap-2 mt-1">
                           <div className="flex-1 h-1.5 rounded-full bg-fg/6 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all ${deal.stage === 'closed_won' ? 'bg-success' : deal.stage === 'closed_lost' ? 'bg-danger' : 'bg-accent-500'}`}
+                              className={`h-full rounded-full transition-[width] ${deal.stage === 'closed_won' ? 'bg-success' : deal.stage === 'closed_lost' ? 'bg-danger' : 'bg-accent-500'}`}
                               style={{ width: `${progress}%` }}
                             />
                           </div>
@@ -305,7 +305,7 @@ export function CompanyDetail() {
             <Link
               key={contact.id}
               to={`/contacts/${contact.id}`}
-              className="flex items-center gap-4 glass rounded-xl border-fg/8 p-4 hover:border-fg/15 transition-all group"
+              className="flex items-center gap-4 glass rounded-xl border-fg/8 p-4 hover:border-fg/15 transition group"
             >
               <Avatar name={`${contact.firstName} ${contact.lastName}`} size="sm" />
               <div className="flex-1 min-w-0">
@@ -333,7 +333,7 @@ export function CompanyDetail() {
             return (
               <div
                 key={deal.id}
-                className="glass rounded-xl border-fg/8 p-4 flex items-center gap-4 cursor-pointer hover:border-fg/15 transition-all group"
+                className="glass rounded-xl border-fg/8 p-4 flex items-center gap-4 cursor-pointer hover:border-fg/15 transition group"
                 onClick={() => navigate('/deals')}
               >
                 <div className="flex-1 min-w-0">

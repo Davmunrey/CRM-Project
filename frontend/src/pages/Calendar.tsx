@@ -259,7 +259,7 @@ function DayPanel({ date, activities, deals, contacts, onClose, onNewActivity, t
               return (
                 <div
                   key={activity.id}
-                  className="group glass rounded-xl p-3 space-y-2 hover:border-fg/10 transition-all"
+                  className="group glass rounded-xl p-3 space-y-2 hover:border-fg/10 transition"
                 >
                   <div className="flex items-start gap-2">
                     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium shrink-0 ${colors.bg} ${colors.text}`}>
@@ -405,7 +405,7 @@ function MonthView({ currentDate, activities, deals, activeTypes, selectedDay, o
               key={key}
               onClick={() => onDayClick(day)}
               className={[
-                'relative flex flex-col p-1.5 rounded-xl border text-left transition-all min-h-[80px]',
+                'relative flex flex-col p-1.5 rounded-xl border text-left transition min-h-[80px]',
                 'hover:border-fg/15 hover:bg-fg/4',
                 isSelected
                   ? 'border-accent-500/50 bg-accent-500/8'
@@ -831,7 +831,7 @@ export function Calendar() {
           <button type="button"
             onClick={() => setViewMode('month')}
             className={[
-              'px-3 py-1 rounded-md text-xs font-medium transition-all',
+              'px-3 py-1 rounded-md text-xs font-medium transition',
               viewMode === 'month'
                 ? 'bg-accent-500/25 text-accent-400 border border-accent-500/30'
                 : 'text-fg-muted hover:text-fg',
@@ -842,7 +842,7 @@ export function Calendar() {
           <button type="button"
             onClick={() => setViewMode('week')}
             className={[
-              'px-3 py-1 rounded-md text-xs font-medium transition-all',
+              'px-3 py-1 rounded-md text-xs font-medium transition',
               viewMode === 'week'
                 ? 'bg-accent-500/25 text-accent-400 border border-accent-500/30'
                 : 'text-fg-muted hover:text-fg',
@@ -912,7 +912,7 @@ export function Calendar() {
                 key={type}
                 onClick={() => toggleType(type)}
                 className={[
-                  'flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium border transition-all',
+                  'flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium border transition',
                   active
                     ? `${colors.bg} ${colors.text} border-current/20`
                     : 'bg-transparent text-fg-subtle border-fg/6 hover:text-fg-muted',
@@ -930,7 +930,7 @@ export function Calendar() {
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Calendar area */}
         <div className={[
-          'flex flex-col flex-1 min-h-0 glass rounded-2xl p-4 transition-all',
+          'flex flex-col flex-1 min-h-0 glass rounded-2xl p-4 transition',
           showPanel ? 'min-w-0' : '',
         ].join(' ')}>
           {viewMode === 'month' ? (

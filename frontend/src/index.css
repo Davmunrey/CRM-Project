@@ -264,7 +264,7 @@
   }
 
   .glass-hover {
-    @apply transition-all duration-base;
+    @apply transition duration-base;
   }
 
   .glass-hover:hover {
@@ -349,7 +349,7 @@
 
   /* ── Table row ───────────────────────────────────────── */
   .table-row-hover {
-    @apply transition-all duration-fast cursor-pointer;
+    @apply transition duration-fast cursor-pointer;
   }
 
   .table-row-hover:hover {

@@ -44,7 +44,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               focus-visible:border-accent-500/50
               hover:border-border-strong
               disabled:opacity-50 disabled:cursor-not-allowed
-              transition-all duration-base
+              transition duration-base
               min-h-control
               ${error ? 'border-danger/50 focus-visible:ring-danger/30' : 'border-border-subtle'}
               ${leftIcon ? 'pl-9' : 'pl-3'}

@@ -105,7 +105,7 @@ export function Topbar({ title, onOpenCommandPalette, onOpenMobileNav }: TopbarP
           <button
             type="button"
             onClick={onOpenMobileNav}
-            className="md:hidden min-h-11 min-w-11 flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+            className="md:hidden min-h-11 min-w-11 flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition duration-fast ease-out-strong active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
             aria-label={t.nav.expandSidebar}
           >
             <Menu size={20} aria-hidden />
@@ -122,7 +122,7 @@ export function Topbar({ title, onOpenCommandPalette, onOpenMobileNav }: TopbarP
       <button
         type="button"
         onClick={onOpenCommandPalette}
-        className="sm:hidden min-h-11 min-w-11 flex items-center justify-center rounded-xl bg-surface-2/90 border border-fg/8 hover:bg-fg/6 text-fg-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+        className="sm:hidden min-h-11 min-w-11 flex items-center justify-center rounded-xl bg-surface-2/90 border border-fg/8 hover:bg-fg/6 transition duration-fast ease-out-strong active:scale-[0.97] text-fg-subtle focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
         aria-label={`${t.common.search} (⌘K)`}
       >
         <Search size={18} aria-hidden />
@@ -130,7 +130,7 @@ export function Topbar({ title, onOpenCommandPalette, onOpenMobileNav }: TopbarP
       <button
         type="button"
         onClick={onOpenCommandPalette}
-        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-2/90 border border-fg/8 hover:bg-fg/6 hover:border-fg/12 transition-all duration-fast text-fg-subtle hover:text-fg-muted text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+        className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-surface-2/90 border border-fg/8 hover:bg-fg/6 hover:border-fg/12 transition duration-fast ease-out-strong active:scale-[0.97] text-fg-subtle hover:text-fg-muted text-xs focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
       >
         <Search size={14} />
         <span>{t.common.search}...</span>
@@ -144,7 +144,7 @@ export function Topbar({ title, onOpenCommandPalette, onOpenMobileNav }: TopbarP
           aria-label={t.nav.notifications}
           aria-expanded={showNotifs}
           onClick={() => setShowNotifs((v) => !v)}
-          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition-all duration-fast focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-fg/6 transition duration-fast ease-out-strong active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
         >
           <Bell size={18} />
           {(overdueActivities.length > 0 || urgentFollowUps.length > 0 || unreadNotifCount > 0) && (
@@ -274,7 +274,7 @@ export function Topbar({ title, onOpenCommandPalette, onOpenMobileNav }: TopbarP
               : t.auth.profile
           }
           onClick={() => setShowUserMenu((v) => !v)}
-          className="flex items-center gap-2.5 pl-4 border-l border-fg/8 hover:bg-fg/4 -ml-2 px-3 py-1.5 rounded-xl transition-colors min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
+          className="flex items-center gap-2.5 pl-4 border-l border-fg/8 hover:bg-fg/4 -ml-2 px-3 py-1.5 rounded-xl transition duration-fast ease-out-strong active:scale-[0.97] min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500"
         >
           <Avatar name={currentUser?.name || ''} size="sm" />
           <div className="hidden sm:block text-left">

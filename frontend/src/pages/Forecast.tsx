@@ -357,7 +357,7 @@ export function Forecast() {
               <div key={label} className="flex items-center gap-2">
                 <p className="text-[11px] text-fg-subtle w-36 flex-shrink-0">{label}</p>
                 <div className="flex-1 h-1.5 bg-fg/6 rounded-full overflow-hidden">
-                  <div className="h-full bg-accent-500 rounded-full transition-all duration-slow" style={{ width: `${(value / max) * 100}%` }} />
+                  <div className="h-full bg-accent-500 rounded-full transition-[width] duration-slow" style={{ width: `${(value / max) * 100}%` }} />
                 </div>
                 <span className="text-[11px] text-fg-muted w-6 text-right">{value}</span>
               </div>
@@ -435,7 +435,7 @@ export function Forecast() {
                       <td className="py-3 pr-4">
                         <div className="flex items-center gap-2">
                           <div className="w-20 h-1.5 bg-fg/8 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full bg-accent-500 transition-all duration-slow" style={{ width: `${bet.probability}%` }} />
+                            <div className="h-full rounded-full bg-accent-500 transition-[width] duration-slow" style={{ width: `${bet.probability}%` }} />
                           </div>
                           <span className="text-xs text-fg-muted w-8">{bet.probability}%</span>
                         </div>

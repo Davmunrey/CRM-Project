@@ -264,7 +264,7 @@ export function CustomFieldsSection() {
                 <button type="button"
                   onClick={() => cfToggleRequired(def.id, def.required)}
                   title={def.required ? t.settings.requiredToggleOn : t.settings.requiredToggleOff}
-                  className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
+                  className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition ${
                     def.required
                       ? 'bg-warning/15 border-warning/25 text-warning'
                       : 'bg-fg/5 border-fg/8 text-fg-subtle hover:text-fg-muted'
@@ -276,7 +276,7 @@ export function CustomFieldsSection() {
                 <button type="button"
                   onClick={() => cfToggleActive(def.id, def.isActive)}
                   title={def.isActive ? t.settings.activeToggleOn : t.settings.activeToggleOff}
-                  className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
+                  className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition ${
                     def.isActive
                       ? 'bg-success/15 border-success/25 text-success'
                       : 'bg-fg/5 border-fg/8 text-fg-subtle hover:text-fg-muted'
