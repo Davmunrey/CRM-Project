@@ -886,14 +886,8 @@ export function Landing() {
         style={{ backgroundColor: 'rgba(255,255,255,0.82)', borderBottom: `1px solid ${C.line}` }}
       >
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', boxShadow: '0 6px 18px rgba(79,70,229,0.35)' }}
-            >
-              <Logo variant="icon" theme="onAccent" size={18} />
-            </div>
-            <Logo variant="wordmark" theme="light" size={20} />
+          <div className="flex items-center">
+            <Logo variant="icon" theme="light" size={26} />
           </div>
 
           <nav className="hidden md:flex items-center gap-7 text-sm font-medium" style={{ color: C.muted }}>
@@ -1201,14 +1195,8 @@ export function Landing() {
       {/* ── Footer ──────────────────────────────────────────────────────────── */}
       <footer style={{ borderTop: `1px solid ${C.line}`, background: C.page }}>
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
-              style={{ background: 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
-            >
-              <Logo variant="icon" theme="onAccent" size={13} />
-            </div>
-            <span className="text-sm font-semibold" style={{ color: C.muted }}>n0CRM</span>
+          <div className="flex items-center">
+            <Logo variant="icon" theme="light" size={20} />
           </div>
           <p className="text-xs" style={{ color: C.faint }}>
             The connected outbound CRM · {new Date().getFullYear()}

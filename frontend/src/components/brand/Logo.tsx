@@ -23,7 +23,7 @@ export interface LogoProps {
   className?: string
 }
 
-const CURSOR_CORAL = '#E8523A'
+const CURSOR_CORAL = '#ff6b57'
 
 /** Resolve the wordmark text color for a given theme. */
 function resolveTextColor(theme: LogoTheme): string {
