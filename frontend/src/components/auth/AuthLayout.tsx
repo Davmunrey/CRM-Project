@@ -19,7 +19,7 @@ export interface AuthLayoutProps {
   showBrandingHeader?: boolean
 }
 
-// ─── Ambient parallax backdrop (inspired by "The Boat") ──────────────────────
+// ─── Ambient parallax backdrop ───────────────────────────────────────────────
 // Three soft layers that drift + breathe on their own (CSS) and shift at
 // different depths as the pointer moves (JS). Pure decoration, motion-safe.
 function AuthBackdrop() {
@@ -92,11 +92,11 @@ export function AuthLayout({
   }, [])
 
   const defaultLogo = (
-    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto shadow-brand-sm mb-4 overflow-hidden" style={{ backgroundColor: branding.primaryColor }}>
+    <div className="flex items-center justify-center mx-auto mb-4 text-fg">
       {branding.logoUrl ? (
-        <img src={branding.logoUrl} alt="" className="w-full h-full object-cover" />
+        <img src={branding.logoUrl} alt={branding.appName} className="h-11 w-auto object-contain" />
       ) : (
-        <Logo variant="icon" theme="onAccent" size={28} />
+        <Logo variant="icon" theme="mono" size={34} />
       )}
     </div>
   )

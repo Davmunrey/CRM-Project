@@ -24,21 +24,12 @@ function LoginHero({ branding, t }: { branding: AppSettings['branding']; t: Retu
   ] as const
   return (
     <div className="flex flex-col justify-center gap-6 lg:gap-8 text-left max-w-lg mx-auto lg:mx-0">
-      <div className="landing-float shrink-0 self-start" style={{ ['--float-dur' as string]: '8s' }}>
-        <div
-          className="relative w-14 h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center shadow-brand-sm overflow-hidden ring-1 ring-fg/10 motion-safe:transition motion-safe:duration-300 motion-safe:ease-out motion-safe:hover:shadow-md motion-safe:hover:ring-fg/18 motion-safe:hover:scale-[1.02]"
-          style={{ backgroundColor: branding.primaryColor }}
-        >
-          <div
-            className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/35 via-white/8 to-transparent opacity-90"
-            aria-hidden
-          />
-          {branding.logoUrl ? (
-            <img src={branding.logoUrl} alt="" className="relative z-[1] w-full h-full object-cover" />
-          ) : (
-            <Logo variant="icon" theme="onAccent" size={28} className="relative z-[1]" />
-          )}
-        </div>
+      <div className="landing-float shrink-0 self-start text-fg" style={{ ['--float-dur' as string]: '8s' }}>
+        {branding.logoUrl ? (
+          <img src={branding.logoUrl} alt={branding.appName} className="h-12 lg:h-14 w-auto object-contain" />
+        ) : (
+          <Logo variant="icon" theme="mono" size={44} />
+        )}
       </div>
       <div>
         <h2 className="text-2xl sm:text-3xl xl:text-4xl font-bold text-fg tracking-tight">{branding.appName}</h2>

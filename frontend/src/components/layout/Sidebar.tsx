@@ -367,11 +367,11 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className={`flex items-center h-16 border-b border-fg/6 flex-shrink-0 ${collapsed ? 'justify-center px-3' : 'px-4 gap-3'}`}>
-        <div className="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0 shadow-brand-sm overflow-hidden" style={{ backgroundColor: branding.primaryColor }}>
+        <div className="flex items-center justify-center flex-shrink-0 text-fg">
           {branding.logoUrl ? (
-            <img src={branding.logoUrl} alt={branding.appName} className="w-full h-full object-cover" />
+            <img src={branding.logoUrl} alt={branding.appName} className="h-7 w-auto object-contain" />
           ) : (
-            <Logo variant="icon" theme="onAccent" size={20} />
+            <Logo variant="icon" theme="mono" size={20} />
           )}
         </div>
         {!collapsed && (

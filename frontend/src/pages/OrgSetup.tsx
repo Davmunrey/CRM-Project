@@ -103,11 +103,8 @@ export function OrgSetup() {
     <AuthLayout
       variant="centered"
       logo={(
-        <div className="relative w-14 h-14 rounded-2xl bg-accent-500/20 flex items-center justify-center mx-auto mb-4 border border-accent-500/25 overflow-hidden shadow-brand-sm ring-1 ring-accent-500/20 motion-safe:transition motion-safe:duration-300 motion-safe:hover:scale-[1.02]">
-          <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-fg/40 via-transparent to-accent-500/10" aria-hidden />
-          <span className="relative z-[1]">
-            <Logo variant="icon" theme="onAccent" size={28} />
-          </span>
+        <div className="flex items-center justify-center mx-auto mb-4 text-fg">
+          <Logo variant="icon" theme="mono" size={34} />
         </div>
       )}
       title={<h1 className="text-2xl font-bold text-fg">{t.orgSetup.title}</h1>}
