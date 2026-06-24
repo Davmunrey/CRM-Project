@@ -22,7 +22,9 @@
   --brand-primary: var(--brand-600);
   --brand-ink: var(--brand-900);
 
-  --font-sans: 'DM Sans', system-ui, sans-serif;
+  /* Space Grotesk is the app-wide typeface (body + display), matching the
+     landing. DM Sans is kept loaded only for the brand logo mark. */
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
   --font-display: 'Space Grotesk', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 

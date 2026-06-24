@@ -19,7 +19,9 @@ export default {
         '2xl': '1536px',
       },
       fontFamily: {
-        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+        // Space Grotesk is the app-wide typeface (drives Tailwind's base html
+        // font and the `font-sans` utility). DM Sans is kept only for the logo.
+        sans: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
         display: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
       },
