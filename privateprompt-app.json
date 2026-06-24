@@ -22,7 +22,7 @@
       "env": {
         "POSTGRES_DB":       { "secret": false, "generate": false, "label": "Database name",     "default": "n0crm" },
         "POSTGRES_USER":     { "secret": false, "generate": false, "label": "Database user",     "default": "n0crm" },
-        "POSTGRES_PASSWORD": { "secret": true,  "generate": true,  "label": "Database password" }
+        "POSTGRES_PASSWORD": { "secret": true,  "generate": false, "default": "n0crm_db_2026_secure", "label": "Database password (must match the api service)" }
       },
       "healthcheck": {
         "test": ["CMD-SHELL", "pg_isready -U n0crm"],
@@ -58,7 +58,7 @@
         { "name": "n0crm-backups", "mount": "/backups" }
       ],
       "env": {
-        "POSTGRES_PASSWORD":      { "secret": true,  "generate": false, "label": "DB Password (shared with postgres)" },
+        "POSTGRES_PASSWORD":      { "secret": true,  "generate": false, "default": "n0crm_db_2026_secure", "label": "DB Password (must match the postgres service)" },
         "JWT_SECRET":             { "secret": true,  "generate": true,  "label": "JWT Secret" },
         "TOKEN_ENCRYPTION_KEY":   { "secret": true,  "generate": true,  "label": "Encryption Key" },
         "DEBUG_TOKEN":            { "secret": true,  "generate": true,  "label": "Debug Token" },
@@ -100,7 +100,7 @@
     }
   },
   "post_install": {
-    "description": "On first run the API applies all database migrations automatically, then the server starts. Register your organisation at /register. Required secrets are auto-generated: POSTGRES_PASSWORD, JWT_SECRET, TOKEN_ENCRYPTION_KEY. Optional: RESEND_API_KEY, GOOGLE_CLIENT_ID/SECRET, ANTHROPIC_API_KEY.",
+    "description": "On first run the API applies all database migrations automatically, then the server starts. Register your organisation at /register. POSTGRES_PASSWORD has a shared fixed default (identical on the postgres and api services so they can never drift); change it only if you set it on BOTH. Auto-generated secrets: JWT_SECRET, TOKEN_ENCRYPTION_KEY. Optional: RESEND_API_KEY, GOOGLE_CLIENT_ID/SECRET, ANTHROPIC_API_KEY.",
     "first_run_url": "/register"
   },
   "links": {

@@ -23,7 +23,7 @@
       "env": {
         "POSTGRES_DB":       { "secret": false, "generate": false, "label": "Database name",     "default": "n0crm" },
         "POSTGRES_USER":     { "secret": false, "generate": false, "label": "Database user",     "default": "n0crm" },
-        "POSTGRES_PASSWORD": { "secret": true,  "generate": true,  "label": "Database password" }
+        "POSTGRES_PASSWORD": { "secret": true,  "generate": false, "default": "n0crm_db_2026_secure", "label": "Database password (must match the api service)" }
       },
       "healthcheck": {
         "test": ["CMD-SHELL", "pg_isready -U n0crm"],
@@ -54,7 +54,7 @@
         { "name": "n0crm-backups", "mount": "/backups" }
       ],
       "env": {
-        "POSTGRES_PASSWORD":     { "secret": true,  "generate": true,  "label": "PostgreSQL password (auto-shared with postgres)" },
+        "POSTGRES_PASSWORD":     { "secret": true,  "generate": false, "default": "n0crm_db_2026_secure", "label": "PostgreSQL password (must match the postgres service)" },
         "JWT_SECRET":            { "secret": true,  "generate": true,  "label": "JWT signing secret (auto-generated, min 64 chars)" },
         "TOKEN_ENCRYPTION_KEY":  { "secret": true,  "generate": true,  "label": "32-byte hex key for encrypting OAuth tokens (auto-generated)" },
         "REDIS_URL":             { "secret": false, "generate": false, "label": "Redis connection URL", "default": "redis://redis:6379" },
