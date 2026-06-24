@@ -140,6 +140,78 @@ function Counter({
   )
 }
 
+// ─── Motion: ambient parallax backdrop (inspired by "The Boat") ──────────────
+// Soft colour layers that drift + breathe on their own (CSS .landing-drift) and
+// glide at different speeds as the page scrolls (JS → translateY per depth),
+// giving the hero the same layered, cinematic depth as the boat scene.
+function HeroParallax() {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const root = ref.current
+    if (!root) return
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+
+    const layers = Array.from(root.querySelectorAll<HTMLElement>('[data-speed]'))
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const y = window.scrollY
+      for (const layer of layers) {
+        const speed = Number(layer.dataset.speed) || 0
+        layer.style.transform = `translate3d(0, ${(y * speed).toFixed(1)}px, 0)`
+      }
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  // depth: nearer layers (higher |speed|) drift faster & travel more on scroll.
+  const layers = [
+    { speed: 0.06, drift: { top: '-14%', left: '-6%', size: 620, color: 'rgba(99,102,241,0.10)', dur: '27s', dx: '34px', dy: '-24px', scale: 1.06 } },
+    { speed: -0.13, drift: { top: '4%', right: '-10%', size: 540, color: 'rgba(124,58,237,0.09)', dur: '33s', dx: '-30px', dy: '22px', scale: 1.08, reverse: true } },
+    { speed: 0.2, drift: { bottom: '-16%', left: '28%', size: 460, color: 'rgba(79,70,229,0.08)', dur: '21s', dx: '26px', dy: '28px', scale: 1.1 } },
+  ]
+
+  return (
+    <div ref={ref} className="absolute inset-0 pointer-events-none" aria-hidden>
+      {layers.map((l, i) => {
+        const d = l.drift
+        return (
+          <div
+            key={i}
+            data-speed={l.speed}
+            className="absolute will-change-transform"
+            style={{ top: d.top, bottom: d.bottom, left: d.left, right: d.right }}
+          >
+            <div
+              className="landing-drift rounded-full"
+              style={{
+                width: d.size,
+                height: d.size,
+                background: `radial-gradient(circle, ${d.color} 0%, transparent 68%)`,
+                filter: 'blur(56px)',
+                ['--drift-dur' as string]: d.dur,
+                ['--drift-x' as string]: d.dx,
+                ['--drift-y' as string]: d.dy,
+                ['--drift-scale' as string]: String(d.scale),
+                ...(d.reverse ? { animationDirection: 'reverse' } : {}),
+              }}
+            />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── Shared: browser chrome wrapper ─────────────────────────────────────────
 
 function BrowserFrame({ children, url = 'app.n0crm.io/pipeline' }: { children: React.ReactNode; url?: string }) {
@@ -917,8 +989,8 @@ export function Landing() {
           maskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%)',
           WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%)',
         }} />
-        {/* Color blobs */}
-        <div className="absolute pointer-events-none" style={{ top: '-14%', left: '-4%', width: 600, height: 600, background: 'radial-gradient(circle, rgba(99,102,241,0.09) 0%, transparent 68%)', filter: 'blur(56px)' }} />
+        {/* Drifting parallax colour layers (theboat-style ambient depth) */}
+        <HeroParallax />
 
         <div className="max-w-5xl mx-auto px-6 pt-20 sm:pt-24 text-center relative z-10">
           {/* Social-proof badge */}
