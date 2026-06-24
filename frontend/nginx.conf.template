@@ -23,6 +23,24 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    # ── index.html must NEVER be cached ───────────────────────────────────────
+    # Hashed assets below are immutable, but the HTML entry point lists their
+    # filenames — if the browser caches index.html it keeps loading the OLD
+    # asset hashes after a deploy (stale app). no-cache forces revalidation so a
+    # new build is picked up immediately. (A location with add_header does not
+    # inherit the server-level headers, so the security set is repeated here.)
+    location = /index.html {
+        add_header Cache-Control            "no-cache"                        always;
+        add_header X-Frame-Options          "DENY"                            always;
+        add_header X-Content-Type-Options   "nosniff"                         always;
+        add_header Referrer-Policy          "strict-origin-when-cross-origin" always;
+        add_header X-XSS-Protection         "1; mode=block"                   always;
+        add_header Permissions-Policy       "camera=(), microphone=(), geolocation=(), payment=()" always;
+        add_header Cross-Origin-Opener-Policy "same-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+        add_header Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; img-src 'self' data: https: blob:; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https: wss:; worker-src 'self' blob:; upgrade-insecure-requests" always;
+    }
+
     # ── Socket.io (WebSocket upgrade) ────────────────────────────────────────
     location /api/socket.io/ {
         limit_req zone=api burst=40 nodelay;
