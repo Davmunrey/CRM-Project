@@ -106,6 +106,9 @@ export function SecurePasswordField({
   const checklistLabels = useMemo(() => passwordChecklistLabels(t), [t])
   const id = useId()
   const [show, setShow] = useState(false)
+  const [focused, setFocused] = useState(false)
+  const reqsId = `${id}-reqs`
+  const showReqsPopover = showRequirementChecklist && focused
 
   const applyGenerated = () => {
     const next = generateSecurePassword()
@@ -141,6 +144,9 @@ export function SecurePasswordField({
           type={show ? 'text' : 'password'}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          aria-describedby={showReqsPopover ? reqsId : undefined}
           placeholder={placeholder}
           required={required}
           autoFocus={autoFocus}
@@ -161,20 +167,27 @@ export function SecurePasswordField({
             onClick={() => setShow((v) => !v)}
           />
         </div>
+
+        {/* Requirements live in a popover anchored to the field, shown only while
+            the input is focused — so the form is no longer padded by a permanent
+            checklist. Mirrors the app's existing dropdown panel styling. */}
+        {showReqsPopover ? (
+          <div
+            id={reqsId}
+            className="absolute left-0 right-0 top-full z-50 mt-2 rounded-xl border border-fg/10 bg-surface-2 p-3 shadow-xl"
+          >
+            <PasswordRequirementChecklist
+              password={value}
+              compact={compactChecklist}
+              policyTitle={t.auth.passwordPolicyTitle}
+              labels={checklistLabels}
+            />
+            {!enforceStrongPasswordMinLength ? (
+              <p className="mt-1.5 text-[10px] text-fg-subtle leading-snug">{t.auth.passwordPolicyLoginHint}</p>
+            ) : null}
+          </div>
+        ) : null}
       </div>
-      {showRequirementChecklist ? (
-        <div className="space-y-1">
-          <PasswordRequirementChecklist
-            password={value}
-            compact={compactChecklist}
-            policyTitle={t.auth.passwordPolicyTitle}
-            labels={checklistLabels}
-          />
-          {!enforceStrongPasswordMinLength ? (
-            <p className="text-[10px] text-fg-subtle leading-snug">{t.auth.passwordPolicyLoginHint}</p>
-          ) : null}
-        </div>
-      ) : null}
       {showPolicyHint ? (
         <p className="text-xs text-fg-muted">{t.auth.passwordStrengthHint}</p>
       ) : null}
