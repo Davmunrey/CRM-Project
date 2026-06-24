@@ -41,9 +41,9 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
-/* Ambient depth (inspired by "The Boat"): soft layers drift + sway forever,
-   each at its own pace/direction via per-element CSS vars. Paired in markup with
-   an outer wrapper that JS nudges on scroll / pointer for parallax depth. */
+/* Ambient depth: soft layers drift + sway forever, each at its own
+   pace/direction via per-element CSS vars. Paired in markup with an outer
+   wrapper that JS nudges on scroll / pointer for parallax depth. */
 @keyframes landingDrift {
   0%   { transform: translate3d(0, 0, 0) scale(1); }
   50%  { transform: translate3d(var(--drift-x, 22px), var(--drift-y, -16px), 0) scale(var(--drift-scale, 1.05)); }
@@ -83,7 +83,7 @@
 .marquee-mask:hover .marquee-track {
   animation-play-state: paused;
 }
-/* Continuous ambient motion for parallax layers (theboat-style). */
+/* Continuous ambient motion for parallax layers. */
 .landing-drift {
   animation: landingDrift var(--drift-dur, 20s) ease-in-out infinite;
   will-change: transform;
@@ -517,8 +517,8 @@
     background-color: rgb(var(--color-surface-0));
   }
 
-  /* Auth backdrop blobs breathe + drift (theboat ambient depth). The outer
-     `.parallax-layer` wrapper handles pointer parallax; this animates the blob. */
+  /* Auth backdrop blobs breathe + drift. The outer `.parallax-layer` wrapper
+     handles pointer parallax; this animates the blob itself. */
   .auth-bg-blob {
     animation: landingDrift var(--drift-dur, 22s) ease-in-out infinite;
     will-change: transform;

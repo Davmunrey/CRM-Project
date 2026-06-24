@@ -140,10 +140,10 @@ function Counter({
   )
 }
 
-// ─── Motion: ambient parallax backdrop (inspired by "The Boat") ──────────────
+// ─── Motion: ambient parallax backdrop ──────────────────────────────────────
 // Soft colour layers that drift + breathe on their own (CSS .landing-drift) and
 // glide at different speeds as the page scrolls (JS → translateY per depth),
-// giving the hero the same layered, cinematic depth as the boat scene.
+// giving the hero a layered, cinematic sense of depth.
 function HeroParallax() {
   const ref = useRef<HTMLDivElement>(null)
 
@@ -989,7 +989,7 @@ export function Landing() {
           maskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%)',
           WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%)',
         }} />
-        {/* Drifting parallax colour layers (theboat-style ambient depth) */}
+        {/* Drifting parallax colour layers — ambient depth */}
         <HeroParallax />
 
         <div className="max-w-5xl mx-auto px-6 pt-20 sm:pt-24 text-center relative z-10">
