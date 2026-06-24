@@ -50,7 +50,7 @@
       }
     },
     "api": {
-      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:latest",
+      "image": "gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm-api:latest",
       "port": 3001,
       "memory_mb": 512,
       "cpu": 1.25,
@@ -82,7 +82,7 @@
       }
     },
     "web": {
-      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:web",
+      "image": "gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm-api:web",
       "port": 80,
       "memory_mb": 256,
       "cpu": 1.0,
@@ -104,6 +104,6 @@
     "first_run_url": "/register"
   },
   "links": {
-    "repository": "https://gitea.apps.privateprompt.tech/clovrlabs/n0crm"
+    "repository": "https://gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm"
   }
 }

@@ -16,7 +16,7 @@
   "cpu": 0.25,
   "services": {
     "web": {
-      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm:latest",
+      "image": "gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm:latest",
       "port": 80,
       "memory_mb": 128,
       "cpu": 0.25,
@@ -42,6 +42,6 @@
     "first_run_url": "/"
   },
   "links": {
-    "repository": "https://gitea.apps.privateprompt.tech/clovrlabs/n0crm"
+    "repository": "https://gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm"
   }
 }

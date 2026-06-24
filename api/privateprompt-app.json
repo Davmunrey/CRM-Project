@@ -46,7 +46,7 @@
       }
     },
     "api": {
-      "image": "gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:latest",
+      "image": "gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm-api:latest",
       "port": 3001,
       "memory_mb": 192,
       "cpu": 0.5,
@@ -84,6 +84,6 @@
     "first_run_url": "/health"
   },
   "links": {
-    "repository": "https://gitea.apps.privateprompt.tech/clovrlabs/n0crm"
+    "repository": "https://gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm"
   }
 }

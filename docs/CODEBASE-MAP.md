@@ -2589,7 +2589,7 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
   - ENTRYPOINT ['/docker-entrypoint.sh']; CMD ['node', 'dist/index.js']
 - **[`api/privateprompt-app.json`](api/privateprompt-app.json)** — PrivatePrompt platform manifest for API-standalone deployment
   - slug: n0crm-api; services: postgres (16-alpine), redis (7-alpine), api
-  - api image: gitea.apps.privateprompt.tech/clovrlabs/n0crm-api:latest; port 3001
+  - api image: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm-api:latest; port 3001
   - Auto-generated secrets: POSTGRES_PASSWORD, JWT_SECRET, TOKEN_ENCRYPTION_KEY, DEBUG_TOKEN
   - User-supplied: CORS_ORIGIN, RESEND_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
   - TRUST_PROXY default '2' (platform edge + nginx), BACKUP_INTERVAL_HOURS default '6', BACKUP_KEEP default '10'
@@ -2641,7 +2641,7 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
   - Copies dist/ to /usr/share/nginx/html; copies nginx-main.conf, nginx.conf.template, docker-entrypoint.sh
   - EXPOSE 80; HEALTHCHECK wget localhost:80/; ENTRYPOINT ['/docker-entrypoint.sh']
 - **[`frontend/privateprompt-app.json`](frontend/privateprompt-app.json)** — PrivatePrompt platform manifest for frontend-only deployment
-  - slug: n0crm-frontend; image: gitea.apps.privateprompt.tech/clovrlabs/n0crm:latest; port 80
+  - slug: n0crm-frontend; image: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm:latest; port 80
   - env N0CRM_API_URL — points to internal n0crm-api service (default http://n0crm-api:3001)
   - memory_mb: 128 / cpu: 0.25
   - post_install: first_run_url /

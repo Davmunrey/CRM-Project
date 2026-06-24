@@ -557,14 +557,14 @@ If you add deployment or third-party integration jobs later, define secrets in G
 Use SSH remote:
 
 ```bash
-git remote set-url origin git@gitea.apps.privateprompt.tech:clovrlabs/n0crm.git
+git remote set-url origin git@gitea-clovrlabs.apps.privateprompt.tech:clovrlabs/n0crm.git
 ```
 
 And in `~/.ssh/config`, set:
 
 ```sshconfig
-Host gitea.apps.privateprompt.tech
-    HostName gitea.apps.privateprompt.tech
+Host gitea-clovrlabs.apps.privateprompt.tech
+    HostName gitea-clovrlabs.apps.privateprompt.tech
     User git
     Port 2222
     IdentityFile ~/.ssh/id_ed25519
@@ -574,7 +574,7 @@ Host gitea.apps.privateprompt.tech
 Quick verification:
 
 ```bash
-ssh -T git@gitea.apps.privateprompt.tech
+ssh -T git@gitea-clovrlabs.apps.privateprompt.tech
 git ls-remote --heads origin
 ```
 

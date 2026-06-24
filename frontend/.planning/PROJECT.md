@@ -8,7 +8,7 @@ The product is **self-hosted**: a monorepo comprising a React 18 SPA frontend (`
 
 There is **no Supabase dependency** anywhere in the production stack. No Edge Functions, no Supabase Auth, no supabase client at runtime.
 
-**Git:** Gitea (authoritative): `https://gitea.apps.privateprompt.tech/clovrlabs/n0CRM` — CI: `.gitea/workflows/ci.yml`
+**Git:** Gitea (authoritative): `https://gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0CRM` — CI: `.gitea/workflows/ci.yml`
 
 **Documentation language:** `.planning/` and engineering master documents under `docs/` are maintained in **English**.
 
