@@ -41,6 +41,18 @@
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
+/* Ambient depth (inspired by "The Boat"): soft layers drift + sway forever,
+   each at its own pace/direction via per-element CSS vars. Paired in markup with
+   an outer wrapper that JS nudges on scroll / pointer for parallax depth. */
+@keyframes landingDrift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(var(--drift-x, 22px), var(--drift-y, -16px), 0) scale(var(--drift-scale, 1.05)); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes landingSway {
+  0%, 100% { transform: rotate(var(--sway-from, -2.2deg)) translateY(0); }
+  50%      { transform: rotate(var(--sway-to, 2.2deg)) translateY(-7px); }
+}
 
 /* Scroll-reveal: starts hidden, `.reveal-in` (added when in view) settles it. */
 .reveal {
@@ -59,7 +71,7 @@
   animation: landingHeroIn 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 .landing-float {
-  animation: landingFloatY 7s ease-in-out infinite;
+  animation: landingFloatY var(--float-dur, 7s) ease-in-out infinite;
 }
 .landing-gradient-anim {
   background-size: 200% 200%;
@@ -70,6 +82,21 @@
 }
 .marquee-mask:hover .marquee-track {
   animation-play-state: paused;
+}
+/* Continuous ambient motion for parallax layers (theboat-style). */
+.landing-drift {
+  animation: landingDrift var(--drift-dur, 20s) ease-in-out infinite;
+  will-change: transform;
+}
+.landing-sway {
+  animation: landingSway var(--sway-dur, 9s) ease-in-out infinite;
+  will-change: transform;
+}
+/* Outer parallax wrapper: JS writes --parallax (px); transition smooths it. */
+.parallax-layer {
+  transform: translate3d(var(--parallax-x, 0), var(--parallax-y, 0), 0);
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
 @layer base {
@@ -488,6 +515,13 @@
   .light .auth-page-bg {
     background-image: var(--auth-page-gradient-light);
     background-color: rgb(var(--color-surface-0));
+  }
+
+  /* Auth backdrop blobs breathe + drift (theboat ambient depth). The outer
+     `.parallax-layer` wrapper handles pointer parallax; this animates the blob. */
+  .auth-bg-blob {
+    animation: landingDrift var(--drift-dur, 22s) ease-in-out infinite;
+    will-change: transform;
   }
 
   .light .auth-bg-blob {
