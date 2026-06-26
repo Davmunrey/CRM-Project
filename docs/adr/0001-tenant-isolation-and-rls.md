@@ -6,7 +6,7 @@
 
 ## Context
 
-n0CRM is multi-tenant: every business row carries `organization_id` and the API
+Propel is multi-tenant: every business row carries `organization_id` and the API
 derives the caller's org from the verified JWT (`req.user.org`). Migration 002
 also defines PostgreSQL **Row-Level Security (RLS)** policies on ~21 tables keyed
 on a `set_current_org()` GUC (`app.current_org_id`).

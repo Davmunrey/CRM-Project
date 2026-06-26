@@ -5,15 +5,15 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: n0crm
-      POSTGRES_USER: n0crm
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-n0crm_dev_pass}
+      POSTGRES_DB: propel
+      POSTGRES_USER: propel
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-propel_dev_pass}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-n0crm}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-propel}"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -75,7 +75,7 @@ services:
       dockerfile: Dockerfile
     working_dir: /app
     environment:
-      DATABASE_URL: postgres://n0crm:${POSTGRES_PASSWORD:-n0crm_dev_pass}@pgbouncer:6432/n0crm
+      DATABASE_URL: postgres://propel:${POSTGRES_PASSWORD:-propel_dev_pass}@pgbouncer:6432/propel
     command: sh -c "npm run db:migrate"
     depends_on:
       pgbouncer:
@@ -89,7 +89,7 @@ services:
       dockerfile: Dockerfile
     working_dir: /app
     environment:
-      DATABASE_URL: postgres://n0crm:${POSTGRES_PASSWORD:-n0crm_dev_pass}@pgbouncer:6432/n0crm
+      DATABASE_URL: postgres://propel:${POSTGRES_PASSWORD:-propel_dev_pass}@pgbouncer:6432/propel
     command: sh -c "npm run db:seed"
     depends_on:
       migrate:
@@ -113,11 +113,11 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgres://n0crm:${POSTGRES_PASSWORD:-n0crm_dev_pass}@pgbouncer:6432/n0crm
+      DATABASE_URL: postgres://propel:${POSTGRES_PASSWORD:-propel_dev_pass}@pgbouncer:6432/propel
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost}
-      EMAIL_FROM: ${EMAIL_FROM:-noreply@n0crm.com}
+      EMAIL_FROM: ${EMAIL_FROM:-noreply@propel.com}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-}
@@ -155,7 +155,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      N0CRM_API_URL: http://api:3001
+      PROPEL_API_URL: http://api:3001
     depends_on:
       api:
         condition: service_healthy
@@ -170,7 +170,7 @@ services:
     restart: unless-stopped
     environment:
       # Uses main user — create a dedicated read-only role in production
-      DATA_SOURCE_NAME: "postgresql://n0crm:${POSTGRES_PASSWORD:-n0crm_dev_pass}@postgres:5432/n0crm?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://propel:${POSTGRES_PASSWORD:-propel_dev_pass}@postgres:5432/propel?sslmode=disable"
     ports:
       - "127.0.0.1:9187:9187"
     depends_on:
@@ -227,9 +227,9 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: n0crm
-      POSTGRES_DB: n0crm
-      PGPASSWORD: ${POSTGRES_PASSWORD:-n0crm_dev_pass}
+      POSTGRES_USER: propel
+      POSTGRES_DB: propel
+      PGPASSWORD: ${POSTGRES_PASSWORD:-propel_dev_pass}
     volumes:
       - ./infra/backup/backup.sh:/backup.sh:ro
       - ./infra/backup/crontab:/etc/crontabs/root:ro

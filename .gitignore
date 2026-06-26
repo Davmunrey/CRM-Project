@@ -10,8 +10,10 @@ lerna-debug.log*
 node_modules
 frontend/node_modules
 api/node_modules
+.next
 dist
 dist-ssr
+*.tsbuildinfo
 *.local
 .env.e2e
 

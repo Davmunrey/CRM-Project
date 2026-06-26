@@ -1,0 +1,16 @@
+{
+  "name": "Propel",
+  "short_name": "Propel",
+  "description": "Outbound-native CRM for sales teams",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0C8A68",
+  "theme_color": "#0C1F1A",
+  "icons": [
+    {
+      "src": "/brand/logo-dark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,585 @@
+import { useMemo, useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Users, TrendingUp, Trophy, Plus, Activity, Briefcase, Zap, Target, BarChart3, Clock, Bell } from 'lucide-react'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+} from 'recharts'
+import { useContactsStore } from '../store/contactsStore'
+import { useDealsStore } from '../store/dealsStore'
+import { useActivitiesStore } from '../store/activitiesStore'
+import { useCompaniesStore } from '../store/companiesStore'
+import { StatCard } from '../components/ui/StatCard'
+import { Badge, type BadgeVariant } from '../components/ui/Badge'
+import { Avatar } from '../components/ui/Avatar'
+import { Button } from '../components/ui/Button'
+import { AnimatedCounter } from '../components/ui/AnimatedCounter'
+import { formatCurrency, formatRelativeDate } from '../utils/formatters'
+import { useAuthStore } from '../store/authStore'
+import { EMPTY_ORG_ONBOARDING, useOnboardingStore } from '../store/onboardingStore'
+import { useNotificationsStore } from '../store/notificationsStore'
+import { CustomDashboard } from '../components/dashboard/CustomDashboard'
+import { PermissionGate } from '../components/auth/PermissionGate'
+import type { DealStage, CRMNotification } from '../types'
+import { subMonths, subWeeks, format, startOfMonth, endOfMonth, parseISO, isWithinInterval, differenceInDays, getDay, isAfter, isBefore } from 'date-fns'
+import { useTranslations } from '../i18n'
+import { useDateLocale } from '../hooks/useDateLocale'
+import { trackUxAction } from '../lib/uxMetrics'
+import { useChartTheme } from '../lib/chartTheme'
+
+const STAGE_BADGE_MAP: Record<DealStage, BadgeVariant> = {
+  lead: 'info',
+  qualified: 'warning',
+  proposal: 'violet',
+  negotiation: 'orange',
+  closed_won: 'success',
+  closed_lost: 'danger',
+}
+
+const MONTHLY_QUOTA = 50000
+
+const HEATMAP_LEVEL_CLASSES = [
+  'crm-heat-0',
+  'crm-heat-1',
+  'crm-heat-2',
+  'crm-heat-3',
+  'crm-heat-4',
+] as const
+
+export function Dashboard() {
+  const navigate = useNavigate()
+  const chart = useChartTheme()
+  const t = useTranslations()
+  const dateLocale = useDateLocale()
+  const DAY_LABELS = t.dashboard.dayLabels
+  const contacts = useContactsStore((s) => s.contacts)
+  const deals = useDealsStore((s) => s.deals)
+  const activities = useActivitiesStore((s) => s.activities)
+  const companies = useCompaniesStore((s) => s.companies)
+  const organizationId = useAuthStore((s) => s.organizationId)
+  const [dashView, setDashView] = useState<'overview' | 'custom'>('overview')
+  /** Slice ref is stable in the store; `getFlags()` returns a new object every call and breaks Zustand + React (infinite updates). */
+  const onboardingSlice = useOnboardingStore(
+    useCallback((s) => (organizationId ? s.byOrg[organizationId] : undefined), [organizationId]),
+  )
+  const onboardingFlags = useMemo(
+    () => (onboardingSlice ? { ...EMPTY_ORG_ONBOARDING, ...onboardingSlice } : EMPTY_ORG_ONBOARDING),
+    [onboardingSlice],
+  )
+  const dismissOnboardingBanner = useOnboardingStore((s) => s.dismissHomeBanner)
+  const onboardingComplete =
+    onboardingFlags.importContacts && onboardingFlags.firstDeal && onboardingFlags.firstSequence
+  const showOnboardingBanner =
+    Boolean(organizationId) && !onboardingComplete && !onboardingFlags.homeBannerDismissedAt
+
+  // ── KPIs ─────────────────────────────────────────────────────────────────
+  const stats = useMemo(() => {
+    const now = new Date()
+    const monthStart = startOfMonth(now).toISOString()
+    const openDeals = deals.filter((d) => d.stage !== 'closed_won' && d.stage !== 'closed_lost')
+    const pipelineValue = openDeals.reduce((sum, d) => sum + d.value, 0)
+    const wonThisMonth = deals
+      .filter((d) => d.stage === 'closed_won' && d.updatedAt >= monthStart)
+      .reduce((sum, d) => sum + d.value, 0)
+    return { totalContacts: contacts.length, openDeals: openDeals.length, pipelineValue, wonThisMonth }
+  }, [contacts, deals])
+
+  // ── Revenue by month (last 6) ─────────────────────────────────────────────
+  const revenueData = useMemo(() => {
+    const now = new Date()
+    return Array.from({ length: 6 }, (_, i) => {
+      const month = subMonths(now, 5 - i)
+      const start = startOfMonth(month)
+      const end = endOfMonth(month)
+      const value = deals
+        .filter((d) => {
+          if (d.stage !== 'closed_won') return false
+          try {
+            return isWithinInterval(parseISO(d.updatedAt), { start, end })
+          } catch { return false }
+        })
+        .reduce((sum, d) => sum + d.value, 0)
+      return {
+        month: format(month, 'MMM', { locale: dateLocale }),
+        value,
+      }
+    })
+  }, [deals, dateLocale])
+
+
+  // ── Recent activities (last 8) ───────────────────────────────────────────
+  const recentActivities = useMemo(() => {
+    return [...activities]
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .slice(0, 8)
+  }, [activities])
+
+  // ── Top deals by value ────────────────────────────────────────────────────
+  const topDeals = useMemo(() => {
+    return [...deals]
+      .filter((d) => d.stage !== 'closed_lost')
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5)
+  }, [deals])
+
+  // ── Sales Velocity ────────────────────────────────────────────────────────
+  const salesVelocity = useMemo(() => {
+    const closedWon = deals.filter((d) => d.stage === 'closed_won')
+    if (closedWon.length === 0) return 0
+    const totalDays = closedWon.reduce((sum, d) => {
+      const created = parseISO(d.createdAt)
+      const closed = parseISO(d.updatedAt)
+      return sum + Math.max(differenceInDays(closed, created), 1)
+    }, 0)
+    return Math.round(totalDays / closedWon.length)
+  }, [deals])
+
+  // ── Conversion Rate ───────────────────────────────────────────────────────
+  const conversionRate = useMemo(() => {
+    const won = deals.filter((d) => d.stage === 'closed_won').length
+    const lost = deals.filter((d) => d.stage === 'closed_lost').length
+    const total = won + lost
+    if (total === 0) return 0
+    return Math.round((won / total) * 100)
+  }, [deals])
+
+  // ── Monthly Quota Progress ────────────────────────────────────────────────
+  const quotaProgress = useMemo(() => {
+    const percentage = Math.min(Math.round((stats.wonThisMonth / MONTHLY_QUOTA) * 100), 100)
+    const remaining = Math.max(MONTHLY_QUOTA - stats.wonThisMonth, 0)
+    return { percentage, remaining, current: stats.wonThisMonth }
+  }, [stats.wonThisMonth])
+
+
+  // ── Activity Heatmap (last 4 weeks) ───────────────────────────────────────
+  const heatmapData = useMemo(() => {
+    const now = new Date()
+    const fourWeeksAgo = subWeeks(now, 4)
+
+    // Initialize: 4 weeks x 7 days
+    const grid: number[][] = Array.from({ length: 4 }, () => Array.from({ length: 7 }, () => 0))
+
+    activities.forEach((act) => {
+      try {
+        const date = parseISO(act.createdAt)
+        if (isBefore(date, fourWeeksAgo) || isAfter(date, now)) return
+        // Find which week (0-3) and day (0=Mon, 6=Sun)
+        const diffWeeks = Math.floor(differenceInDays(now, date) / 7)
+        const weekIdx = 3 - Math.min(diffWeeks, 3)
+        // getDay returns 0=Sun, 1=Mon ... 6=Sat → convert to Mon=0 ... Sun=6
+        const rawDay = getDay(date)
+        const dayIdx = rawDay === 0 ? 6 : rawDay - 1
+        grid[weekIdx][dayIdx] += 1
+      } catch { /* skip invalid dates */ }
+    })
+
+    // Find max for color scaling
+    const maxCount = Math.max(1, ...grid.flat())
+
+    return { grid, maxCount }
+  }, [activities])
+
+  // ── Recent Notifications (manual subscription) ──────────────────────────
+  const [recentNotifs, setRecentNotifs] = useState<CRMNotification[]>([])
+  const computeNotifs = useCallback(() => {
+    setRecentNotifs(useNotificationsStore.getState().notifications.slice(0, 5))
+  }, [])
+  useEffect(() => {
+    
+    computeNotifs()
+    const unsub = useNotificationsStore.subscribe(computeNotifs)
+    return unsub
+  }, [computeNotifs])
+
+  const getContact = (id: string) => contacts.find((c) => c.id === id)
+  const getCompany = (id: string) => companies.find((c) => c.id === id)
+
+  const getHeatLevelClass = (count: number, maxCount: number): string => {
+    if (count === 0) return HEATMAP_LEVEL_CLASSES[0]
+    const intensity = count / maxCount
+    if (intensity < 0.25) return HEATMAP_LEVEL_CLASSES[1]
+    if (intensity < 0.5) return HEATMAP_LEVEL_CLASSES[2]
+    if (intensity < 0.75) return HEATMAP_LEVEL_CLASSES[3]
+    return HEATMAP_LEVEL_CLASSES[4]
+  }
+
+  return (
+    <div className="crm-page space-y-6">
+      <div className="flex justify-end">
+        <div className="inline-flex overflow-hidden rounded-xl border border-fg/10 bg-fg/[0.05] text-sm">
+          <button
+            type="button"
+            onClick={() => setDashView('overview')}
+            className={`px-3 py-1.5 ${dashView === 'overview' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
+          >
+            {t.dashboardWidgets.overview}
+          </button>
+          <button
+            type="button"
+            onClick={() => setDashView('custom')}
+            className={`px-3 py-1.5 ${dashView === 'custom' ? 'bg-accent-600 text-fg' : 'text-fg-subtle hover:text-fg-muted'} transition-colors`}
+          >
+            {t.dashboardWidgets.custom}
+          </button>
+        </div>
+      </div>
+
+      {dashView === 'custom' ? (
+        <CustomDashboard />
+      ) : (
+        <>
+      {showOnboardingBanner && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-accent-500/30 bg-accent-500/10 px-4 py-3">
+          <div>
+            <p className="text-sm font-semibold text-fg">{t.dashboard.onboardingBannerTitle}</p>
+            <p className="text-xs text-fg-muted mt-0.5">{t.dashboard.onboardingBannerBody}</p>
+          </div>
+          <div className="flex flex-wrap gap-2 shrink-0">
+            <Button size="sm" onClick={() => navigate('/settings?tab=onboarding')}>
+              {t.dashboard.onboardingBannerSettings}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                dismissOnboardingBanner(organizationId ?? undefined)
+                trackUxAction('onboarding_banner_dismiss', {})
+              }}
+            >
+              {t.dashboard.onboardingBannerDismiss}
+            </Button>
+          </div>
+        </div>
+      )}
+      {/* ── Row 1: Quick actions ──────────────────────────────────────────── */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <PermissionGate permission="contacts:create">
+          <Button
+            size="sm"
+            leftIcon={<Plus size={14} />}
+            onClick={() => {
+              trackUxAction('quick_create_contact')
+              navigate('/contacts?create=1')
+            }}
+          >
+            {t.dashboard.newContact}
+          </Button>
+        </PermissionGate>
+        <PermissionGate permission="deals:create">
+          <Button
+            size="sm"
+            variant="secondary"
+            leftIcon={<Plus size={14} />}
+            onClick={() => {
+              trackUxAction('quick_create_deal')
+              navigate('/deals?create=1')
+            }}
+          >
+            {t.dashboard.newDeal}
+          </Button>
+        </PermissionGate>
+        <PermissionGate permission="activities:create">
+          <Button
+            size="sm"
+            variant="secondary"
+            leftIcon={<Plus size={14} />}
+            onClick={() => {
+              trackUxAction('quick_create_activity')
+              navigate('/activities?create=1')
+            }}
+          >
+            {t.dashboard.newActivity}
+          </Button>
+        </PermissionGate>
+      </div>
+
+      {/* ── Row 2: KPI Cards ──────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <StatCard
+          title={t.dashboard.totalContacts}
+          value={<AnimatedCounter value={stats.totalContacts} />}
+          icon={<Users size={20} />}
+          accent="accent"
+          subtitle={`${companies.length} ${t.companies.title.toLowerCase()}`}
+        />
+        <StatCard
+          title={t.dashboard.openDeals}
+          value={<AnimatedCounter value={stats.openDeals} />}
+          icon={<Briefcase size={20} />}
+          accent="info"
+        />
+        <StatCard
+          title={t.dashboard.pipelineValue}
+          value={<AnimatedCounter value={stats.pipelineValue} prefix="€" />}
+          icon={<TrendingUp size={20} />}
+          accent="accent"
+        />
+        <StatCard
+          title={t.dashboard.wonThisMonth}
+          value={<AnimatedCounter value={stats.wonThisMonth} prefix="€" />}
+          icon={<Trophy size={20} />}
+          accent="success"
+        />
+      </div>
+
+      {/* ── Row 3: Revenue Chart + Quota & Velocity ──────────────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        {/* Revenue bar chart */}
+        <div className="xl:col-span-2 glass rounded-2xl p-5">
+          <h2 className="text-sm font-semibold text-fg-muted mb-4">{t.dashboard.revenueByMonth}</h2>
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={revenueData} margin={{ top: 5, right: 5, bottom: 5, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={chart.gridStroke} vertical={false} />
+              <XAxis dataKey="month" tick={{ fill: chart.axisTickFill, fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis
+                tick={{ fill: chart.axisTickFill, fontSize: 11 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
+              />
+              <Tooltip
+                contentStyle={chart.tooltipStyle}
+                formatter={(value: unknown) => [formatCurrency(Number(value)), t.dashboard.closed]}
+              />
+              <Bar dataKey="value" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
+              <defs>
+                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={chart.barGradientTop} />
+                  <stop offset="100%" stopColor={chart.barGradientBottom} />
+                </linearGradient>
+              </defs>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Right column: Quota + Velocity + Conversion */}
+        <div className="flex flex-col gap-4">
+          {/* Monthly Quota Progress */}
+          <div className="glass rounded-2xl p-5 flex-1">
+            <div className="flex items-center gap-2 mb-3">
+              <Target size={16} className="text-accent-400" />
+              <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.monthlyQuota}</h2>
+            </div>
+            <div className="flex items-end justify-between mb-3">
+              <div>
+                <p className="text-2xl font-bold text-fg">
+                  <AnimatedCounter value={quotaProgress.percentage} suffix="%" />
+                </p>
+                <p className="text-xs text-fg-subtle mt-1">
+                  {formatCurrency(quotaProgress.current)} / {formatCurrency(MONTHLY_QUOTA)}
+                </p>
+              </div>
+              <p className="text-xs text-fg-subtle">
+                {t.dashboard.remaining} {formatCurrency(quotaProgress.remaining)}
+              </p>
+            </div>
+            <div className="w-full h-3 bg-surface-2/90 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-[width] duration-slow"
+                style={{
+                  width: `${quotaProgress.percentage}%`,
+                  background: `linear-gradient(90deg, ${chart.seriesPalette[0]}, ${chart.seriesPalette[1]}, ${chart.seriesPalette[2]})`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Sales Velocity */}
+          <div className="glass rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap size={16} className="text-warning" />
+              <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.salesVelocity}</h2>
+            </div>
+            <p className="text-2xl font-bold text-fg">
+              <AnimatedCounter value={salesVelocity} suffix={` ${t.dashboard.days}`} />
+            </p>
+            <p className="text-xs text-fg-subtle mt-1">{t.dashboard.avgCloseTime}</p>
+          </div>
+
+          {/* Conversion Rate */}
+          <div className="glass rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <BarChart3 size={16} className="text-success" />
+              <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.conversionRate}</h2>
+            </div>
+            <p className="text-2xl font-bold text-fg">
+              <AnimatedCounter value={conversionRate} suffix="%" />
+            </p>
+            <p className="text-xs text-fg-subtle mt-1">{t.reports.conversionRate}</p>
+          </div>
+        </div>
+      </div>
+
+
+      {/* ── Row 5: Recent Activities + Top Deals ─────────────────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        {/* Recent activities */}
+        <div className="glass rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.recentActivities}</h2>
+            <button
+              type="button"
+              onClick={() => navigate('/activities')}
+              className="text-xs text-accent-400 hover:text-accent-300 transition-colors"
+            >
+              {t.dashboard.viewAll}
+            </button>
+          </div>
+          <div className="space-y-3">
+            {recentActivities.map((activity) => {
+              const contact = activity.contactId ? getContact(activity.contactId) : undefined
+              return (
+                <div key={activity.id} className="flex items-start gap-3 pb-3 border-b border-fg/6 last:border-0 last:pb-0">
+                  <div className="w-8 h-8 rounded-lg bg-surface-2/90 flex items-center justify-center flex-shrink-0">
+                    <Activity size={13} className="text-accent-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-fg truncate">{activity.subject}</p>
+                    <p className="text-xs text-fg-subtle mt-0.5">
+                      {t.activities.typeLabels[activity.type]}
+                      {contact ? ` · ${contact.firstName} ${contact.lastName}` : ''}
+                    </p>
+                  </div>
+                  <span className="text-[10px] text-fg-subtle flex-shrink-0">
+                    {formatRelativeDate(activity.createdAt)}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Top deals */}
+        <div className="glass rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.topDeals}</h2>
+            <button
+              type="button"
+              onClick={() => navigate('/deals')}
+              className="text-xs text-accent-400 hover:text-accent-300 transition-colors"
+            >
+              {t.dashboard.viewPipeline}
+            </button>
+          </div>
+          <div className="space-y-3">
+            {topDeals.map((deal) => {
+              const contact = getContact(deal.contactId)
+              const company = getCompany(deal.companyId)
+              return (
+                <div
+                  key={deal.id}
+                  className="flex items-center gap-3 pb-3 border-b border-fg/6 last:border-0 last:pb-0 cursor-pointer hover:bg-fg/[0.03] -mx-2 px-2 rounded-lg transition-colors"
+                  onClick={() => navigate(`/deals?deal=${deal.id}`)}
+                >
+                  {contact && <Avatar name={`${contact.firstName} ${contact.lastName}`} size="xs" />}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-fg truncate">{deal.title}</p>
+                    <p className="text-xs text-fg-subtle truncate">{company?.name ?? '-'}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-xs font-semibold text-success">
+                      {formatCurrency(deal.value, deal.currency)}
+                    </span>
+                    <Badge variant={STAGE_BADGE_MAP[deal.stage] ?? 'neutral'}>
+                      {t.deals.stageLabels[deal.stage as keyof typeof t.deals.stageLabels] ?? deal.stage}
+                    </Badge>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Row 6: Notifications Feed ────────────────────────────────────── */}
+      {recentNotifs.length > 0 && (
+        <div className="glass rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Bell size={16} className="text-accent-400" />
+              <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.latestNotifications}</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/notifications')}
+              className="text-xs text-accent-400 hover:text-accent-300 transition-colors"
+            >
+              {t.dashboard.viewNotifications}
+            </button>
+          </div>
+          <div className="space-y-2">
+            {recentNotifs.map((n) => (
+              <div
+                key={n.id}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors cursor-pointer ${
+                  n.isRead ? 'opacity-50 hover:opacity-70' : 'bg-fg/[0.02] hover:bg-fg/[0.05]'
+                }`}
+                onClick={() => {
+                  useNotificationsStore.getState().markAsRead(n.id)
+                  if (n.entityType === 'deal') navigate('/deals')
+                  else if (n.entityType === 'lead' && n.entityId) navigate(`/leads/${n.entityId}`)
+                  else if (n.entityType === 'contact' && n.entityId) navigate(`/contacts/${n.entityId}`)
+                  else navigate('/notifications')
+                }}
+              >
+                {!n.isRead && <span className="w-2 h-2 rounded-full bg-accent-500 flex-shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-fg truncate">{n.title}</p>
+                  <p className="text-[10px] text-fg-subtle truncate">{n.message}</p>
+                </div>
+                <span className="text-[10px] text-fg-subtle flex-shrink-0">
+                  {formatRelativeDate(n.createdAt)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Row 7: Activity Heatmap ──────────────────────────────────────── */}
+      <div className="glass rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <Clock size={16} className="text-accent-400" />
+          <h2 className="text-sm font-semibold text-fg-muted">{t.dashboard.activityHeatmap}</h2>
+        </div>
+        <div className="space-y-2">
+          {/* Day labels */}
+          <div className="grid grid-cols-7 gap-2">
+            {DAY_LABELS.map((day) => (
+              <div key={day} className="text-center text-[10px] text-fg-subtle font-medium">
+                {day}
+              </div>
+            ))}
+          </div>
+          {/* Heatmap grid */}
+          {heatmapData.grid.map((week, weekIdx) => (
+            <div key={weekIdx} className="grid grid-cols-7 gap-2">
+              {week.map((count, dayIdx) => (
+                <div
+                  key={`${weekIdx}-${dayIdx}`}
+                  className={`h-8 rounded-lg ${getHeatLevelClass(count, heatmapData.maxCount)} flex items-center justify-center transition-colors`}
+                  title={`${count} ${t.activities.title.toLowerCase()}`}
+                >
+                  {count > 0 && (
+                    <span className="text-[10px] font-semibold text-fg/85">{count}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+          {/* Legend */}
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <span className="text-[10px] text-fg-subtle">{t.dashboard.heatmapLess}</span>
+            <div className="w-4 h-4 rounded crm-heat-0" />
+            <div className="w-4 h-4 rounded crm-heat-1" />
+            <div className="w-4 h-4 rounded crm-heat-2" />
+            <div className="w-4 h-4 rounded crm-heat-3" />
+            <div className="w-4 h-4 rounded crm-heat-4" />
+            <span className="text-[10px] text-fg-subtle">{t.dashboard.heatmapMore}</span>
+          </div>
+        </div>
+      </div>
+        </>
+      )}
+    </div>
+  )
+}

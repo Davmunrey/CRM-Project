@@ -1,6 +1,6 @@
-# n0CRM — Codebase Map
+# Propel — Codebase Map
 
-> Auto-generated structural map of the entire n0CRM monorepo (Fastify 5 API + React 18 frontend, PostgreSQL/Redis/Socket.io). Generated 2026-06-11 by a parallel multi-agent mapping pass. Covers **403 files** across **13 areas**.
+> Auto-generated structural map of the entire Propel monorepo (Fastify 5 API + React 18 frontend, PostgreSQL/Redis/Socket.io). Generated 2026-06-11 by a parallel multi-agent mapping pass. Covers **403 files** across **13 areas**.
 
 **Stack:** Fastify 5 · Node 22 · PostgreSQL 16 (postgres.js, `transform: postgres.camel`) · PgBouncer · Redis 7 (ioredis) · Socket.io 4 · React 18 · Vite · Zustand · Tailwind · Vitest. Auth: JWT HS256 (HttpOnly cookie, `jti` denylist) · TOTP MFA · OIDC SSO · SCIM 2.0 · server-side RBAC. Multi-provider AI agent (Gemini/OpenAI/Anthropic).
 
@@ -56,7 +56,7 @@ API bootstrap and shared infrastructure for the Fastify 5 backend. index.ts is t
   - OIDC_ISSUER/CLIENT_ID/CLIENT_SECRET/REDIRECT_URI, OIDC_DEFAULT_ROLE enum(admin/manager/sales_rep/viewer)
   - ALLOW_OPEN_REGISTRATION (string->bool), REGISTRATION_ALLOWED_DOMAINS
   - CORS_ORIGIN (optional, no default by design), APP_URL default http://localhost:5173
-  - Email: RESEND_API_KEY, SMTP_HOST/PORT/USER/PASS, EMAIL_FROM default noreply@n0crm.com
+  - Email: RESEND_API_KEY, SMTP_HOST/PORT/USER/PASS, EMAIL_FROM default noreply@propel.com
   - REDIS_URL default redis://localhost:6379
   - GOOGLE_CLIENT_ID/SECRET/REDIRECT_URI/CALENDAR_WEBHOOK_URL
   - STRIPE_SECRET_KEY/WEBHOOK_SECRET/SUCCESS_URL/CANCEL_URL
@@ -172,7 +172,7 @@ Identity, governance, and admin HTTP route handlers for the Fastify 5 API. Cover
 - **[`api/src/routes/apiKeys.ts`](api/src/routes/apiKeys.ts)** — Org-scoped programmatic API keys and lead-capture tokens management; registered at /integrations.
   - export apiKeysRoutes(app) — onRequest app.authenticate; mutations guarded by requirePermission('apikeys:manage') (manageKeys preHandler)
   - GET /integrations/api-keys — list org keys (id,name,key_prefix,scopes,revoked_at,last_used_at,expires_at,created_at)
-  - POST /integrations/api-keys — body {name,expiresInDays?,scopes?[]}; generates n0crm_ key, stores sha256 key_hash + key_prefix + scopes (db.json); returns {key, apiKey} (raw key once)
+  - POST /integrations/api-keys — body {name,expiresInDays?,scopes?[]}; generates propel_ key, stores sha256 key_hash + key_prefix + scopes (db.json); returns {key, apiKey} (raw key once)
   - POST /integrations/api-keys/:id/rotate — revoke old (revoked_at) + issue new key same name
   - DELETE /integrations/api-keys/:id — soft revoke (revoked_at)
   - GET /integrations/lead-capture-tokens — list (id,label,token_prefix,enabled,created_at)
@@ -423,7 +423,7 @@ CRM core route plugins under api/src/routes/. Each exports an async `*Routes(app
 
 ## API Routes — Integrations, Comms & Automation
 
-Fastify 5 route handlers for n0CRM's external integrations, comms, and automation. Each module is a `register`ed plugin with an explicit URL prefix set in api/src/index.ts. Most routes are JWT-guarded via `app.authenticate` (per-route `onRequest` or a plugin-wide `addHook('onRequest')`); a small set of inbound/tracking endpoints are intentionally public. Multi-tenancy is enforced everywhere by scoping every SQL query on `organization_id` (and often `user_id`) from `req.user.org`/`req.user.sub`. Postgres is accessed through tagged-template `db` (postgres.js, transform: camel) so SQL returns camelCase columns. Secrets (refresh tokens, SMTP passwords, Slack/Zoom/webhook secrets) are stored encrypted via `encryptToken`/`decryptToken` (tokenCipher). SSRF defense is layered: Slack uses a fixed-host allow-list re-checked at send time; SMTP and outbound webhooks resolve+pin a public IP via `resolvePublicIp` (ssrfGuard) to defeat DNS-rebinding TOCTOU. Inbound webhooks (generic, Zoom) verify HMAC-SHA256 signatures; Google Calendar push and the email tracking pixel/click are unauthenticated by design.
+Fastify 5 route handlers for Propel's external integrations, comms, and automation. Each module is a `register`ed plugin with an explicit URL prefix set in api/src/index.ts. Most routes are JWT-guarded via `app.authenticate` (per-route `onRequest` or a plugin-wide `addHook('onRequest')`); a small set of inbound/tracking endpoints are intentionally public. Multi-tenancy is enforced everywhere by scoping every SQL query on `organization_id` (and often `user_id`) from `req.user.org`/`req.user.sub`. Postgres is accessed through tagged-template `db` (postgres.js, transform: camel) so SQL returns camelCase columns. Secrets (refresh tokens, SMTP passwords, Slack/Zoom/webhook secrets) are stored encrypted via `encryptToken`/`decryptToken` (tokenCipher). SSRF defense is layered: Slack uses a fixed-host allow-list re-checked at send time; SMTP and outbound webhooks resolve+pin a public IP via `resolvePublicIp` (ssrfGuard) to defeat DNS-rebinding TOCTOU. Inbound webhooks (generic, Zoom) verify HMAC-SHA256 signatures; Google Calendar push and the email tracking pixel/click are unauthenticated by design.
 
 **Files (14):**
 
@@ -477,7 +477,7 @@ Fastify 5 route handlers for n0CRM's external integrations, comms, and automatio
   - POST /webhook-subscriptions/ — auth + requirePermission('webhooks:manage'); target_url must startWith https://; generates 32-byte signing secret (encryptToken), INSERT webhook_subscriptions + webhook_subscription_secrets, returns raw secret once
   - PATCH /webhook-subscriptions/:id — auth + webhooks:manage; update name/enabled/event_filters/custom_headers
   - DELETE /webhook-subscriptions/:id — auth + webhooks:manage
-  - POST /webhook-subscriptions/:id/test — auth + webhooks:manage; pinnedFetch test payload; X-N0CRM-Signature sha256 HMAC; updates last_delivery_at/last_http_status/last_delivery_error
+  - POST /webhook-subscriptions/:id/test — auth + webhooks:manage; pinnedFetch test payload; X-Propel-Signature sha256 HMAC; updates last_delivery_at/last_http_status/last_delivery_error
   - POST /webhook-subscriptions/:id/rotate-secret — auth + webhooks:manage; new secret UPSERT webhook_subscription_secrets
 - **[`api/src/routes/smtp.ts`](api/src/routes/smtp.ts)** — Per-org SMTP settings CRUD and connectivity test with SSRF host pinning via nodemailer.
   - export smtpRoutes(app) — prefix /smtp; plugin-wide onRequest app.authenticate; zod settingsBody (host, port, username, password, fromAddress, fromName, replyTo, secure starttls|ssl|none)
@@ -653,9 +653,9 @@ Non-AI API service modules in api/src/services/. They form the security backbone
 - **[`api/src/services/metrics.ts`](api/src/services/metrics.ts)** — prom-client singleton registry with default + custom application metrics
   - export metricsRegistry (Registry singleton)
   - collectDefaultMetrics into registry
-  - httpRequestsTotal Counter n0crm_http_requests_total labels method/route/status_code
-  - activeWebsocketConnections Gauge n0crm_active_websocket_connections
-  - dbQueryDurationSeconds Histogram n0crm_db_query_duration_seconds label query_name, buckets 0.001..2.5
+  - httpRequestsTotal Counter propel_http_requests_total labels method/route/status_code
+  - activeWebsocketConnections Gauge propel_active_websocket_connections
+  - dbQueryDurationSeconds Histogram propel_db_query_duration_seconds label query_name, buckets 0.001..2.5
 - **[`api/src/services/observability.ts`](api/src/services/observability.ts)** — Request-correlation id resolution and central structured error capture (Sentry hook point)
   - resolveRequestId(headerValue) — trusts well-formed X-Request-Id via REQ_ID_RE /^[A-Za-z0-9._-]{1,128}$/, else randomUUID()
   - captureException(log,err,ctx) — emits evt:'unhandled_error' structured log
@@ -734,7 +734,7 @@ Non-AI API service modules in api/src/services/. They form the security backbone
   - generateSecret(bytes=20) — 160-bit random base32
   - generateTotp(secretBase32,forTimeSec,step=30,digits=6)
   - verifyTotp(secretBase32,token,{nowSec,step,digits,window=1}) — ±window drift, timingSafeEqual constant-time, digit-regex validation
-  - otpauthUrl(secretBase32,accountLabel,issuer='n0CRM') — SHA1/6digits/30s otpauth:// URI
+  - otpauthUrl(secretBase32,accountLabel,issuer='Propel') — SHA1/6digits/30s otpauth:// URI
   - internal hotp(key,counter,digits) HMAC-SHA1 dynamic truncation
   - compatible with Google Authenticator/1Password/Authy
 - **[`api/src/services/totp.test.ts`](api/src/services/totp.test.ts)** — Vitest unit tests with RFC 6238 reference vectors
@@ -757,7 +757,7 @@ Non-AI API service modules in api/src/services/. They form the security backbone
 
 ## Database — Schema & Migrations
 
-Authoritative data model for n0CRM, a multi-tenant CRM. 21 plain-SQL migration files in api/migrations/ applied in lexical order by a custom runner that records applied files in a _migrations table (referenced in 017). Every business table is org-scoped via organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE; tenant isolation is enforced both at app layer (organization_id = $1 filtering) and as defense-in-depth via Postgres Row Level Security. RLS lives in 002_indexes_and_perf.sql (+ 018_ai.sql): a set_current_org(uuid|text) SECURITY DEFINER function sets the app.current_org_id GUC per request, and per-table policies filter USING (organization_id = current_setting('app.current_org_id', true)::uuid). The app uses postgres.js with transform: postgres.camel, so snake_case columns map to camelCase in code. 002_indexes_and_perf.sql also adds pg_trgm GIN indexes for ILIKE search and many composite/partial B-tree indexes built CONCURRENTLY. Note the duplicate numeric prefix 002 (002_password_reset_tokens.sql and 002_indexes_and_perf.sql) — they are distinct files.
+Authoritative data model for Propel, a multi-tenant CRM. 21 plain-SQL migration files in api/migrations/ applied in lexical order by a custom runner that records applied files in a _migrations table (referenced in 017). Every business table is org-scoped via organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE; tenant isolation is enforced both at app layer (organization_id = $1 filtering) and as defense-in-depth via Postgres Row Level Security. RLS lives in 002_indexes_and_perf.sql (+ 018_ai.sql): a set_current_org(uuid|text) SECURITY DEFINER function sets the app.current_org_id GUC per request, and per-table policies filter USING (organization_id = current_setting('app.current_org_id', true)::uuid). The app uses postgres.js with transform: postgres.camel, so snake_case columns map to camelCase in code. 002_indexes_and_perf.sql also adds pg_trgm GIN indexes for ILIKE search and many composite/partial B-tree indexes built CONCURRENTLY. Note the duplicate numeric prefix 002 (002_password_reset_tokens.sql and 002_indexes_and_perf.sql) — they are distinct files.
 
 **Files (21):**
 
@@ -1772,7 +1772,7 @@ The frontend pages layer is a React 18 + Vite SPA using React Router v6. Every p
 
 ## Frontend — Components
 
-React 18 + TypeScript component layer for the n0CRM frontend, organized by domain: activities, ai, auth, brand, companies, contacts, deals, email (+ email/composer), import, integrations, layout, settings, shared, ui (design-system primitives), and workflows. Domain forms (Contact/Company/Deal/Activity) all use react-hook-form + zodResolver with i18n-derived schemas (createXSchema(t)) and compose the ui/ primitives (Input, Select, Textarea, Button). The ui/ folder is the design system: token-based Tailwind primitives (no raw palette — uses bg-surface-*, text-fg*, accent-*, semantic success/warning/danger/info), with Select delegating to a portal-based SearchableSelect, Modal/SlideOver/ConfirmDialog sharing focus-trap logic, and a SlideOver-based global AiAssistant. All copy is internationalized via useTranslations()/getTranslations() from ../../i18n, and most stateful pieces read Zustand stores (often via manual subscribe() to avoid Zustand v5 + StrictMode getSnapshot issues, notably in Topbar/Sidebar/SmartViewBar/AttachmentsList). Integration cards and settings panels talk to the Fastify API via lib/api (camelCase responses per postgres.camel).
+React 18 + TypeScript component layer for the Propel frontend, organized by domain: activities, ai, auth, brand, companies, contacts, deals, email (+ email/composer), import, integrations, layout, settings, shared, ui (design-system primitives), and workflows. Domain forms (Contact/Company/Deal/Activity) all use react-hook-form + zodResolver with i18n-derived schemas (createXSchema(t)) and compose the ui/ primitives (Input, Select, Textarea, Button). The ui/ folder is the design system: token-based Tailwind primitives (no raw palette — uses bg-surface-*, text-fg*, accent-*, semantic success/warning/danger/info), with Select delegating to a portal-based SearchableSelect, Modal/SlideOver/ConfirmDialog sharing focus-trap logic, and a SlideOver-based global AiAssistant. All copy is internationalized via useTranslations()/getTranslations() from ../../i18n, and most stateful pieces read Zustand stores (often via manual subscribe() to avoid Zustand v5 + StrictMode getSnapshot issues, notably in Topbar/Sidebar/SmartViewBar/AttachmentsList). Integration cards and settings panels talk to the Fastify API via lib/api (camelCase responses per postgres.camel).
 
 **Files (83):**
 
@@ -1817,7 +1817,7 @@ React 18 + TypeScript component layer for the n0CRM frontend, organized by domai
   - ProtectedRoute({children,requiredPermission})
   - waits on isLoadingAuth; redirects /login,/org-setup,/org-access-required
   - workspaceHostMismatch screen; admin:access requires isSuperAdmin; hasPermission check
-- **[`frontend/src/components/brand/Logo.tsx`](frontend/src/components/brand/Logo.tsx)** — n0crm brand wordmark/icon/lockup with theme color resolution
+- **[`frontend/src/components/brand/Logo.tsx`](frontend/src/components/brand/Logo.tsx)** — propel brand wordmark/icon/lockup with theme color resolution
   - Logo({variant:lockup|icon|wordmark,theme:light|dark|mono|onAccent,size,lockup,productLabel})
   - types LogoVariant/LogoTheme/LogoLockup/LogoProps
   - CURSOR_CORAL #E8523A coral cursor; resolveTextColor/resolveProductLabelColor
@@ -2256,14 +2256,14 @@ Frontend support layer for the React 18 SPA: the HTTP client, validation schemas
   - resolveWorkspaceSlugFromWindowHostname(hostname, explicitRootDomain)
   - RESERVED_FIRST_LABELS, AUTO_INFER_DISABLED_SUFFIXES (vercel.app, netlify.app, supabase.co, ...)
 - **[`frontend/src/lib/appIdentity.ts`](frontend/src/lib/appIdentity.ts)** — Commercial product identity constants.
-  - APP_NAME='n0CRM'
+  - APP_NAME='Propel'
   - APP_TAGLINE='Outbound-native CRM'
   - LEGACY_COMPACT_APP_TITLE_BEFORE_REBRAND='crmpro'
 - **[`frontend/src/lib/realtimeSubscriptions.ts`](frontend/src/lib/realtimeSubscriptions.ts)** — Socket.io client wiring; db:change events trigger throttled store re-fetches.
   - initRealtimeSubscriptions() -> cleanup fn
   - TABLE_HANDLERS map (contacts, companies, deals, activities, notifications, sales_goals, email_sequences, automation_rules/executions, leads, audit_log, organization_members, email_templates, products, custom_field_definitions, pipelines)
   - io(serverUrl, withCredentials) listens 'db:change'
-  - 180ms throttle; window.__n0crmDbChange bridge
+  - 180ms throttle; window.__propelDbChange bridge
 - **[`frontend/src/lib/supabaseHelpers.ts`](frontend/src/lib/supabaseHelpers.ts)** — Thin API-client wrappers retained for migration backward-compat (name is legacy).
   - getOrgId() (from authStore.organizationId)
   - getErrorMessage(error)
@@ -2385,7 +2385,7 @@ Frontend support layer for the React 18 SPA: the HTTP client, validation schemas
   - refreshGmailAccessToken(setToken) (GET /gmail/refresh-token)
   - withGmailToken(currentToken, setToken, fn) (retries once on GmailApiError 401)
 - **[`frontend/src/services/googleIntegrationService.ts`](frontend/src/services/googleIntegrationService.ts)** — Google integration status/OAuth-start/disconnect API client + scope label helpers.
-  - GOOGLE_OAUTH_MESSAGE_SOURCE='n0crm-google-oauth'
+  - GOOGLE_OAUTH_MESSAGE_SOURCE='propel-google-oauth'
   - type GoogleOAuthBundle (primary|calendar|contacts)
   - fetchGoogleOAuthConfigStatus, fetchGoogleOAuthStartUrl (POST /gmail/oauth-start), fetchGoogleIntegrationStatus (GET /gmail/integration-status)
   - syncGoogleContacts (POST /gmail/sync-contacts), disconnectGoogleIntegration (POST /gmail/disconnect)
@@ -2417,8 +2417,8 @@ Frontend support layer for the React 18 SPA: the HTTP client, validation schemas
 - Permissions are a CLIENT-SIDE MIRROR only — getPermissionsForRole reads dynamic per-org overrides from useSettingsStore (settings.permissionProfiles) but hasPermission/hasAnyPermission/hasAllPermissions use the STATIC ROLE_PERMISSIONS map (no dynamic override). Server-side RBAC is the real enforcement (see backend partition). 'owner' role is normalized to 'admin' in authStore before reaching these helpers.
 - Validation schemas are Zod factory functions taking i18n Translations (t) so error messages localize; createDealSchema additionally takes availableStages to validate against the dynamic pipeline. csvRowSchemas use plain Zod (no i18n) with safe-parse + sensible defaults for imports.
 - Email sending is provider-abstracted: gmail goes DIRECT to Gmail REST from the browser using an OAuth access token (PKCE flow in gmailService), while resend/smtp route through the backend POST /email/send. Header sanitization (strip CR/LF and <>) appears in both gmailService MIME builders and outboundEmailIdentity to prevent header injection.
-- Realtime: realtimeSubscriptions.ts connects Socket.io with withCredentials (cookie handshake), listens for 'db:change' {table} and throttles (180ms) store re-fetches; also exposes window.__n0crmDbChange bridge. useDataInit orchestrates the initial parallel store hydration and polling intervals.
-- supabaseHelpers.ts is legacy-named but now just wraps the n0CRM api client (sbDelete/sbBulkDelete hit /<table>/<id>); confirms the Supabase->postgres.js migration. usePresence is an explicit stub returning empty members (Socket.io presence not yet wired).
+- Realtime: realtimeSubscriptions.ts connects Socket.io with withCredentials (cookie handshake), listens for 'db:change' {table} and throttles (180ms) store re-fetches; also exposes window.__propelDbChange bridge. useDataInit orchestrates the initial parallel store hydration and polling intervals.
+- supabaseHelpers.ts is legacy-named but now just wraps the Propel api client (sbDelete/sbBulkDelete hit /<table>/<id>); confirms the Supabase->postgres.js migration. usePresence is an explicit stub returning empty members (Socket.io presence not yet wired).
 - Dependencies on other partitions: types/* (Contact, Deal, Company, Activity, Lead, AppSettings, SmartViewFilter, navigation types, GmailThread/Message), i18n/* (Translations, Language, seed ids), store/* (auth, settings, and all entity stores), config/navigationDefaults, components/ui/Badge, and data/linkedin-industries-v2.json.
 - Security-relevant: securePassword uses crypto.getRandomValues (min length 12, excludes ambiguous chars); gmailService OAuth uses PKCE S256 + CSRF state nonce stored in sessionStorage; useGoogleOAuthPopup validates postMessage origin === window.location.origin; emailTracking and emailPlainFormatting both HTML-escape user content before injecting into HTML bodies.
 
@@ -2508,12 +2508,12 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
   - Tests setLanguage() forces languageMode to 'manual'
   - Uses vi.stubGlobal to mock navigator
 - **[`docker-compose.yml`](docker-compose.yml)** — Full-stack production Docker Compose — all services for self-hosting
-  - postgres:16-alpine — port 127.0.0.1:5432, DB n0crm, 2g/2cpu, POSTGRES_PASSWORD env
+  - postgres:16-alpine — port 127.0.0.1:5432, DB propel, 2g/2cpu, POSTGRES_PASSWORD env
   - pgbouncer — port 127.0.0.1:6432, transaction mode, max_client_conn 500, pool_size 25
   - redis:7-alpine — port 127.0.0.1:6379, AOF persistence (appendonly+appendfsync everysec)
   - migrate — runs npm run db:migrate; seed profile (opt-in via --profile seed)
   - api — port 127.0.0.1:3001, env: NODE_ENV, DATABASE_URL, REDIS_URL, JWT_SECRET, CORS_ORIGIN, EMAIL_FROM, RESEND_API_KEY, SMTP_*, GOOGLE_*, GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, AI_DEFAULT_PROVIDER, TRUST_PROXY, TOKEN_ENCRYPTION_KEY
-  - frontend — port 80, env N0CRM_API_URL
+  - frontend — port 80, env PROPEL_API_URL
   - postgres-exporter — port 127.0.0.1:9187
   - node-exporter — host network, port 9100
   - prometheus — port 127.0.0.1:9090, 30d retention
@@ -2528,20 +2528,20 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
   - frontend — nginx:alpine serving ../frontend/dist with ./config/nginx.conf, port 80
 - **[`infra/backup/backup.sh`](infra/backup/backup.sh)** — pg_dump backup script run every 6h inside the backup container
   - Connects to host 'postgres' as POSTGRES_USER / POSTGRES_DB
-  - Writes to /backups/n0crm_YYYYMMDD_HHMMSS.sql.gz
+  - Writes to /backups/propel_YYYYMMDD_HHMMSS.sql.gz
   - Prunes files older than 7 days via find -mtime +7 -delete
 - **[`infra/backup/crontab`](infra/backup/crontab)** — Busybox crond schedule for the backup container
   - 0 */6 * * * /backup.sh >> /var/log/backup.log 2>&1
   - Runs every 6 hours
 - **[`infra/pgbouncer/pgbouncer.ini`](infra/pgbouncer/pgbouncer.ini)** — PgBouncer static configuration — connection pooler between API and Postgres
-  - [databases] n0crm = host=postgres port=5432 dbname=n0crm
+  - [databases] propel = host=postgres port=5432 dbname=propel
   - pool_mode = transaction
   - max_client_conn = 500
   - default_pool_size = 25 / reserve_pool_size = 5
   - listen_port = 6432 / auth_type = md5
   - auth_file = /etc/pgbouncer/userlist.txt
 - **[`infra/pgbouncer/userlist.txt`](infra/pgbouncer/userlist.txt)** — PgBouncer user auth file (md5 credential list)
-  - n0crm user with md5_hash_placeholder — must be replaced with real md5 hash in production
+  - propel user with md5_hash_placeholder — must be replaced with real md5 hash in production
 - **[`infra/prometheus/prometheus.yml`](infra/prometheus/prometheus.yml)** — Prometheus scrape configuration
   - scrape_interval: 15s
   - job 'api' — api:3001 /metrics
@@ -2588,8 +2588,8 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
   - EXPOSE 3001; HEALTHCHECK wget localhost:3001/health
   - ENTRYPOINT ['/docker-entrypoint.sh']; CMD ['node', 'dist/index.js']
 - **[`api/privateprompt-app.json`](api/privateprompt-app.json)** — PrivatePrompt platform manifest for API-standalone deployment
-  - slug: n0crm-api; services: postgres (16-alpine), redis (7-alpine), api
-  - api image: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm-api:latest; port 3001
+  - slug: propel-api; services: postgres (16-alpine), redis (7-alpine), api
+  - api image: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/propel-api:latest; port 3001
   - Auto-generated secrets: POSTGRES_PASSWORD, JWT_SECRET, TOKEN_ENCRYPTION_KEY, DEBUG_TOKEN
   - User-supplied: CORS_ORIGIN, RESEND_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
   - TRUST_PROXY default '2' (platform edge + nginx), BACKUP_INTERVAL_HOURS default '6', BACKUP_KEEP default '10'
@@ -2641,8 +2641,8 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
   - Copies dist/ to /usr/share/nginx/html; copies nginx-main.conf, nginx.conf.template, docker-entrypoint.sh
   - EXPOSE 80; HEALTHCHECK wget localhost:80/; ENTRYPOINT ['/docker-entrypoint.sh']
 - **[`frontend/privateprompt-app.json`](frontend/privateprompt-app.json)** — PrivatePrompt platform manifest for frontend-only deployment
-  - slug: n0crm-frontend; image: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm:latest; port 80
-  - env N0CRM_API_URL — points to internal n0crm-api service (default http://n0crm-api:3001)
+  - slug: propel-frontend; image: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/propel:latest; port 80
+  - env PROPEL_API_URL — points to internal propel-api service (default http://propel-api:3001)
   - memory_mb: 128 / cpu: 0.25
   - post_install: first_run_url /
 - **[`README.md`](README.md)** — Top-level project README — architecture overview, quick-start, feature matrix, quality gates

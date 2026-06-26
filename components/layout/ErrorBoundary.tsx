@@ -1,0 +1,51 @@
+import { Component } from 'react'
+import type { ReactNode, ErrorInfo } from 'react'
+import { AlertTriangle } from 'lucide-react'
+import { Button } from '../ui/Button'
+import { getTranslations } from '../../i18n'
+import { Sentry } from '../../lib/sentry'
+
+interface Props {
+  children: ReactNode
+}
+
+interface State {
+  hasError: boolean
+  error?: Error
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } })
+  }
+
+  render() {
+    const t = getTranslations()
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full py-20 text-center px-4">
+          <div className="w-16 h-16 rounded-2xl bg-danger/10 flex items-center justify-center mb-4">
+            <AlertTriangle size={28} className="text-danger" />
+          </div>
+          <h2 className="text-lg font-semibold text-fg mb-2">{t.errorBoundary.title}</h2>
+          <p className="text-sm text-fg-muted max-w-sm mb-6">
+            {this.state.error?.message ?? t.errorBoundary.fallbackDescription}
+          </p>
+          <Button type="button" onClick={() => this.setState({ hasError: false })}>
+            {t.errorBoundary.retry}
+          </Button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
