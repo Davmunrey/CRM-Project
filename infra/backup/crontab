@@ -1,2 +1,0 @@
-# Run backup every 6 hours
-0 */6 * * * /backup.sh >> /var/log/backup.log 2>&1

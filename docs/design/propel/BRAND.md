@@ -8,7 +8,6 @@ Reference extracted from Propel Brand Book, App, and Landing mockups.
 |----------|-------|
 | Product name | **Propel** |
 | Tagline | Outbound-native CRM for sales teams |
-| Parent company | Clovr Labs (footer/legal only) |
 
 ## Color palette
 

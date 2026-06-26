@@ -61,7 +61,7 @@ function isValidWorkspaceSlugLabel(label: string): boolean {
 
 /**
  * When `VITE_WORKSPACE_ROOT_DOMAIN` is not set, infers tenant slug from the leftmost DNS label
- * (e.g. `acme.example.com` → `acme`, like `clovrlabssl.pipedrive.com`).
+ * (e.g. `acme.example.com` → `acme`, like `tenant.crm.example.com`).
  * Skips preview/PaaS hosts and reserved first labels.
  */
 export function inferWorkspaceSlugFromHostname(hostname: string): string | null {

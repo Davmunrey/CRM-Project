@@ -838,8 +838,8 @@ Authoritative data model for Propel, a multi-tenant CRM. 21 plain-SQL migration 
 - **[`api/migrations/016_admin_enhancements.sql`](api/migrations/016_admin_enhancements.sql)** — Org suspension status + super-admin impersonation audit log.
   - ALTER organizations ADD COLUMN status text NOT NULL DEFAULT 'active' CHECK (active|suspended|trial)
   - impersonation_logs(id, super_admin_id FK users, target_org_id FK organizations, target_user_id FK users, impersonated_at, ended_at); idx impersonation_logs_admin(super_admin_id,impersonated_at DESC), impersonation_logs_org(target_org_id,impersonated_at DESC)
-- **[`api/migrations/017_bootstrap_super_admin.sql`](api/migrations/017_bootstrap_super_admin.sql)** — One-off idempotent DO block promoting david@clovrlabs.com to super-admin.
-  - DO $$ ... UPDATE users SET is_super_admin = true WHERE email = 'david@clovrlabs.com'; RAISE NOTICE with ROW_COUNT $$ (no-op if user absent or already set); recorded in _migrations so it never re-applies
+- **`017_bootstrap_super_admin.sql`** (legacy) — One-off idempotent DO block promoting a placeholder admin email to super-admin.
+  - DO $$ ... UPDATE users SET is_super_admin = true WHERE email = 'CHANGE_ME@example.com'; RAISE NOTICE with ROW_COUNT $$ (no-op if user absent or already set); recorded in _migrations so it never re-applies
 - **[`api/migrations/002_indexes_and_perf.sql`](api/migrations/002_indexes_and_perf.sql)** — Performance indexes (pg_trgm GIN + composite/partial B-tree, CONCURRENTLY) and the org-isolation Row Level Security layer.
   - CREATE EXTENSION pg_trgm; GIN trigram indexes: idx_trgm_contacts_first_name/last_name/email/phone, idx_trgm_companies_name, idx_trgm_deals_title, idx_trgm_leads_first_name/last_name/email
   - Composite FK indexes scoped to org: idx_contacts_org_assigned/org_company, idx_deals_org_contact/org_company/org_owner/org_assigned, idx_activities_org_company/org_contact/org_deal, idx_seq_enr_org_sequence/org_contact, idx_leads_org_assigned/org_owner, idx_lead_events_org, idx_quick_replies_org_user, idx_sales_goals_org_user, idx_auto_exec_org_rule, idx_cfv_org_field
@@ -2589,7 +2589,7 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
   - ENTRYPOINT ['/docker-entrypoint.sh']; CMD ['node', 'dist/index.js']
 - **[`api/privateprompt-app.json`](api/privateprompt-app.json)** — PrivatePrompt platform manifest for API-standalone deployment
   - slug: propel-api; services: postgres (16-alpine), redis (7-alpine), api
-  - api image: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/propel-api:latest; port 3001
+  - api image: registry.example.com/propel/propel-api:latest; port 3001
   - Auto-generated secrets: POSTGRES_PASSWORD, JWT_SECRET, TOKEN_ENCRYPTION_KEY, DEBUG_TOKEN
   - User-supplied: CORS_ORIGIN, RESEND_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
   - TRUST_PROXY default '2' (platform edge + nginx), BACKUP_INTERVAL_HOURS default '6', BACKUP_KEEP default '10'
@@ -2641,7 +2641,7 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
   - Copies dist/ to /usr/share/nginx/html; copies nginx-main.conf, nginx.conf.template, docker-entrypoint.sh
   - EXPOSE 80; HEALTHCHECK wget localhost:80/; ENTRYPOINT ['/docker-entrypoint.sh']
 - **[`frontend/privateprompt-app.json`](frontend/privateprompt-app.json)** — PrivatePrompt platform manifest for frontend-only deployment
-  - slug: propel-frontend; image: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/propel:latest; port 80
+  - slug: propel-frontend; image: registry.example.com/propel/propel:latest; port 80
   - env PROPEL_API_URL — points to internal propel-api service (default http://propel-api:3001)
   - memory_mb: 128 / cpu: 0.25
   - post_install: first_run_url /
@@ -2650,7 +2650,6 @@ The i18n subsystem is a fully-typed, Zustand-persisted catalog. `types.ts` defin
   - CI badge referencing .gitea/workflows/ci.yml
   - Test counts: API 105, Web 273
   - npm audit 0 vulnerabilities badge
-  - Maintained by Clovr Labs
 - **[`SECURITY-AUDIT.md`](SECURITY-AUDIT.md)** — Security audit and pen-test results document — all findings resolved
   - Gray-box review + /security-pen-testing + /skill-security-auditor passes
   - Critical 1/1 fixed, High 3/3, Medium 4/4, Low 3/3, Moderate deps 3/3, Hardening round 3: 5/5

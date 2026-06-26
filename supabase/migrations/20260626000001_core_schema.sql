@@ -1094,23 +1094,23 @@ CREATE TABLE IF NOT EXISTS impersonation_logs (
 CREATE INDEX IF NOT EXISTS impersonation_logs_admin ON impersonation_logs (super_admin_id, impersonated_at DESC);
 CREATE INDEX IF NOT EXISTS impersonation_logs_org ON impersonation_logs (target_org_id, impersonated_at DESC);
 
--- ─── from api/migrations/017_bootstrap_super_admin.sql ───
--- One-off bootstrap: promote david@clovrlabs.com to platform super-admin.
--- Recorded in _migrations after first run so it never re-applies.
--- Idempotent by design — the UPDATE is a no-op if the flag is already true,
--- and a no-op if the user does not exist yet (no rows match).
-
-DO $$
-DECLARE
-  affected INT;
-BEGIN
-  UPDATE users
-     SET is_super_admin = true
-   WHERE email = 'david@clovrlabs.com';
-  GET DIAGNOSTICS affected = ROW_COUNT;
-  RAISE NOTICE '[017] promoted % row(s) to super_admin (target: david@clovrlabs.com)', affected;
-END
-$$;
+-- ─── platform super-admin bootstrap (optional, manual) ───
+-- Intentionally left as a documented no-op template. To promote the first
+-- platform super-admin, set the placeholder below to the target account email
+-- and run this block once. Idempotent: the UPDATE is a no-op if the flag is
+-- already set or if no user matches.
+--
+-- DO $$
+-- DECLARE
+--   affected INT;
+-- BEGIN
+--   UPDATE users
+--      SET is_super_admin = true
+--    WHERE email = 'CHANGE_ME@example.com';
+--   GET DIAGNOSTICS affected = ROW_COUNT;
+--   RAISE NOTICE 'promoted % row(s) to super_admin', affected;
+-- END
+-- $$;
 
 -- ─── from api/migrations/018_ai.sql ───
 -- ─────────────────────────────────────────────────────────────────────────────

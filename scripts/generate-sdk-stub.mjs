@@ -4,13 +4,13 @@ import { join } from 'node:path'
 const outDir = join(process.cwd(), 'packages', 'sdk-ts', 'src')
 mkdirSync(outDir, { recursive: true })
 
-const source = `export interface N0crmClientOptions {
+const source = `export interface PropelClientOptions {
   baseUrl: string
   apiKey: string
 }
 
-export class N0crmClient {
-  constructor(private readonly opts: N0crmClientOptions) {}
+export class PropelClient {
+  constructor(private readonly opts: PropelClientOptions) {}
 
   async list(collection: 'contacts' | 'companies' | 'deals' | 'activities', limit = 50) {
     const res = await fetch(\`\${this.opts.baseUrl}/v1/\${collection}?limit=\${limit}\`, {

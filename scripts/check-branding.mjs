@@ -4,16 +4,12 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const pattern = /\bn0crm\b|\bn0CRM\b|@n0crm\b|\bn0crm-api\b|\bN0CRM\b/i
+const pattern = /\bn0crm\b|@n0crm\b|\bn0crm-api\b|clovr\s*labs|clovrlabs|\bclovr\b/i
 const skipDirs = new Set([
   'node_modules',
   '.git',
-  'frontend',
-  'api',
-  'infra',
   '.next',
   'dist',
-  '.gitea',
 ])
 const skipFiles = new Set([
   'package-lock.json',

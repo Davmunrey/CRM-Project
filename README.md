@@ -35,7 +35,7 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 |---|---|
 | 🤖 **AI sales assistant** | A tool-using agent over your **own** CRM data — searches contacts/deals, drafts replies, suggests the next best action, logs activities. Multi-provider with **Google Gemini free by default** (or OpenAI / Anthropic). Degrades gracefully with no key. |
 | 🏢 **True multi-tenant** | Every row scoped to `organization_id`. JWT custom claims inject `org_id` + `role` via Supabase Auth hook. **Row Level Security** on tenant tables; server-side RBAC in Edge Functions. |
-| 🔐 **Security-first** | Supabase Auth, MFA (TOTP), account lockout patterns, AES-256-GCM field encryption for OAuth tokens, SSRF-hardened webhooks, tamper-evident security-event log, GDPR data-subject export & erasure. **`npm audit --audit-level=critical` in CI.** |
+| 🔐 **Security-first** | Supabase Auth, MFA (TOTP), account lockout patterns, AES-256-GCM field encryption for OAuth tokens, SSRF-hardened webhooks, tamper-evident security-event log, GDPR data-subject export & erasure. **`npm audit --omit=dev --audit-level=critical` in CI.** |
 | 📬 **Outbound-native** | Gmail thread sync + send/reply, Google Calendar, A/B email sequences, lead scoring, automations, multi-pipeline deals with a quote builder. |
 | 🌍 **6 languages** | Full UI i18n: English · Español · Português · Français · Deutsch · Italiano. |
 | 🔌 **Connected** | Native **Gmail & Calendar**, **Slack**, **Stripe**, **LinkedIn**, signed **webhooks**, a scoped **public API**, and **multi-provider AI** — connect your stack in a few clicks, fully managed. |
@@ -182,6 +182,9 @@ npx supabase db push
 
 # 4. Run locally
 npm run dev    # → http://localhost:3000
+
+# 5. (optional) Verify the toolchain
+npm run check:branding && npm run typecheck && npm run lint && npm run test:run
 ```
 
 Open [http://localhost:3000](http://localhost:3000) for the Propel marketing landing. CRM routes (`/login`, `/contacts`, `/deals`, …) load the app shell.
@@ -309,7 +312,7 @@ Enterprise identity setup: [`docs/sso-and-scim.md`](docs/sso-and-scim.md)
 | Secrets / encryption | AES-256-GCM field encryption (OAuth tokens); service role key server-only |
 | Compliance | Tamper-evident **security-event log** · **GDPR** export & erasure · audit log |
 | AI governance | Per-tenant kill switch · monthly token spend cap · transcript retention purge |
-| Supply chain | `npm audit --audit-level=critical` in CI |
+| Supply chain | `npm audit --omit=dev --audit-level=critical` in CI |
 | Branding guard | `npm run check:branding` — blocks legacy product names in committed source |
 
 📄 Full audit + remediation history: [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md) · Backup & disaster-recovery runbook: [`docs/disaster-recovery.md`](docs/disaster-recovery.md)
@@ -323,16 +326,38 @@ Enterprise identity setup: [`docs/sso-and-scim.md`](docs/sso-and-scim.md)
 npm run check:branding    # no legacy product names in source
 npm run typecheck         # tsc --noEmit
 npm run lint:ci           # ESLint (Next.js)
+npm run test:run          # Vitest unit tests
 npm run build             # production build
-npm audit --audit-level=critical
+npm audit --omit=dev --audit-level=critical   # production dependency audit
 
 # Optional local checks
 npm run ui:lint           # UI consistency guardrails
 npm run i18n:lint         # i18n key parity
-npm run test:run          # Vitest
 ```
 
-**Status:** Branding guard · TypeScript strict · ESLint · production build · critical dependency audit on every CI run.
+**Status:** Branding guard · TypeScript strict · ESLint · Vitest · production build · critical production-dependency audit on every CI run.
+
+---
+
+## 🧪 Testing
+
+| Command | What it does |
+|---------|--------------|
+| `npm run test` | Vitest in watch mode (local dev) |
+| `npm run test:run` | Vitest once (CI) — unit/smoke tests under [`tests/`](tests/) |
+| `npm run typecheck` | `tsc --noEmit` across the app |
+| `npm run lint` | ESLint via Next.js |
+| `npm run build` | Full production build |
+
+Unit tests live in [`tests/`](tests/) and run on Node via [`vitest.config.ts`](vitest.config.ts) (path alias `@/*` → repo root). Start with [`tests/smoke.test.ts`](tests/smoke.test.ts).
+
+**Manual smoke checklist** (after `supabase db push` + `npm run dev`):
+
+1. Landing renders at `/`; sign in at `/login`.
+2. Create a contact, company, and deal; confirm they persist (PostgREST + RLS).
+3. Move a deal across pipeline stages on the Deals board.
+4. Settings → Integrations loads; connect a provider card.
+5. (If configured) Settings → Integrations → **n8n**: connect, add an event subscription, hit **Test**, and confirm a row in the execution log.
 
 ---
 
@@ -340,7 +365,7 @@ npm run test:run          # Vitest
 
 | Workflow · Job | Trigger | Action |
 |---|---|---|
-| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) · **ci** | push `master` / `main` / `propel/**` · PR | `npm ci` → branding → tsc → ESLint → build → `npm audit` |
+| [`.github/workflows/ci.yml`](.github/workflows/ci.yml) · **ci** | push `master` / `main` / `propel/**` · PR | `npm ci` → branding → tsc → ESLint → build → Vitest → `npm audit` |
 
 Deploy previews and production builds are handled by **Vercel** on merge to the connected branch.
 

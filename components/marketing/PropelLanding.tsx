@@ -84,7 +84,7 @@ export function PropelLanding() {
       </main>
 
       <footer className="border-t border-white/10 px-6 py-8 text-center text-sm opacity-70">
-        © {new Date().getFullYear()} {APP_NAME} · by Clovr Labs
+        © {new Date().getFullYear()} {APP_NAME}
       </footer>
     </div>
   )
