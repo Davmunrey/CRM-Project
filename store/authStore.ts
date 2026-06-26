@@ -3,6 +3,15 @@ import { persist } from 'zustand/middleware'
 import type { AuthUser, Organization, Invitation, UserRole, Session } from '../types/auth'
 import { api } from '../lib/api'
 import { devConsole } from '../lib/devConsole'
+import {
+  supabaseAuthEnabled,
+  supabaseCreateOrg,
+  supabaseFetchOrgUsers,
+  supabaseLogin,
+  supabaseLogout,
+  supabaseRegister,
+  supabaseRestoreSession,
+} from '../lib/supabase/auth'
 import { useAuditStore } from './auditStore'
 import { toast } from './toastStore'
 import { getTranslations } from '../i18n'
@@ -175,6 +184,15 @@ export const useAuthStore = create<AuthState>()(
         if (current?.organizationId && organizationId !== current.organizationId) return
 
         try {
+          if (supabaseAuthEnabled()) {
+            const users = await supabaseFetchOrgUsers(organizationId)
+            if (current && !users.some((u) => u.id === current.id)) {
+              users.unshift({ ...current, organizationId })
+            }
+            set({ users })
+            return
+          }
+
           const res = await api.get<{ data: ApiMember[] }>('/orgs/me/members')
           const users: AuthUser[] = res.data.map((m) => ({
             id: m.id,
@@ -205,6 +223,21 @@ export const useAuthStore = create<AuthState>()(
         }
         set({ tenantResolutionStatus: 'resolving', tenantResolutionMessage: null })
         try {
+          if (supabaseAuthEnabled()) {
+            const org = await supabaseCreateOrg(
+              state.currentUser.name,
+              state.currentUser.email.split('@')[0]?.replace(/[^a-z0-9]/g, '-') ?? 'workspace',
+            )
+            set({
+              organizationId: org.id,
+              organization: org,
+              tenantResolutionStatus: 'ready',
+              tenantResolutionMessage: null,
+            })
+            get().setCurrentUser({ ...state.currentUser, organizationId: org.id })
+            return
+          }
+
           const org = await api.post<Organization>('/orgs', {
             name: state.currentUser.name,
             slug: state.currentUser.email.split('@')[0]?.replace(/[^a-z0-9]/g, '-') ?? 'workspace',
@@ -218,6 +251,26 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (email, password, totp) => {
         try {
+          if (supabaseAuthEnabled()) {
+            if (totp) {
+              return { success: false, error: 'MFA via TOTP is not yet wired for Supabase auth' }
+            }
+            const res = await supabaseLogin(email, password)
+            if (!res.success || !res.user) {
+              return { success: false, error: res.error ?? 'Login failed' }
+            }
+            const now = new Date().toISOString()
+            const user: AuthUser = { ...res.user, lastLoginAt: now, updatedAt: now }
+            set({
+              currentUser: user,
+              session: res.session ?? null,
+              organizationId: user.organizationId ?? null,
+              tenantResolutionStatus: user.organizationId ? 'ready' : 'idle',
+            })
+            if (user.organizationId) void get().fetchOrgUsers(user.organizationId)
+            return { success: true }
+          }
+
           const res = await api.post<LoginResponse>('/auth/login', { email, password, ...(totp ? { totp } : {}) })
           // Token is now in an HttpOnly cookie — not accessible from JS.
           // Store only the user profile and expiry timestamp in Zustand.
@@ -263,7 +316,11 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          await api.post('/auth/logout')  // server clears the HttpOnly cookie
+          if (supabaseAuthEnabled()) {
+            await supabaseLogout()
+          } else {
+            await api.post('/auth/logout')  // server clears the HttpOnly cookie
+          }
         } catch {
           // ignore — clear local state regardless
         }
@@ -281,6 +338,24 @@ export const useAuthStore = create<AuthState>()(
 
       register: async (data) => {
         try {
+          if (supabaseAuthEnabled()) {
+            const res = await supabaseRegister(data)
+            if (!res.success || !res.user) {
+              return { success: false, error: res.error ?? 'Register failed' }
+            }
+            const now = new Date().toISOString()
+            const user: AuthUser = { ...res.user, createdAt: now, updatedAt: now }
+            set({
+              currentUser: user,
+              session: res.session ?? null,
+              users: [user],
+              organizationId: null,
+              tenantResolutionStatus: 'idle',
+              tenantResolutionMessage: null,
+            })
+            return { success: true }
+          }
+
           const res = await api.post<LoginResponse>('/auth/register', data)
           // Token is in HttpOnly cookie — only store profile and expiry
           const now = new Date().toISOString()
@@ -496,9 +571,29 @@ function normalizeRole(raw: string | undefined): UserRole {
   return valid.includes(r as UserRole) ? (r as UserRole) : 'sales_rep'
 }
 
-/** Called from App.tsx — verifies the HttpOnly cookie session by calling /auth/me. */
+/** Called from App.tsx — restores session from Supabase or legacy API cookie. */
 export function initAuth(): (() => void) | undefined {
   const store = useAuthStore.getState()
+
+  if (supabaseAuthEnabled()) {
+    void supabaseRestoreSession()
+      .then(({ user, session }) => {
+        if (user && session) {
+          useAuthStore.setState({
+            currentUser: user,
+            session,
+            organizationId: user.organizationId ?? null,
+            tenantResolutionStatus: user.organizationId ? 'ready' : 'idle',
+          })
+          if (user.organizationId) void useAuthStore.getState().fetchOrgUsers(user.organizationId)
+        } else {
+          useAuthStore.getState().setCurrentUser(null)
+        }
+      })
+      .catch(() => useAuthStore.getState().setCurrentUser(null))
+      .finally(() => useAuthStore.getState().setIsLoadingAuth(false))
+    return
+  }
 
   // Fast path: no persisted session → user never logged in, no cookie to restore
   const session = store.session
