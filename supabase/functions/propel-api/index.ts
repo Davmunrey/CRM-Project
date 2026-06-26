@@ -2,12 +2,14 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { corsHeaders, handleOptions, jsonResponse } from '../_shared/cors.ts'
 import { getAuthContext } from '../_shared/auth.ts'
 import {
+  handleAccount,
   handleAi,
   handleAutomations,
   handleBilling,
   handleEmailTracking,
   handleGmailThreadLinks,
   handleGmailThreadWorkspace,
+  handleMembers,
   handlePipelines,
   handleSequences,
   handleWebhooks,
@@ -78,6 +80,18 @@ serve(async (req) => {
 
     if (path.startsWith('/webhook-subscriptions')) {
       const res = await handleWebhooks(req, auth, path)
+      Object.entries(corsHeaders).forEach(([k, v]) => res.headers.set(k, v))
+      return res
+    }
+
+    if (path.startsWith('/orgs/me/members')) {
+      const res = await handleMembers(req, auth, path)
+      Object.entries(corsHeaders).forEach(([k, v]) => res.headers.set(k, v))
+      return res
+    }
+
+    if (path === '/auth/me' || path === '/auth/password' || path === '/auth/admin/reset-password') {
+      const res = await handleAccount(req, auth, path)
       Object.entries(corsHeaders).forEach(([k, v]) => res.headers.set(k, v))
       return res
     }

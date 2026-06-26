@@ -1,10 +1,49 @@
 import type { AuthContext } from '../_shared/auth.ts'
-import { toSnake } from '../_shared/auth.ts'
+import { serviceClient, toSnake } from '../_shared/auth.ts'
 
 function requireOrg(ctx: AuthContext): string | Response {
   if (!ctx.orgId) return new Response(JSON.stringify({ error: 'No organization' }), { status: 403 })
   return ctx.orgId
 }
+
+function requireAdmin(ctx: AuthContext): Response | null {
+  if (ctx.role !== 'owner' && ctx.role !== 'admin') {
+    return new Response(JSON.stringify({ error: 'Forbidden: requires admin' }), { status: 403 })
+  }
+  return null
+}
+
+type ProfileMemberRow = {
+  id: string
+  email: string | null
+  name: string | null
+  role: string | null
+  job_title: string | null
+  phone: string | null
+  avatar_url: string | null
+  is_active: boolean | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+/** Profile row → the camelCase member shape the client (authStore) expects. */
+function toMember(p: ProfileMemberRow) {
+  return {
+    id: p.id,
+    email: p.email ?? '',
+    name: p.name ?? '',
+    role: p.role ?? 'sales_rep',
+    jobTitle: p.job_title ?? '',
+    phone: p.phone ?? undefined,
+    avatarUrl: p.avatar_url ?? undefined,
+    isActive: p.is_active ?? true,
+    createdAt: p.created_at ?? new Date().toISOString(),
+    updatedAt: p.updated_at ?? p.created_at ?? new Date().toISOString(),
+  }
+}
+
+const MEMBER_COLS = 'id, email, name, role, job_title, phone, avatar_url, is_active, created_at, updated_at'
+const VALID_ROLES = ['owner', 'admin', 'manager', 'sales_rep', 'viewer']
 
 export async function handleGmailThreadLinks(req: Request, ctx: AuthContext, path: string): Promise<Response> {
   const orgId = requireOrg(ctx)
@@ -296,6 +335,220 @@ export async function handleWebhooks(req: Request, ctx: AuthContext, path: strin
     const { data, error } = await ctx.supabase.from('webhook_subscriptions').select('*').eq('organization_id', orgId)
     if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
     return Response.json(data ?? [])
+  }
+
+  return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 })
+}
+
+// ─── Team members ─────────────────────────────────────────────────────────────
+// Routes: /orgs/me/members            GET (list) · POST (create)
+//         /orgs/me/members/:id/role   PATCH
+//         /orgs/me/members/:id/status PATCH
+// Listing is allowed for any org member; mutations require admin/owner. Creating
+// a member needs the service-role admin API (the only way to mint an auth user),
+// so it runs through serviceClient(); the JWT custom claims hook + handle_new_user
+// trigger then populate the profile from user_metadata.
+export async function handleMembers(req: Request, ctx: AuthContext, path: string): Promise<Response> {
+  const orgId = requireOrg(ctx)
+  if (orgId instanceof Response) return orgId
+
+  if (path === '/orgs/me/members' && req.method === 'GET') {
+    const { data, error } = await ctx.supabase
+      .from('profiles')
+      .select(MEMBER_COLS)
+      .eq('organization_id', orgId)
+      .order('created_at', { ascending: true })
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+    return Response.json({ data: ((data ?? []) as ProfileMemberRow[]).map(toMember) })
+  }
+
+  // All mutations below are admin/owner only.
+  const forbidden = requireAdmin(ctx)
+  if (forbidden) return forbidden
+
+  if (path === '/orgs/me/members' && req.method === 'POST') {
+    const body = (await req.json()) as {
+      email?: string
+      name?: string
+      password?: string
+      role?: string
+      jobTitle?: string
+      phone?: string
+    }
+    if (!body.email || !body.name || !body.password) {
+      return new Response(JSON.stringify({ error: 'email, name and password are required' }), { status: 400 })
+    }
+    const role = VALID_ROLES.includes(body.role ?? '') ? body.role! : 'sales_rep'
+    const admin = serviceClient()
+
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+      email: body.email,
+      password: body.password,
+      email_confirm: true,
+      user_metadata: { name: body.name, role, organization_id: orgId },
+    })
+    if (createErr || !created?.user) {
+      return new Response(JSON.stringify({ error: createErr?.message ?? 'Failed to create user' }), { status: 400 })
+    }
+
+    // The handle_new_user trigger creates the profile from metadata; upsert to
+    // enforce org/role/job_title deterministically and return the final row.
+    const { data: profile, error: upsertErr } = await admin
+      .from('profiles')
+      .upsert(
+        {
+          id: created.user.id,
+          email: body.email,
+          name: body.name,
+          role,
+          organization_id: orgId,
+          job_title: body.jobTitle ?? null,
+          phone: body.phone ?? null,
+          is_active: true,
+        },
+        { onConflict: 'id' },
+      )
+      .select(MEMBER_COLS)
+      .single()
+    if (upsertErr) return new Response(JSON.stringify({ error: upsertErr.message }), { status: 400 })
+    return Response.json(toMember(profile as ProfileMemberRow), { status: 201 })
+  }
+
+  const match = path.match(/^\/orgs\/me\/members\/([^/]+)\/(role|status)$/)
+  if (match && req.method === 'PATCH') {
+    const memberId = match[1]
+    const action = match[2]
+
+    // Target must belong to the caller's org.
+    const { data: target } = await ctx.supabase
+      .from('profiles')
+      .select('id, organization_id, role')
+      .eq('id', memberId)
+      .maybeSingle()
+    if (!target || (target as { organization_id: string }).organization_id !== orgId) {
+      return new Response(JSON.stringify({ error: 'Member not found' }), { status: 404 })
+    }
+    const body = (await req.json()) as { role?: string; isActive?: boolean }
+
+    if (action === 'role') {
+      if (!VALID_ROLES.includes(body.role ?? '')) {
+        return new Response(JSON.stringify({ error: 'Invalid role' }), { status: 400 })
+      }
+      // Last-owner safety: never leave the org without an owner.
+      if ((target as { role: string }).role === 'owner' && body.role !== 'owner') {
+        const { count } = await ctx.supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true })
+          .eq('organization_id', orgId)
+          .eq('role', 'owner')
+        if ((count ?? 0) <= 1) {
+          return new Response(JSON.stringify({ error: 'Cannot demote the last owner' }), { status: 409 })
+        }
+      }
+      const { data, error } = await serviceClient()
+        .from('profiles')
+        .update({ role: body.role, updated_at: new Date().toISOString() })
+        .eq('id', memberId)
+        .eq('organization_id', orgId)
+        .select(MEMBER_COLS)
+        .single()
+      if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+      return Response.json(toMember(data as ProfileMemberRow))
+    }
+
+    // action === 'status'
+    if (typeof body.isActive !== 'boolean') {
+      return new Response(JSON.stringify({ error: 'isActive boolean required' }), { status: 400 })
+    }
+    if (body.isActive === false && (target as { role: string }).role === 'owner') {
+      const { count } = await ctx.supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', orgId)
+        .eq('role', 'owner')
+        .eq('is_active', true)
+      if ((count ?? 0) <= 1) {
+        return new Response(JSON.stringify({ error: 'Cannot deactivate the last owner' }), { status: 409 })
+      }
+    }
+    const { data, error } = await serviceClient()
+      .from('profiles')
+      .update({ is_active: body.isActive, updated_at: new Date().toISOString() })
+      .eq('id', memberId)
+      .eq('organization_id', orgId)
+      .select(MEMBER_COLS)
+      .single()
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+    return Response.json(toMember(data as ProfileMemberRow))
+  }
+
+  return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 })
+}
+
+// ─── Account (self + admin password) ──────────────────────────────────────────
+// Routes: /auth/me                  PATCH  (self profile)
+//         /auth/password            PATCH  (self change, re-verifies current)
+//         /auth/admin/reset-password POST  (admin resets a member, service-role)
+export async function handleAccount(req: Request, ctx: AuthContext, path: string): Promise<Response> {
+  if (path === '/auth/me' && req.method === 'PATCH') {
+    const body = toSnake((await req.json()) as Record<string, unknown>)
+    // Only self-mutable profile fields.
+    const allowed: Record<string, unknown> = {}
+    for (const k of ['name', 'job_title', 'phone', 'avatar', 'avatar_url'] as const) {
+      if (body[k] !== undefined) allowed[k === 'avatar' ? 'avatar_url' : k] = body[k]
+    }
+    allowed.updated_at = new Date().toISOString()
+    const { data, error } = await ctx.supabase
+      .from('profiles')
+      .update(allowed)
+      .eq('id', ctx.userId)
+      .select(MEMBER_COLS)
+      .single()
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+    return Response.json(toMember(data as ProfileMemberRow))
+  }
+
+  if (path === '/auth/password' && req.method === 'PATCH') {
+    const { currentPassword, newPassword } = (await req.json()) as {
+      currentPassword?: string
+      newPassword?: string
+    }
+    if (!currentPassword || !newPassword) {
+      return new Response(JSON.stringify({ error: 'currentPassword and newPassword required' }), { status: 400 })
+    }
+    // Re-verify the current password before allowing the change.
+    const { data: me } = await ctx.supabase.auth.getUser()
+    const email = me.user?.email
+    if (!email) return new Response(JSON.stringify({ error: 'No email on account' }), { status: 400 })
+    const verifier = serviceClient()
+    const { error: signErr } = await verifier.auth.signInWithPassword({ email, password: currentPassword })
+    if (signErr) return new Response(JSON.stringify({ error: 'Current password is incorrect' }), { status: 400 })
+    const { error } = await serviceClient().auth.admin.updateUserById(ctx.userId, { password: newPassword })
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+    return Response.json({ ok: true })
+  }
+
+  if (path === '/auth/admin/reset-password' && req.method === 'POST') {
+    const forbidden = requireAdmin(ctx)
+    if (forbidden) return forbidden
+    const orgId = requireOrg(ctx)
+    if (orgId instanceof Response) return orgId
+    const { userId, newPassword } = (await req.json()) as { userId?: string; newPassword?: string }
+    if (!userId || !newPassword) {
+      return new Response(JSON.stringify({ error: 'userId and newPassword required' }), { status: 400 })
+    }
+    // Confirm the target is in the caller's org before resetting.
+    const { data: target } = await ctx.supabase
+      .from('profiles')
+      .select('id, organization_id')
+      .eq('id', userId)
+      .maybeSingle()
+    if (!target || (target as { organization_id: string }).organization_id !== orgId) {
+      return new Response(JSON.stringify({ error: 'Member not found' }), { status: 404 })
+    }
+    const { error } = await serviceClient().auth.admin.updateUserById(userId, { password: newPassword })
+    if (error) return new Response(JSON.stringify({ error: error.message }), { status: 400 })
+    return Response.json({ ok: true })
   }
 
   return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 })
