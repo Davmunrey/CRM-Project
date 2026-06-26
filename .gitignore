@@ -42,7 +42,6 @@ docs/security-audit-*.md
 .vercel
 .env
 .env*.local
-.mcp.json
 
 # OneDrive conflict copies (this repo currently lives under OneDrive, which
 # creates "<name>-<DEVICE>.<ext>" duplicates of edited files). Never commit them.
