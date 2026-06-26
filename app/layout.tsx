@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Hanken_Grotesk } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
 
 const hanken = Hanken_Grotesk({
@@ -21,6 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-propel-ink font-sans text-fg antialiased">
         {children}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
