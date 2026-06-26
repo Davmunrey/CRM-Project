@@ -1,6 +1,6 @@
 /**
  * Extracts the workspace slug from the browser hostname when the app is served on
- * `{slug}.{rootDomain}` (similar to company subdomains in Pipedrive).
+ * `{slug}.{rootDomain}` (per-tenant subdomains).
  *
  * @param hostname e.g. window.location.hostname (no port)
  * @param rootDomain e.g. `crm.example.com` (lowercase recommended)
@@ -46,8 +46,6 @@ const AUTO_INFER_DISABLED_SUFFIXES = [
   'azurewebsites.net',
   'onrender.com',
   'supabase.co',
-  /** Staging / app host pattern (e.g. staging.apps.privateprompt.tech — first label is env, not tenant). */
-  'apps.privateprompt.tech',
 ]
 
 function hostnameMatchesDisabledSuffix(host: string): boolean {
@@ -60,7 +58,7 @@ function isValidWorkspaceSlugLabel(label: string): boolean {
 }
 
 /**
- * When `VITE_WORKSPACE_ROOT_DOMAIN` is not set, infers tenant slug from the leftmost DNS label
+ * When `NEXT_PUBLIC_WORKSPACE_ROOT_DOMAIN` is not set, infers tenant slug from the leftmost DNS label
  * (e.g. `acme.example.com` → `acme`, like `tenant.crm.example.com`).
  * Skips preview/PaaS hosts and reserved first labels.
  */
@@ -89,7 +87,7 @@ export function inferWorkspaceSlugFromHostname(hostname: string): string | null 
 }
 
 /**
- * Explicit `VITE_WORKSPACE_ROOT_DOMAIN` wins (strict suffix match).
+ * Explicit `NEXT_PUBLIC_WORKSPACE_ROOT_DOMAIN` wins (strict suffix match).
  * Otherwise uses {@link inferWorkspaceSlugFromHostname}.
  */
 export function resolveWorkspaceSlugFromWindowHostname(

@@ -100,8 +100,6 @@ Contacts · Companies · Deals · Pipelines · Sequences · Gmail & Calendar · 
 
 ## 🏗️ Architecture
 
-> 🗺️ **Full file-by-file structural map:** [`docs/CODEBASE-MAP.md`](docs/CODEBASE-MAP.md)
-
 ```
 Browser
   │
@@ -315,7 +313,7 @@ Enterprise identity setup: [`docs/sso-and-scim.md`](docs/sso-and-scim.md)
 | Supply chain | `npm audit --omit=dev --audit-level=critical` in CI |
 | Branding guard | `npm run check:branding` — blocks legacy product names in committed source |
 
-📄 Full audit + remediation history: [`SECURITY-AUDIT.md`](SECURITY-AUDIT.md) · Backup & disaster-recovery runbook: [`docs/disaster-recovery.md`](docs/disaster-recovery.md)
+📄 Backup & disaster-recovery runbook: [`docs/disaster-recovery.md`](docs/disaster-recovery.md)
 
 ---
 

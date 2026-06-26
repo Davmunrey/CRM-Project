@@ -532,7 +532,7 @@ export function Admin() {
   }, [])
 
   // Match the shared API client's base (lib/api.ts): default to '/api' (the
-  // reverse-proxy path) when VITE_API_URL is unset — NOT '' which 404s.
+  // reverse-proxy path) when NEXT_PUBLIC_API_URL is unset — NOT '' which 404s.
   const apiBase = (process.env.NEXT_PUBLIC_API_URL as string | undefined) ?? '/api'
 
   const handleExportOrgs = () => {
