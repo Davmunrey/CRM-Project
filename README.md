@@ -202,13 +202,16 @@ Open [http://localhost:3000](http://localhost:3000) for the Propel marketing lan
    npx supabase link --project-ref YOUR_PROJECT_REF
    ```
 
-3. **Push migrations** (schema + profiles auth hook + JWT RLS):
+3. **Push migrations** (schema + profiles auth hook + JWT RLS + tenant bootstrap):
 
    ```bash
    npx supabase db push
    ```
 
-   Migrations live in `supabase/migrations/`.
+   Migrations live in `supabase/migrations/`. The tenant-bootstrap migration
+   (`…_org_bootstrap.sql`) adds the `create_organization` RPC that lets a
+   freshly-registered user create their workspace under RLS — onboarding
+   (`/register` → `/org-setup`) then works end-to-end with no manual SQL.
 
 4. **Enable custom access token hook** — Supabase Dashboard → Authentication → Hooks → Postgres function `custom_access_token_hook` (see `supabase/config.toml`).
 

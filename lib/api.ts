@@ -2,6 +2,7 @@
 
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { crmPostgrestRequest, isCrmPostgrestPath } from '@/lib/supabase/crmApi'
+import { handleAnalytics, isAnalyticsPath } from '@/lib/supabase/analytics'
 
 function apiBase(path: string): string {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -33,6 +34,10 @@ async function request<T>(
   body?: unknown,
   signal?: AbortSignal,
 ): Promise<T> {
+  if (isSupabaseConfigured() && method === 'GET' && isAnalyticsPath(path)) {
+    return handleAnalytics<T>(path)
+  }
+
   if (isSupabaseConfigured() && isCrmPostgrestPath(path)) {
     const result = await crmPostgrestRequest<T>(method, path, body)
     return result as T

@@ -177,25 +177,29 @@ export async function supabaseFetchOrgUsers(organizationId: string): Promise<Aut
   return (data as ProfileRow[]).map(profileToAuthUser)
 }
 
+type OrgRow = { id: string; name: string; plan: string | null; created_at: string }
+
 export async function supabaseCreateOrg(name: string, slug: string): Promise<Organization> {
   const supabase = createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
 
-  const { data: org, error } = await supabase
-    .from('organizations')
-    .insert({ name, slug })
-    .select('*')
-    .single()
-  if (error || !org) throw new Error(error?.message ?? 'Failed to create organization')
+  // Bootstrap the tenant atomically via a SECURITY DEFINER RPC. A brand-new
+  // user has no org_id in their JWT, so a direct INSERT into `organizations`
+  // would be blocked by RLS (and the RETURNING filtered out by the SELECT
+  // policy). The RPC creates the org, claims the caller as owner, and returns
+  // the row regardless of RLS. See migration 20260626000004_org_bootstrap.sql.
+  const { data, error } = await supabase.rpc('create_organization', {
+    org_name: name,
+    org_slug: slug,
+  })
+  if (error) throw new Error(error.message)
+  const org = (Array.isArray(data) ? data[0] : data) as OrgRow | null
+  if (!org) throw new Error('Failed to create organization')
 
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .update({ organization_id: org.id, role: 'owner' })
-    .eq('id', user.id)
-  if (profileError) throw new Error(profileError.message)
+  // The org_id custom claim is injected by the access-token hook at token
+  // issuance time. Force a refresh so the new org_id lands in the JWT and the
+  // org-scoped RLS policies start matching for subsequent PostgREST calls —
+  // without this, every read/write would silently see an empty tenant.
+  await supabase.auth.refreshSession()
 
   return {
     id: org.id,

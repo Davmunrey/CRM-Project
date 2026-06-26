@@ -10,6 +10,7 @@ import { Input } from '../components/ui/Input'
 import { Card } from '../components/ui/Card'
 import { AuthLayout } from '../components/auth/AuthLayout'
 import { api } from '../lib/api'
+import { supabaseAuthEnabled, supabaseCreateOrg } from '../lib/supabase/auth'
 import { trackUxAction } from '../lib/uxMetrics'
 
 interface OrgCreateResponse {
@@ -67,8 +68,12 @@ export function OrgSetup() {
     setError(null)
 
     try {
-      const res = await api.post<OrgCreateResponse>('/orgs', { name: orgName.trim(), slug: slug.trim() })
-      // Server sets the updated cookie (JWT now contains org claim) — nothing to store client-side
+      // With Supabase, the tenant is bootstrapped through a SECURITY DEFINER RPC
+      // that also refreshes the JWT so the org_id claim is present for RLS. The
+      // legacy REST path posts to the Propel API which sets an HttpOnly cookie.
+      const orgId = supabaseAuthEnabled()
+        ? (await supabaseCreateOrg(orgName.trim(), slug.trim())).id
+        : (await api.post<OrgCreateResponse>('/orgs', { name: orgName.trim(), slug: slug.trim() })).id
 
       // Save billing/legal info to settings (client-side branding store)
       updateBranding({
@@ -84,9 +89,9 @@ export function OrgSetup() {
 
       // Update auth store with org
       if (currentUser) {
-        setCurrentUser({ ...currentUser, organizationId: res.id })
+        setCurrentUser({ ...currentUser, organizationId: orgId })
       }
-      useAuthStore.setState({ organizationId: res.id, tenantResolutionStatus: 'ready', tenantResolutionMessage: null })
+      useAuthStore.setState({ organizationId: orgId, tenantResolutionStatus: 'ready', tenantResolutionMessage: null })
 
       trackUxAction('onboarding_org_setup_submit_success')
       navigate('/', { replace: true })
