@@ -15,8 +15,8 @@
   --brand-ink: var(--propel-ink);
 
   --font-sans: var(--font-hanken), 'Hanken Grotesk', system-ui, sans-serif;
-  --font-display: var(--font-hanken), 'Hanken Grotesk', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  /* --font-display (Schibsted Grotesk) and --font-mono (JetBrains Mono) are
+     provided by next/font on <html>; do not override them here. */
 
   --color-accent-500: 68 194 160;
   --color-accent-600: 12 138 104;

@@ -10,6 +10,16 @@
   }
 }
 
+/* Landing logo marquee */
+@keyframes pmarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* CRM shell utilities (subset — full styles in styles/globals.css for reference) */
 .crm-page {
   @apply p-4 md:p-6;
