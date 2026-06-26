@@ -82,10 +82,30 @@ BEGIN
     'lead_form_configs', 'security_events', 'mfa_devices'
   ]
   LOOP
-    IF to_regclass('public.' || t) IS NOT NULL THEN
+    -- Only apply the org-scoped policy to tables that actually have an
+    -- organization_id column. Global/catalog tables (e.g. `plans`) live in this
+    -- list for forward-compat but are not tenant-scoped — applying org RLS to
+    -- them would raise "column organization_id does not exist" and abort push.
+    IF to_regclass('public.' || t) IS NOT NULL
+       AND EXISTS (
+         SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'public' AND table_name = t AND column_name = 'organization_id'
+       ) THEN
       PERFORM public.apply_org_rls(('public.' || t)::regclass);
     END IF;
   END LOOP;
+END $$;
+
+-- Plans: a global catalog with no organization_id. Enable RLS (it lives in the
+-- API-exposed `public` schema) but allow any authenticated user to read it;
+-- writes are reserved for the service role, which bypasses RLS.
+DO $$
+BEGIN
+  IF to_regclass('public.plans') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.plans ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS rls_plans_read ON public.plans';
+    EXECUTE 'CREATE POLICY rls_plans_read ON public.plans FOR SELECT TO authenticated USING (true)';
+  END IF;
 END $$;
 
 -- Profiles: users can read/update their own row; org members see teammates
