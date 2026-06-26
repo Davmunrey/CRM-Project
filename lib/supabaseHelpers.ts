@@ -1,8 +1,6 @@
-/**
- * Helpers wrapping the Propel API client.
- * Kept for backward compat during migration.
- */
-import { api } from './api'
+'use client'
+
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client'
 import { useAuthStore } from '../store/authStore'
 import { devConsole } from './devConsole'
 
@@ -22,10 +20,24 @@ export function getErrorMessage(error: unknown): string {
 }
 
 export async function sbDelete(table: string, id: string): Promise<void> {
+  if (isSupabaseConfigured()) {
+    const supabase = createClient()
+    const { error } = await supabase.from(table).delete().eq('id', id)
+    if (error) throw error
+    return
+  }
+  const { api } = await import('./api')
   await api.delete(`/${table}/${id}`)
 }
 
 export async function sbBulkDelete(table: string, ids: string[]): Promise<void> {
+  if (isSupabaseConfigured()) {
+    const supabase = createClient()
+    const { error } = await supabase.from(table).delete().in('id', ids)
+    if (error) throw error
+    return
+  }
+  const { api } = await import('./api')
   await Promise.all(ids.map((id) => api.delete(`/${table}/${id}`)))
 }
 

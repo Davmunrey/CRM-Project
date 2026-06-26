@@ -1,9 +1,30 @@
-/** @deprecated Use Supabase client — kept for incremental store migration (Hito 2). */
-function apiBase(): string {
-  if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1`
+'use client'
+
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/client'
+import { crmPostgrestRequest, isCrmPostgrestPath } from '@/lib/supabase/crmApi'
+
+function apiBase(path: string): string {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  if (typeof process !== 'undefined' && supabaseUrl) {
+    if (path.startsWith('/public/v1')) return `${supabaseUrl}/functions/v1/public-api`
+    if (path.startsWith('/public/forms')) return `${supabaseUrl}/functions/v1/public-forms`
+    if (path.startsWith('/public/booking')) return `${supabaseUrl}/functions/v1/public-booking`
+    return `${supabaseUrl}/functions/v1/propel-api`
   }
   return process.env.NEXT_PUBLIC_API_URL ?? '/api'
+}
+
+async function authHeaders(forEdge = false): Promise<Record<string, string>> {
+  if (!isSupabaseConfigured()) return {}
+  const headers: Record<string, string> = {}
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (forEdge && anonKey) headers.apikey = anonKey
+  const supabase = createClient()
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`
+  return headers
 }
 
 async function request<T>(
@@ -12,10 +33,17 @@ async function request<T>(
   body?: unknown,
   signal?: AbortSignal,
 ): Promise<T> {
-  const headers: Record<string, string> = {}
+  if (isSupabaseConfigured() && isCrmPostgrestPath(path)) {
+    const result = await crmPostgrestRequest<T>(method, path, body)
+    return result as T
+  }
+
+  const headers: Record<string, string> = {
+    ...(await authHeaders(isSupabaseConfigured() && !isCrmPostgrestPath(path))),
+  }
   if (body !== undefined) headers['Content-Type'] = 'application/json'
 
-  const res = await fetch(`${apiBase()}${path}`, {
+  const res = await fetch(`${apiBase(path)}${path}`, {
     method,
     headers,
     credentials: 'include',

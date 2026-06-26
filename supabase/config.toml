@@ -63,9 +63,18 @@ enabled = true
 policy = "per_worker"
 inspector_port = 8083
 
-# Edge Functions verify JWT by default; service-role calls bypass via header.
-[functions]
+# Edge Functions verify JWT by default; public functions opt out below.
+[functions.propel-api]
 verify_jwt = true
+
+[functions.public-api]
+verify_jwt = false
+
+[functions.public-forms]
+verify_jwt = false
+
+[functions.public-booking]
+verify_jwt = false
 
 [analytics]
 enabled = false
