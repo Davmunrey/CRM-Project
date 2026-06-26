@@ -1,23 +1,16 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { User, Mail, ArrowRight, ShieldCheck } from 'lucide-react'
+import { User, Mail, Lock, ArrowRight } from 'lucide-react'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
 import { useAuthStore } from '../store/authStore'
-import { Button } from '../components/ui/Button'
-import { Input } from '../components/ui/Input'
-import { Card } from '../components/ui/Card'
-import { AuthLayout } from '../components/auth/AuthLayout'
-import { SecurePasswordField } from '../components/auth/SecurePasswordField'
 import { formatPasswordStrengthIssues, getPasswordStrengthIssues } from '../lib/securePassword'
+import { AuthSplit, AuthField, DISPLAY, BODY } from '../components/auth/AuthSplit'
 
 export function Register() {
   const t = useTranslations()
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
-  useEffect(() => {
-    const unsub = useSettingsStore.subscribe((s) => setBranding(s.settings.branding))
-    return unsub
-  }, [])
+  useEffect(() => useSettingsStore.subscribe((s) => setBranding(s.settings.branding)), [])
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -52,83 +45,68 @@ export function Register() {
       setError(result.error ?? t.errors.generic)
       return
     }
-
     navigate('/')
   }
 
   return (
-    <AuthLayout
-      variant="centered"
-      title={(
-        <>
-          <h1 className="text-2xl font-bold text-fg">{t.auth.registerButton}</h1>
-          <p className="text-sm text-fg-muted mt-1">{branding.appName}</p>
-        </>
-      )}
+    <AuthSplit
+      appName={branding.appName}
+      headline={t.auth.landingTagline}
+      subtext="Create your workspace and let an AI assistant start surfacing your next best move from day one."
     >
-      <Card className="p-8">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">
-              {error}
-            </div>
-          )}
+      <h2 style={{ ...DISPLAY, fontWeight: 700, fontSize: 28, letterSpacing: '-0.02em', margin: '0 0 6px', color: '#0C1F1A' }}>
+        Create your account
+      </h2>
+      <p style={{ ...BODY, fontSize: 15, fontWeight: 300, color: '#8A938E', margin: '0 0 30px' }}>{branding.appName}</p>
 
-          <Input
-            label={t.common.name}
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t.common.name}
-            required
-            autoFocus
-            leftIcon={<User size={16} aria-hidden />}
-          />
-
-          <Input
-            label={t.auth.email}
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t.auth.emailPlaceholder}
-            required
-            leftIcon={<Mail size={16} aria-hidden />}
-          />
-
-          <SecurePasswordField
-            label={t.auth.password}
-            value={password}
-            onChange={setPassword}
-            placeholder={t.auth.password}
-            required
-          />
-
-          <Button
-            type="submit"
-            className="w-full rounded-xl"
-            size="lg"
-            disabled={loading || !name || !email || !password}
-            loading={loading}
-            rightIcon={<ArrowRight size={16} aria-hidden />}
+      <form onSubmit={handleSubmit}>
+        {error && (
+          <div
+            role="alert"
+            style={{ ...BODY, fontSize: 14, color: '#B23A2E', background: '#FDECE9', border: '1px solid #F6C9C1', borderRadius: 10, padding: '11px 14px', marginBottom: 18 }}
           >
-            {t.auth.registerButton}
-          </Button>
-        </form>
+            {error}
+          </div>
+        )}
 
-        <div className="mt-6 pt-5 border-t border-fg/6 text-center">
-          <p className="text-sm text-fg-muted">
-            {t.auth.hasAccount}{' '}
-            <Link to="/login" className="text-accent-400 hover:text-accent-300 font-medium transition-colors">
-              {t.auth.login}
-            </Link>
-          </p>
-        </div>
+        <AuthField label={t.common.name} icon={<User size={17} aria-hidden />} value={name} onChange={setName} placeholder={t.common.name} autoComplete="name" autoFocus required />
+        <AuthField label={t.auth.email} icon={<Mail size={17} aria-hidden />} type="email" value={email} onChange={setEmail} placeholder={t.auth.emailPlaceholder} autoComplete="email" required />
+        <AuthField label={t.auth.password} icon={<Lock size={17} aria-hidden />} type="password" value={password} onChange={setPassword} placeholder={t.auth.password} autoComplete="new-password" required accentIcon />
 
-        <div className="mt-4 flex justify-center">
-          <ShieldCheck size={14} className="text-fg-subtle mr-1.5 mt-0.5 shrink-0" aria-hidden />
-          <p className="text-[11px] text-fg-subtle">{'Your data is encrypted and never shared.'}</p>
-        </div>
-      </Card>
-    </AuthLayout>
+        <button
+          type="submit"
+          disabled={loading || !name || !email || !password}
+          style={{
+            border: 'none',
+            cursor: loading ? 'wait' : 'pointer',
+            width: '100%',
+            ...DISPLAY,
+            fontSize: 15,
+            fontWeight: 600,
+            color: '#fff',
+            background: '#0C8A68',
+            padding: 14,
+            borderRadius: 10,
+            marginTop: 4,
+            opacity: loading || !name || !email || !password ? 0.6 : 1,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
+          className="transition-colors hover:enabled:!bg-[#0A6E54]"
+        >
+          {t.auth.registerButton}
+          {!loading && <ArrowRight size={16} aria-hidden />}
+        </button>
+      </form>
+
+      <p style={{ textAlign: 'center', fontSize: 13.5, color: '#8A938E', margin: '26px 0 0', ...BODY }}>
+        {t.auth.hasAccount}{' '}
+        <Link to="/login" style={{ ...DISPLAY, fontWeight: 600, color: '#0C8A68' }}>
+          {t.auth.login}
+        </Link>
+      </p>
+    </AuthSplit>
   )
 }
