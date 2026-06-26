@@ -1,0 +1,653 @@
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes countUp {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Marketing landing motion (CSS-only; honours prefers-reduced-motion below) ── */
+@keyframes landingFloatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes landingHeroIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes landingGradientPan {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+@keyframes landingMarquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+/* Ambient depth: soft layers drift + sway forever, each at its own
+   pace/direction via per-element CSS vars. Paired in markup with an outer
+   wrapper that JS nudges on scroll / pointer for parallax depth. */
+@keyframes landingDrift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(var(--drift-x, 22px), var(--drift-y, -16px), 0) scale(var(--drift-scale, 1.05)); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes landingSway {
+  0%, 100% { transform: rotate(var(--sway-from, -2.2deg)) translateY(0); }
+  50%      { transform: rotate(var(--sway-to, 2.2deg)) translateY(-7px); }
+}
+
+/* Scroll-reveal: starts hidden, `.reveal-in` (added when in view) settles it. */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+.landing-hero-in {
+  animation: landingHeroIn 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.landing-float {
+  animation: landingFloatY var(--float-dur, 7s) ease-in-out infinite;
+}
+.landing-gradient-anim {
+  background-size: 200% 200%;
+  animation: landingGradientPan 6s linear infinite alternate;
+}
+.marquee-track {
+  animation: landingMarquee 30s linear infinite;
+}
+.marquee-mask:hover .marquee-track {
+  animation-play-state: paused;
+}
+/* Continuous ambient motion for parallax layers. */
+.landing-drift {
+  animation: landingDrift var(--drift-dur, 20s) ease-in-out infinite;
+  will-change: transform;
+}
+.landing-sway {
+  animation: landingSway var(--sway-dur, 9s) ease-in-out infinite;
+  will-change: transform;
+}
+/* Outer parallax wrapper: JS writes --parallax (px); transition smooths it. */
+.parallax-layer {
+  transform: translate3d(var(--parallax-x, 0), var(--parallax-y, 0), 0);
+  transition: transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+@layer base {
+  /* Design tokens: `src/styles/tokens.css`. Remove one-off utilities here only when a token exists. */
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+
+  ::selection {
+    background: rgba(37, 99, 235, 0.3);
+    color: #fff;
+  }
+
+  html.light ::selection {
+    background: rgba(79, 70, 229, 0.22);
+    color: var(--text-main);
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.08);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255,255,255,0.14);
+  }
+
+  html.light ::-webkit-scrollbar-thumb {
+    background: rgba(15, 23, 42, 0.12);
+  }
+
+  html.light ::-webkit-scrollbar-thumb:hover {
+    background: rgba(15, 23, 42, 0.2);
+  }
+
+  /* ── Autofill override ───────────────────────────────── */
+  /* Prevent browser autofill from applying a white/light background
+     that makes white input text invisible on dark themes */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 40px var(--bg-elevated) inset !important;
+    -webkit-text-fill-color: var(--text-main) !important;
+    caret-color: var(--text-main);
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  /* Respect user motion preferences: disable non-essential transitions/animations. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * App shell: consistent horizontal rhythm + max width.
+   * Use .crm-page for scrollable content; .crm-page-full for h-full split views.
+   * Main column background: .app-main-surface on <main> (Layout).
+   * (inbox, kanban, calendar) where children manage vertical spacing.
+   */
+  .crm-page {
+    @apply w-full max-w-[1800px] mx-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-8;
+  }
+
+  /* Full main region height; add flex flex-col or flex flex-row on the element */
+  .crm-page-full {
+    @apply w-full max-w-[1800px] mx-auto min-h-0 h-full px-4 sm:px-6 lg:px-8;
+  }
+
+  /**
+   * App shell: workspace column (topbar + main) - strong lift vs sidebar.
+   */
+  .app-workspace-column {
+    position: relative;
+    z-index: var(--z-shell-content);
+    border-left: 1px solid rgba(var(--color-border-subtle) / calc(var(--opacity-border-subtle) * 1.35));
+    box-shadow:
+      -28px 0 72px -18px rgba(0, 0, 0, 0.62),
+      -12px 0 36px -10px rgba(0, 0, 0, 0.45),
+      inset 1px 0 0 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .light .app-workspace-column {
+    border-left-color: rgba(var(--color-border-subtle) / 0.18);
+    box-shadow:
+      -16px 0 48px -12px rgba(15, 23, 42, 0.14),
+      -6px 0 20px -6px rgba(15, 23, 42, 0.08),
+      inset 1px 0 0 0 rgba(255, 255, 255, 0.85);
+  }
+
+  /**
+   * Main scroll region - single canvas for every route (dark + light).
+   * Subtle brand wash + stacked surfaces so Contacts, Timeline, etc. match.
+   */
+  .app-main-surface {
+    position: relative;
+    z-index: var(--z-page-lift);
+    isolation: isolate;
+    background:
+      radial-gradient(
+        ellipse 130% 90% at 50% -35%,
+        rgb(var(--color-accent-500) / 0.26) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 80% 55% at 100% 0%,
+        rgb(var(--color-accent-600) / 0.12) 0%,
+        transparent 50%
+      ),
+      linear-gradient(
+        180deg,
+        rgb(var(--color-surface-0) / 0.78) 0%,
+        rgb(var(--color-surface-1) / 0.55) 32%,
+        rgb(var(--color-surface-1) / 0.2) 62%,
+        transparent 92%
+      );
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+      inset 0 -2px 0 0 rgba(0, 0, 0, 0.2),
+      0 0 80px -24px rgb(var(--color-accent-600) / 0.15);
+  }
+
+  .light .app-main-surface {
+    background:
+      radial-gradient(
+        ellipse 120% 85% at 50% -30%,
+        rgb(var(--color-accent-500) / 0.2) 0%,
+        transparent 55%
+      ),
+      linear-gradient(
+        180deg,
+        rgb(var(--color-surface-1) / 0.98) 0%,
+        rgb(var(--color-surface-2) / 0.65) 40%,
+        transparent 88%
+      );
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 0 0 rgba(15, 23, 42, 0.08),
+      0 0 64px -20px rgb(var(--color-accent-500) / 0.18);
+  }
+
+  /* ── Glass card - default elevation (theme-aware shadow from tokens.css) ─ */
+  .glass {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-sm);
+    transition:
+      box-shadow 180ms var(--ease-default),
+      border-color 180ms var(--ease-default),
+      background 180ms var(--ease-default);
+  }
+
+  /**
+   * Secondary / grouped blocks (e.g. Settings) - recessed tint vs main panel, same lift as glass.
+   * Prefer this over ad-hoc `bg-surface-2/90 border …` so shadow + border stay consistent.
+   */
+  .crm-surface-section {
+    background: rgb(var(--color-surface-2) / 0.94);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .glass-hover {
+    @apply transition duration-base;
+  }
+
+  .glass-hover:hover {
+    background: color-mix(in srgb, var(--bg-panel) 90%, var(--text-main) 10%);
+    border-color: color-mix(in srgb, var(--border-soft) 85%, var(--text-main) 15%);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Auth shell: gradient over semantic base (pair with `bg-surface-0` for min surface). */
+  .auth-page-bg {
+    background-image: var(--auth-page-gradient-dark);
+    background-color: rgb(var(--color-surface-0));
+  }
+
+  /* ── Gradient text ───────────────────────────────────── */
+  .text-gradient {
+    background: linear-gradient(
+      135deg,
+      rgb(var(--color-accent-400)) 0%,
+      rgb(var(--color-accent-300)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-brand {
+    background: linear-gradient(
+      135deg,
+      rgb(var(--color-accent-600)) 0%,
+      rgb(var(--color-accent-800)) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Brand gradient button (accent tokens + branding) ─ */
+  .btn-gradient {
+    background: linear-gradient(
+      135deg,
+      rgb(var(--color-accent-600)) 0%,
+      rgb(var(--color-accent-800)) 100%
+    );
+    box-shadow: 0 0 20px rgb(var(--color-accent-600) / 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: box-shadow 150ms var(--ease-out), transform 150ms var(--ease-out);
+  }
+
+  .btn-gradient:hover {
+    box-shadow: 0 0 30px rgb(var(--color-accent-600) / 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+  }
+
+  /* Tactile press feedback (Emil): scale down on press — covers Button primary + landing CTAs. */
+  .btn-gradient:active {
+    transform: scale(0.97);
+    box-shadow: 0 0 15px rgb(var(--color-accent-600) / 0.35);
+  }
+
+  /* ── Glow dot ────────────────────────────────────────── */
+  .glow-dot::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.3;
+    filter: blur(4px);
+  }
+
+  /* ── Nav active indicator ────────────────────────────── */
+  .nav-active {
+    background: linear-gradient(90deg, rgb(var(--color-accent-600) / 0.15) 0%, transparent 100%);
+    border-left: 2px solid rgb(var(--color-accent-600));
+    box-shadow: inset 0 0 20px rgb(var(--color-accent-600) / 0.05);
+  }
+
+  /* ── Stat card number ────────────────────────────────── */
+  .stat-number {
+    animation: countUp 0.6s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  /* ── Table row ───────────────────────────────────────── */
+  .table-row-hover {
+    @apply transition duration-fast cursor-pointer;
+  }
+
+  .table-row-hover:hover {
+    background: rgb(var(--color-accent-600) / 0.08);
+  }
+
+  /* ── Priority dot ────────────────────────────────────── */
+  .priority-high   { background: rgb(var(--color-danger)); box-shadow: 0 0 6px rgb(var(--color-danger) / 0.5); }
+  .priority-medium { background: rgb(var(--color-warning)); box-shadow: 0 0 6px rgb(var(--color-warning) / 0.4); }
+  .priority-low    { background: rgb(var(--color-fg-subtle)); }
+
+  /* Dashboard heatmap levels */
+  .crm-heat-0 { background: rgba(148, 163, 184, 0.14); border: 1px solid rgba(148, 163, 184, 0.22); }
+  .crm-heat-1 { background: rgba(99, 102, 241, 0.24); border: 1px solid rgba(99, 102, 241, 0.3); }
+  .crm-heat-2 { background: rgba(99, 102, 241, 0.4); border: 1px solid rgba(99, 102, 241, 0.45); }
+  .crm-heat-3 { background: rgba(99, 102, 241, 0.58); border: 1px solid rgba(99, 102, 241, 0.62); }
+  .crm-heat-4 { background: rgba(99, 102, 241, 0.82); border: 1px solid rgba(129, 140, 248, 0.95); }
+
+  .contacts-table-head {
+    background: color-mix(in srgb, var(--bg-panel) 88%, #000 12%);
+  }
+
+  .toast-surface {
+    background: color-mix(in srgb, var(--bg-panel) 94%, #000 6%);
+    border-color: var(--border-soft);
+  }
+
+  .toast-success {
+    background: color-mix(in srgb, var(--bg-panel) 84%, #10b981 16%);
+    border-color: rgba(16, 185, 129, 0.45);
+  }
+
+  .toast-error {
+    background: color-mix(in srgb, var(--bg-panel) 84%, #ef4444 16%);
+    border-color: rgba(239, 68, 68, 0.45);
+  }
+
+  .toast-warning {
+    background: color-mix(in srgb, var(--bg-panel) 84%, #f59e0b 16%);
+    border-color: rgba(245, 158, 11, 0.45);
+  }
+
+  .toast-info {
+    background: color-mix(in srgb, var(--bg-panel) 84%, #3b82f6 16%);
+    border-color: rgba(59, 130, 246, 0.45);
+  }
+
+  /* ── Theme-aware form controls (profile, light/dark) ─── */
+  .crm-themed-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid var(--border-soft);
+    background-color: var(--bg-elevated);
+    color: var(--text-main);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .crm-themed-input::placeholder {
+    color: var(--text-muted);
+    opacity: 0.85;
+  }
+
+  .crm-themed-input:focus {
+    border-color: rgb(var(--color-ring) / 0.45);
+    box-shadow: 0 0 0 2px rgb(var(--color-ring) / 0.22);
+  }
+
+  .propel-form-label {
+    display: block;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    margin-bottom: 0.25rem;
+    color: var(--text-muted);
+  }
+
+  .propel-input-icon {
+    color: var(--text-muted);
+  }
+
+  .propel-profile-card-title {
+    color: var(--text-main);
+  }
+
+  .propel-profile-value {
+    color: var(--text-main);
+  }
+}
+
+@layer utilities {
+  /** Keyboard focus - use with `outline-none` on interactive elements. */
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgb(var(--color-surface-0) / 1),
+      0 0 0 4px rgb(var(--color-ring) / 0.45);
+  }
+
+  .focus-ring {
+    outline: none;
+  }
+
+  /* ── Skeleton shimmer ────────────────────────────────── */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--color-fg) / 0.04) 25%,
+      rgb(var(--color-fg) / 0.09) 50%,
+      rgb(var(--color-fg) / 0.04) 75%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* ── Glow border ─────────────────────────────────────── */
+  .border-brand-glow {
+    border-color: rgb(var(--color-accent-600) / 0.5);
+    box-shadow:
+      0 0 0 1px rgb(var(--color-accent-600) / 0.2),
+      0 0 20px rgb(var(--color-accent-600) / 0.1);
+  }
+
+  /* ── Blur backdrop ───────────────────────────────────── */
+  .backdrop-dark {
+    backdrop-filter: blur(16px);
+    background: rgb(var(--color-surface-0) / 0.8);
+  }
+}
+
+@layer base {
+  /* Shell surfaces use semantic tokens (html.light in tokens.css); keep only
+     overrides where Tailwind utility colors still need a readable light pass. */
+
+  .light .auth-page-bg {
+    background-image: var(--auth-page-gradient-light);
+    background-color: rgb(var(--color-surface-0));
+  }
+
+  /* Auth backdrop blobs breathe + drift. The outer `.parallax-layer` wrapper
+     handles pointer parallax; this animates the blob itself. */
+  .auth-bg-blob {
+    animation: landingDrift var(--drift-dur, 22s) ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .light .auth-bg-blob {
+    opacity: 0.45;
+    filter: blur(60px);
+  }
+
+  .light .slide-panel {
+    background-color: var(--bg-panel) !important;
+    border-left-color: rgba(15, 23, 42, 0.14) !important;
+  }
+
+  .light .modal-backdrop {
+    background: rgba(15, 23, 42, 0.28) !important;
+  }
+
+  /* Legacy Tailwind palette overrides removed - components use semantic tokens (text-fg*, accent-*, border-fg/*). */
+
+  .light .sidebar-active {
+    color: #ffffff !important;
+    background: linear-gradient(90deg, rgba(79, 70, 229, 0.92) 0%, rgba(79, 70, 229, 0.78) 100%) !important;
+    border-left-color: #4338ca !important;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  }
+
+  .light .sidebar-inactive {
+    color: #334155 !important;
+  }
+
+  .light .sidebar-inactive:hover {
+    color: #0f172a !important;
+    background-color: rgba(15, 23, 42, 0.06) !important;
+  }
+
+  .light .hover\:bg-fg\/4:hover,
+  .light .hover\:bg-fg\/5:hover,
+  .light .hover\:bg-fg\/6:hover,
+  .light .hover\:bg-fg\/10:hover {
+    background-color: rgba(15, 23, 42, 0.06) !important;
+  }
+
+  .light .placeholder\:text-fg-subtle::placeholder {
+    color: #64748b !important;
+    opacity: 1 !important;
+  }
+
+  .light input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  .light textarea,
+  .light select {
+    color: #0f172a;
+    caret-color: #0f172a;
+  }
+
+  .light select option {
+    background-color: #ffffff;
+    color: #0f172a;
+  }
+
+  /* Keep primary purple buttons highly legible in light mode */
+  .light .btn-gradient,
+  .light .btn-gradient:hover,
+  .light .btn-gradient:active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%);
+  }
+
+  .light .crm-heat-0 { background: #e2e8f0; border-color: #cbd5e1; }
+  .light .crm-heat-1 { background: #dbeafe; border-color: #93c5fd; }
+  .light .crm-heat-2 { background: #bfdbfe; border-color: #60a5fa; }
+  .light .crm-heat-3 { background: #93c5fd; border-color: #3b82f6; }
+  .light .crm-heat-4 { background: #6366f1; border-color: #4338ca; }
+
+  .light .contacts-table-head {
+    background: #ffffff !important;
+  }
+
+  .light .toast-surface {
+    background: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.16) !important;
+  }
+
+  .light .toast-success {
+    background: #ecfdf5 !important;
+    border-color: rgba(16, 185, 129, 0.45) !important;
+  }
+
+  .light .toast-error {
+    background: #fef2f2 !important;
+    border-color: rgba(239, 68, 68, 0.45) !important;
+  }
+
+  .light .toast-warning {
+    background: #fffbeb !important;
+    border-color: rgba(245, 158, 11, 0.45) !important;
+  }
+
+  .light .toast-info {
+    background: #eff6ff !important;
+    border-color: rgba(59, 130, 246, 0.45) !important;
+  }
+
+  .light .kanban-dropzone {
+    background-color: #ffffff !important;
+    border-color: rgba(15, 23, 42, 0.12) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .light .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--color-border-subtle) / 0.06) 25%,
+      rgb(var(--color-border-subtle) / 0.12) 50%,
+      rgb(var(--color-border-subtle) / 0.06) 75%
+    );
+    background-size: 1000px 100%;
+  }
+
+  .light .backdrop-dark {
+    background: rgb(var(--color-surface-0) / 0.72);
+  }
+}
+
+@layer utilities {
+  /** Micro type for badges / kbd - prefer over arbitrary `text-[10px]` */
+  .text-2xs {
+    font-size: 0.625rem;
+    line-height: 1rem;
+  }
+}

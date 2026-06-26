@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0crm-api
+  IMAGE: gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/propel-api
 
 jobs:
   build:
@@ -23,7 +23,7 @@ jobs:
         run: |
           rm -rf .git
           git init
-          git remote add origin "https://oauth2:${GIT_TOKEN}@gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/n0CRM.git"
+          git remote add origin "https://oauth2:${GIT_TOKEN}@gitea-clovrlabs.apps.privateprompt.tech/clovrlabs/Propel.git"
           git fetch --depth=1 origin "${GITHUB_SHA}"
           git checkout FETCH_HEAD
 

@@ -1,8 +1,8 @@
-# n0CRM — Backup & Disaster Recovery Runbook
+# Propel — Backup & Disaster Recovery Runbook
 
 _Last updated: 2026-06-11 · Owner: Platform / Ops_
 
-This runbook documents how n0CRM data is backed up, the recovery objectives, and
+This runbook documents how Propel data is backed up, the recovery objectives, and
 the **step-by-step, tested restore procedure**. The enterprise review flagged
 "local-only, never-restore-tested backups" as a release blocker — this runbook is
 the control that closes it. **Run the [restore drill](#5-restore-drill-do-this-quarterly) at least quarterly.**
@@ -16,7 +16,7 @@ the control that closes it. **Run the [restore drill](#5-restore-drill-do-this-q
 | **PostgreSQL** (all tenant data) | Scheduled `pg_dump \| gzip` every `BACKUP_INTERVAL_HOURS` (default 6h), keep last `BACKUP_KEEP` (default 10) | `/backups` volume in the API container (`api/src/routes/debug.ts`) |
 | **PostgreSQL** (on demand) | `GET /_debug/backup` streams `pg_dump \| gzip` as a download | wherever you save it (do this for **off-site** copies) |
 | **Redis** | Ephemeral by design (rate-limit counters, JWT denylist, OAuth-state, sessions-valid-after, BullMQ) | Not backed up — see [§4](#4-redis-loss) |
-| **Object/file data** | n0CRM stores no blobs; Gmail attachments are fetched live from Google | n/a |
+| **Object/file data** | Propel stores no blobs; Gmail attachments are fetched live from Google | n/a |
 
 > ⚠️ The scheduled dump lives **inside the API container's `/backups` volume**. A
 > volume/host loss takes the backups with it. Treat the on-demand download as the
@@ -45,10 +45,10 @@ store it somewhere independent (S3/GCS/another host):
 ```bash
 # Authenticated download of a fresh dump (DEBUG_TOKEN is required & gates /_debug/*)
 curl -fSL -H "X-Debug-Token: $DEBUG_TOKEN" \
-  https://<your-host>/api/_debug/backup -o "n0crm-$(date +%F).sql.gz"
+  https://<your-host>/api/_debug/backup -o "propel-$(date +%F).sql.gz"
 
 # Verify it's a valid gzip + non-trivial size, then ship it off-site
-gzip -t "n0crm-$(date +%F).sql.gz" && aws s3 cp "n0crm-$(date +%F).sql.gz" s3://<your-dr-bucket>/
+gzip -t "propel-$(date +%F).sql.gz" && aws s3 cp "propel-$(date +%F).sql.gz" s3://<your-dr-bucket>/
 ```
 
 Automate this on a host **outside** the app's blast radius (a cron runner, CI
@@ -74,17 +74,17 @@ No restore needed. For stronger guarantees, enable Redis AOF persistence + HA (s
 
 ```bash
 # 1. Spin up a throwaway Postgres
-docker run -d --name n0crm-restore-test \
-  -e POSTGRES_DB=n0crm -e POSTGRES_USER=n0crm -e POSTGRES_PASSWORD=restore_test \
+docker run -d --name propel-restore-test \
+  -e POSTGRES_DB=propel -e POSTGRES_USER=propel -e POSTGRES_PASSWORD=restore_test \
   -p 5599:5432 postgres:16-alpine
 
 # 2. Restore the most recent off-site dump into it
-gzip -dc n0crm-YYYY-MM-DD.sql.gz | \
-  PGPASSWORD=restore_test psql -h localhost -p 5599 -U n0crm -d n0crm \
+gzip -dc propel-YYYY-MM-DD.sql.gz | \
+  PGPASSWORD=restore_test psql -h localhost -p 5599 -U propel -d propel \
     --single-transaction --set=ON_ERROR_STOP=on
 
 # 3. Sanity-check row counts (should match production order-of-magnitude)
-PGPASSWORD=restore_test psql -h localhost -p 5599 -U n0crm -d n0crm -c \
+PGPASSWORD=restore_test psql -h localhost -p 5599 -U propel -d propel -c \
   "SELECT
      (SELECT count(*) FROM organizations) AS orgs,
      (SELECT count(*) FROM users)         AS users,
@@ -93,7 +93,7 @@ PGPASSWORD=restore_test psql -h localhost -p 5599 -U n0crm -d n0crm -c \
      (SELECT count(*) FROM _migrations)   AS migrations;"
 
 # 4. Tear down
-docker rm -f n0crm-restore-test
+docker rm -f propel-restore-test
 ```
 
 **Pass criteria:** restore completes with `ON_ERROR_STOP=on` (no errors), counts are

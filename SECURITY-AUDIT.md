@@ -1,4 +1,4 @@
-# n0CRM — Security Audit & Penetration Test
+# Propel — Security Audit & Penetration Test
 
 _Scope: live Fastify API (`api/`), React frontend (`frontend/`), and the AI/agentic feature. The deleted `frontend/supabase/` legacy is out of scope (removed)._
 

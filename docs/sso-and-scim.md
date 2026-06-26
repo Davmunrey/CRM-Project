@@ -1,6 +1,6 @@
 # Enterprise Identity — SSO (OIDC) & SCIM 2.0
 
-n0CRM supports IdP-driven authentication and lifecycle management:
+Propel supports IdP-driven authentication and lifecycle management:
 
 - **SSO** — OpenID Connect / OAuth2 with PKCE and just-in-time (JIT) user provisioning.
 - **SCIM 2.0** — automated user provisioning and **deprovisioning** from your IdP
