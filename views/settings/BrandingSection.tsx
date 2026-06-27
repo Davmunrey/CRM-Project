@@ -1,14 +1,19 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { useTranslations } from '../../i18n'
 import { useSettingsStore } from '../../store/settingsStore'
+import { useAuthStore } from '../../store/authStore'
 import { toast } from '../../store/toastStore'
 import { api } from '../../lib/api'
+import { uploadOrgLogo } from '../../lib/supabase/storage'
 
 export function BrandingSection() {
   const t = useTranslations()
   const { settings, updateBranding } = useSettingsStore()
+  const organizationId = useAuthStore((s) => s.organizationId)
+  const logoInputRef = useRef<HTMLInputElement>(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const [brandingDraft, setBrandingDraft] = useState(settings.branding)
   // Reset the local draft when the stored branding changes. Adjust-state-during-render
   // (React's documented pattern) instead of a setState-in-effect cascade.
@@ -47,6 +52,26 @@ export function BrandingSection() {
       quoteFooter: merged.quoteFooter ?? null,
     }).catch(() => {/* silent — local state already saved */})
     toast.success(t.common.save + ' ✓')
+  }
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file later
+    if (!file) return
+    if (!organizationId) {
+      toast.error('No organization')
+      return
+    }
+    setUploadingLogo(true)
+    try {
+      const url = await uploadOrgLogo(organizationId, file)
+      setBrandingDraft((prev) => ({ ...prev, logoUrl: url }))
+      toast.success(t.common.save + ' ✓')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed')
+    } finally {
+      setUploadingLogo(false)
+    }
   }
 
   const handleResetBranding = () => {
@@ -155,6 +180,31 @@ export function BrandingSection() {
           onChange={(e) => setBrandingDraft((prev) => ({ ...prev, quoteFooter: e.target.value }))}
           placeholder={t.settings.quoteFooterPlaceholder}
         />
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        {brandingDraft.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={brandingDraft.logoUrl}
+            alt="Logo"
+            className="h-12 w-12 rounded-lg border border-border object-contain bg-white"
+          />
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-border text-2xs text-fg-muted">
+            Logo
+          </div>
+        )}
+        <input
+          ref={logoInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+          className="hidden"
+          onChange={handleLogoUpload}
+        />
+        <Button size="sm" variant="ghost" disabled={uploadingLogo} onClick={() => logoInputRef.current?.click()}>
+          {uploadingLogo ? '…' : 'Upload logo'}
+        </Button>
+        <span className="text-2xs text-fg-muted">PNG/JPG/SVG · max 5 MB</span>
       </div>
       <div className="mt-3 flex gap-2">
         <Button size="sm" onClick={handleSaveBranding}>{t.common.save}</Button>
