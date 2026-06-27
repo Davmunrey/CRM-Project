@@ -13,6 +13,7 @@ import { GeneralSection } from './GeneralSection'
 import { EmailSection } from './EmailSection'
 import { CustomFieldsSection } from './CustomFieldsSection'
 import { BrandingSection } from './BrandingSection'
+import { BillingSection } from './BillingSection'
 import { PipelineSection } from './PipelineSection'
 import { PermissionsSection } from './PermissionsSection'
 import { DataSection } from './DataSection'
@@ -32,6 +33,7 @@ type SettingsTab =
   | 'navigation'
   | 'webhooks'
   | 'integrations'
+  | 'billing'
   | 'advanced'
 
 export function Settings() {
@@ -51,6 +53,7 @@ export function Settings() {
     { id: 'navigation', label: t.settings.tabNavigation },
     { id: 'webhooks', label: t.settings.tabWebhooks },
     { id: 'integrations', label: t.settings.tabIntegrations },
+    { id: 'billing', label: 'Billing' },
     { id: 'advanced', label: t.settings.tabAdvanced },
   ]
 
@@ -119,6 +122,8 @@ export function Settings() {
           </div>
         </section>
       )}
+
+      {activeTab === 'billing' && <BillingSection />}
 
       {activeTab === 'data' && <DataSection />}
 

@@ -1,5 +1,6 @@
 import type { AuthContext } from '../_shared/auth.ts'
 import { serviceClient, toSnake } from '../_shared/auth.ts'
+import Stripe from 'https://esm.sh/stripe@17.7.0?target=deno&no-check'
 
 function requireOrg(ctx: AuthContext): string | Response {
   if (!ctx.orgId) return new Response(JSON.stringify({ error: 'No organization' }), { status: 403 })
@@ -317,13 +318,99 @@ export async function handleSequences(req: Request, ctx: AuthContext, path: stri
   return new Response(JSON.stringify({ error: 'Not found' }), { status: 404 })
 }
 
+function getStripe(): Stripe | null {
+  const key = Deno.env.get('STRIPE_SECRET_KEY')
+  if (!key) return null
+  return new Stripe(key, { apiVersion: '2025-03-31.basil', httpClient: Stripe.createFetchHttpClient() })
+}
+
+function appOrigin(req: Request): string {
+  return req.headers.get('origin') || Deno.env.get('SITE_URL') || 'https://crm-project.vercel.app'
+}
+
+/**
+ * Billing endpoints backed by Stripe.
+ *  GET  /billing/status   → current plan + subscription (any org member)
+ *  POST /billing/checkout → Stripe Checkout session for a plan (admins)
+ *  POST /billing/portal   → Stripe billing portal session (admins)
+ */
 export async function handleBilling(req: Request, ctx: AuthContext, path: string): Promise<Response> {
+  const orgId = requireOrg(ctx)
+  if (orgId instanceof Response) return orgId
+  const db = serviceClient()
+
   if (path === '/billing/status' && req.method === 'GET') {
-    const orgId = requireOrg(ctx)
-    if (orgId instanceof Response) return orgId
-    const { data: org } = await ctx.supabase.from('organizations').select('plan, settings').eq('id', orgId).single()
-    return Response.json({ plan: org?.plan ?? 'free', status: 'active' })
+    const { data: sub } = await db
+      .from('subscriptions')
+      .select('status, current_period_end, trial_ends_at, stripe_customer_id, plan:plans(slug, name, price_monthly, price_yearly)')
+      .eq('organization_id', orgId)
+      .maybeSingle()
+    const { data: org } = await db.from('organizations').select('plan').eq('id', orgId).single()
+    return Response.json({
+      plan: org?.plan ?? 'free',
+      status: sub?.status ?? 'active',
+      subscription: sub ?? null,
+      hasBilling: Boolean(Deno.env.get('STRIPE_SECRET_KEY')),
+    })
   }
+
+  const stripe = getStripe()
+  if (!stripe) {
+    return new Response(JSON.stringify({ error: 'Billing not configured (missing STRIPE_SECRET_KEY)' }), { status: 503 })
+  }
+
+  if (path === '/billing/checkout' && req.method === 'POST') {
+    const adminErr = requireAdmin(ctx)
+    if (adminErr) return adminErr
+    const body = await req.json().catch(() => ({}))
+    const interval = body.interval === 'yearly' ? 'yearly' : 'monthly'
+    const { data: plan } = await db
+      .from('plans')
+      .select('id, slug, name, stripe_price_id_monthly, stripe_price_id_yearly')
+      .or(`id.eq.${body.planId ?? '00000000-0000-0000-0000-000000000000'},slug.eq.${body.planSlug ?? '__none__'}`)
+      .maybeSingle()
+    const priceId = interval === 'yearly' ? plan?.stripe_price_id_yearly : plan?.stripe_price_id_monthly
+    if (!plan || !priceId) {
+      return new Response(JSON.stringify({ error: 'Plan or Stripe price not configured' }), { status: 400 })
+    }
+
+    // Reuse the org's Stripe customer if we already have one.
+    const { data: existing } = await db
+      .from('subscriptions').select('stripe_customer_id').eq('organization_id', orgId).maybeSingle()
+    let customerId = existing?.stripe_customer_id as string | undefined
+    if (!customerId) {
+      const customer = await stripe.customers.create({ metadata: { organization_id: orgId } })
+      customerId = customer.id
+    }
+
+    const origin = appOrigin(req)
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${origin}/settings?billing=success`,
+      cancel_url: `${origin}/settings?billing=cancelled`,
+      subscription_data: { metadata: { organization_id: orgId, plan_id: plan.id } },
+      metadata: { organization_id: orgId, plan_id: plan.id },
+    })
+    return Response.json({ url: session.url })
+  }
+
+  if (path === '/billing/portal' && req.method === 'POST') {
+    const adminErr = requireAdmin(ctx)
+    if (adminErr) return adminErr
+    const { data: sub } = await db
+      .from('subscriptions').select('stripe_customer_id').eq('organization_id', orgId).maybeSingle()
+    if (!sub?.stripe_customer_id) {
+      return new Response(JSON.stringify({ error: 'No Stripe customer for this organization' }), { status: 400 })
+    }
+    const portal = await stripe.billingPortal.sessions.create({
+      customer: sub.stripe_customer_id as string,
+      return_url: `${appOrigin(req)}/settings`,
+    })
+    return Response.json({ url: portal.url })
+  }
+
   return new Response(JSON.stringify({ error: 'Billing endpoint not implemented' }), { status: 501 })
 }
 

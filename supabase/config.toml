@@ -99,5 +99,9 @@ verify_jwt = false
 [functions.public-booking]
 verify_jwt = false
 
+# Stripe calls this unauthenticated; the webhook signature is the trust anchor.
+[functions.stripe-webhook]
+verify_jwt = false
+
 [analytics]
 enabled = false
