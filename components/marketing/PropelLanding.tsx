@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { SiteFooter } from '@/components/marketing/chrome'
 
 /**
  * Propel marketing landing — implements the "Propel Landing" brand design
@@ -187,7 +188,7 @@ export function PropelLanding() {
             Start free — no card
           </Link>
           <Link
-            href="/register"
+            href="/contact"
             style={{
               ...DISPLAY,
               fontSize: 16,
@@ -663,7 +664,7 @@ export function PropelLanding() {
               <Link href="/register" style={{ ...DISPLAY, fontSize: 16, fontWeight: 600, color: '#06231B', background: '#44C2A0', padding: '15px 30px', borderRadius: 11 }} className="transition-colors hover:!bg-[#7BE0BE]">
                 Start free
               </Link>
-              <Link href="/register" style={{ ...DISPLAY, fontSize: 16, fontWeight: 600, color: '#FBFAF7', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', padding: '15px 30px', borderRadius: 11 }}>
+              <Link href="/contact" style={{ ...DISPLAY, fontSize: 16, fontWeight: 600, color: '#FBFAF7', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', padding: '15px 30px', borderRadius: 11 }}>
                 Book a demo
               </Link>
             </div>
@@ -672,30 +673,7 @@ export function PropelLanding() {
       </div>
 
       {/* FOOTER */}
-      <div style={{ borderTop: '1px solid #E8E5DD', background: '#FBFAF7' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '56px 32px 40px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr', gap: 40, marginBottom: 48 }} className="max-md:!grid-cols-2">
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 16 }}>
-                <Mark size={30} />
-                <span style={{ ...DISPLAY, fontWeight: 700, fontSize: 19, letterSpacing: '-0.02em' }}>Propel</span>
-              </div>
-              <p style={{ fontSize: 14.5, lineHeight: 1.55, fontWeight: 300, color: '#8A938E', maxWidth: '30ch', margin: 0 }}>
-                The AI-native CRM for outbound teams. propeltech.es
-              </p>
-            </div>
-            <FooterCol title="Product" links={[['Features', '#features'], ['Integrations', '#connect'], ['Pricing', '#pricing'], ['Security', '#security']]} />
-            <FooterCol title="Company" links={[['About', '#'], ['Careers', '#'], ['Blog', '#'], ['Contact', '#']]} />
-            <FooterCol title="Legal" links={[['Privacy', '#'], ['Terms', '#'], ['GDPR', '#'], ['Security', '#security']]} />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 28, borderTop: '1px solid #E8E5DD', flexWrap: 'wrap', gap: 14 }}>
-            <span style={{ ...MONO, fontSize: 12, color: '#A6ABA4' }}>© 2026 Propel · propeltech.es</span>
-            <span style={{ ...BODY, fontSize: 13, color: '#A6ABA4' }}>
-              English · Español · Português · Français · Deutsch · Italiano
-            </span>
-          </div>
-        </div>
-      </div>
+      <SiteFooter />
     </div>
   )
 }
@@ -817,17 +795,3 @@ function CheckList({ items, color, textColor }: { items: string[]; color: string
   )
 }
 
-function FooterCol({ title, links }: { title: string; links: readonly (readonly [string, string])[] }) {
-  return (
-    <div>
-      <div style={{ ...DISPLAY, fontWeight: 700, fontSize: 13, color: '#0C1F1A', marginBottom: 14 }}>{title}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 14.5, color: '#5E6B66' }}>
-        {links.map(([label, href]) => (
-          <a key={label + href} href={href} className="transition-colors hover:text-[#0C8A68]">
-            {label}
-          </a>
-        ))}
-      </div>
-    </div>
-  )
-}
