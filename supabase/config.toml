@@ -53,6 +53,29 @@ enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
 
+# Branded Propel email templates (also applied to the remote project via the
+# Management API once a custom SMTP provider is configured — template editing is
+# blocked on free tier with the default email provider).
+[auth.email.template.confirmation]
+subject = "Confirm your email · Propel"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Propel password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "Your Propel sign-in link"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.invite]
+subject = "You're invited to Propel"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new email · Propel"
+content_path = "./supabase/templates/email_change.html"
+
 # Custom JWT claims: org_id + role from public.profiles (migration 20260626000002)
 [auth.hook.custom_access_token]
 enabled = true
