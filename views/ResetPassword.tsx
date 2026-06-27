@@ -1,23 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import { useSettingsStore } from '../store/settingsStore'
 import { useTranslations } from '../i18n'
-import { Button } from '../components/ui/Button'
-import { Card } from '../components/ui/Card'
-import { AuthLayout } from '../components/auth/AuthLayout'
 import { SecurePasswordField } from '../components/auth/SecurePasswordField'
 import { formatPasswordStrengthIssues, getPasswordStrengthIssues } from '../lib/securePassword'
 import { api } from '../lib/api'
 import { trackUxAction } from '../lib/uxMetrics'
+import { AuthSplit, DISPLAY, BODY } from '../components/auth/AuthSplit'
 
 export function ResetPassword() {
   const t = useTranslations()
   const [branding, setBranding] = useState(useSettingsStore.getState().settings.branding)
-  useEffect(() => {
-    const unsub = useSettingsStore.subscribe((s) => setBranding(s.settings.branding))
-    return unsub
-  }, [])
+  useEffect(() => useSettingsStore.subscribe((s) => setBranding(s.settings.branding)), [])
+
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -68,31 +64,36 @@ export function ResetPassword() {
   }
 
   return (
-    <AuthLayout
-      variant="centered"
-      title={(
-        <>
-          <h1 className="text-2xl font-bold text-fg">{branding.appName}</h1>
-          <p className="text-sm text-fg-muted mt-1">{t.auth.resetPasswordPageTitle}</p>
-        </>
-      )}
+    <AuthSplit
+      appName={branding.appName}
+      headline={t.auth.landingTagline}
+      subtext="Choose a new password to secure your account."
     >
-      <Card className="p-8">
-        {!token ? (
-          <div className="text-center py-4">
-            <p className="text-sm text-fg-muted mb-4">{t.errors.invalidResetToken ?? 'Invalid or missing reset token.'}</p>
-            <Link to="/forgot-password" className="text-sm text-accent-400 hover:text-accent-300 transition-colors">
-              {t.auth.sendLink}
-            </Link>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="px-4 py-3 rounded-xl bg-danger/10 border border-danger/20 text-sm text-danger">
-                {error}
-              </div>
-            )}
+      <h2 style={{ ...DISPLAY, fontWeight: 700, fontSize: 28, letterSpacing: '-0.02em', margin: '0 0 6px', color: '#0C1F1A' }}>
+        {t.auth.resetPasswordPageTitle}
+      </h2>
 
+      {!token ? (
+        <div style={{ marginTop: 12 }}>
+          <p style={{ ...BODY, fontSize: 14.5, fontWeight: 300, color: '#8A938E', margin: '0 0 16px' }}>
+            {t.errors.invalidResetToken ?? 'Invalid or missing reset token.'}
+          </p>
+          <Link to="/forgot-password" style={{ ...DISPLAY, fontSize: 13.5, fontWeight: 600, color: '#0C8A68' }}>
+            {t.auth.sendLink}
+          </Link>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} style={{ marginTop: 24 }}>
+          {error && (
+            <div
+              role="alert"
+              style={{ ...BODY, fontSize: 14, color: '#B23A2E', background: '#FDECE9', border: '1px solid #F6C9C1', borderRadius: 10, padding: '11px 14px', marginBottom: 18 }}
+            >
+              {error}
+            </div>
+          )}
+
+          <div style={{ marginBottom: 18 }}>
             <SecurePasswordField
               label={t.auth.password}
               value={password}
@@ -105,7 +106,9 @@ export function ResetPassword() {
               required
               autoFocus
             />
+          </div>
 
+          <div style={{ marginBottom: 18 }}>
             <SecurePasswordField
               label={t.auth.confirmPassword}
               value={confirmPassword}
@@ -116,20 +119,42 @@ export function ResetPassword() {
               placeholder={t.auth.confirmPassword}
               required
             />
+          </div>
 
-            <Button
-              type="submit"
-              className="w-full rounded-xl"
-              size="lg"
-              disabled={loading || !password || !confirmPassword}
-              loading={loading}
-              rightIcon={<ArrowRight size={16} aria-hidden />}
-            >
-              {t.auth.savePassword}
-            </Button>
-          </form>
-        )}
-      </Card>
-    </AuthLayout>
+          <button
+            type="submit"
+            disabled={loading || !password || !confirmPassword}
+            style={{
+              border: 'none',
+              cursor: loading ? 'wait' : 'pointer',
+              width: '100%',
+              ...DISPLAY,
+              fontSize: 15,
+              fontWeight: 600,
+              color: '#fff',
+              background: '#0C8A68',
+              padding: 14,
+              borderRadius: 10,
+              marginTop: 4,
+              opacity: loading || !password || !confirmPassword ? 0.6 : 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}
+            className="transition-colors hover:enabled:!bg-[#0A6E54]"
+          >
+            {t.auth.savePassword}
+            {!loading && <ArrowRight size={16} aria-hidden />}
+          </button>
+
+          <p style={{ textAlign: 'center', fontSize: 13.5, color: '#8A938E', margin: '16px 0 0', ...BODY }}>
+            <Link to="/login" style={{ ...DISPLAY, fontWeight: 600, color: '#0C8A68' }}>
+              {t.auth.backToLogin}
+            </Link>
+          </p>
+        </form>
+      )}
+    </AuthSplit>
   )
 }
